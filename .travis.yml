@@ -1,8 +1,12 @@
 language: java
-
 branches:
   only:
   - master
-
-
 script: mvn clean verify
+deploy:
+  provider: heroku
+  api_key:
+    secure: ojJNRdcEc4bvmt/+uMVvBzLjUaCpMp6YbdDgVa8Hgy3QmJ4F60Texd7bMGuu9I0tf21bXtpasc19tibmdIDjYVZRD9g1qu/fO9nrXtn7GYJiFr4hZ5KEj5uFSCCjdyaIZTJ2Uv3K1BvWjv6z4nvwg1Pb6kAGuZuLYrk6U2h7euAe7zzeOLJGgRU+t8EzuF7v/4CiZHRHZjXzp17is6ZgPtmijQrhthhtKBPbRbtrnfMguGZ5QotkNa17gwf55N0hpr5LsmLWQGSCclA8YSbe+0DQxorGAuiv6W0nOCep7YsNMF8CVyUURXcnaQMwB4lYe/p4hXlsZ+08sQM3GWd6PVpkQ79CcRcKB6vSH/3wCdT3lUwDd8/mHSPc49SO6hS/cvQZu8m1BfUZfZfhMGNmZH+4NkWEtmKGIflneSHMDH0R0JUE0AeQjji+uwp833HEuGqRIvPnTpWwtwfODmZJNnH96qWSCdnklLZuMlD3wLS/vjgGX5v/PKi6O6G2gpjSAvRTT0S5fiuf8N8dQ5qFrSgTnyI6A/1bmm0xOT9DqWnMbhMtmwOC6f+XUJOSjIt/QdQgIN1NniZ+isbE+gzbPc6thgAWVLHqQ4FdlaazH3UwRiapeepimarinNAm5aZc4MU4qFVF05L8AJlnUCkTF1LICq9TG/iFqJkwHOC+wcs=
+  app: discogsrecordcollection
+  on:
+    repo: BrotherLogic/recordcollection
