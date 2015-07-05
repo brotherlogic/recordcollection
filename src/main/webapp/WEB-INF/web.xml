@@ -4,4 +4,19 @@
 
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
+
+  <!-- Sets up the servlet for use -->
+  <listener>
+    <listener-class>com.brotherlogic.recordcollection.ContextListener</listener-class>
+  </listener>
+
+  <!-- The central servlet endpoint -->
+  <servlet>
+    <servlet-name>MainServlet</servlet-name>
+    <servlet-class>com.brotherlogic.recordcollection.EndPoint</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>MainServlet</servlet-name>
+    <url-pattern>/endpoint/*</url-pattern>
+  </servlet-mapping>
 </web-app>

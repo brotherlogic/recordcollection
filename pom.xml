@@ -9,13 +9,144 @@
   <url>http://maven.apache.org</url>
   <dependencies>
     <dependency>
+      <groupId>com.brotherlogic</groupId>
+      <artifactId>discogs</artifactId>
+      <version>0.1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.scribe</groupId>
+      <artifactId>scribe</artifactId>
+      <version>1.3.7</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tomcat</groupId>
+      <artifactId>tomcat-catalina</artifactId>
+      <version>8.0.21</version>
+    </dependency>
+
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.12</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-core</artifactId>
+      <version>2.0.23-beta</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
   <build>
     <finalName>recordcollection</finalName>
+   
+    <plugins>
+      <plugin>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-maven-plugin</artifactId>
+        <version>9.1.2.v20140210</version>
+        <configuration>
+          <systemProperties>
+            <systemProperty>
+              <name>discogs-key</name>
+              <value>${discogs-key}</value>
+            </systemProperty>
+            <systemProperty>
+              <name>discogs-secret</name>
+              <value>${discogs-secret}</value>
+            </systemProperty>
+          </systemProperties>
+          <jvmArgs>${failsafeArgLine}</jvmArgs>
+          <scanIntervalSeconds>5</scanIntervalSeconds>
+          <stopKey>foo</stopKey>
+          <stopPort>9999</stopPort>
+          <skip>${skip.integration.tests}</skip>
+          <webApp>
+            <contextPath>/</contextPath>
+          </webApp>
+          <contextPath>/</contextPath>
+        </configuration>
+        <executions>
+          <execution>
+            <id>start-jetty</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>run-forked</goal>
+            </goals>
+            <configuration>
+              <scanIntervalSeconds>0</scanIntervalSeconds>
+              <waitForChild>false</waitForChild>
+            </configuration>
+          </execution>
+          <execution>
+            <id>stop-jetty</id>
+            <phase>post-integration-test</phase>
+            <goals>
+              <goal>stop</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+	<groupId>org.jacoco</groupId>
+	<artifactId>jacoco-maven-plugin</artifactId>
+	<version>0.7.1.201405082137</version>
+	<executions>
+	  <execution>
+	    <id>default-prepare-agent</id>
+	    <goals>
+	      <goal>prepare-agent</goal>
+	    </goals>
+	  </execution>
+	  <execution>
+	    <id>default-report</id>
+	    <phase>prepare-package</phase>
+	    <goals>
+	      <goal>report</goal>
+	    </goals>
+	  </execution>
+	  <execution>
+	    <id>default-check</id>
+	    <goals>
+	      <goal>check</goal>
+	    </goals>
+	    <configuration>
+	      <rules>
+		<!--  implementation is needed only for Maven 2  -->
+		<rule implementation="org.jacoco.maven.RuleConfiguration">
+		  <element>CLASS</element>
+                  <excludes>
+                    <exclude>*DiscogsService*</exclude>
+                  </excludes>
+		  <limits>
+		    <!--  implementation is needed only for Maven 2  -->
+		    <limit implementation="org.jacoco.report.check.Limit">
+		      <counter>BRANCH</counter>
+		      <value>COVEREDRATIO</value>
+		      <minimum>1.0</minimum>
+		    </limit>
+		  </limits>
+		</rule>
+		<rule implementation="org.jacoco.maven.RuleConfiguration">
+		  <element>CLASS</element>
+                  <excludes>
+                    <exclude>*DiscogsService*</exclude>
+                  </excludes>
+		  <limits>
+		    <!--  implementation is needed only for Maven 2  -->
+		    <limit implementation="org.jacoco.report.check.Limit">
+		      <counter>LINE</counter>
+		      <value>COVEREDRATIO</value>
+		      <minimum>1.0</minimum>
+		    </limit>
+		  </limits>
+		</rule>
+	      </rules>
+	    </configuration>
+	  </execution>
+	</executions>
+      </plugin>
+    </plugins>
   </build>
 </project>
