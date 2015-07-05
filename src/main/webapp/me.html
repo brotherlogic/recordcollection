@@ -2,6 +2,7 @@
   <head>
     <title>Record Collection</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="jquery.cookie.js"></script>
     <link rel="stylesheet" type="text/css" href="rcstyle.css">
   </head>
   <body>
@@ -15,9 +16,17 @@
       }
       
       $(document).ready(function() {
+
+      alert("HERE " + $.cookie("access_token"));
+      
         //Replace the parts with the right parts
-        //user = get("/endpoint/me?token=");
-        //$("#greeting").html("Welcome " + user["username"]);
+      user = get("/endpoint/me?token=" + $.cookie("access_token"));
+
+      if (user["redirect"]) {
+      window.location.replace(user["redirect"]);
+      }
+
+        $("#greeting").html("Welcome " + user["userName"]);
       });
     </script>
   </body>

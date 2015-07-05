@@ -35,6 +35,14 @@ public class DiscogsService implements OAuthService
         this.config = config;
     }
 
+    public RequestBuilder getRequestBuilder() {
+        return new RequestBuilder(){
+            public OAuthRequest buildRequest(Verb v, String url) {
+                return new OAuthRequest(v, url);
+            }
+        };
+    }
+
     /**
      * {@inheritDoc}
      */

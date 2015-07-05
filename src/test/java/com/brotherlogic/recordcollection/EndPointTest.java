@@ -7,6 +7,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 
+import com.brotherlogic.discogs.User;
+import com.brotherlogic.discogs.backend.UserBackend;
+
+
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
 
@@ -30,13 +34,21 @@ import javax.servlet.http.HttpServletResponse;
 
 public class EndPointTest extends BaseTest {
 
-    Logger logger = Logger.getLogger(getClass());
+    private Logger logger = Logger.getLogger(getClass());
 
+    private Map<String,DiscogsToken> authTokens = new TreeMap<String,DiscogsToken>();
+
+    private ServletContext mContext;
+    
     private HttpServletResponse testRequest(String requestURL) throws Exception {
-        return testRequest(requestURL,null);
+        return testRequest(requestURL, null);
+    }
+
+    private HttpServletResponse testRequest(String requestURL, Token tokenInMap) throws Exception {
+        return testRequest(requestURL, tokenInMap, null);
     }
     
-    private HttpServletResponse testRequest(String requestURL, Token tokenInMap) throws Exception{
+    private HttpServletResponse testRequest(String requestURL, Token tokenInMap, Token authToken) throws Exception{
         HttpServletResponse response = Mockito.mock(HttpServletResponse.class);
         HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
         
@@ -54,9 +66,7 @@ public class EndPointTest extends BaseTest {
         Token mAuthToken = new Token("TestToken","SecretAuth");
         logger.log(Level.INFO,"Should get " + mAuthToken + " from " + mToken);
         Mockito.when(mService.getAccessToken(Mockito.eq(mToken), Mockito.any(Verifier.class))).thenReturn(mAuthToken);
-        ServletContext mContext = Mockito.mock(ServletContext.class);
-
-        Map<String,Token> authTokens = new TreeMap<String,Token>();
+        mContext = Mockito.mock(ServletContext.class);
         Mockito.when(mContext.getAttribute("auth_tokens")).thenReturn(authTokens);
         
         Map<String,Token> initTokenMap = new TreeMap<String,Token>();
@@ -107,6 +117,27 @@ public class EndPointTest extends BaseTest {
     public void testCallbackRequest() throws Exception {
         HttpServletResponse response = testRequest("/callback?oauth_token=TestToken&oauth_verifier=TestVerifier", new Token("TestToken","TestSecret"));
         Mockito.verify(response).sendRedirect("/index.html?token=TestToken");
+    }
+
+    @Test
+    public void testRetrieveMeWithoutTokenCausesRedirectToLoginWithRemoveCookie() throws Exception {
+        HttpServletResponse response = testRequest("/me?token=TestAuth",null,null);
+        String responseStr = ((ByteArrayMockOutputStream) response.getOutputStream()).getString();
+        Assert.assertTrue(responseStr.contains("redirect"));
+    }
+
+    @Test
+    public void testRetrieveMe() throws Exception {
+        DiscogsToken authToken = Mockito.mock(DiscogsToken.class);
+        User u = new User("brotherlogic");
+        UserBackend backend = Mockito.mock(UserBackend.class);
+        Mockito.when(backend.getMe()).thenReturn(u);
+        Mockito.when(authToken.getUserBackend(Mockito.any(RequestBuilder.class))).thenReturn(backend);
+        authTokens.put("TestAuth",authToken);
+        
+        String response = ((ByteArrayMockOutputStream) testRequest("/me?token=TestAuth",null,authToken).getOutputStream()).getString();
+        logger.log(Level.DEBUG,"Retrieve Me response = " + response);
+        Assert.assertTrue(response.contains("brotherlogic"));
     }
 }
 
