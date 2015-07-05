@@ -34,12 +34,12 @@ public class ContextListener implements ServletContextListener {
 
         OAuthService service = new ServiceBuilder()
 	    .provider(DiscogsApi.class)
-	    .apiKey(System.getProperty("discogs-key"))
-	    .apiSecret(System.getProperty("discogs-secret"))
+	    .apiKey(System.getenv("discogskey"))
+	    .apiSecret(System.getenv("discogssecret"))
 	    .callback(CALLBACK_URL)
 	    .build();
 
-        arg0.getServletContext().setAttribute("config",new Config(System.getProperty("discogs-key"),System.getProperty("discogs-secret"),service));
+        arg0.getServletContext().setAttribute("config",new Config(System.getenv("discogskey"),System.getenv("discogssecret"),service));
         arg0.getServletContext().setAttribute("token_map",new TreeMap<String,Token>());
         arg0.getServletContext().setAttribute("auth_tokens",new TreeMap<String,Token>());
     }
