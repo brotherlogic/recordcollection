@@ -41,6 +41,6 @@ public class ContextListener implements ServletContextListener {
 
         arg0.getServletContext().setAttribute("config",new Config(System.getenv("discogskey"),System.getenv("discogssecret"),service));
         arg0.getServletContext().setAttribute("token_map",new TreeMap<String,Token>());
-        arg0.getServletContext().setAttribute("auth_tokens",new TreeMap<String,Token>());
+        arg0.getServletContext().setAttribute("auth_tokens",new TreeMap<String,ScribeRetriever>());
     }
 }

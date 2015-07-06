@@ -2,6 +2,11 @@ package com.brotherlogic.recordcollection;
 
 import java.util.Map;
 
+import com.brotherlogic.discogs.User;
+import com.brotherlogic.discogs.backend.UserBackend;
+import com.brotherlogic.discogs.backend.WebUserBackend;
+
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
@@ -12,7 +17,9 @@ import org.apache.log4j.Logger;
 
 import org.scribe.oauth.OAuthService;
 import org.scribe.builder.ServiceBuilder;
+import org.scribe.model.OAuthRequest;
 import org.scribe.model.Token;
+import org.scribe.model.Verb;
 import org.scribe.model.Verifier;
 
 import java.io.IOException;
@@ -56,6 +63,20 @@ public class EndPoint extends GenericServlet {
                 hResp.sendRedirect("/index.html?token=" + token.getToken());
                 
                 return;
+            } else if (paras[1].startsWith("me")) {
+                DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
+                DiscogsToken authToken = ((Map<String,DiscogsToken>)req.getServletContext().getAttribute("auth_tokens")).get(hReq.getParameter("token"));
+                logger.log(Level.INFO,"Retrieved " + authToken + " from " + hReq.getParameter("token"));
+                if (authToken == null) {
+                    //Needs to reauth - force a redirect
+                    JsonObject obj = new JsonObject();
+                    obj.add("redirect",new JsonPrimitive("/index.html?reauth=true"));
+                    writeResponse(hResp,obj);
+                    return;
+                }
+                UserBackend backend = authToken.getUserBackend(service.getRequestBuilder());
+                writeResponse(hResp,new Gson().toJsonTree(backend.getMe()));
+                return;
             }
         }
 
@@ -63,15 +84,16 @@ public class EndPoint extends GenericServlet {
         writeResponse(hResp,JsonNull.INSTANCE);
     }
 
+
     private Token saveToken(String token, String verifierStr, ServletRequest req) {
         logger.log(Level.INFO,"Getting " + token + " from " + req.getServletContext().getAttribute("token_map"));
         Token prevToken = (Token) ((Map)req.getServletContext().getAttribute("token_map")).get(token);
         Verifier verifier = new Verifier(verifierStr);
         DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
-        Token accessToken = service.getAccessToken(prevToken, verifier);
+        DiscogsToken accessToken = new DiscogsToken(service.getAccessToken(prevToken, verifier), service);
 
         logger.log(Level.INFO,"Received " + accessToken + " from " + prevToken + " and " + verifier);
-        
+        logger.log(Level.INFO,"Put " + accessToken.getToken() + " into auth_tokens map");
         ((Map)req.getServletContext().getAttribute("auth_tokens")).put(accessToken.getToken(),accessToken);
         return accessToken;
     }
