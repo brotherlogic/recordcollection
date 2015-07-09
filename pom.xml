@@ -10,7 +10,7 @@
   <url>http://maven.apache.org</url>
 
   <properties>
-    <jetty.runner.version>8.1.16.v20140903</jetty.runner.version>
+    <jetty.runner.version>8.1.14.v20131031</jetty.runner.version>
   </properties>
 
   <dependencies>
