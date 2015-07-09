@@ -99,6 +99,7 @@ public class EndPoint extends GenericServlet {
     }
 
     private String getAuthUrl(final HttpServletRequest req) {
+        logger.log(Level.INFO,"Servlet context: " + req.getClass());
         logger.log(Level.INFO,"Config object: " + req.getServletContext().getAttribute("config"));
         DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
 
