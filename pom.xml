@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
@@ -7,6 +8,11 @@
   <version>0.1</version>
   <name>recordcollection Maven Webapp</name>
   <url>http://maven.apache.org</url>
+
+  <properties>
+    <jetty.runner.version>9.3.0.RC1</jetty.runner.version>
+  </properties>
+
   <dependencies>
     <dependency>
       <groupId>com.brotherlogic</groupId>
@@ -24,6 +30,15 @@
       <version>8.0.21</version>
     </dependency>
 
+    <!-- This keeps the jetty runner out of the build but
+         allows us to use the versions plugin -->
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-runner</artifactId>
+      <version>${jetty.runner.version}</version>
+      <scope>test</scope>
+    </dependency>
+      
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
@@ -159,9 +174,9 @@
             <configuration>
               <artifactItems>
                 <artifactItem>
-                  <groupId>org.mortbay.jetty</groupId>
+                  <groupId>org.eclipse.jetty</groupId>
                   <artifactId>jetty-runner</artifactId>
-                  <version>7.5.4.v20111024</version>
+                  <version>${jetty.runner.version}</version>
                   <destFileName>jetty-runner.jar</destFileName>
                 </artifactItem>
               </artifactItems>
