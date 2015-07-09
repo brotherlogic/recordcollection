@@ -16,8 +16,6 @@
       }
       
       $(document).ready(function() {
-
-      alert("HERE " + $.cookie("access_token"));
       
         //Replace the parts with the right parts
       user = get("/endpoint/me?token=" + $.cookie("access_token"));

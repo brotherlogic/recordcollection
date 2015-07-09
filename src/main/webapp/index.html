@@ -32,7 +32,6 @@
       }
       
       $( document ).ready(function() {
-      alert("Ummm");
       
         //Check to see if we're being asked to refresh the cookie
         if (getQueryParams()["reauth"]) {
@@ -40,9 +39,7 @@
         }
       
       //See if we have an access token
-      alert("TESTING FOR " + $.cookie('access_token'));
         if ($.cookie('access_token')) {
-          alert("HERE = " + $.cookie('access_token'));
           window.location.href = "merrr.html";
         }
 
@@ -50,7 +47,6 @@
         if (getQueryParams()["token"]) {
           var token = getQueryParams()["token"];
       $.cookie('access_token',token,{ expires: 7, path: '/' });
-      alert("Setting cookie " + $.cookie('access_token'));
           window.location.href = "/";
         }
       
