@@ -7,25 +7,29 @@
   </head>
   <body>
     <h1 id=greeting>Welcome</h1>
+    <div id=information></div>
     <script>
-      function get(url) {
-        var request = new XMLHttpRequest();
-        request.open('GET', url, false);  // `false` makes the request synchronous
-        request.send();
-        return JSON.parse(request.responseText);
-      }
-      
-      $(document).ready(function() {
-      
-        //Replace the parts with the right parts
-      user = get("/endpoint/me?token=" + $.cookie("access_token"));
+     function get(url) {
+       var request = new XMLHttpRequest();
+       request.open('GET', url, false);  // `false` makes the request synchronous
+       request.send();
+       return JSON.parse(request.responseText);
+     }
+     
+     $(document).ready(function() {
+       
+       //Replace the parts with the right parts
+       user = get("/endpoint/me?token=" + $.cookie("access_token"));
+       
+       if (user["redirect"]) {
+         window.location.replace(user["redirect"]);
+       }
+       
+       $("#greeting").html("Welcome " + user["userName"]);
 
-      if (user["redirect"]) {
-      window.location.replace(user["redirect"]);
-      }
-
-        $("#greeting").html("Welcome " + user["userName"]);
-      });
+       collection_info = get("/endpoint/overview/" + user["userName"] + "?token=" + $.cookie("access_token"));
+       $("#information").html("You have " + collection_info["collection_size"] + " records in " + collection_info["number_of_folders"] + " folders.");
+     });
     </script>
   </body>
 </html>

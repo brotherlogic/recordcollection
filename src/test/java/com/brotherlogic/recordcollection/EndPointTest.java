@@ -1,5 +1,7 @@
 package com.brotherlogic.recordcollection;
 
+import java.util.Collection;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -7,12 +9,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringReader;
 
+import com.brotherlogic.discogs.Folder;
 import com.brotherlogic.discogs.User;
+import com.brotherlogic.discogs.backend.CollectionBackend;
 import com.brotherlogic.discogs.backend.UserBackend;
-
 
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -105,7 +109,7 @@ public class EndPointTest extends BaseTest {
         JsonElement elem = new JsonParser().parse(response);
         Assert.assertTrue(elem.isJsonNull());
     }
-    
+
     @Test
     public void testLoginRequest() throws Exception {
         String responseString = ((ByteArrayMockOutputStream) testRequest("/login/").getOutputStream()).getString();
@@ -126,6 +130,29 @@ public class EndPointTest extends BaseTest {
         Assert.assertTrue(responseStr.contains("redirect"));
     }
 
+    @Test
+    public void testOverviewRequest() throws Exception {
+        DiscogsToken authToken = Mockito.mock(DiscogsToken.class);
+        Collection<Folder> folders = new LinkedList<Folder>();
+        Folder f1 = Mockito.mock(Folder.class);
+        Mockito.when(f1.getCount()).thenReturn(10);
+        Folder f2 = Mockito.mock(Folder.class);
+        Mockito.when(f2.getCount()).thenReturn(20);
+        folders.add(f1);
+        folders.add(f2);
+
+        CollectionBackend backend = Mockito.mock(CollectionBackend.class);
+        Mockito.when(backend.getFolders("brotherlogic")).thenReturn(folders);
+        Mockito.when(authToken.getCollectionBackend(Mockito.any(RequestBuilder.class))).thenReturn(backend);
+        authTokens.put("TestAuth",authToken);
+
+        String responseString = ((ByteArrayMockOutputStream) testRequest("/overview/brotherlogic?token=TestAuth").getOutputStream()).getString();
+        logger.log(Level.DEBUG,"Response = " + responseString);
+        JsonObject obj = new JsonParser().parse(responseString).getAsJsonObject();
+        Assert.assertEquals(2,obj.get("number_of_folders").getAsInt());
+        Assert.assertEquals(30,obj.get("collection_size").getAsInt());
+    }
+    
     @Test
     public void testRetrieveMe() throws Exception {
         DiscogsToken authToken = Mockito.mock(DiscogsToken.class);

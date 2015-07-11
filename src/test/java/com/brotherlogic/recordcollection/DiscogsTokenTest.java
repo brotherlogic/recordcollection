@@ -20,5 +20,15 @@ public class DiscogsTokenTest {
                 }
             }));
     }
-    
+
+    @Test
+    public void testBuildCollectionBackend() {
+        DiscogsService serv = Mockito.mock(DiscogsService.class);
+        DiscogsToken token = new DiscogsToken("TestKey", "TestSecret", serv);
+        Assert.assertNotNull(token.getCollectionBackend(new RequestBuilder() {
+                public OAuthRequest buildRequest(Verb v, String url) {
+                    return null;
+                }
+            }));
+    }    
 }
