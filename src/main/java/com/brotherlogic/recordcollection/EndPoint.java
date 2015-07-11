@@ -1,9 +1,13 @@
 package com.brotherlogic.recordcollection;
 
+import java.util.Collection;
 import java.util.Map;
 
+import com.brotherlogic.discogs.Folder;
 import com.brotherlogic.discogs.User;
+import com.brotherlogic.discogs.backend.CollectionBackend;
 import com.brotherlogic.discogs.backend.UserBackend;
+import com.brotherlogic.discogs.backend.WebCollectionBackend;
 import com.brotherlogic.discogs.backend.WebUserBackend;
 
 import com.google.gson.Gson;
@@ -46,7 +50,23 @@ public class EndPoint extends GenericServlet {
 
         logger.log(Level.INFO,"Converting: " + hReq.getRequestURI());
         String[] paras = hReq.getRequestURI().substring(1).split("/");
+        if (hReq.getRequestURI().contains("?"))
+            paras = hReq.getRequestURI().substring(1,hReq.getRequestURI().indexOf('?')).split("/");
 
+        //Re-Auth if we need to
+        DiscogsToken authToken = null;
+        if (hReq.getParameter("token") != null) {
+            authToken = ((Map<String,DiscogsToken>)req.getServletContext().getAttribute("auth_tokens")).get(hReq.getParameter("token"));
+            logger.log(Level.INFO,"Retrieved " + authToken + " from " + hReq.getParameter("token"));
+            if (authToken == null) {
+                //Needs to reauth - force a redirect
+                JsonObject obj = new JsonObject();
+                obj.add("redirect",new JsonPrimitive("/index.html?reauth=true"));
+                writeResponse(hResp,obj);
+                return;
+            }
+        }
+        
         if (paras.length > 1) {
             if (paras[1].equals("login")) {
                 JsonObject obj = new JsonObject();
@@ -65,17 +85,23 @@ public class EndPoint extends GenericServlet {
                 return;
             } else if (paras[1].startsWith("me")) {
                 DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
-                DiscogsToken authToken = ((Map<String,DiscogsToken>)req.getServletContext().getAttribute("auth_tokens")).get(hReq.getParameter("token"));
-                logger.log(Level.INFO,"Retrieved " + authToken + " from " + hReq.getParameter("token"));
-                if (authToken == null) {
-                    //Needs to reauth - force a redirect
-                    JsonObject obj = new JsonObject();
-                    obj.add("redirect",new JsonPrimitive("/index.html?reauth=true"));
-                    writeResponse(hResp,obj);
-                    return;
-                }
                 UserBackend backend = authToken.getUserBackend(service.getRequestBuilder());
                 writeResponse(hResp,new Gson().toJsonTree(backend.getMe()));
+                return;
+            } else if (paras[1].startsWith("overview")) {
+                DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
+                CollectionBackend backend = authToken.getCollectionBackend(service.getRequestBuilder());
+                Collection<Folder> folders = backend.getFolders(paras[2]);
+
+                int colSize = 0;
+                for(Folder f : folders) {
+                    colSize += f.getCount();
+                }
+                
+                JsonObject response = new JsonObject();
+                response.add("number_of_folders",new JsonPrimitive(folders.size()));
+                response.add("collection_size",new JsonPrimitive(colSize));
+                writeResponse(hResp, response);
                 return;
             }
         }
