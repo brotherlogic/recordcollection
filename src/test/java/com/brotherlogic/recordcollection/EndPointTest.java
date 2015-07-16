@@ -1,5 +1,7 @@
 package com.brotherlogic.recordcollection;
 
+import com.brotherlogic.recordcollection.storage.Storage;
+
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
@@ -40,7 +42,7 @@ public class EndPointTest extends BaseTest {
 
     private Logger logger = Logger.getLogger(getClass());
 
-    private Map<String,DiscogsToken> authTokens = new TreeMap<String,DiscogsToken>();
+    private Map<String,Token> authTokens = new TreeMap<String,Token>();
 
     private ServletContext mContext;
     
@@ -80,7 +82,18 @@ public class EndPointTest extends BaseTest {
         Mockito.when(mService.getRequestToken()).thenReturn(mToken);
         Mockito.when(mService.getAuthorizationUrl(mToken)).thenReturn("http://initialauth");
         Mockito.when(request.getServletContext()).thenReturn(mContext);
-        Mockito.when(mContext.getAttribute("config")).thenReturn(new Config("testkey","testsecret",mService));
+
+        RcSystem sys = Mockito.mock(RcSystem.class);
+        Mockito.when(sys.getConfig()).thenReturn(new Config("testkey","testsecret",mService));
+        Storage mStorage = Mockito.mock(Storage.class);
+
+        for(String str : authTokens.keySet()) {
+          logger.log(Level.INFO,"Putting " + authTokens.get(str) + " for " + str);
+          Mockito.when(mStorage.getToken(str)).thenReturn(authTokens.get(str));
+        }
+        Mockito.when(sys.getStorage()).thenReturn(mStorage);
+
+        Mockito.when(mContext.getAttribute("system")).thenReturn(sys);
         Mockito.when(mContext.getAttribute("token_map")).thenReturn(initTokenMap);
 
         if (requestURL.contains("?"))
@@ -89,7 +102,6 @@ public class EndPointTest extends BaseTest {
                 logger.log(Level.DEBUG,"Putting " + bits[0] + " -> " + bits[1] + " into parameter map");
                 Mockito.when(request.getParameter(bits[0])).thenReturn(bits[1]);
             }
-        
         myEndPoint.service(request,response);
 
         //Check that the response is as expected
@@ -98,9 +110,14 @@ public class EndPointTest extends BaseTest {
 
     @Test
     public void testEmptyRequest() throws Exception {
-        String response = ((ByteArrayMockOutputStream) testRequest("/").getOutputStream()).getString();
-        JsonElement elem = new JsonParser().parse(response);
-        Assert.assertTrue(elem.isJsonNull());
+      Token authToken = Mockito.mock(Token.class);
+      Mockito.when(authToken.getToken()).thenReturn("testtoken");
+      Mockito.when(authToken.getSecret()).thenReturn("testsecret");
+      authTokens.put("TestAuth",authToken);
+      
+      String response = ((ByteArrayMockOutputStream) testRequest("/?token=TestAuth").getOutputStream()).getString();
+      JsonElement elem = new JsonParser().parse(response);
+      Assert.assertTrue(elem.isJsonNull());
     }
 
     @Test
@@ -125,46 +142,52 @@ public class EndPointTest extends BaseTest {
 
     @Test
     public void testRetrieveMeWithoutTokenCausesRedirectToLoginWithRemoveCookie() throws Exception {
-        HttpServletResponse response = testRequest("/me?token=TestAuth",null,null);
+        HttpServletResponse response = testRequest("/me?token=TestAuth22",null,null);
         String responseStr = ((ByteArrayMockOutputStream) response.getOutputStream()).getString();
         Assert.assertTrue(responseStr.contains("redirect"));
     }
 
     @Test
     public void testOverviewRequest() throws Exception {
-        DiscogsToken authToken = Mockito.mock(DiscogsToken.class);
-        Collection<Folder> folders = new LinkedList<Folder>();
-        Folder f1 = Mockito.mock(Folder.class);
-        Mockito.when(f1.getCount()).thenReturn(10);
-        Folder f2 = Mockito.mock(Folder.class);
-        Mockito.when(f2.getCount()).thenReturn(20);
-        folders.add(f1);
-        folders.add(f2);
-
-        CollectionBackend backend = Mockito.mock(CollectionBackend.class);
-        Mockito.when(backend.getFolders("brotherlogic")).thenReturn(folders);
-        Mockito.when(authToken.getCollectionBackend(Mockito.any(RequestBuilder.class))).thenReturn(backend);
-        authTokens.put("TestAuth",authToken);
-
-        String responseString = ((ByteArrayMockOutputStream) testRequest("/overview/brotherlogic?token=TestAuth").getOutputStream()).getString();
-        logger.log(Level.DEBUG,"Response = " + responseString);
-        JsonObject obj = new JsonParser().parse(responseString).getAsJsonObject();
-        Assert.assertEquals(2,obj.get("number_of_folders").getAsInt());
-        Assert.assertEquals(30,obj.get("collection_size").getAsInt());
+      DiscogsToken authToken = Mockito.mock(DiscogsToken.class);
+      Mockito.when(authToken.getToken()).thenReturn("testtoken");
+      Mockito.when(authToken.getSecret()).thenReturn("testsecret");
+      
+      Collection<Folder> folders = new LinkedList<Folder>();
+      Folder f1 = Mockito.mock(Folder.class);
+      Mockito.when(f1.getCount()).thenReturn(10);
+      Folder f2 = Mockito.mock(Folder.class);
+      Mockito.when(f2.getCount()).thenReturn(20);
+      folders.add(f1);
+      folders.add(f2);
+      
+      CollectionBackend backend = Mockito.mock(CollectionBackend.class);
+      Mockito.when(backend.getFolders("brotherlogic")).thenReturn(folders);
+      Mockito.when(authToken.getCollectionBackend(Mockito.any(RequestBuilder.class))).thenReturn(backend);
+      authTokens.put("TestAuth",authToken);
+      
+      String responseString = ((ByteArrayMockOutputStream) testRequest("/overview/brotherlogic?token=TestAuth").getOutputStream()).getString();
+      logger.log(Level.DEBUG,"Response = " + responseString);
+      JsonObject obj = new JsonParser().parse(responseString).getAsJsonObject();
+      Assert.assertEquals(2,obj.get("number_of_folders").getAsInt());
+      Assert.assertEquals(30,obj.get("collection_size").getAsInt());
     }
     
     @Test
     public void testRetrieveMe() throws Exception {
-        DiscogsToken authToken = Mockito.mock(DiscogsToken.class);
-        User u = new User("brotherlogic");
-        UserBackend backend = Mockito.mock(UserBackend.class);
-        Mockito.when(backend.getMe()).thenReturn(u);
-        Mockito.when(authToken.getUserBackend(Mockito.any(RequestBuilder.class))).thenReturn(backend);
-        authTokens.put("TestAuth",authToken);
-        
-        String response = ((ByteArrayMockOutputStream) testRequest("/me?token=TestAuth",null,authToken).getOutputStream()).getString();
-        logger.log(Level.DEBUG,"Retrieve Me response = " + response);
-        Assert.assertTrue(response.contains("brotherlogic"));
+      DiscogsToken authToken = Mockito.mock(DiscogsToken.class);
+      Mockito.when(authToken.getToken()).thenReturn("testtoken");
+      Mockito.when(authToken.getSecret()).thenReturn("testsecret");
+      
+      User u = new User("brotherlogic");
+      UserBackend backend = Mockito.mock(UserBackend.class);
+      Mockito.when(backend.getMe()).thenReturn(u);
+      Mockito.when(authToken.getUserBackend(Mockito.any(RequestBuilder.class))).thenReturn(backend);
+      authTokens.put("TestAuth",authToken);
+      
+      String response = ((ByteArrayMockOutputStream) testRequest("/me?token=TestAuth",null,authToken).getOutputStream()).getString();
+      logger.log(Level.DEBUG,"Retrieve Me response = " + response);
+      Assert.assertTrue(response.contains("brotherlogic"));
     }
 }
 

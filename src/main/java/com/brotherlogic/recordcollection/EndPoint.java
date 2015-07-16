@@ -38,111 +38,121 @@ import javax.servlet.ServletResponse;
 
 public class EndPoint extends GenericServlet {
     
-    private Logger logger = Logger.getLogger(getClass());
-    private String callbackURL = "http://blah";
+  private Logger logger = Logger.getLogger(getClass());
+  private String callbackURL = "http://blah";
     
-    @Override
-    public void service(final ServletRequest req, final ServletResponse res)
-        throws ServletException, IOException {
+  @Override
+  public void service(final ServletRequest req, final ServletResponse res)
+    throws ServletException, IOException {
         
-        HttpServletRequest hReq = (HttpServletRequest) req;
-        HttpServletResponse hResp = (HttpServletResponse) res;
+    HttpServletRequest hReq = (HttpServletRequest) req;
+    HttpServletResponse hResp = (HttpServletResponse) res;
 
-        logger.log(Level.INFO,"Converting: " + hReq.getRequestURI());
-        String[] paras = hReq.getRequestURI().substring(1).split("/");
-        if (hReq.getRequestURI().contains("?"))
-            paras = hReq.getRequestURI().substring(1,hReq.getRequestURI().indexOf('?')).split("/");
+    logger.log(Level.INFO,"Converting: " + hReq.getRequestURI());
+    String[] paras = hReq.getRequestURI().substring(1).split("/");
+    if (hReq.getRequestURI().contains("?"))
+      paras = hReq.getRequestURI().substring(1,hReq.getRequestURI().indexOf('?')).split("/");
 
-        //Re-Auth if we need to
-        DiscogsToken authToken = null;
-        if (hReq.getParameter("token") != null) {
-            authToken = ((Map<String,DiscogsToken>)req.getServletContext().getAttribute("auth_tokens")).get(hReq.getParameter("token"));
-            logger.log(Level.INFO,"Retrieved " + authToken + " from " + hReq.getParameter("token"));
-            if (authToken == null) {
-                //Needs to reauth - force a redirect
-                JsonObject obj = new JsonObject();
-                obj.add("redirect",new JsonPrimitive("/index.html?reauth=true"));
-                writeResponse(hResp,obj);
-                return;
-            }
-        }
-        
-        if (paras.length > 1) {
-            if (paras[1].equals("login")) {
-                JsonObject obj = new JsonObject();
-                obj.add("redirect",new JsonPrimitive(getAuthUrl(hReq)));
-                writeResponse(hResp,obj);
-                return;
-            } else if (paras[1].startsWith("callback")) {
-                logger.log(Level.INFO,"Request = " + hReq.getRequestURI());
-                Token token = saveToken(hReq.getParameter("oauth_token"),hReq.getParameter("oauth_verifier"), req);
-                JsonObject obj = new JsonObject();
-                obj.add("token",new JsonPrimitive(token.getToken()));
-
-                //Forward the browser on to /index.html?token=blah
-                hResp.sendRedirect("/index.html?token=" + token.getToken());
-                
-                return;
-            } else if (paras[1].startsWith("me")) {
-                DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
-                UserBackend backend = authToken.getUserBackend(service.getRequestBuilder());
-                writeResponse(hResp,new Gson().toJsonTree(backend.getMe()));
-                return;
-            } else if (paras[1].startsWith("overview")) {
-                DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
-                CollectionBackend backend = authToken.getCollectionBackend(service.getRequestBuilder());
-                Collection<Folder> folders = backend.getFolders(paras[2]);
-
-                int colSize = 0;
-                for(Folder f : folders) {
-                    colSize += f.getCount();
-                }
-                
-                JsonObject response = new JsonObject();
-                response.add("number_of_folders",new JsonPrimitive(folders.size()));
-                response.add("collection_size",new JsonPrimitive(colSize));
-                writeResponse(hResp, response);
-                return;
-            }
-        }
-
-        //Write out a json null
-        writeResponse(hResp,JsonNull.INSTANCE);
+    //Re-Auth if we need to
+    DiscogsToken authToken = null;
+    if (hReq.getParameter("token") != null) {
+      Token tempToken = (((RcSystem)req.getServletContext().getAttribute("system")).getStorage().getToken(hReq.getParameter("token")));
+      logger.log(Level.INFO,"Retrieved " + tempToken + " from " + hReq.getParameter("token"));
+      if (tempToken == null) {
+        //Needs to reauth - force a redirect
+        JsonObject obj = new JsonObject();
+        obj.add("redirect",new JsonPrimitive("/index.html?reauth=true"));
+        writeResponse(hResp,obj);
+        return;
+      } else {
+        logger.log(Level.INFO,"Building from token " + tempToken + " with " + tempToken.getToken() + "," + tempToken.getSecret() + " class = " + tempToken.getClass() + " and " + (tempToken instanceof DiscogsToken));
+        if (!(tempToken instanceof DiscogsToken))
+          authToken = new DiscogsToken(tempToken,((RcSystem)req.getServletContext().getAttribute("system")).getConfig().getService());
+        else
+          authToken = (DiscogsToken)tempToken;
+      }
     }
 
-
-    private Token saveToken(String token, String verifierStr, ServletRequest req) {
-        logger.log(Level.INFO,"Getting " + token + " from " + req.getServletContext().getAttribute("token_map"));
-        Token prevToken = (Token) ((Map)req.getServletContext().getAttribute("token_map")).get(token);
-        Verifier verifier = new Verifier(verifierStr);
-        DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
-        DiscogsToken accessToken = new DiscogsToken(service.getAccessToken(prevToken, verifier), service);
-
-        logger.log(Level.INFO,"Received " + accessToken + " from " + prevToken + " and " + verifier);
-        logger.log(Level.INFO,"Put " + accessToken.getToken() + " into auth_tokens map");
-        ((Map)req.getServletContext().getAttribute("auth_tokens")).put(accessToken.getToken(),accessToken);
-        return accessToken;
-    }
-
-    private String getAuthUrl(final HttpServletRequest req) {
-        logger.log(Level.INFO,"Servlet context: " + req.getClass());
-        logger.log(Level.INFO,"Config object: " + req.getServletContext().getAttribute("config"));
-        DiscogsService service = (DiscogsService)((Config) req.getServletContext().getAttribute("config")).getService();
-
-        logger.log(Level.INFO,"Setting callback URI from : " + req.getRequestURL());
-        service.setCallback(req.getRequestURL().toString().replace("login","callback"));
-        Token t = service.getRequestToken();
-
-        Map<String, Token> tokenMap = (Map) req.getServletContext().getAttribute("token_map");
-        tokenMap.put(t.getToken(),t);
-        
-        return service.getAuthorizationUrl(t);
-    }
+    logger.log(Level.INFO,"For Request " + hReq.getRequestURI() + " => " + authToken);
     
-    private void writeResponse (HttpServletResponse resp, JsonElement obj) throws IOException {
-        logger.log(Level.INFO,"Writing " + obj + " to output stream (" + resp.getOutputStream().getClass() + ")");
-        PrintStream ps = new PrintStream(resp.getOutputStream());
-        ps.print(obj.toString());
-        ps.close();
-    }    
+    if (paras.length > 1) {
+      if (paras[1].equals("login")) {
+        JsonObject obj = new JsonObject();
+        obj.add("redirect",new JsonPrimitive(getAuthUrl(hReq)));
+        writeResponse(hResp,obj);
+        return;
+      } else if (paras[1].startsWith("callback")) {
+        logger.log(Level.INFO,"Request = " + hReq.getRequestURI());
+        Token token = saveToken(hReq.getParameter("oauth_token"),hReq.getParameter("oauth_verifier"), req);
+        JsonObject obj = new JsonObject();
+        obj.add("token",new JsonPrimitive(token.getToken()));
+
+        //Forward the browser on to /index.html?token=blah
+        hResp.sendRedirect("/index.html?token=" + token.getToken());
+                
+        return;
+      } else if (paras[1].startsWith("me")) {
+        DiscogsService service = (DiscogsService)((RcSystem) req.getServletContext().getAttribute("system")).getConfig().getService();
+        logger.log(Level.INFO,"Building backend " + authToken);
+        UserBackend backend = authToken.getUserBackend(service.getRequestBuilder());
+        logger.log(Level.INFO,"Got backend: " + backend);
+        writeResponse(hResp,new Gson().toJsonTree(backend.getMe()));
+        return;
+      } else if (paras[1].startsWith("overview")) {
+        DiscogsService service = (DiscogsService)((RcSystem) req.getServletContext().getAttribute("system")).getConfig().getService();
+        CollectionBackend backend = authToken.getCollectionBackend(service.getRequestBuilder());
+        Collection<Folder> folders = backend.getFolders(paras[2]);
+
+        int colSize = 0;
+        for(Folder f : folders) {
+          colSize += f.getCount();
+        }
+                
+        JsonObject response = new JsonObject();
+        response.add("number_of_folders",new JsonPrimitive(folders.size()));
+        response.add("collection_size",new JsonPrimitive(colSize));
+        writeResponse(hResp, response);
+        return;
+      }
+    }
+
+    //Write out a json null
+    writeResponse(hResp,JsonNull.INSTANCE);
+  }
+
+
+  private Token saveToken(String token, String verifierStr, ServletRequest req) {
+    logger.log(Level.INFO,"Getting " + token + " from " + req.getServletContext().getAttribute("token_map"));
+    Token prevToken = (Token) ((Map)req.getServletContext().getAttribute("token_map")).get(token);
+    Verifier verifier = new Verifier(verifierStr);
+    DiscogsService service = (DiscogsService)((RcSystem) req.getServletContext().getAttribute("system")).getConfig().getService();
+    DiscogsToken accessToken = new DiscogsToken(service.getAccessToken(prevToken, verifier), service);
+
+    logger.log(Level.INFO,"Received " + accessToken + " from " + prevToken + " and " + verifier);
+    logger.log(Level.INFO,"Put " + accessToken.getToken() + " into auth_tokens map");
+    ((RcSystem)req.getServletContext().getAttribute("system")).getStorage().storeToken(accessToken);
+    return accessToken;
+  }
+
+  private String getAuthUrl(final HttpServletRequest req) {
+    logger.log(Level.INFO,"Servlet context: " + req.getClass());
+    logger.log(Level.INFO,"Config object: " + req.getServletContext().getAttribute("config"));
+    DiscogsService service = (DiscogsService)((RcSystem) req.getServletContext().getAttribute("system")).getConfig().getService();
+
+    logger.log(Level.INFO,"Setting callback URI from : " + req.getRequestURL());
+    service.setCallback(req.getRequestURL().toString().replace("login","callback"));
+    Token t = service.getRequestToken();
+
+    Map<String, Token> tokenMap = (Map) req.getServletContext().getAttribute("token_map");
+    tokenMap.put(t.getToken(),t);
+        
+    return service.getAuthorizationUrl(t);
+  }
+    
+  private void writeResponse (HttpServletResponse resp, JsonElement obj) throws IOException {
+    logger.log(Level.INFO,"Writing " + obj + " to output stream (" + resp.getOutputStream().getClass() + ")");
+    PrintStream ps = new PrintStream(resp.getOutputStream());
+    ps.print(obj.toString());
+    ps.close();
+  }    
 }
