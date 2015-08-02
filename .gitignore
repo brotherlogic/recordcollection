@@ -5,3 +5,4 @@ target/
 .settings
 .project
 run.sh
+test.sh

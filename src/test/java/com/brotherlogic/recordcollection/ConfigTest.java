@@ -9,7 +9,7 @@ import org.junit.Test;
 public class ConfigTest {
  
     @Test
-    public void testConfigCorrectlyParsedFromString() {
+    public void testConfigCorrectlyParsed() {
 	Config c = new Config("ApiKey","ApiSecret",null);
 	
 	Assert.assertEquals("ApiKey",c.getApiKey());

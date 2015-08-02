@@ -4,21 +4,19 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.Reader;
 
-import org.scribe.oauth.OAuthService;
-
 public class Config {
 
     private String key;
     private String secret;
-    private OAuthService service;
+    private DiscogsService service;
     
-    public Config(String k, String s, OAuthService ser) {
+    public Config(String k, String s, DiscogsService ser) {
         key = k;
         secret = s;
         service = ser;
     }
 
-    public OAuthService getService() {
+    public DiscogsService getService() {
         return service;
     }
     
@@ -28,9 +26,5 @@ public class Config {
 
     public String getApiSecret() {
 	return secret;
-    }
-
-    public String toString() {
-        return super.toString() + ": " + key + "," + secret + "," + service;
     }
 }
