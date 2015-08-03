@@ -21,6 +21,8 @@ public class BaseTest {
         // add appender to any Logger (here is root)
         Logger.getRootLogger().removeAllAppenders();
         Logger.getRootLogger().addAppender(console);
+
+        EnvironmentVariable.clear();
     }
     
 }

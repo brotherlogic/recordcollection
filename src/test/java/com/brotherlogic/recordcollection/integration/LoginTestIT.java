@@ -12,7 +12,7 @@ import org.junit.Test;
 
 import org.scribe.model.Token;
 
-public class LoginTestIT extends BaseIntegrationTest {
+public class LoginTestIT extends BaseIntegrationTestIT {
 
   private Logger logger = Logger.getLogger(getClass());
   

@@ -1,7 +1,10 @@
 package com.brotherlogic.recordcollection;
 
+import java.io.Reader;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.brotherlogic.discogs.Folder;
 import com.brotherlogic.discogs.User;
@@ -14,6 +17,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonPrimitive;
 
 import org.apache.log4j.Level;
@@ -40,7 +44,27 @@ public class EndPoint extends GenericServlet {
     
   private Logger logger = Logger.getLogger(getClass());
   private String callbackURL = "http://blah";
-    
+
+  //Hold a mapping between tokens and user ids in memory
+  private Map<String,Integer> userIDMap = new TreeMap<String,Integer>();
+
+  protected void addUserId(DiscogsToken t, Integer idNumber) {
+    userIDMap.put(t.getToken(),idNumber);
+  }
+  
+  protected Integer getUserId(DiscogsToken t, DiscogsService service) {
+    logger.log(Level.INFO,"Token = " + t);
+    logger.log(Level.INFO,"USERID with " + t.getToken() + " given " + userIDMap + " and also " + t.getClass());
+    if (userIDMap.containsKey(t.getToken()))
+      return userIDMap.get(t.getToken());
+
+    logger.log(Level.INFO,"Building user with " + t.getUserBackend(service.getRequestBuilder()));
+    User u = t.getUserBackend(service.getRequestBuilder()).getMe();
+    logger.log(Level.INFO,"Found user " + u);
+    userIDMap.put(t.getToken(), u.getId());
+    return u.getId();
+  }
+  
   @Override
   public void service(final ServletRequest req, final ServletResponse res)
     throws ServletException, IOException {
@@ -48,7 +72,7 @@ public class EndPoint extends GenericServlet {
     HttpServletRequest hReq = (HttpServletRequest) req;
     HttpServletResponse hResp = (HttpServletResponse) res;
 
-    logger.log(Level.INFO,"Converting: " + hReq.getRequestURI());
+    logger.log(Level.INFO,"Converting: ("+hReq.getMethod()+")" + hReq.getRequestURI());
     String[] paras = hReq.getRequestURI().substring(1).split("/");
     if (hReq.getRequestURI().contains("?"))
       paras = hReq.getRequestURI().substring(1,hReq.getRequestURI().indexOf('?')).split("/");
@@ -66,6 +90,8 @@ public class EndPoint extends GenericServlet {
         return;
       } else {
         logger.log(Level.INFO,"Building from token " + tempToken + " with " + tempToken.getToken() + "," + tempToken.getSecret() + " class = " + tempToken.getClass() + " and " + (tempToken instanceof DiscogsToken));
+        logger.log(Level.INFO,"Using " + ((RcSystem)req.getServletContext().getAttribute("system")));
+        logger.log(Level.INFO,"Using " + ((RcSystem)req.getServletContext().getAttribute("system")).getConfig());
         if (!(tempToken instanceof DiscogsToken))
           authToken = new DiscogsToken(tempToken,((RcSystem)req.getServletContext().getAttribute("system")).getConfig().getService());
         else
@@ -113,6 +139,32 @@ public class EndPoint extends GenericServlet {
         response.add("collection_size",new JsonPrimitive(colSize));
         writeResponse(hResp, response);
         return;
+      } else if (paras[1].startsWith("collections")) {
+        RcSystem system = ((RcSystem)req.getServletContext().getAttribute("system"));
+        List<RecordCollection> cols = system.getStorage().getCollections(getUserId(authToken,system.getConfig().getService()));
+
+        writeResponse(hResp, new Gson().toJsonTree(cols));
+        return;
+      }
+      else if (paras[1].startsWith("collection")) {
+        if (hReq.getMethod().equals("PUT")) {
+          JsonObject obj = getRequestBody(hReq.getReader()).getAsJsonObject();
+          RecordCollection col = new RecordCollection(obj);
+          RcSystem system = ((RcSystem)req.getServletContext().getAttribute("system"));
+          system.getStorage().storeCollection(getUserId(authToken,system.getConfig().getService()),col);
+          JsonObject response = new JsonObject();
+          response.add("response",new JsonPrimitive(true));
+          writeResponse(hResp,response);
+          return;
+        } else {
+          RcSystem system = ((RcSystem)req.getServletContext().getAttribute("system"));
+          logger.log(Level.INFO,"Assessing: " + authToken + " and " + system.getConfig().getService());
+          logger.log(Level.INFO,"Retrieving collection: " + getUserId(authToken,system.getConfig().getService()) + " and " + hReq.getParameter("name"));
+          RecordCollection col = system.getStorage().getCollection(getUserId(authToken,system.getConfig().getService()), hReq.getParameter("name"));
+          logger.log(Level.INFO,"Found collection: " + col);
+          writeResponse(hResp, new Gson().toJsonTree(col));
+          return;
+        }
       }
     }
 
@@ -120,6 +172,25 @@ public class EndPoint extends GenericServlet {
     writeResponse(hResp,JsonNull.INSTANCE);
   }
 
+  /**                                                                                                                                                                              
+   * @param reader                                                                                                                               
+   *            The reader processing this request
+   * @return The extracted body of the request                                                                                                                                     
+   * @throws IOException                                                                                                                                                           
+   *             If we can't process the reqesut                                                                                                                                   
+   */                                                                                                                                                                              
+  protected JsonElement getRequestBody(final Reader reader) throws IOException {                                                                           
+    StringBuffer jb = new StringBuffer();                                                                                                                                        
+    char[] buffer = new char[1024];                                                                                                                                
+    int read = reader.read(buffer);                                                                                                                                         
+    while (read > 0) {                                                                                                                                                  
+      jb.append(new String(buffer, 0, read));                                                                                                                             
+      read = reader.read(buffer);                                                                                                                                      
+    }                                                                                                                                                               
+    reader.close();                                                                                                                                                     
+    return new JsonParser().parse(jb.toString());  
+  }
+  
 
   private Token saveToken(String token, String verifierStr, ServletRequest req) {
     logger.log(Level.INFO,"Getting " + token + " from " + req.getServletContext().getAttribute("token_map"));
