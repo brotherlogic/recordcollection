@@ -8,16 +8,24 @@
   <version>0.1</version>
   <name>recordcollection Maven Webapp</name>
   <url>http://maven.apache.org</url>
-
+  
   <properties>
     <jetty.runner.version>8.1.14.v20131031</jetty.runner.version>
   </properties>
 
+  <repositories>
+    <repository>
+      <id>Nexus</id>
+      <name>Nexus release</name>
+      <url>https://oss.sonatype.org/content/repositories/releases/</url>
+    </repository>
+  </repositories>
+  
   <dependencies>
     <dependency>
       <groupId>com.brotherlogic</groupId>
       <artifactId>discogs</artifactId>
-      <version>0.3</version>
+      <version>0.4</version>
     </dependency>
     <dependency>
       <groupId>org.scribe</groupId>
@@ -116,9 +124,8 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>2.18.1</version>
         <configuration>
-          <forkMode>always</forkMode>
           <environmentVariables>
-            <DATABASE_URL>${DATABASE_URL}</DATABASE_URL>
+            <DATABASE_URL>MadeUpDatabaseURL</DATABASE_URL>
             <discogskey>TestKey</discogskey>
             <discogssecret>TestSecret</discogssecret>
           </environmentVariables>
@@ -176,6 +183,7 @@
 		  <element>CLASS</element>
                   <excludes>
                     <exclude>*DiscogsService*</exclude>
+                    <exclude>*DatabaseConnector*</exclude>
                   </excludes>
 		  <limits>
 		    <!--  implementation is needed only for Maven 2  -->
@@ -190,6 +198,7 @@
 		  <element>CLASS</element>
                   <excludes>
                     <exclude>*DiscogsService*</exclude>
+                    <exclude>*DatabaseConnector*</exclude>
                   </excludes>
 		  <limits>
 		    <!--  implementation is needed only for Maven 2  -->

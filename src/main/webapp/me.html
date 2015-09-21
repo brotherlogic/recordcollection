@@ -8,6 +8,7 @@
   <body>
     <h1 id=greeting>Welcome</h1>
     <div id=information></div>
+    <div id=collections></div>
     <script>
      function get(url) {
        var request = new XMLHttpRequest();
@@ -29,6 +30,14 @@
 
        collection_info = get("/endpoint/overview/" + user["userName"] + "?token=" + $.cookie("access_token"));
        $("#information").html("You have " + collection_info["collection_size"] + " records in " + collection_info["number_of_folders"] + " folders.");
+
+       collections = get("/endpoint/collections?token=" + $.cookie("access_token"));
+       html_text = "<TABLE WIDTH=3><TR><TH>Name</TH><TH>Folders</TH><TH>Proportions</TH></TR>"
+       for(var i = 0; i < collections.length ; i++) {
+         html_text += "<TR><TD>Blah1</TD><TD>Blah2</TD><TD>Blah3</TD></TR>";
+       }
+       html_text += "</TABLE>";
+       $("#collections").html(html_text);
      });
     </script>
   </body>

@@ -1,8 +1,9 @@
 package com.brotherlogic.recordcollection;
 
+import com.brotherlogic.recordcollection.storage.database.DatabaseConnector;
 import com.brotherlogic.recordcollection.storage.database.DatabaseStorage;
 import com.brotherlogic.recordcollection.storage.database.DatabaseSystem;
-import com.brotherlogic.recordcollection.storage.database.DatabaseV1;
+import com.brotherlogic.recordcollection.storage.database.DatabaseV2;
 import com.brotherlogic.recordcollection.storage.Storage;
 
 import org.apache.log4j.Level;
@@ -23,12 +24,25 @@ public class MainSystem implements RcSystem {
   private Logger logger = Logger.getLogger(getClass());
 
   private final String CALLBACK_URL = "http://localhost";
+
+  ConnectionBuilder builder;
+
+  public MainSystem() {
+    builder = new DatabaseConnector();
+  }
+
+  public MainSystem(ConnectionBuilder build) {
+    builder = build;
+  }
   
   public String getVersion() {
     return "0.1";
   }
 
   public Config getConfig() {
+
+    logger.log(Level.INFO,"Building service with " + System.getenv("discogskey") + " and " + System.getenv("discogssecret"));
+    
     OAuthService service = new ServiceBuilder()
       .provider(DiscogsApi.class)
       .apiKey(System.getenv("discogskey"))
@@ -36,28 +50,38 @@ public class MainSystem implements RcSystem {
       .callback(CALLBACK_URL)
       .build();
 
+    logger.log(Level.INFO,"Built " + service);
+    
     return new Config(System.getenv("discogskey"),System.getenv("discogssecret"), (DiscogsService) service);
   }
 
   public Storage getStorage() {
-    return getStorage("org.postgresql.Driver",System.getenv("DATABASE_URL"));
+    return getStorage("org.postgresql.Driver",System.getenv("DATABASE_URL"), new DatabaseSystem(new DatabaseV2()));
   }
   
-  protected Storage getStorage(String driverName, String databaseURL) {
+  protected Storage getStorage(String driverName, String databaseURL, DatabaseSystem sys) {
+
+    if (databaseURL == null)
+      return null;
     try {
       Class.forName(driverName);
       logger.log(Level.INFO,"Building from " + databaseURL);
       URI dbUri = new URI(databaseURL);
 
+      if (dbUri.getUserInfo() == null) {
+        logger.log(Level.FATAL,databaseURL + " is malformed");
+        return null;
+      }
+      
       String username = dbUri.getUserInfo().split(":")[0];
       String password = dbUri.getUserInfo().split(":")[1];
       String dbUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() + "?ssl=true&sslfactory=org.postgresql.ssl.NonValidatingFactory";
 
-      Connection connection = DriverManager.getConnection(dbUrl, username, password);
+      logger.log(Level.FATAL, "database = " + dbUrl);
+      
+      Connection connection = builder.makeConnection(dbUrl, username, password);
 
       logger.log(Level.INFO, "Created connection: " + connection);
-      
-      DatabaseSystem sys = new DatabaseSystem(new DatabaseV1());
       sys.initDatabase(connection);
       
       return new DatabaseStorage(connection);
@@ -73,3 +97,4 @@ public class MainSystem implements RcSystem {
     return null;
   }
 }
+

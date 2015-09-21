@@ -1,8 +1,9 @@
 package com.brotherlogic.recordcollection;
 
+import com.brotherlogic.recordcollection.storage.database.Database;
 import com.brotherlogic.recordcollection.storage.database.DatabaseStorage;
 import com.brotherlogic.recordcollection.storage.database.DatabaseSystem;
-import com.brotherlogic.recordcollection.storage.database.DatabaseV1;
+import com.brotherlogic.recordcollection.storage.database.DatabaseV2;
 import com.brotherlogic.recordcollection.storage.Storage;
 
 import org.apache.log4j.Level;
@@ -17,6 +18,16 @@ import java.sql.SQLException;
 public class TestingSystem implements RcSystem {
 
   private Logger logger = Logger.getLogger(getClass());
+
+  public Database db = new DatabaseV2();
+
+
+  public TestingSystem() {
+  }
+  
+  public TestingSystem(Database dbIn) {
+    db = dbIn;
+  }
   
   public String getVersion() {
     return "0.1";
@@ -31,6 +42,10 @@ public class TestingSystem implements RcSystem {
   }
   
   public Storage getStorage(boolean clean) {
+    return getStorage(clean,db);
+  }
+
+  public Storage getStorage(boolean clean, Database dbSys) {
     //Link to a test database
     try {
       Class.forName("org.postgresql.Driver");
@@ -42,9 +57,12 @@ public class TestingSystem implements RcSystem {
 
       Connection connection =  DriverManager.getConnection(dbUrl, username, password);
 
-      logger.log(Level.INFO,"Created connection: " + connection);
+      logger.log(Level.INFO,"Created connection: " + connection + " cleaning " + clean);
+
+      logger.log(Level.INFO,"DURL = " + System.getenv("DATABASE_URL"));
+      logger.log(Level.INFO,"DBAC = " + System.getenv("discogsbackend"));
       
-      DatabaseSystem sys = new DatabaseSystem(new DatabaseV1());
+      DatabaseSystem sys = new DatabaseSystem(dbSys);
       if (clean)
         sys.cleanDatabase(connection);
       sys.initDatabase(connection);

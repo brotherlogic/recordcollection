@@ -55,9 +55,9 @@ public class DatabaseV1Test extends BaseTest {
   }
 
   @Test
-  public void testGetNext() {
+  public void testGetPrev() {
     DatabaseV1 db = new DatabaseV1();
-    Assert.assertNull(db.getNextVersion());
+    Assert.assertNull(db.getPrevVersion());
   }
 
   @Test
@@ -116,6 +116,21 @@ public class DatabaseV1Test extends BaseTest {
     DatabaseV1 db = new DatabaseV1();
     Assert.assertFalse(db.validate(mConnection));
   }
+
+  @Test
+  public void testValidateFailOnNoCols() throws SQLException {
+    Connection mConnection = Mockito.mock(Connection.class);
+    Statement mStatement = Mockito.mock(Statement.class);
+    Mockito.when(mConnection.createStatement()).thenReturn(mStatement);
+
+    ResultSet mResultSet = Mockito.mock(ResultSet.class);
+    Mockito.when(mResultSet.next()).thenReturn(false);
+    Mockito.when(mStatement.executeQuery(Mockito.any(String.class))).thenReturn(mResultSet);
+    
+    DatabaseV1 db = new DatabaseV1();
+    Assert.assertFalse(db.validate(mConnection));
+  }
+
   
   @Test
   public void testValidate() throws SQLException {

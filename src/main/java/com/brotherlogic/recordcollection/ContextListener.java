@@ -1,5 +1,6 @@
 package com.brotherlogic.recordcollection;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -7,6 +8,7 @@ import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.FileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
@@ -35,7 +37,13 @@ public class ContextListener implements ServletContextListener {
     console.activateOptions();
     Logger.getRootLogger().removeAllAppenders();
     Logger.getRootLogger().addAppender(console);
-        
+
+    //    try {
+    //  Logger.getRootLogger().addAppender(new FileAppender(new PatternLayout(),"server.log"));
+    //} catch (IOException e){
+    //  e.printStackTrace();
+    //}
+    
     arg0.getServletContext().setAttribute("system", new MainSystem());
     arg0.getServletContext().setAttribute("token_map", new TreeMap<String,Token>());
   }
