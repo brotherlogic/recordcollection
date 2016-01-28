@@ -1,6 +1,6 @@
 package com.brotherlogic.recordcollection.storage;
 
-import com.brotherlogic.recordcollection.RecordCollection;
+import com.brotherlogic.recordcollection.FolderGroup;
 
 import java.util.List;
 import java.util.Map;
@@ -11,7 +11,7 @@ public interface Storage {
   void forceCleanDatabase();
   Token getToken(String userKey);
   void storeToken(Token token);
-  void storeCollection(Integer userId, RecordCollection c);
-  RecordCollection getCollection(Integer userId, String name);
-  List<RecordCollection> getCollections(Integer userId);
+  void storeCollection(Integer userId, FolderGroup c);
+  FolderGroup getCollection(Integer userId, String name);
+  List<FolderGroup> getCollections(Integer userId);
 }

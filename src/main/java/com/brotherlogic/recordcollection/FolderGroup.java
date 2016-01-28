@@ -6,12 +6,12 @@ import java.util.List;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-public class RecordCollection {
+public class FolderGroup {
   private List<Integer> folders = new LinkedList<Integer>();
   private List<Integer> proportions = new LinkedList<Integer>();
   private String name = "";
 
-  public RecordCollection(JsonObject data) {
+  public FolderGroup(JsonObject data) {
     for(JsonElement folder : data.get("folders").getAsJsonArray()) {
       folders.add(folder.getAsInt());
     }
@@ -21,7 +21,7 @@ public class RecordCollection {
     name = data.get("name").getAsString();
   }
   
-  public RecordCollection(List<Integer> folds, List<Integer> props, String nm) {
+  public FolderGroup(List<Integer> folds, List<Integer> props, String nm) {
     folders.addAll(folds);
     proportions.addAll(props);
     name = nm;

@@ -1,7 +1,7 @@
 package com.brotherlogic.recordcollection.storage.database;
 
 import com.brotherlogic.recordcollection.storage.Storage;
-import com.brotherlogic.recordcollection.RecordCollection;
+import com.brotherlogic.recordcollection.FolderGroup;
 import com.brotherlogic.recordcollection.RequestBuilder;
 import com.brotherlogic.recordcollection.ScribeRetriever;
 
@@ -68,7 +68,7 @@ public class DatabaseStorage implements Storage {
   }
 
   @Override
-  public void storeCollection(Integer userId, RecordCollection col) {
+  public void storeCollection(Integer userId, FolderGroup col) {
     try{
       storeCollectionStmt.setString(3, convertList(col.getFolders()));
       storeCollectionStmt.setString(4, convertList(col.getProps()));
@@ -84,7 +84,7 @@ public class DatabaseStorage implements Storage {
   }
 
   @Override
-  public RecordCollection getCollection(Integer userId, String name) {
+  public FolderGroup getCollection(Integer userId, String name) {
     try {
       return getCollection(userId, name, getCollectionStmt);
     } catch (SQLException e) {
@@ -94,7 +94,7 @@ public class DatabaseStorage implements Storage {
     return null;
   }
 
-  protected RecordCollection getCollection(Integer userId, String name, PreparedStatement s) throws SQLException {
+  protected FolderGroup getCollection(Integer userId, String name, PreparedStatement s) throws SQLException {
     s.setInt(1,userId);
     s.setString(2,name);
 
@@ -102,14 +102,14 @@ public class DatabaseStorage implements Storage {
     ResultSet rs = s.executeQuery();
     if (rs.next()) {
       logger.log(Level.INFO,"Found Response " + rs);
-      return new RecordCollection(convertString(rs.getString(1).trim()), convertString(rs.getString(2).trim()), name);
+      return new FolderGroup(convertString(rs.getString(1).trim()), convertString(rs.getString(2).trim()), name);
     }
 
     return null;
   }
 
   @Override
-  public List<RecordCollection> getCollections(Integer userId) {
+  public List<FolderGroup> getCollections(Integer userId) {
     try {
       return getCollections(userId, getCollectionsStmt);
     } catch (SQLException e) {
@@ -119,8 +119,8 @@ public class DatabaseStorage implements Storage {
     return null;
   }
 
-  protected List<RecordCollection> getCollections(Integer userId, PreparedStatement s) throws SQLException {
-    List<RecordCollection> collections = new LinkedList<RecordCollection>();
+  protected List<FolderGroup> getCollections(Integer userId, PreparedStatement s) throws SQLException {
+    List<FolderGroup> collections = new LinkedList<FolderGroup>();
     
     s.setInt(1,userId);
 
@@ -128,7 +128,7 @@ public class DatabaseStorage implements Storage {
     ResultSet rs = s.executeQuery();
     while(rs.next()) {
       logger.log(Level.INFO,"Found response " + rs);
-      RecordCollection r = new RecordCollection(convertString(rs.getString(1).trim()), convertString(rs.getString(2).trim()), rs.getString(3));
+      FolderGroup r = new FolderGroup(convertString(rs.getString(1).trim()), convertString(rs.getString(2).trim()), rs.getString(3));
       collections.add(r);
     }
 
