@@ -141,7 +141,7 @@ public class EndPoint extends GenericServlet {
         return;
       } else if (paras[1].startsWith("collections")) {
         RcSystem system = ((RcSystem)req.getServletContext().getAttribute("system"));
-        List<RecordCollection> cols = system.getStorage().getCollections(getUserId(authToken,system.getConfig().getService()));
+        List<FolderGroup> cols = system.getStorage().getCollections(getUserId(authToken,system.getConfig().getService()));
 
         writeResponse(hResp, new Gson().toJsonTree(cols));
         return;
@@ -149,7 +149,7 @@ public class EndPoint extends GenericServlet {
       else if (paras[1].startsWith("collection")) {
         if (hReq.getMethod().equals("PUT")) {
           JsonObject obj = getRequestBody(hReq.getReader()).getAsJsonObject();
-          RecordCollection col = new RecordCollection(obj);
+          FolderGroup col = new FolderGroup(obj);
           RcSystem system = ((RcSystem)req.getServletContext().getAttribute("system"));
           system.getStorage().storeCollection(getUserId(authToken,system.getConfig().getService()),col);
           JsonObject response = new JsonObject();
@@ -160,7 +160,7 @@ public class EndPoint extends GenericServlet {
           RcSystem system = ((RcSystem)req.getServletContext().getAttribute("system"));
           logger.log(Level.INFO,"Assessing: " + authToken + " and " + system.getConfig().getService());
           logger.log(Level.INFO,"Retrieving collection: " + getUserId(authToken,system.getConfig().getService()) + " and " + hReq.getParameter("name"));
-          RecordCollection col = system.getStorage().getCollection(getUserId(authToken,system.getConfig().getService()), hReq.getParameter("name"));
+          FolderGroup col = system.getStorage().getCollection(getUserId(authToken,system.getConfig().getService()), hReq.getParameter("name"));
           logger.log(Level.INFO,"Found collection: " + col);
           writeResponse(hResp, new Gson().toJsonTree(col));
           return;

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.LinkedList;
 
 import com.brotherlogic.recordcollection.BaseTest;
-import com.brotherlogic.recordcollection.RecordCollection;
+import com.brotherlogic.recordcollection.FolderGroup;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,7 +28,7 @@ public class DatabaseStorageTest extends BaseTest {
     PreparedStatement mStatement = Mockito.mock(PreparedStatement.class);
     Mockito.when(mConnection.prepareStatement(Mockito.anyString())).thenReturn(mStatement);
 
-    RecordCollection c = new RecordCollection(Arrays.asList(new Integer[] {12,13,14}), Arrays.asList(new Integer[] {12,13,15}), "TestCollection");
+    FolderGroup c = new FolderGroup(Arrays.asList(new Integer[] {12,13,14}), Arrays.asList(new Integer[] {12,13,15}), "TestCollection");
     DatabaseStorage store = new DatabaseStorage(mConnection);
     store.storeCollection(123,c);
 
@@ -42,7 +42,7 @@ public class DatabaseStorageTest extends BaseTest {
     Mockito.when(mConnection.prepareStatement(Mockito.anyString())).thenReturn(mStatement);
     Mockito.doThrow(new SQLException()).when(mStatement).setString(Mockito.anyInt(),Mockito.anyString());
     
-    RecordCollection c = new RecordCollection(Arrays.asList(new Integer[] {12,13,14}), Arrays.asList(new Integer[] {12,13,15}), "TestCollection");
+    FolderGroup c = new FolderGroup(Arrays.asList(new Integer[] {12,13,14}), Arrays.asList(new Integer[] {12,13,15}), "TestCollection");
     DatabaseStorage store = new DatabaseStorage(mConnection);
     store.storeCollection(123,c);
 
@@ -130,7 +130,7 @@ public class DatabaseStorageTest extends BaseTest {
 
     Connection mConnection = Mockito.mock(Connection.class);
     DatabaseStorage store = new DatabaseStorage(mConnection);
-    RecordCollection recCol = store.getCollection(1234,"Test",mState);
+    FolderGroup recCol = store.getCollection(1234,"Test",mState);
 
     List<Integer> vals = Arrays.asList(new Integer[] {12,14});
     List<Integer> vals2 = Arrays.asList(new Integer[] {15,16});
@@ -153,7 +153,7 @@ public class DatabaseStorageTest extends BaseTest {
     Connection mConnection = Mockito.mock(Connection.class);
     Mockito.when(mConnection.prepareStatement(Mockito.anyString())).thenReturn(mState);
     DatabaseStorage store = new DatabaseStorage(mConnection);
-    List<RecordCollection> cols = store.getCollections(1234);
+    List<FolderGroup> cols = store.getCollections(1234);
 
     Assert.assertEquals(2,cols.size());
   }
@@ -172,7 +172,7 @@ public class DatabaseStorageTest extends BaseTest {
     Connection mConnection = Mockito.mock(Connection.class);
     Mockito.when(mConnection.prepareStatement(Mockito.anyString())).thenReturn(mState);
     DatabaseStorage store = new DatabaseStorage(mConnection);
-    List<RecordCollection> cols = store.getCollections(1234);
+    List<FolderGroup> cols = store.getCollections(1234);
 
     Assert.assertNull(cols);
   }
@@ -189,7 +189,7 @@ public class DatabaseStorageTest extends BaseTest {
 
     Connection mConnection = Mockito.mock(Connection.class);
     DatabaseStorage store = new DatabaseStorage(mConnection);
-    RecordCollection recCol = store.getCollection(1234,"TestMadeUp",mState);
+    FolderGroup recCol = store.getCollection(1234,"TestMadeUp",mState);
 
     Assert.assertNull(recCol);
   }
@@ -241,7 +241,7 @@ public class DatabaseStorageTest extends BaseTest {
     Mockito.when(mConnection.prepareStatement(Mockito.anyString())).thenReturn(mState);
     
     DatabaseStorage store = new DatabaseStorage(mConnection);
-    RecordCollection rc = store.getCollection(1234,"testkey");
+    FolderGroup rc = store.getCollection(1234,"testkey");
 
     Assert.assertEquals("testkey",rc.getName());
   }
@@ -295,7 +295,7 @@ public class DatabaseStorageTest extends BaseTest {
     Mockito.when(mConnection.prepareStatement(Mockito.anyString())).thenReturn(mState);
     
     DatabaseStorage store = new DatabaseStorage(mConnection);
-    RecordCollection rc = store.getCollection(1234,"testkey");
+    FolderGroup rc = store.getCollection(1234,"testkey");
 
     Assert.assertNull(rc);
   }

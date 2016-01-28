@@ -49,8 +49,8 @@ public class EndPointTest extends BaseTest {
   private Logger logger = Logger.getLogger(getClass());  
   private Map<String,Token> authTokens = new TreeMap<String,Token>();
   private ServletContext mContext;
-  private RecordCollection testCollection = new RecordCollection(Arrays.asList(new Integer[] {12,23,24}), Arrays.asList(new Integer[] {23,24,25}),"Testing");
-  private List<RecordCollection> testCollections = Arrays.asList(new RecordCollection[]{new RecordCollection(Arrays.asList(new Integer[] {12,23}), Arrays.asList(new Integer[] {23,24}), "Testing"), new RecordCollection(Arrays.asList(new Integer[] {24,25}), Arrays.asList(new Integer[] {25,26}), "Testing2")});
+  private FolderGroup testCollection = new FolderGroup(Arrays.asList(new Integer[] {12,23,24}), Arrays.asList(new Integer[] {23,24,25}),"Testing");
+  private List<FolderGroup> testCollections = Arrays.asList(new FolderGroup[]{new FolderGroup(Arrays.asList(new Integer[] {12,23}), Arrays.asList(new Integer[] {23,24}), "Testing"), new FolderGroup(Arrays.asList(new Integer[] {24,25}), Arrays.asList(new Integer[] {25,26}), "Testing2")});
 
   
   private HttpServletResponse testRequest(String requestURL) throws Exception {
@@ -217,7 +217,7 @@ public class EndPointTest extends BaseTest {
     Mockito.when(authToken.getToken()).thenReturn("testtoken");
     Mockito.when(authToken.getSecret()).thenReturn("testsecret");
     authTokens.put("TestAuth",authToken);
-    RecordCollection collection = new RecordCollection(Arrays.asList(new Integer[] {12,23,24}), Arrays.asList(new Integer[] {23,24,25}),"Testing");
+    FolderGroup collection = new FolderGroup(Arrays.asList(new Integer[] {12,23,24}), Arrays.asList(new Integer[] {23,24,25}),"Testing");
     
     String response = ((ByteArrayMockOutputStream) testRequest("PUT","/collection?token=TestAuth",new Gson().toJsonTree(collection), authToken).getOutputStream()).getString();
     JsonObject obj = new JsonParser().parse(response).getAsJsonObject();

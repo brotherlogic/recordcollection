@@ -14,7 +14,7 @@ public class CollectionTest {
 
   @Test
   public void testBuildGet() {
-    RecordCollection c = new RecordCollection(Arrays.asList(new Integer[] {12,13,14}), Arrays.asList(new Integer[] {10,10}), "TestingCollection");
+    FolderGroup c = new FolderGroup(Arrays.asList(new Integer[] {12,13,14}), Arrays.asList(new Integer[] {10,10}), "TestingCollection");
 
     Assert.assertEquals(3, c.getFolders().size());
     Assert.assertEquals(2, c.getProps().size());
