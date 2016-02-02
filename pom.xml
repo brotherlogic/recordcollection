@@ -14,10 +14,6 @@
     <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 
-  <name>${project.groupId}:${project.artifactId}</name>
-  <description>Record Collection library</description>
-  <url>https://github.com/BrotherLogic/recordcollection</url>
-  
   <licenses>
     <license>
       <name>The Apache License, Version 2.0</name>
@@ -25,6 +21,10 @@
     </license>
   </licenses>
 
+  <name>${project.groupId}:${project.artifactId}</name>
+  <description>Record Collection library</description>
+  <url>https://github.com/BrotherLogic/recordcollection</url>
+  
   <developers>
     <developer>
       <name>Simon Tucker</name>
