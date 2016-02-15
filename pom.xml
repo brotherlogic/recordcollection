@@ -4,7 +4,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.brotherlogic.recordcollection</groupId>
   <artifactId>recordcollection</artifactId>
-  <packaging>war</packaging>
+  <packaging>jar</packaging>
   <version>0.1</version>
   
   <properties>
