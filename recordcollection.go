@@ -62,7 +62,7 @@ func (s *Server) GetState() []*pbg.State {
 
 // Init builds out a server
 func Init() *Server {
-	return &Server{}
+	return &Server{GoServer: &goserver.GoServer{}}
 }
 
 func main() {
