@@ -3,10 +3,18 @@ package main
 import (
 	"context"
 	"testing"
+
+	"github.com/brotherlogic/goserver"
+	"github.com/brotherlogic/keystore/client"
+
+	pb "github.com/brotherlogic/recordcollection/proto"
 )
 
 func InitTestServer() *Server {
-	return &Server{}
+	s := &Server{GoServer: &goserver.GoServer{}, collection: &pb.RecordCollection{}}
+	s.retr = &testSyncer{}
+	s.GoServer.KSclient = *keystoreclient.GetTestClient(".testing/")
+	return s
 }
 
 func TestGetRecords(t *testing.T) {
