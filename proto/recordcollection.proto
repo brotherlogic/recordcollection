@@ -6,6 +6,7 @@ import "github.com/brotherlogic/godiscogs/godiscogs.proto";
 
 message RecordCollection {
   repeated Record records = 1;
+  repeated godiscogs.Release wants = 2;
 }
 
 // This is a record that we own

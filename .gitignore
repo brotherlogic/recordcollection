@@ -6,3 +6,5 @@ target/
 .project
 run.sh
 test.sh
+
+recordcollection

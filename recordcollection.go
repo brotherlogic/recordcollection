@@ -4,9 +4,11 @@ import (
 	"flag"
 	"io/ioutil"
 	"log"
+	"time"
 
 	"google.golang.org/grpc"
 
+	"github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/keystore/client"
 
@@ -14,10 +16,16 @@ import (
 	pb "github.com/brotherlogic/recordcollection/proto"
 )
 
+type saver interface {
+	GetCollection() []godiscogs.Release
+	GetWantlist() []godiscogs.Release
+}
+
 //Server main server type
 type Server struct {
 	*goserver.GoServer
 	collection *pb.RecordCollection
+	retr       saver
 }
 
 const (
@@ -34,6 +42,10 @@ func (s *Server) readRecordCollection() error {
 	}
 	s.collection = data.(*pb.RecordCollection)
 	return nil
+}
+
+func (s *Server) saveRecordCollection() {
+	s.KSclient.Save(KEY, s.collection)
 }
 
 // DoRegister does RPC registration
@@ -81,6 +93,7 @@ func main() {
 
 	server.GoServer.KSclient = *keystoreclient.GetClient(server.GetIP)
 	server.RegisterServer("recordcollection", false)
+	server.RegisterRepeatingTask(server.runSync, time.Hour)
 	server.Log("Starting!")
 	server.Serve()
 }
