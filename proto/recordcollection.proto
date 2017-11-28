@@ -45,7 +45,7 @@ message ReleaseMetadata {
 
 // A request to get some records
 message GetRecordsRequest {
-  int32 id = 1;
+  Record filter = 1;
 }
 
 // A list of records in response
@@ -53,6 +53,15 @@ message GetRecordsResponse {
   repeated Record records = 1;
 }
 
+message UpdateRecordRequest {
+  Record update = 1;
+}
+
+message UpdateRecordsResponse {
+  Record updated = 1;
+}
+
 service DiscogsService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
+  rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
 }
