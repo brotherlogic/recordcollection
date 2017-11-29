@@ -93,10 +93,12 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	server := Init()
+	server.GoServer.KSclient = *keystoreclient.GetClient(server.GetIP)
 	server.PrepServer()
 
 	if len(*token) > 0 {
 		server.KSclient.Save(TOKEN, &pb.Token{Token: *token})
+		log.Fatalf("Written TOKEN")
 	}
 	tType := &pb.Token{}
 	tResp, _, err := server.KSclient.Read(TOKEN, tType)
@@ -107,7 +109,7 @@ func main() {
 
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token)
 	server.Register = server
-	server.GoServer.KSclient = *keystoreclient.GetClient(server.GetIP)
+
 	server.RegisterServer("recordcollection", false)
 	server.RegisterRepeatingTask(server.runSync, time.Hour)
 	server.Log("Starting!")
