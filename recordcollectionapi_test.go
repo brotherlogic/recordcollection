@@ -15,6 +15,7 @@ func InitTestServer() *Server {
 	s := &Server{GoServer: &goserver.GoServer{}, collection: &pb.RecordCollection{}}
 	s.retr = &testSyncer{}
 	s.GoServer.KSclient = *keystoreclient.GetTestClient(".testing/")
+	s.SkipLog = true
 	return s
 }
 

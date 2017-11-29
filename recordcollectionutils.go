@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -24,6 +25,8 @@ func (s *Server) syncCollection() {
 			s.collection.Records = append(s.collection.Records, &pb.Record{Release: &record})
 		}
 	}
+
+	s.Log(fmt.Sprintf("Synced to %v", len(s.collection.GetRecords())))
 	s.lastSyncTime = time.Now()
 }
 
