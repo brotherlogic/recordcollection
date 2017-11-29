@@ -27,6 +27,7 @@ func (s *Server) syncCollection() {
 		}
 	}
 
+	log.Printf("SYNCED: %v", len(s.collection.Records))
 	s.Log(fmt.Sprintf("Synced to %v", len(s.collection.GetRecords())))
 	s.lastSyncTime = time.Now()
 }

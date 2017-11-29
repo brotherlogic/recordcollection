@@ -69,6 +69,9 @@ func main() {
 			}
 
 			fmt.Printf("%v records in the collection\n", len(rec.GetRecords()))
+			for i, r := range rec.GetRecords() {
+				fmt.Printf("%v. %v\n", i, r)
+			}
 		} else {
 			log.Printf("Error: %v", err)
 		}
