@@ -10,6 +10,7 @@ import (
 )
 
 func (s *Server) syncCollection() {
+	s.Log(fmt.Sprintf("Starting sync collection"))
 	records := s.retr.GetCollection()
 
 	for _, record := range records {
