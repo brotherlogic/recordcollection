@@ -100,8 +100,11 @@ func main() {
 		server.KSclient.Save(TOKEN, &pb.Token{Token: *token})
 		log.Fatalf("Written TOKEN")
 	}
+	log.Printf("Reading token")
 	tType := &pb.Token{}
 	tResp, _, err := server.KSclient.Read(TOKEN, tType)
+
+	log.Printf("Read Token")
 
 	if err != nil {
 		log.Fatalf("Error reading token: %v", err)

@@ -14,7 +14,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
 	for _, rec := range s.collection.GetRecords() {
-		log.Printf("Comparing %v -> %v", rec, request.Filter.GetRelease())
+		log.Printf("Comparing %v -> %v with %v", rec, request.Filter.GetRelease(), request.Filter.GetRelease() == nil)
 		if request.Filter.GetRelease() == nil || (request.Filter.GetRelease().InstanceId > 0 && request.Filter.GetRelease().InstanceId == rec.GetRelease().InstanceId) {
 			response.Records = append(response.Records, rec)
 		} else if request.Filter.GetRelease() == nil || (request.Filter.GetRelease().Id > 0 && request.Filter.GetRelease().Id == rec.GetRelease().Id) {
