@@ -12,13 +12,13 @@ import (
 func (s *Server) syncCollection() {
 	s.Log(fmt.Sprintf("Starting sync collection"))
 	records := s.retr.GetCollection()
+	log.Printf("RETRIEVED: %v", len(records))
 
 	for _, record := range records {
 		found := false
 		for _, r := range s.collection.GetRecords() {
-			if r.GetRelease().Id == record.Id {
+			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
-				log.Printf("MERGING %v and %v", r.Release, &record)
 				proto.Merge(r.Release, &record)
 			}
 		}
@@ -27,7 +27,7 @@ func (s *Server) syncCollection() {
 		}
 	}
 
-	log.Printf("SYNCED: %v", len(s.collection.Records))
+	log.Printf("SYNCED: %v", len(s.collection.GetRecords()))
 	s.Log(fmt.Sprintf("Synced to %v", len(s.collection.GetRecords())))
 	s.lastSyncTime = time.Now()
 }
