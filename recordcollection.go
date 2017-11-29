@@ -18,8 +18,8 @@ import (
 )
 
 type saver interface {
-	GetCollection() []godiscogs.Release
-	GetWantlist() ([]godiscogs.Release, error)
+	GetCollection() []*godiscogs.Release
+	GetWantlist() ([]*godiscogs.Release, error)
 }
 
 //Server main server type

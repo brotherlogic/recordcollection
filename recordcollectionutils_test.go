@@ -6,12 +6,12 @@ import pb "github.com/brotherlogic/recordcollection/proto"
 
 type testSyncer struct{}
 
-func (t *testSyncer) GetCollection() []pbd.Release {
-	return []pbd.Release{pbd.Release{Id: 234, Title: "Magic"}}
+func (t *testSyncer) GetCollection() []*pbd.Release {
+	return []*pbd.Release{&pbd.Release{Id: 234, Title: "Magic"}}
 }
 
-func (t *testSyncer) GetWantlist() ([]pbd.Release, error) {
-	return []pbd.Release{pbd.Release{Id: 255, Title: "Mirror"}}, nil
+func (t *testSyncer) GetWantlist() ([]*pbd.Release, error) {
+	return []*pbd.Release{&pbd.Release{Id: 255, Title: "Mirror"}}, nil
 }
 
 func TestGoodSync(t *testing.T) {

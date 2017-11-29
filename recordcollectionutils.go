@@ -19,12 +19,12 @@ func (s *Server) syncCollection() {
 		for _, r := range s.collection.GetRecords() {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
-				proto.Merge(r.Release, &record)
+				proto.Merge(r.Release, record)
 			}
 		}
 
 		if !found {
-			s.collection.Records = append(s.collection.Records, &pb.Record{Release: &record})
+			s.collection.Records = append(s.collection.Records, &pb.Record{Release: record})
 		}
 	}
 
@@ -41,11 +41,11 @@ func (s *Server) syncWantlist() {
 		for _, w := range s.collection.GetWants() {
 			if w.Id == want.Id {
 				found = true
-				proto.Merge(w, &want)
+				proto.Merge(w, want)
 			}
 		}
 		if !found {
-			s.collection.Wants = append(s.collection.Wants, &want)
+			s.collection.Wants = append(s.collection.Wants, want)
 		}
 	}
 }
