@@ -12,7 +12,7 @@ import (
 func (s *Server) syncCollection() {
 	s.Log(fmt.Sprintf("Starting sync collection"))
 	records := s.retr.GetCollection()
-	log.Printf("RETRIEVED: %v", len(records))
+	log.Printf("RETRIEVED: %v %v", len(records), s.collection.GetRecords())
 
 	for _, record := range records {
 		found := false
@@ -22,6 +22,7 @@ func (s *Server) syncCollection() {
 				proto.Merge(r.Release, &record)
 			}
 		}
+
 		if !found {
 			s.collection.Records = append(s.collection.Records, &pb.Record{Release: &record})
 		}
