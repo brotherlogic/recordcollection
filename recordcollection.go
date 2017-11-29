@@ -24,8 +24,9 @@ type saver interface {
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	collection *pb.RecordCollection
-	retr       saver
+	collection   *pb.RecordCollection
+	retr         saver
+	lastSyncTime time.Time
 }
 
 const (
@@ -69,12 +70,12 @@ func (s *Server) Mote(master bool) error {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	return []*pbg.State{}
+	return []*pbg.State{&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()}}
 }
 
 // Init builds out a server
 func Init() *Server {
-	return &Server{GoServer: &goserver.GoServer{}}
+	return &Server{GoServer: &goserver.GoServer{}, lastSyncTime: time.Now()}
 }
 
 func main() {

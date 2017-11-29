@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
@@ -23,6 +24,7 @@ func (s *Server) syncCollection() {
 			s.collection.Records = append(s.collection.Records, &pb.Record{Release: &record})
 		}
 	}
+	s.lastSyncTime = time.Now()
 }
 
 func (s *Server) syncWantlist() {
