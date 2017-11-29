@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/brotherlogic/goserver"
@@ -11,16 +12,17 @@ import (
 	pb "github.com/brotherlogic/recordcollection/proto"
 )
 
-func InitTestServer() *Server {
+func InitTestServer(folder string) *Server {
 	s := &Server{GoServer: &goserver.GoServer{}, collection: &pb.RecordCollection{}}
 	s.retr = &testSyncer{}
-	s.GoServer.KSclient = *keystoreclient.GetTestClient(".testing/")
+	os.RemoveAll(folder)
+	s.GoServer.KSclient = *keystoreclient.GetTestClient(folder)
 	s.SkipLog = true
 	return s
 }
 
 func TestGetRecords(t *testing.T) {
-	s := InitTestServer()
+	s := InitTestServer(".testGetRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
 
@@ -29,12 +31,12 @@ func TestGetRecords(t *testing.T) {
 	}
 
 	if len(r.GetRecords()) != 1 {
-		t.Errorf("Wrong number of records returned: %v", r)
+		t.Errorf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
 	}
 }
 
 func TestUpdateRecords(t *testing.T) {
-	s := InitTestServer()
+	s := InitTestServer(".testUpdateRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1}}})

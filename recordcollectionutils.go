@@ -32,7 +32,7 @@ func (s *Server) syncCollection() {
 }
 
 func (s *Server) syncWantlist() {
-	wants := s.retr.GetWantlist()
+	wants, _ := s.retr.GetWantlist()
 
 	for _, want := range wants {
 		found := false

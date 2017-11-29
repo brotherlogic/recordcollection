@@ -30,14 +30,19 @@ func findServer(name string) (string, int32) {
 }
 
 func main() {
+	host, port := findServer("recordcollection")
+
+	if port < 0 {
+		log.Fatalf("Unable to locate recordcollection server")
+	}
+
+	conn, _ := grpc.Dial(host+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
+	defer conn.Close()
+
+	registry := pbrc.NewDiscogsServiceClient(conn)
+
 	switch os.Args[1] {
 	case "get":
-		host, port := findServer("recordcollection")
-
-		conn, _ := grpc.Dial(host+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
-		defer conn.Close()
-
-		registry := pbrc.NewDiscogsServiceClient(conn)
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
 
@@ -51,6 +56,19 @@ func main() {
 				fmt.Printf("Release: %v", r.GetRelease())
 				fmt.Printf("Metadata: %v", r.GetMetdata())
 			}
+		} else {
+			log.Printf("Error: %v", err)
+		}
+	case "all":
+		rec, err := registry.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}}})
+
+		if err == nil {
+
+			if len(rec.GetRecords()) == 0 {
+				log.Printf("No records found!")
+			}
+
+			fmt.Printf("%v records in the collection\n", len(rec.GetRecords()))
 		} else {
 			log.Printf("Error: %v", err)
 		}

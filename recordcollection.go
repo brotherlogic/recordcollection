@@ -12,13 +12,14 @@ import (
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/keystore/client"
 
+	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 )
 
 type saver interface {
 	GetCollection() []godiscogs.Release
-	GetWantlist() []godiscogs.Release
+	GetWantlist() ([]godiscogs.Release, error)
 }
 
 //Server main server type
@@ -32,6 +33,9 @@ type Server struct {
 const (
 	// KEY The main collection
 	KEY = "github.com/brotherlogic/recordcollection/collection"
+
+	//TOKEN for discogs
+	TOKEN = "/github.com/brotherlogic/recordcollection/token"
 )
 
 func (s *Server) readRecordCollection() error {
@@ -80,6 +84,7 @@ func Init() *Server {
 
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
+	var token = flag.String("token", "", "Discogs token")
 	flag.Parse()
 
 	//Turn off logging
@@ -87,11 +92,21 @@ func main() {
 		log.SetFlags(0)
 		log.SetOutput(ioutil.Discard)
 	}
-
 	server := Init()
-	server.Register = server
 	server.PrepServer()
 
+	if len(*token) > 0 {
+		server.KSclient.Save(TOKEN, &pb.Token{Token: *token})
+	}
+	tType := &pb.Token{}
+	tResp, _, err := server.KSclient.Read(TOKEN, tType)
+
+	if err != nil {
+		log.Fatalf("Error reading token: %v", err)
+	}
+
+	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token)
+	server.Register = server
 	server.GoServer.KSclient = *keystoreclient.GetClient(server.GetIP)
 	server.RegisterServer("recordcollection", false)
 	server.RegisterRepeatingTask(server.runSync, time.Hour)

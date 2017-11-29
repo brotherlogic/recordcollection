@@ -10,12 +10,12 @@ func (t *testSyncer) GetCollection() []pbd.Release {
 	return []pbd.Release{pbd.Release{Id: 234, Title: "Magic"}}
 }
 
-func (t *testSyncer) GetWantlist() []pbd.Release {
-	return []pbd.Release{pbd.Release{Id: 255, Title: "Mirror"}}
+func (t *testSyncer) GetWantlist() ([]pbd.Release, error) {
+	return []pbd.Release{pbd.Release{Id: 255, Title: "Mirror"}}, nil
 }
 
 func TestGoodSync(t *testing.T) {
-	s := InitTestServer()
+	s := InitTestServer(".testGoodSync")
 	s.runSync()
 
 	// Check that we have one record and one want
@@ -28,7 +28,7 @@ func TestGoodSync(t *testing.T) {
 }
 
 func TestGoodMergeSync(t *testing.T) {
-	s := InitTestServer()
+	s := InitTestServer(".testGoodMergeSync")
 	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
 	s.runSync()
 
