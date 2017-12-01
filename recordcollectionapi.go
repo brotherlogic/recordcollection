@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"golang.org/x/net/context"
 
@@ -11,6 +12,7 @@ import (
 
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
+	t := time.Now()
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
 	for _, rec := range s.collection.GetRecords() {
@@ -22,6 +24,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 		}
 	}
 
+	s.LogFunction("GetRecords", t)
 	return response, nil
 }
 

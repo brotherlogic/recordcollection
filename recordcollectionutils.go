@@ -51,7 +51,7 @@ func (s *Server) syncWantlist() {
 }
 
 func (s *Server) runSync() {
-	//SyncWithDiscogs Syncs everything with discogs
+	log.Printf("RUNNING SYNC")
 	s.syncCollection()
 	s.syncWantlist()
 	s.saveRecordCollection()

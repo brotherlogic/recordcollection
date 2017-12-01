@@ -5,46 +5,37 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 
+	"github.com/brotherlogic/goserver/utils"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	pbdi "github.com/brotherlogic/discovery/proto"
 	pbgd "github.com/brotherlogic/godiscogs"
-	"github.com/brotherlogic/goserver/utils"
+
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 )
 
-func findServer(name string) (string, int32) {
-	conn, _ := grpc.Dial(utils.Discover, grpc.WithInsecure())
-	defer conn.Close()
-
-	registry := pbdi.NewDiscoveryServiceClient(conn)
-	rs, err := registry.Discover(context.Background(), &pbdi.RegistryEntry{Name: name})
-
-	if err == nil {
-		return rs.GetIp(), rs.GetPort()
-	}
-
-	return "", -1
-}
-
 func main() {
-	host, port := findServer("recordcollection")
+	host, port, err := utils.Resolve("recordcollection")
 
-	if port < 0 {
+	if err != nil {
 		log.Fatalf("Unable to locate recordcollection server")
 	}
 
+	log.Printf("DIALLING %v, %v, %v", host, port, err)
 	conn, _ := grpc.Dial(host+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
 	defer conn.Close()
 
 	registry := pbrc.NewDiscogsServiceClient(conn)
 
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
 	switch os.Args[1] {
 	case "get":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
 
 		if err == nil {
 
@@ -60,7 +51,7 @@ func main() {
 			log.Printf("Error: %v", err)
 		}
 	case "all":
-		rec, err := registry.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}}})
 
 		if err == nil {
 
