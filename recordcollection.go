@@ -32,7 +32,7 @@ type Server struct {
 
 const (
 	// KEY The main collection
-	KEY = "github.com/brotherlogic/recordcollection/collection"
+	KEY = "/github.com/brotherlogic/recordcollection/collection"
 
 	//TOKEN for discogs
 	TOKEN = "/github.com/brotherlogic/recordcollection/token"
