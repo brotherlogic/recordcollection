@@ -9,6 +9,33 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+const (
+	// RecacheDelay - recache everything every 30 days
+	RecacheDelay = 60 * 60 * 24 * 30
+)
+
+func (s *Server) runRecache() {
+	for key, val := range s.cacheMap {
+		log.Printf("CACHE: %v", val)
+		s.cacheRecord(val)
+		delete(s.cacheMap, key)
+		time.Sleep(s.cacheWait)
+	}
+}
+
+func (s *Server) cacheRecord(r *pb.Record) {
+	if time.Now().Unix()-r.GetMetdata().GetLastCache() > 60*60*24*30 {
+		release, err := s.retr.GetRelease(r.GetRelease().Id)
+		s.Log(fmt.Sprintf("RECACHE: %v", release))
+		if err == nil {
+			proto.Merge(r.GetRelease(), release)
+			log.Printf("NOW: %v", r.GetRelease())
+			r.GetMetdata().LastCache = time.Now().Unix()
+			s.saveRecordCollection()
+		}
+	}
+}
+
 func (s *Server) syncCollection() {
 	s.Log(fmt.Sprintf("Starting sync collection"))
 	records := s.retr.GetCollection()

@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/keystore/client"
 
 	pbd "github.com/brotherlogic/godiscogs"
@@ -13,8 +12,13 @@ import (
 )
 
 func InitTestServer(folder string) *Server {
-	s := &Server{GoServer: &goserver.GoServer{}, collection: &pb.RecordCollection{}}
+	s := Init()
+	s.cacheWait = 0
 	s.retr = &testSyncer{}
+
+	// Create the record collection because we're not init'ing from a file
+	s.collection = &pb.RecordCollection{}
+
 	os.RemoveAll(folder)
 	s.GoServer.KSclient = *keystoreclient.GetTestClient(folder)
 	s.SkipLog = true
