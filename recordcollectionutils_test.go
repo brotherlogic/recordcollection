@@ -54,7 +54,7 @@ func TestGoodMergeSync(t *testing.T) {
 
 func TestRecache(t *testing.T) {
 	s := InitTestServer(".testrecache")
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}, Metdata: &pb.ReleaseMetadata{}}}}
+	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
 
 	s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
 	s.runRecache()
