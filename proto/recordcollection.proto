@@ -61,7 +61,7 @@ message UpdateRecordsResponse {
   Record updated = 1;
 }
 
-service DiscogsService {
+service RecordCollectionService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
 }
