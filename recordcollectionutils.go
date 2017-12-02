@@ -24,15 +24,16 @@ func (s *Server) runRecache() {
 }
 
 func (s *Server) cacheRecord(r *pb.Record) {
+	if r.GetMetdata() == nil {
+		r.Metdata = &pb.ReleaseMetadata{}
+	}
+
 	if time.Now().Unix()-r.GetMetdata().GetLastCache() > 60*60*24*30 {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
 		s.Log(fmt.Sprintf("RECACHE: %v", release))
 		if err == nil {
 			proto.Merge(r.GetRelease(), release)
-			log.Printf("NOW: %v", r.GetRelease())
-			if r.GetMetdata() == nil {
-				r.Metdata = &pb.ReleaseMetadata{}
-			}
+			s.Log(fmt.Sprintf("NOW: %v", r))
 			r.GetMetdata().LastCache = time.Now().Unix()
 			s.saveRecordCollection()
 		}
