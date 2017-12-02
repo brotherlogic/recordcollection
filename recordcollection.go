@@ -55,7 +55,7 @@ func (s *Server) saveRecordCollection() {
 
 // DoRegister does RPC registration
 func (s *Server) DoRegister(server *grpc.Server) {
-	pb.RegisterDiscogsServiceServer(server, s)
+	pb.RegisterRecordCollectionServiceServer(server, s)
 }
 
 // ReportHealth alerts if we're not healthy

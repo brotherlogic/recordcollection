@@ -27,7 +27,7 @@ func main() {
 	conn, _ := grpc.Dial(host+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
 	defer conn.Close()
 
-	registry := pbrc.NewDiscogsServiceClient(conn)
+	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	defer cancel()
