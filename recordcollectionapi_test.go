@@ -35,6 +35,20 @@ func TestGetRecords(t *testing.T) {
 	}
 }
 
+func TestGetRecordsById(t *testing.T) {
+	s := InitTestServer(".testGetRecords")
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
+	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 123}}})
+
+	if err != nil {
+		t.Errorf("Error in getting records: %v", err)
+	}
+
+	if len(r.GetRecords()) != 1 {
+		t.Errorf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
+	}
+}
+
 func TestUpdateRecords(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}})
