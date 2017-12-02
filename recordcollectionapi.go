@@ -20,10 +20,13 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	for _, rec := range s.collection.GetRecords() {
 		if request.Filter.GetRelease() == nil || (request.Filter.GetRelease().InstanceId > 0 && request.Filter.GetRelease().InstanceId == rec.GetRelease().InstanceId) {
 			response.Records = append(response.Records, rec)
+			s.cacheMap[rec.GetRelease().Id] = rec
 		} else if request.Filter.GetRelease().Id > 0 && request.Filter.GetRelease().Id == rec.GetRelease().Id {
 			response.Records = append(response.Records, rec)
+			s.cacheMap[rec.GetRelease().Id] = rec
 		} else if request.Filter.GetRelease().FolderId > 0 && request.Filter.GetRelease().FolderId == rec.GetRelease().FolderId {
 			response.Records = append(response.Records, rec)
+			s.cacheMap[rec.GetRelease().Id] = rec
 		}
 	}
 
