@@ -30,6 +30,9 @@ func (s *Server) cacheRecord(r *pb.Record) {
 		if err == nil {
 			proto.Merge(r.GetRelease(), release)
 			log.Printf("NOW: %v", r.GetRelease())
+			if r.GetMetdata() == nil {
+				r.Metdata = &pb.ReleaseMetadata{}
+			}
 			r.GetMetdata().LastCache = time.Now().Unix()
 			s.saveRecordCollection()
 		}
