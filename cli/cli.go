@@ -51,7 +51,7 @@ func main() {
 			log.Printf("Error: %v", err)
 		}
 	case "all":
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{}})
 
 		if err == nil {
 
@@ -60,9 +60,6 @@ func main() {
 			}
 
 			fmt.Printf("%v records in the collection\n", len(rec.GetRecords()))
-			for i, r := range rec.GetRecords() {
-				fmt.Printf("%v. %v\n", i, r)
-			}
 		} else {
 			log.Printf("Error: %v", err)
 		}
