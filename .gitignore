@@ -8,3 +8,5 @@ run.sh
 test.sh
 
 recordcollection
+.testing
+cli/cli
