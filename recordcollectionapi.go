@@ -42,3 +42,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 	return nil, nil
 }
+
+// AddRecord adds a record
+func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*pb.AddRecordResponse, error) {
+	err := s.retr.AddToFolder(1, request.GetToAdd().GetRelease().Id)
+	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err
+}

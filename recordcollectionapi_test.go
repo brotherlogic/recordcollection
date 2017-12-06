@@ -25,6 +25,15 @@ func InitTestServer(folder string) *Server {
 	return s
 }
 
+func TestAddRecord(t *testing.T) {
+	s := InitTestServer(".testaddrecord")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 1234}}})
+
+	if err != nil {
+		t.Errorf("Error in adding record: %v", err)
+	}
+}
+
 func TestGetRecords(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
