@@ -6,6 +6,7 @@ import (
 
 	"golang.org/x/net/context"
 
+	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 )
@@ -17,13 +18,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 
 	s.Log(fmt.Sprintf("Processing %v records", len(s.collection.GetRecords())))
 	for _, rec := range s.collection.GetRecords() {
-		if request.Filter.GetRelease() == nil || (request.Filter.GetRelease().InstanceId > 0 && request.Filter.GetRelease().InstanceId == rec.GetRelease().InstanceId) {
-			response.Records = append(response.Records, rec)
-			s.cacheMap[rec.GetRelease().Id] = rec
-		} else if request.Filter.GetRelease().Id > 0 && request.Filter.GetRelease().Id == rec.GetRelease().Id {
-			response.Records = append(response.Records, rec)
-			s.cacheMap[rec.GetRelease().Id] = rec
-		} else if request.Filter.GetRelease().FolderId > 0 && request.Filter.GetRelease().FolderId == rec.GetRelease().FolderId {
+		if request.Filter.GetRelease() == nil || utils.FuzzyMatch(request.Filter, rec) {
 			response.Records = append(response.Records, rec)
 			s.cacheMap[rec.GetRelease().Id] = rec
 		}
