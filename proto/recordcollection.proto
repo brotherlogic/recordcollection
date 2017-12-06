@@ -12,7 +12,7 @@ message RecordCollection {
 // This is a record that we own
 message Record {
   godiscogs.Release release = 1;
-  ReleaseMetadata metdata = 2;
+  ReleaseMetadata metadata = 2;
 }
 
 // This is the discogs token
