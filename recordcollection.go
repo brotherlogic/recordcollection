@@ -77,7 +77,7 @@ func (s *Server) Mote(master bool) error {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	return []*pbg.State{&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()}}
+	return []*pbg.State{&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()}, &pbg.State{Key: "sync_size", Value: int64(len(s.cacheMap))}}
 }
 
 // Init builds out a server

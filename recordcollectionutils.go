@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	pb "github.com/brotherlogic/recordcollection/proto"
@@ -16,7 +15,6 @@ const (
 
 func (s *Server) runRecache() {
 	for key, val := range s.cacheMap {
-		log.Printf("CACHE: %v", val)
 		s.cacheRecord(val)
 		delete(s.cacheMap, key)
 		time.Sleep(s.cacheWait)
@@ -43,7 +41,6 @@ func (s *Server) cacheRecord(r *pb.Record) {
 func (s *Server) syncCollection() {
 	s.Log(fmt.Sprintf("Starting sync collection"))
 	records := s.retr.GetCollection()
-	log.Printf("RETRIEVED: %v %v", len(records), s.collection.GetRecords())
 
 	for _, record := range records {
 		found := false
@@ -59,7 +56,6 @@ func (s *Server) syncCollection() {
 		}
 	}
 
-	log.Printf("SYNCED: %v", len(s.collection.GetRecords()))
 	s.Log(fmt.Sprintf("Synced to %v", len(s.collection.GetRecords())))
 	s.lastSyncTime = time.Now()
 }
@@ -82,7 +78,6 @@ func (s *Server) syncWantlist() {
 }
 
 func (s *Server) runSync() {
-	log.Printf("RUNNING SYNC")
 	s.syncCollection()
 	s.syncWantlist()
 	s.saveRecordCollection()

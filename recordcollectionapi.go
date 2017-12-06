@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"golang.org/x/net/context"
@@ -38,9 +37,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
-			log.Printf("BEFORE: %v", rec)
 			proto.Merge(rec, request.GetUpdate())
-			log.Printf("AFTER: %v", rec)
 		}
 	}
 	return nil, nil

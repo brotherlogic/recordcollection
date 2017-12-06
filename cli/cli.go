@@ -23,7 +23,6 @@ func main() {
 		log.Fatalf("Unable to locate recordcollection server")
 	}
 
-	log.Printf("DIALLING %v, %v, %v", host, port, err)
 	conn, _ := grpc.Dial(host+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
 	defer conn.Close()
 
@@ -38,30 +37,16 @@ func main() {
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
 
 		if err == nil {
-
-			if len(rec.GetRecords()) == 0 {
-				log.Printf("No records found!")
-			}
-
 			for _, r := range rec.GetRecords() {
 				fmt.Printf("Release: %v\n", r.GetRelease())
 				fmt.Printf("Metadata: %v\n", r.GetMetadata())
 			}
-		} else {
-			log.Printf("Error: %v", err)
 		}
 	case "all":
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{}})
 
 		if err == nil {
-
-			if len(rec.GetRecords()) == 0 {
-				log.Printf("No records found!")
-			}
-
 			fmt.Printf("%v records in the collection\n", len(rec.GetRecords()))
-		} else {
-			log.Printf("Error: %v", err)
 		}
 	}
 }
