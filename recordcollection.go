@@ -21,6 +21,7 @@ type saver interface {
 	GetCollection() []*godiscogs.Release
 	GetWantlist() ([]*godiscogs.Release, error)
 	GetRelease(id int32) (*godiscogs.Release, error)
+	AddToFolder(folderID int32, releaseID int32) error
 }
 
 //Server main server type

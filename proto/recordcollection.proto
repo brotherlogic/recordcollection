@@ -61,7 +61,16 @@ message UpdateRecordsResponse {
   Record updated = 1;
 }
 
+message AddRecordRequest {
+  Record to_add = 1;
+}
+
+message AddRecordResponse {
+  Record added = 2;
+}
+
 service RecordCollectionService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
+  rpc AddRecord(AddRecordRequest) returns (AddRecordResponse) {};
 }
