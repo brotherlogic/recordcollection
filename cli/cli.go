@@ -45,7 +45,7 @@ func main() {
 
 			for _, r := range rec.GetRecords() {
 				fmt.Printf("Release: %v\n", r.GetRelease())
-				fmt.Printf("Metadata: %v\n", r.GetMetdata())
+				fmt.Printf("Metadata: %v\n", r.GetMetadata())
 			}
 		} else {
 			log.Printf("Error: %v", err)
