@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/brotherlogic/keystore/client"
 
@@ -91,5 +92,32 @@ func TestUpdateRecords(t *testing.T) {
 
 	if r == nil || len(r.Records) != 1 || r.Records[0].Release.Title != "madeup2" {
 		t.Errorf("Error in updating records: %v", r)
+	}
+}
+
+func TestForceRecache(t *testing.T) {
+	s := InitTestServer(".testforcerecache")
+	s.cacheWait = time.Hour
+	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
+
+	s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
+	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	if len(r.GetRecords()) != 1 || r.GetRecords()[0].GetRelease().Title == "On The Wall" {
+		t.Errorf("Record has been recached: %v", r)
+	}
+
+	r, err = s.GetRecords(context.Background(), &pb.GetRecordsRequest{Force: true, Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	if len(r.GetRecords()) != 1 || r.GetRecords()[0].GetRelease().Title != "On The Wall" {
+		t.Errorf("Record has not been recached: %v", r)
 	}
 }
