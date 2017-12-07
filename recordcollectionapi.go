@@ -20,7 +20,11 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	for _, rec := range s.collection.GetRecords() {
 		if request.Filter.GetRelease() == nil || utils.FuzzyMatch(request.Filter, rec) {
 			response.Records = append(response.Records, rec)
-			s.cacheMap[rec.GetRelease().Id] = rec
+			if request.GetForce() {
+				s.cacheRecord(rec)
+			} else {
+				s.cacheMap[rec.GetRelease().Id] = rec
+			}
 		}
 	}
 

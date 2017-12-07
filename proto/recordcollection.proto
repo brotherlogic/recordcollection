@@ -46,6 +46,9 @@ message ReleaseMetadata {
 // A request to get some records
 message GetRecordsRequest {
   Record filter = 1;
+
+  //Forces a refresh on this record
+  bool force = 2;
 }
 
 // A list of records in response
