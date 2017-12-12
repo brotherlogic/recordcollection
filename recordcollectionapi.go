@@ -17,6 +17,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
 	s.Log(fmt.Sprintf("Processing %v records", len(s.collection.GetRecords())))
+	t2 := time.Now()
 	for _, rec := range s.collection.GetRecords() {
 		if request.Filter.GetRelease() == nil || utils.FuzzyMatch(request.Filter, rec) {
 			response.Records = append(response.Records, rec)
@@ -27,6 +28,8 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			}
 		}
 	}
+	d := time.Now().Sub(t2)
+	s.Log(fmt.Sprintf("Took %v", d))
 
 	s.LogFunction(fmt.Sprintf("GetRecords-%v", len(s.collection.GetRecords())), t)
 	return response, nil
