@@ -41,6 +41,13 @@ message ReleaseMetadata {
 
 	// The data we last recached this release
 	int64 last_cache = 7;
+
+  enum Category {
+    PURCHASED = 0;
+    UNLISTENED = 1;
+    STAGED = 2;
+  }
+  Category category = 8;
 }
 
 // A request to get some records
