@@ -28,7 +28,7 @@ func main() {
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	switch os.Args[1] {
