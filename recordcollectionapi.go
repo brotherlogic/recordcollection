@@ -42,7 +42,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			proto.Merge(rec, request.GetUpdate())
 		}
 	}
-	return nil, nil
+	return &pb.UpdateRecordsResponse{}, nil
 }
 
 // AddRecord adds a record
