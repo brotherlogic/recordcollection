@@ -37,11 +37,13 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
+	t := time.Now()
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
 			proto.Merge(rec, request.GetUpdate())
 		}
 	}
+	s.LogFunction(fmt.Sprintf("UpdateRecord-%v", len(s.collection.GetRecords())), t)
 	return &pb.UpdateRecordsResponse{}, nil
 }
 
