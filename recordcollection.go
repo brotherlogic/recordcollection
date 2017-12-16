@@ -70,7 +70,8 @@ func (s *Server) ReportHealth() bool {
 // Mote promotes/demotes this server
 func (s *Server) Mote(master bool) error {
 	if master {
-		return s.readRecordCollection()
+		err := s.readRecordCollection()
+		return err
 	}
 
 	return nil
