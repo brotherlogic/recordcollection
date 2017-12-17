@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 )
@@ -28,10 +29,15 @@ func (s *Server) cacheRecord(r *pb.Record) {
 
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
-		s.Log(fmt.Sprintf("RECACHE: %v", release))
 		if err == nil {
+
+			//Clear repeated fields first
+			r.GetRelease().Images = []*pbd.Image{}
+			r.GetRelease().Artists = []*pbd.Artist{}
+			r.GetRelease().Formats = []*pbd.Format{}
+			r.GetRelease().Labels = []*pbd.Label{}
+
 			proto.Merge(r.GetRelease(), release)
-			s.Log(fmt.Sprintf("NOW: %v", r))
 			r.GetMetadata().LastCache = time.Now().Unix()
 			s.saveRecordCollection()
 		}
