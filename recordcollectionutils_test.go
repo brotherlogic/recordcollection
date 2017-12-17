@@ -19,6 +19,9 @@ func (t *testSyncer) GetWantlist() ([]*pbd.Release, error) {
 }
 
 func (t *testSyncer) GetRelease(id int32) (*pbd.Release, error) {
+	if id == 4707982 {
+		return &pbd.Release{Id: 4707982, Title: "Future", Images: []*pbd.Image{&pbd.Image{Type: "primary", Uri: "http://magic"}}}, nil
+	}
 	return &pbd.Release{Id: 234, Title: "On The Wall"}, nil
 }
 
@@ -37,6 +40,28 @@ func TestGoodSync(t *testing.T) {
 	if len(s.collection.GetWants()) != 1 {
 		t.Errorf("Wrong number of wants: %v", s.collection.GetWants())
 	}
+}
+
+func TestImageMerge(t *testing.T) {
+	s := InitTestServer(".testImageMerge")
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}}
+	s.cacheRecord(r)
+
+	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
+		t.Fatalf("Record has not been recached %v", r)
+	}
+
+	r.Metadata.LastCache = 0
+	s.cacheRecord(r)
+
+	if r.GetMetadata().LastCache == 0 {
+		t.Fatalf("Record has not been double cached: %v", r)
+	}
+
+	if len(r.GetRelease().GetImages()) != 1 {
+		t.Errorf("Image merge has failed: %v", r)
+	}
+
 }
 
 func TestGoodMergeSync(t *testing.T) {
