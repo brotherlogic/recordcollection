@@ -27,7 +27,8 @@ func (s *Server) cacheRecord(r *pb.Record) {
 		r.Metadata = &pb.ReleaseMetadata{}
 	}
 
-	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 {
+	//Force a recache if the record has no title
+	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
 		if err == nil {
 
