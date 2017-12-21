@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"time"
@@ -119,6 +120,7 @@ func main() {
 		log.Fatalf("Error reading token: %v", err)
 	}
 
+	server.Log(fmt.Sprintf("Starting record collection with %v", tResp))
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token)
 	server.Register = server
 
