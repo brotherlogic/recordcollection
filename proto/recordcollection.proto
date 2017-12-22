@@ -30,7 +30,7 @@ message ReleaseMetadata {
   // The relative path to the release
   string file_path = 3;
 
-	// The cost of the record in pence
+	// The cost of the record in cents
 	int32 cost = 4;
 
 	// If we have other copies of this
@@ -49,6 +49,9 @@ message ReleaseMetadata {
     STAGED = 3;
   }
   Category category = 8;
+
+  // The folder this record should be placed in
+  int32 goal_folder = 9
 }
 
 // A request to get some records
