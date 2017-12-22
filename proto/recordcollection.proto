@@ -51,7 +51,7 @@ message ReleaseMetadata {
   Category category = 8;
 
   // The folder this record should be placed in
-  int32 goal_folder = 9
+  int32 goal_folder = 9;
 }
 
 // A request to get some records
