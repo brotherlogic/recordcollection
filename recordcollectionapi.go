@@ -47,8 +47,19 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	return &pb.UpdateRecordsResponse{}, nil
 }
 
-// AddRecord adds a record
+// AddRecord adds a record directly to the listening pile
 func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*pb.AddRecordResponse, error) {
-	err := s.retr.AddToFolder(1, request.GetToAdd().GetRelease().Id)
+	//Reject the add if we don't have a cost or goal folder
+	if request.GetToAdd().GetMetadata().GetCost() == 0 || request.GetToAdd().GetMetadata().GetGoalFolder() == 0 {
+		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder")
+	}
+
+	instanceID, err := s.retr.AddToFolder(812802, request.GetToAdd().GetRelease().Id)
+	if err == nil {
+		request.GetToAdd().Release.InstanceId = int32(instanceID)
+		s.collection.Records = append(s.collection.Records, request.GetToAdd())
+		s.cacheRecord(request.GetToAdd())
+	}
+
 	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err
 }

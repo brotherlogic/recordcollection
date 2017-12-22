@@ -25,8 +25,8 @@ func (t *testSyncer) GetRelease(id int32) (*pbd.Release, error) {
 	return &pbd.Release{Id: 234, Title: "On The Wall"}, nil
 }
 
-func (t *testSyncer) AddToFolder(id int32, folderID int32) error {
-	return nil
+func (t *testSyncer) AddToFolder(id int32, folderID int32) (int, error) {
+	return 200, nil
 }
 
 func TestGoodSync(t *testing.T) {

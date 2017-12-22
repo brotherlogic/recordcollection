@@ -28,10 +28,24 @@ func InitTestServer(folder string) *Server {
 
 func TestAddRecord(t *testing.T) {
 	s := InitTestServer(".testaddrecord")
-	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 1234}}})
+	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})
 
 	if err != nil {
-		t.Errorf("Error in adding record: %v", err)
+		t.Fatalf("Error in adding record: %v", err)
+	}
+
+	//Retrieve the record
+	if r.GetAdded().GetRelease().InstanceId <= 0 {
+		t.Errorf("Added record does not have an instance id: %v", r)
+	}
+}
+
+func TestAddRecordNoCost(t *testing.T) {
+	s := InitTestServer(".testaddrecordnocost")
+	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})
+
+	if err == nil {
+		t.Fatalf("No cost add has not failed: %v", r)
 	}
 }
 
