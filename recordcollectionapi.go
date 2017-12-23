@@ -41,6 +41,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
 			proto.Merge(rec, request.GetUpdate())
+			s.pushMap[rec.GetRelease().Id] = rec
 		}
 	}
 	s.LogFunction(fmt.Sprintf("UpdateRecord-%v", len(s.collection.GetRecords())), t)
