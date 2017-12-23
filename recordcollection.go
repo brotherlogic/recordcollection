@@ -81,6 +81,13 @@ func (s *Server) Mote(master bool) error {
 	return nil
 }
 
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	stateCount := 0
@@ -90,7 +97,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
-	return []*pbg.State{&pbg.State{Key: "core", Value: int64((stateCount * 100) / len(s.collection.GetRecords()))}, &pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()}, &pbg.State{Key: "sync_size", Value: int64(len(s.cacheMap))}}
+	return []*pbg.State{&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))}, &pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()}, &pbg.State{Key: "sync_size", Value: int64(len(s.cacheMap))}}
 }
 
 // Init builds out a server
