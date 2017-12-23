@@ -8,7 +8,9 @@ import (
 )
 import pb "github.com/brotherlogic/recordcollection/proto"
 
-type testSyncer struct{}
+type testSyncer struct {
+	setRatingCount int
+}
 
 func (t *testSyncer) GetCollection() []*pbd.Release {
 	return []*pbd.Release{&pbd.Release{Id: 234, Title: "Magic"}}
@@ -27,6 +29,11 @@ func (t *testSyncer) GetRelease(id int32) (*pbd.Release, error) {
 
 func (t *testSyncer) AddToFolder(id int32, folderID int32) (int, error) {
 	return 200, nil
+}
+
+func (t *testSyncer) SetRating(id int, rating int) error {
+	t.setRatingCount = 1
+	return nil
 }
 
 func TestGoodSync(t *testing.T) {
@@ -95,5 +102,24 @@ func TestRecache(t *testing.T) {
 
 	if len(r.GetRecords()) != 1 || r.GetRecords()[0].GetRelease().Title != "On The Wall" {
 		t.Errorf("Error in reading records: %v", r)
+	}
+}
+
+func TestPush(t *testing.T) {
+	tRetr := &testSyncer{}
+	s := InitTestServer(".testrecache")
+	s.retr = tRetr
+	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{Id: 234, Rating: 5}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	s.runPush()
+
+	if tRetr.setRatingCount != 1 {
+		t.Errorf("Update has not run")
 	}
 }

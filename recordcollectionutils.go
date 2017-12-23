@@ -14,11 +14,26 @@ const (
 	RecacheDelay = 60 * 60 * 24 * 30
 )
 
+func (s *Server) runPush() {
+	for key, val := range s.pushMap {
+		s.pushRecord(val)
+		delete(s.pushMap, key)
+		time.Sleep(s.cacheWait)
+	}
+}
+
 func (s *Server) runRecache() {
 	for key, val := range s.cacheMap {
 		s.cacheRecord(val)
 		delete(s.cacheMap, key)
 		time.Sleep(s.cacheWait)
+	}
+}
+
+func (s *Server) pushRecord(r *pb.Record) {
+	// Push the score
+	if r.GetRelease().Rating > 0 {
+		s.retr.SetRating(int(r.GetRelease().Id), int(r.GetRelease().Rating))
 	}
 }
 

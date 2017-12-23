@@ -23,6 +23,7 @@ type saver interface {
 	GetWantlist() ([]*godiscogs.Release, error)
 	GetRelease(id int32) (*godiscogs.Release, error)
 	AddToFolder(folderID int32, releaseID int32) (int, error)
+	SetRating(releaseID int, rating int) error
 }
 
 //Server main server type
@@ -33,6 +34,8 @@ type Server struct {
 	lastSyncTime time.Time
 	cacheMap     map[int32]*pb.Record
 	cacheWait    time.Duration
+	pushMap      map[int32]*pb.Record
+	pushWait     time.Duration
 }
 
 const (
@@ -92,7 +95,7 @@ func (s *Server) GetState() []*pbg.State {
 
 // Init builds out a server
 func Init() *Server {
-	return &Server{GoServer: &goserver.GoServer{}, lastSyncTime: time.Now(), cacheMap: make(map[int32]*pb.Record), cacheWait: time.Minute}
+	return &Server{GoServer: &goserver.GoServer{}, lastSyncTime: time.Now(), cacheMap: make(map[int32]*pb.Record), cacheWait: time.Minute, pushMap: make(map[int32]*pb.Record), pushWait: time.Minute}
 }
 
 func main() {
@@ -127,6 +130,7 @@ func main() {
 	server.RegisterServer("recordcollection", false)
 	server.RegisterRepeatingTask(server.runSync, time.Hour)
 	server.RegisterRepeatingTask(server.runRecache, time.Hour)
+	server.RegisterRepeatingTask(server.runPush, time.Hour)
 	server.Log("Starting!")
 	server.Serve()
 }
