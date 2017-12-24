@@ -83,8 +83,17 @@ message AddRecordResponse {
   Record added = 2;
 }
 
+message GetRecordCollectionRequest {
+
+}
+
+message GetRecordCollectionResponse {
+  repeated int32 instance_ids = 1;
+}
+
 service RecordCollectionService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
   rpc AddRecord(AddRecordRequest) returns (AddRecordResponse) {};
+  rpc GetRecordCollection(GetRecordCollectionRequest) returns (GetRecordCollectionResponse) {};
 }
