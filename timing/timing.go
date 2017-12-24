@@ -8,6 +8,9 @@ import (
 	"github.com/brotherlogic/keystore/client"
 
 	pbrc "github.com/brotherlogic/recordcollection/proto"
+
+	//Needed to pull in gzip encoding init
+	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 func getIP(server string) (string, int) {
