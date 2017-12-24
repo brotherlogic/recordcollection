@@ -26,6 +26,25 @@ func InitTestServer(folder string) *Server {
 	return s
 }
 
+func TestGetCollection(t *testing.T) {
+	s := InitTestServer(".testaddrecord")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})
+
+	if err != nil {
+		t.Fatalf("Error in adding record: %v", err)
+	}
+
+	collection, err := s.GetRecordCollection(context.Background(), &pb.GetRecordCollectionRequest{})
+
+	if err != nil {
+		t.Fatalf("Error in getting record collection: %v", err)
+	}
+
+	if len(collection.GetInstanceIds()) != 1 {
+		t.Errorf("Error getting collection: %v", collection)
+	}
+}
+
 func TestAddRecord(t *testing.T) {
 	s := InitTestServer(".testaddrecord")
 	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})

@@ -11,6 +11,15 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// GetRecordCollection gets the full collection
+func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordCollectionRequest) (*pb.GetRecordCollectionResponse, error) {
+	resp := &pb.GetRecordCollectionResponse{InstanceIds: make([]int32, 0)}
+	for _, r := range s.collection.GetRecords() {
+		resp.InstanceIds = append(resp.InstanceIds, r.GetRelease().InstanceId)
+	}
+	return resp, nil
+}
+
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
 	t := time.Now()
