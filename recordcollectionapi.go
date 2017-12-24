@@ -45,6 +45,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		}
 	}
 	s.LogFunction(fmt.Sprintf("UpdateRecord-%v", len(s.collection.GetRecords())), t)
+	s.saveRecordCollection()
 	return &pb.UpdateRecordsResponse{}, nil
 }
 
