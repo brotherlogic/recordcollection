@@ -59,6 +59,19 @@ func TestAddRecord(t *testing.T) {
 	}
 }
 
+func TestAddRecordSetsDateAdded(t *testing.T) {
+	s := InitTestServer(".testaddrecord")
+	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})
+
+	if err != nil {
+		t.Fatalf("Error in adding record: %v", err)
+	}
+
+	if r.GetAdded().GetMetadata().GetDateAdded() == 0 {
+		t.Errorf("Added record has not had date added set: %v", r)
+	}
+}
+
 func TestAddRecordNoCost(t *testing.T) {
 	s := InitTestServer(".testaddrecordnocost")
 	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})

@@ -68,6 +68,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	instanceID, err := s.retr.AddToFolder(812802, request.GetToAdd().GetRelease().Id)
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
+		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
 		s.collection.Records = append(s.collection.Records, request.GetToAdd())
 		s.cacheRecord(request.GetToAdd())
 	}
