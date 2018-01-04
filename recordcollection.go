@@ -97,6 +97,8 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	s.Log(fmt.Sprintf("Count = %v leads to %v", stateCount, int64((stateCount*100)/max(1, len(s.collection.GetRecords())))))
+
 	return []*pbg.State{&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))}, &pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()}, &pbg.State{Key: "sync_size", Value: int64(len(s.cacheMap))}}
 }
 
