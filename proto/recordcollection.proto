@@ -49,12 +49,14 @@ message ReleaseMetadata {
     STAGED = 3;
     PRE_FRESHMAN = 4;
     FRESHMAN = 5;
-    IGNORED = 6;
   }
   Category category = 8;
 
   // The folder this record should be placed in
   int32 goal_folder = 9;
+
+  // If a record is dirty, it needs to send updates to discogs
+  bool dirty = 10;
 }
 
 // A request to get some records
