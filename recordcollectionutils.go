@@ -15,10 +15,14 @@ const (
 )
 
 func (s *Server) runPush() {
+	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
 		s.pushRecord(val)
 		delete(s.pushMap, key)
 		time.Sleep(s.cacheWait)
+	}
+	if save {
+		s.saveRecordCollection()
 	}
 }
 
@@ -35,6 +39,13 @@ func (s *Server) pushRecord(r *pb.Record) {
 	if r.GetRelease().Rating > 0 {
 		s.retr.SetRating(int(r.GetRelease().Id), int(r.GetRelease().Rating))
 	}
+
+	if r.GetMetadata().GetMoveFolder() > 0 {
+		s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
+		r.GetMetadata().MoveFolder = 0
+	}
+
+	r.GetMetadata().Dirty = false
 }
 
 func (s *Server) cacheRecord(r *pb.Record) {

@@ -126,7 +126,7 @@ func TestGetRecordsByFolder(t *testing.T) {
 
 func TestUpdateRecords(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}})
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1}}})
 
