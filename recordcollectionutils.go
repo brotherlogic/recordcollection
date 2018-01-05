@@ -42,10 +42,21 @@ func (s *Server) cacheRecord(r *pb.Record) {
 		r.Metadata = &pb.ReleaseMetadata{}
 	}
 
+	// Don't recache a dirty Record
+	if r.GetMetadata().GetDirty() {
+		return
+	}
+
 	//Force a recache if the record has no title
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
 		if err == nil {
+
+			// Reset to dirty if the scores don't match
+			if release.Rating != r.GetRelease().Rating {
+				r.GetMetadata().Dirty = true
+				return
+			}
 
 			//Clear repeated fields first
 			r.GetRelease().Images = []*pbd.Image{}
@@ -54,6 +65,7 @@ func (s *Server) cacheRecord(r *pb.Record) {
 			r.GetRelease().Labels = []*pbd.Label{}
 
 			proto.Merge(r.GetRelease(), release)
+
 			r.GetMetadata().LastCache = time.Now().Unix()
 			s.saveRecordCollection()
 		}

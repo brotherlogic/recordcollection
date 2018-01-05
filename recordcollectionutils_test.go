@@ -68,7 +68,26 @@ func TestImageMerge(t *testing.T) {
 	if len(r.GetRelease().GetImages()) != 1 {
 		t.Errorf("Image merge has failed: %v", r)
 	}
+}
 
+func TestDirtyMerge(t *testing.T) {
+	s := InitTestServer(".testDirtyMerge")
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{Dirty: true}}
+	s.cacheRecord(r)
+
+	if r.GetMetadata().LastCache != 0 {
+		t.Fatalf("Record has not been cached despite being dirty %v", r)
+	}
+}
+
+func TestDirtyAttemptToMerge(t *testing.T) {
+	s := InitTestServer(".testDirtyMerge")
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222, Rating: 4}, Metadata: &pb.ReleaseMetadata{Dirty: false}}
+	s.cacheRecord(r)
+
+	if r.GetMetadata().LastCache != 0 || !r.GetMetadata().Dirty {
+		t.Fatalf("Record has beed recached even though it should be dirty %v", r)
+	}
 }
 
 func TestGoodMergeSync(t *testing.T) {
