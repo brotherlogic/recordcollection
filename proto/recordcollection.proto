@@ -49,6 +49,7 @@ message ReleaseMetadata {
     STAGED = 3;
     PRE_FRESHMAN = 4;
     FRESHMAN = 5;
+    IGNORED = 6;
   }
   Category category = 8;
 

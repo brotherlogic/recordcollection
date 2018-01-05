@@ -53,6 +53,7 @@ func (s *Server) readRecordCollection() error {
 	if err != nil {
 		return err
 	}
+
 	s.collection = data.(*pb.RecordCollection)
 	return nil
 }
