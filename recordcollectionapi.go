@@ -47,15 +47,17 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	t := time.Now()
+	var record *pb.Record
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
 			proto.Merge(rec, request.GetUpdate())
+			record = rec
 			s.pushMap[rec.GetRelease().Id] = rec
 		}
 	}
 	s.LogFunction(fmt.Sprintf("UpdateRecord-%v", len(s.collection.GetRecords())), t)
 	s.saveRecordCollection()
-	return &pb.UpdateRecordsResponse{}, nil
+	return &pb.UpdateRecordsResponse{Updated: record}, nil
 }
 
 // AddRecord adds a record directly to the listening pile
