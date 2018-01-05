@@ -9,7 +9,8 @@ import (
 import pb "github.com/brotherlogic/recordcollection/proto"
 
 type testSyncer struct {
-	setRatingCount int
+	setRatingCount  int
+	moveRecordCount int
 }
 
 func (t *testSyncer) GetCollection() []*pbd.Release {
@@ -34,6 +35,11 @@ func (t *testSyncer) AddToFolder(id int32, folderID int32) (int, error) {
 func (t *testSyncer) SetRating(id int, rating int) error {
 	t.setRatingCount = 1
 	return nil
+}
+
+func (t *testSyncer) MoveToFolder(a, b, c, d int) {
+	t.moveRecordCount = 1
+	// Do nothing
 }
 
 func TestGoodSync(t *testing.T) {
@@ -128,7 +134,7 @@ func TestPush(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
+	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}, Metadata: &pb.ReleaseMetadata{}}}}
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{Id: 234, Rating: 5}}})
 
@@ -139,6 +145,25 @@ func TestPush(t *testing.T) {
 	s.runPush()
 
 	if tRetr.setRatingCount != 1 {
+		t.Errorf("Update has not run")
+	}
+}
+
+func TestPushMove(t *testing.T) {
+	tRetr := &testSyncer{}
+	s := InitTestServer(".testrecache")
+	s.retr = tRetr
+	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	s.runPush()
+
+	if tRetr.moveRecordCount != 1 {
 		t.Errorf("Update has not run")
 	}
 }

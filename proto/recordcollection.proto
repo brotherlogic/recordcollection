@@ -57,6 +57,9 @@ message ReleaseMetadata {
 
   // If a record is dirty, it needs to send updates to discogs
   bool dirty = 10;
+
+  // The folder this record should move to
+  int32 move_folder = 11;
 }
 
 // A request to get some records
