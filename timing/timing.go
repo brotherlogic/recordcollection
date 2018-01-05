@@ -35,7 +35,7 @@ func testRead() {
 
 func testReadCollection() {
 	host, port := getIP("recordcollection")
-	conn, err := grpc.Dial(host+":"+strconv.Itoa(port), grpc.WithInsecure())
+	conn, err := grpc.Dial(host+":"+strconv.Itoa(port), grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.UseCompressor("gzip")))
 	defer conn.Close()
 	if err != nil {
 		log.Fatalf("Unable to dial : %v", err)
@@ -70,5 +70,5 @@ func testReadSubset() {
 }
 
 func main() {
-	testReadSubset()
+	testReadCollection()
 }
