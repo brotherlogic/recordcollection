@@ -93,6 +93,12 @@ func (s *Server) syncCollection() {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
 				proto.Merge(r.Release, record)
+
+				// Set dirty if the ratings don't match
+				if r.Release.Rating != record.Rating {
+
+					r.Metadata.Dirty = true
+				}
 			}
 		}
 

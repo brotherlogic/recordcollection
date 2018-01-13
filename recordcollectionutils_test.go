@@ -113,6 +113,26 @@ func TestGoodMergeSync(t *testing.T) {
 	}
 }
 
+func TestGoodMergeSyncWithDirty(t *testing.T) {
+	s := InitTestServer(".testGoodMergeSyncWithDirty")
+	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234}}}}
+	s.runSync()
+
+	// Check that we have one record and one want
+	if len(s.collection.GetRecords()) != 1 {
+		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
+	}
+	if s.collection.GetRecords()[0].GetRelease().Title != "Magic" {
+		t.Errorf("Incoming has not been merged: %v", s.collection.GetRecords())
+	}
+	if len(s.collection.GetWants()) != 1 {
+		t.Errorf("Wrong number of wants: %v", s.collection.GetWants())
+	}
+	if !s.collection.GetRecords()[0].GetMetadata().Dirty {
+		t.Errorf("Record has not been set dirt")
+	}
+}
+
 func TestRecache(t *testing.T) {
 	s := InitTestServer(".testrecache")
 	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
