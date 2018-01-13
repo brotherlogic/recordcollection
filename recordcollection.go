@@ -56,6 +56,14 @@ func (s *Server) readRecordCollection() error {
 	}
 
 	s.collection = data.(*pb.RecordCollection)
+
+	//Fill the push map
+	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().Dirty {
+			s.pushMap[r.GetRelease().InstanceId] = r
+		}
+	}
+
 	return nil
 }
 
