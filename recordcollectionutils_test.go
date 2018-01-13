@@ -37,9 +37,9 @@ func (t *testSyncer) SetRating(id int, rating int) error {
 	return nil
 }
 
-func (t *testSyncer) MoveToFolder(a, b, c, d int) {
+func (t *testSyncer) MoveToFolder(a, b, c, d int) string {
 	t.moveRecordCount = 1
-	// Do nothing
+	return ""
 }
 
 func TestGoodSync(t *testing.T) {

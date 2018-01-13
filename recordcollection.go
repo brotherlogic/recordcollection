@@ -24,7 +24,7 @@ type saver interface {
 	GetRelease(id int32) (*godiscogs.Release, error)
 	AddToFolder(folderID int32, releaseID int32) (int, error)
 	SetRating(releaseID int, rating int) error
-	MoveToFolder(folderID, releaseID, instanceID, newFolderID int)
+	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) string
 }
 
 //Server main server type
