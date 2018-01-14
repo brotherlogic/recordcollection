@@ -48,6 +48,7 @@ func (s *Server) pushRecord(r *pb.Record) {
 	if r.GetMetadata().GetMoveFolder() > 0 {
 		resp := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 		s.Log(fmt.Sprintf("MOVE: %v -> %v", resp, r))
+		r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 		r.GetMetadata().MoveFolder = 0
 	}
 
