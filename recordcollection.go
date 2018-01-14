@@ -128,7 +128,7 @@ func Init() *Server {
 }
 
 func main() {
-	var quiet = flag.Bool("quiet", true, "Show all output")
+	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
 	flag.Parse()
 
