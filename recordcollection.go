@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"sync"
 	"time"
 
 	"google.golang.org/grpc"
@@ -33,8 +34,10 @@ type Server struct {
 	collection   *pb.RecordCollection
 	retr         saver
 	lastSyncTime time.Time
+	cacheMutex   *sync.Mutex
 	cacheMap     map[int32]*pb.Record
 	cacheWait    time.Duration
+	pushMutex    *sync.Mutex
 	pushMap      map[int32]*pb.Record
 	pushWait     time.Duration
 }
@@ -114,7 +117,16 @@ func (s *Server) GetState() []*pbg.State {
 
 // Init builds out a server
 func Init() *Server {
-	return &Server{GoServer: &goserver.GoServer{}, lastSyncTime: time.Now(), cacheMap: make(map[int32]*pb.Record), cacheWait: time.Minute, pushMap: make(map[int32]*pb.Record), pushWait: time.Minute}
+	return &Server{
+		GoServer:     &goserver.GoServer{},
+		lastSyncTime: time.Now(),
+		cacheMap:     make(map[int32]*pb.Record),
+		cacheWait:    time.Minute,
+		cacheMutex:   &sync.Mutex{},
+		pushMap:      make(map[int32]*pb.Record),
+		pushWait:     time.Minute,
+		pushMutex:    &sync.Mutex{},
+	}
 }
 
 func main() {

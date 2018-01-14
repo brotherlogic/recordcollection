@@ -18,7 +18,9 @@ func (s *Server) runPush() {
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
 		s.pushRecord(val)
+		s.pushMutex.Lock()
 		delete(s.pushMap, key)
+		s.pushMutex.Unlock()
 		time.Sleep(s.cacheWait)
 	}
 	if save {
