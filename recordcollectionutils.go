@@ -93,11 +93,16 @@ func (s *Server) syncCollection() {
 		for _, r := range s.collection.GetRecords() {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
+
+				//Clear repeated fields first to prevent growth
+				r.GetRelease().Images = []*pbd.Image{}
+				r.GetRelease().Artists = []*pbd.Artist{}
+				r.GetRelease().Formats = []*pbd.Format{}
+				r.GetRelease().Labels = []*pbd.Label{}
 				proto.Merge(r.Release, record)
 
 				// Set dirty if the ratings don't match
 				if r.Release.Rating != record.Rating {
-
 					r.Metadata.Dirty = true
 				}
 			}

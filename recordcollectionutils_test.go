@@ -14,7 +14,7 @@ type testSyncer struct {
 }
 
 func (t *testSyncer) GetCollection() []*pbd.Release {
-	return []*pbd.Release{&pbd.Release{Id: 234, Title: "Magic"}}
+	return []*pbd.Release{&pbd.Release{Id: 234, Title: "Magic", Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}}}
 }
 
 func (t *testSyncer) GetWantlist() ([]*pbd.Release, error) {
@@ -52,6 +52,31 @@ func TestGoodSync(t *testing.T) {
 	}
 	if len(s.collection.GetWants()) != 1 {
 		t.Errorf("Wrong number of wants: %v", s.collection.GetWants())
+	}
+}
+
+func TestCleanSync(t *testing.T) {
+	s := InitTestServer(".testGoodSync")
+	s.runSync()
+
+	// Check that we have one record and one want
+	if len(s.collection.GetRecords()) != 1 {
+		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
+	}
+	if len(s.collection.GetRecords()[0].GetRelease().GetImages()) != 1 {
+		t.Errorf("Wrong number of images in synced record: %v", s.collection.GetRecords()[0].GetRelease())
+	}
+
+	for i := 0; i < 10; i++ {
+		s.runSync()
+	}
+
+	// Check that we have one record and one want
+	if len(s.collection.GetRecords()) != 1 {
+		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
+	}
+	if len(s.collection.GetRecords()[0].GetRelease().GetImages()) != 1 {
+		t.Errorf("Wrong number of images in synced record: %v", s.collection.GetRecords()[0].GetRelease())
 	}
 }
 
