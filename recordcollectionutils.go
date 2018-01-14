@@ -39,7 +39,10 @@ func (s *Server) runRecache() {
 func (s *Server) pushRecord(r *pb.Record) {
 	// Push the score
 	if r.GetRelease().Rating > 0 {
-		s.retr.SetRating(int(r.GetRelease().Id), int(r.GetRelease().Rating))
+		err := s.retr.SetRating(int(r.GetRelease().Id), int(r.GetRelease().Rating))
+		if err != nil {
+			s.Log(fmt.Sprintf("RATING ERROR: %v", err))
+		}
 	}
 
 	if r.GetMetadata().GetMoveFolder() > 0 {
