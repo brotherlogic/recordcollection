@@ -2,15 +2,18 @@ package main
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	pbd "github.com/brotherlogic/godiscogs"
+
+	pb "github.com/brotherlogic/recordcollection/proto"
 )
-import pb "github.com/brotherlogic/recordcollection/proto"
 
 type testSyncer struct {
 	setRatingCount  int
 	moveRecordCount int
+	failOnRate      bool
 }
 
 func (t *testSyncer) GetCollection() []*pbd.Release {
@@ -33,6 +36,9 @@ func (t *testSyncer) AddToFolder(id int32, folderID int32) (int, error) {
 }
 
 func (t *testSyncer) SetRating(id int, rating int) error {
+	if t.failOnRate {
+		return errors.New("Set to fail")
+	}
 	t.setRatingCount = 1
 	return nil
 }
@@ -191,6 +197,27 @@ func TestPush(t *testing.T) {
 
 	if tRetr.setRatingCount != 1 {
 		t.Errorf("Update has not run")
+	}
+}
+
+func TestBadPush(t *testing.T) {
+	tRetr := &testSyncer{
+		failOnRate: true,
+	}
+	s := InitTestServer(".testrecache")
+	s.retr = tRetr
+	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}, Metadata: &pb.ReleaseMetadata{}}}}
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{Id: 234, Rating: 5}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	s.runPush()
+
+	if tRetr.setRatingCount > 0 {
+		t.Errorf("Update has not failed")
 	}
 }
 
