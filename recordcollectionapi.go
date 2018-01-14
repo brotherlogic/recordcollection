@@ -53,7 +53,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			proto.Merge(rec, request.GetUpdate())
 			rec.GetMetadata().Dirty = true
 			record = rec
+			s.pushMutex.Lock()
 			s.pushMap[rec.GetRelease().Id] = rec
+			s.pushMutex.Unlock()
 		}
 	}
 	s.LogFunction(fmt.Sprintf("UpdateRecord-%v", len(s.collection.GetRecords())), t)
