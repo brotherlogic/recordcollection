@@ -31,15 +31,18 @@ type saver interface {
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	collection   *pb.RecordCollection
-	retr         saver
-	lastSyncTime time.Time
-	cacheMutex   *sync.Mutex
-	cacheMap     map[int32]*pb.Record
-	cacheWait    time.Duration
-	pushMutex    *sync.Mutex
-	pushMap      map[int32]*pb.Record
-	pushWait     time.Duration
+	collection     *pb.RecordCollection
+	retr           saver
+	lastSyncTime   time.Time
+	lastPushTime   time.Time
+	lastPushLength time.Duration
+	lastPushSize   int
+	cacheMutex     *sync.Mutex
+	cacheMap       map[int32]*pb.Record
+	cacheWait      time.Duration
+	pushMutex      *sync.Mutex
+	pushMap        map[int32]*pb.Record
+	pushWait       time.Duration
 }
 
 const (
@@ -110,20 +113,28 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
-	return []*pbg.State{&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))}, &pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()}, &pbg.State{Key: "sync_size", Value: int64(len(s.cacheMap))}}
+	return []*pbg.State{
+		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
+		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
+		&pbg.State{Key: "sync_size", Value: int64(len(s.cacheMap))},
+		&pbg.State{Key: "push_state", Text: fmt.Sprintf("Started %v [%v]; took %v", s.lastPushTime, s.lastPushSize, s.lastPushLength)},
+	}
 }
 
 // Init builds out a server
 func Init() *Server {
 	return &Server{
-		GoServer:     &goserver.GoServer{},
-		lastSyncTime: time.Now(),
-		cacheMap:     make(map[int32]*pb.Record),
-		cacheWait:    time.Minute,
-		cacheMutex:   &sync.Mutex{},
-		pushMap:      make(map[int32]*pb.Record),
-		pushWait:     time.Minute,
-		pushMutex:    &sync.Mutex{},
+		GoServer:       &goserver.GoServer{},
+		lastSyncTime:   time.Now(),
+		cacheMap:       make(map[int32]*pb.Record),
+		cacheWait:      time.Minute,
+		cacheMutex:     &sync.Mutex{},
+		pushMap:        make(map[int32]*pb.Record),
+		pushWait:       time.Minute,
+		pushMutex:      &sync.Mutex{},
+		lastPushTime:   time.Now(),
+		lastPushSize:   0,
+		lastPushLength: 0,
 	}
 }
 
