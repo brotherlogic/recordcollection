@@ -15,6 +15,8 @@ const (
 )
 
 func (s *Server) runPush() {
+	s.lastPushTime = time.Now()
+	s.lastPushSize = len(s.pushMap)
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
 		s.pushRecord(val)
@@ -26,6 +28,7 @@ func (s *Server) runPush() {
 	if save {
 		s.saveRecordCollection()
 	}
+	s.lastPushLength = time.Now().Sub(s.lastPushTime)
 }
 
 func (s *Server) runRecache() {
