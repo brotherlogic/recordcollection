@@ -17,12 +17,14 @@ const (
 func (s *Server) runPush() {
 	s.lastPushTime = time.Now()
 	s.lastPushSize = len(s.pushMap)
+	s.lastPushDone = 0
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
 		s.pushRecord(val)
 		s.pushMutex.Lock()
 		delete(s.pushMap, key)
 		s.pushMutex.Unlock()
+		s.lastPushDone++
 		time.Sleep(s.cacheWait)
 	}
 	if save {
