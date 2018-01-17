@@ -168,7 +168,7 @@ func main() {
 	}
 
 	server.Log(fmt.Sprintf("Starting record collection with %v", tResp))
-	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token)
+	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
 	server.Register = server
 
 	server.RegisterServer("recordcollection", false)
