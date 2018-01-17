@@ -47,6 +47,7 @@ func (s *Server) pushRecord(r *pb.Record) {
 	// Push the score
 	s.Log(fmt.Sprintf("Scoring record %v (%v)", r.GetRelease().Id, r.GetRelease().Rating))
 	if r.GetRelease().Rating > 0 {
+		s.Log(fmt.Sprintf("Attempting the score: %v", r))
 		err := s.retr.SetRating(int(r.GetRelease().Id), int(r.GetRelease().Rating))
 		if err != nil {
 			s.Log(fmt.Sprintf("RATING ERROR: %v", err))
@@ -54,7 +55,10 @@ func (s *Server) pushRecord(r *pb.Record) {
 	}
 
 	s.Log(fmt.Sprintf("Moving record %v (%v)", r.GetRelease().Id, r.GetMetadata().GetMoveFolder()))
+	time.Sleep(time.Second)
 	if r.GetMetadata().GetMoveFolder() > 0 {
+		s.Log(fmt.Sprintf("Attempting the move: %v", r))
+		time.Sleep(time.Second)
 		resp := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 		s.Log(fmt.Sprintf("MOVE: %v -> %v", resp, r))
 		r.GetRelease().FolderId = r.GetMetadata().MoveFolder
