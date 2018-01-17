@@ -42,6 +42,8 @@ func (s *Server) runRecache() {
 }
 
 func (s *Server) pushRecord(r *pb.Record) {
+	s.Log(fmt.Sprintf("Moving record %v (%v)", r.GetRelease().Id, r.GetRelease().InstanceId))
+
 	// Push the score
 	if r.GetRelease().Rating > 0 {
 		err := s.retr.SetRating(int(r.GetRelease().Id), int(r.GetRelease().Rating))
