@@ -72,6 +72,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
 		s.collection.Records = append(s.collection.Records, request.GetToAdd())
 		s.cacheRecord(request.GetToAdd())
+		s.saveRecordCollection()
 	}
 
 	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err

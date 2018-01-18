@@ -43,6 +43,7 @@ func main() {
 			for _, r := range rec.GetRecords() {
 				fmt.Printf("Release: %v\n", r.GetRelease())
 				fmt.Printf("Metadata: %v\n", r.GetMetadata())
+				fmt.Printf("1 %v, %v, %v", r.GetMetadata().GetDateAdded() > (time.Now().AddDate(0, -3, 0).Unix()), r.GetMetadata().DateAdded, r.GetRelease().Rating == 0)
 			}
 		} else {
 			fmt.Printf("Error: %v", err)
