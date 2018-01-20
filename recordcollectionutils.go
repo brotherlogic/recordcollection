@@ -42,31 +42,25 @@ func (s *Server) runRecache() {
 }
 
 func (s *Server) pushRecord(r *pb.Record) {
-	s.Log(fmt.Sprintf("Pushing record %v (%v)", r.GetRelease().Id, r.GetRelease().InstanceId))
-
 	// Push the score
-	s.Log(fmt.Sprintf("Scoring record %v (%v)", r.GetRelease().Id, r.GetRelease().Rating))
-	if r.GetRelease().Rating > 0 {
-		s.Log(fmt.Sprintf("Attempting the score: %v", r))
-		err := s.retr.SetRating(int(r.GetRelease().Id), int(r.GetRelease().Rating))
+	if r.GetMetadata().GetSetRating() > 0 {
+		err := s.retr.SetRating(int(r.GetRelease().Id), int(r.GetMetadata().GetSetRating()))
 		if err != nil {
 			s.Log(fmt.Sprintf("RATING ERROR: %v", err))
 		}
+		r.GetMetadata().SetRating = 0
 	}
 
-	s.Log(fmt.Sprintf("Moving record %v (%v)", r.GetRelease().Id, r.GetMetadata().GetMoveFolder()))
-	time.Sleep(time.Second)
 	if r.GetMetadata().GetMoveFolder() > 0 {
-		s.Log(fmt.Sprintf("Attempting the move: %v", r))
-		time.Sleep(time.Second)
 		resp := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
-		s.Log(fmt.Sprintf("MOVE: %v -> %v", resp, r))
+		if len(resp) > 0 {
+			s.Log(fmt.Sprintf("Moving record: %v", resp))
+		}
 		r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 		r.GetMetadata().MoveFolder = 0
 	}
 
 	r.GetMetadata().Dirty = false
-	s.Log(fmt.Sprintf("Moving %v is done ->%v", r.GetRelease().Id, r.GetMetadata()))
 }
 
 func (s *Server) cacheRecord(r *pb.Record) {
