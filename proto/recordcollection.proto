@@ -60,6 +60,9 @@ message ReleaseMetadata {
 
   // The folder this record should move to
   int32 move_folder = 11;
+
+  // This is the rating that should be set on the record
+  int32 set_rating = 12;
 }
 
 // A request to get some records
