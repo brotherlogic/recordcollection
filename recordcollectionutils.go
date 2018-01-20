@@ -20,12 +20,15 @@ func (s *Server) runPush() {
 	s.lastPushDone = 0
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
-		s.pushRecord(val)
+		pushed := s.pushRecord(val)
 		s.pushMutex.Lock()
 		delete(s.pushMap, key)
 		s.pushMutex.Unlock()
 		s.lastPushDone++
-		time.Sleep(s.cacheWait)
+
+		if pushed {
+			time.Sleep(s.cacheWait)
+		}
 	}
 	if save {
 		s.saveRecordCollection()
@@ -41,7 +44,8 @@ func (s *Server) runRecache() {
 	}
 }
 
-func (s *Server) pushRecord(r *pb.Record) {
+func (s *Server) pushRecord(r *pb.Record) bool {
+	pushed := r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetMoveFolder() > 0
 	// Push the score
 	if r.GetMetadata().GetSetRating() > 0 {
 		err := s.retr.SetRating(int(r.GetRelease().Id), int(r.GetMetadata().GetSetRating()))
@@ -61,6 +65,7 @@ func (s *Server) pushRecord(r *pb.Record) {
 	}
 
 	r.GetMetadata().Dirty = false
+	return pushed
 }
 
 func (s *Server) cacheRecord(r *pb.Record) {
