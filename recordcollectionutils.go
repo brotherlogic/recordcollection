@@ -116,6 +116,9 @@ func (s *Server) syncCollection() {
 				//Clear repeated fields first to prevent growth
 				if len(record.GetImages()) > 0 {
 					r.GetRelease().Images = []*pbd.Image{}
+					r.GetRelease().Formats = []*pbd.Format{}
+					r.GetRelease().Artists = []*pbd.Artist{}
+					r.GetRelease().Labels = []*pbd.Label{}
 				}
 				proto.Merge(r.Release, record)
 
