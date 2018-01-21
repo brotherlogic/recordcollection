@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 	"time"
 
@@ -48,6 +49,16 @@ func testReadCollection() {
 		log.Fatalf("Error getting records: %v", err)
 	}
 
+	for _, r := range recs.GetRecords() {
+		if r.GetMetadata().GetDateAdded() == 0 {
+			r.GetMetadata().DateAdded = time.Now().Unix()
+			_, err2 := client.UpdateRecord(context.Background(), &pbrc.UpdateRecordRequest{Update: r})
+			if err2 != nil {
+				log.Fatalf("ERRRR: %v", err2)
+			}
+		}
+	}
+
 	fmt.Printf("Got %v records in %v\n", len(recs.GetRecords()), time.Now().Sub(t))
 }
 
@@ -61,12 +72,20 @@ func testReadSubset() {
 
 	client := pbrc.NewRecordCollectionServiceClient(conn)
 	t := time.Now()
-	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbd.Release{FolderId: 812802}}})
+	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbd.Release{FolderId: 812802}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if err != nil {
 		log.Fatalf("Error getting records: %v", err)
 	}
 
-	fmt.Printf("Got %v records in %v\n", len(recs.GetRecords()), time.Now().Sub(t))
+	pDate := int64(math.MaxInt64)
+	count := 0
+	for _, rc := range recs.GetRecords() {
+		if rc.GetMetadata().GetDateAdded() > (time.Now().AddDate(0, -3, 0).Unix()) && rc.GetMetadata().DateAdded < pDate && rc.GetRelease().Rating == 0 {
+			count++
+		}
+	}
+
+	fmt.Printf("Got %v (%v) records in %v\n", len(recs.GetRecords()), count, time.Now().Sub(t))
 }
 
 func main() {
