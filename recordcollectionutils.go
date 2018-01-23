@@ -122,9 +122,9 @@ func (s *Server) syncCollection() {
 				}
 				proto.Merge(r.Release, record)
 
-				// Set dirty if the ratings don't match
+				// Override if the rating doesn't match
 				if r.Release.Rating != record.Rating {
-					r.Metadata.Dirty = true
+					r.Release.Rating = record.Rating
 				}
 			}
 		}
