@@ -159,9 +159,6 @@ func TestGoodMergeSyncWithDirty(t *testing.T) {
 	if len(s.collection.GetWants()) != 1 {
 		t.Errorf("Wrong number of wants: %v", s.collection.GetWants())
 	}
-	if !s.collection.GetRecords()[0].GetMetadata().Dirty {
-		t.Errorf("Record has not been set dirt")
-	}
 }
 
 func TestRecache(t *testing.T) {
