@@ -165,7 +165,8 @@ func main() {
 	tResp, _, err := server.KSclient.Read(TOKEN, tType)
 
 	if err != nil {
-		log.Fatalf("Error reading token: %v", err)
+		server.Log(fmt.Sprintf("Error reading token: %v", err))
+		return
 	}
 
 	server.Log(fmt.Sprintf("Starting record collection with %v", tResp))
