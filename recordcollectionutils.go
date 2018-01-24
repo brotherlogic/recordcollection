@@ -52,6 +52,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 		if err != nil {
 			s.Log(fmt.Sprintf("RATING ERROR: %v", err))
 		}
+		r.GetRelease().Rating = r.GetMetadata().SetRating
 		r.GetMetadata().SetRating = 0
 	}
 
