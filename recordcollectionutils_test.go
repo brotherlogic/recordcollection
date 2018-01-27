@@ -17,7 +17,7 @@ type testSyncer struct {
 }
 
 func (t *testSyncer) GetCollection() []*pbd.Release {
-	return []*pbd.Release{&pbd.Release{Id: 234, Title: "Magic", Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}}}
+	return []*pbd.Release{&pbd.Release{Id: 234, Title: "Magic", Formats: []*pbd.Format{&pbd.Format{Name: "blah"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}}}
 }
 
 func (t *testSyncer) GetWantlist() ([]*pbd.Release, error) {
