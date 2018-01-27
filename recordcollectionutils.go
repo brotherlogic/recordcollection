@@ -114,13 +114,18 @@ func (s *Server) syncCollection() {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
 
-				//Clear repeated fields first to prevent growth
-				if len(record.GetImages()) > 0 {
-					r.GetRelease().Images = []*pbd.Image{}
+				//Clear repeated fields first to prevent growth, but images come from
+				//a hard sync so ignore that
+				if len(record.GetFormats()) > 0 {
 					r.GetRelease().Formats = []*pbd.Format{}
 					r.GetRelease().Artists = []*pbd.Artist{}
 					r.GetRelease().Labels = []*pbd.Label{}
 				}
+
+				if len(record.GetImages()) > 0 {
+					r.GetRelease().Images = []*pbd.Image{}
+				}
+
 				proto.Merge(r.Release, record)
 
 				// Override if the rating doesn't match
