@@ -116,6 +116,7 @@ func (s *Server) syncCollection() {
 
 				//Clear repeated fields first to prevent growth, but images come from
 				//a hard sync so ignore that
+				before := len(r.GetRelease().GetFormats())
 				if len(record.GetFormats()) > 0 {
 					r.GetRelease().Formats = []*pbd.Format{}
 					r.GetRelease().Artists = []*pbd.Artist{}
@@ -133,6 +134,7 @@ func (s *Server) syncCollection() {
 					r.Release.Rating = record.Rating
 				}
 
+				s.Log(fmt.Sprintf("FROM %v to %v", before, len(r.GetRelease().GetFormats())))
 				r.GetMetadata().LastSyncTime = time.Now().Unix()
 			}
 		}
