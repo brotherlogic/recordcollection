@@ -43,6 +43,7 @@ func main() {
 			for _, r := range rec.GetRecords() {
 				fmt.Printf("Release: %v\n", r.GetRelease())
 				fmt.Printf("Metadata: %v\n", r.GetMetadata())
+				fmt.Printf("Images: %v\n", len(r.GetRelease().GetImages()))
 				fmt.Printf("1 %v, %v, %v %v", r.GetMetadata().GetDateAdded() > (time.Now().AddDate(0, -3, 0).Unix()), r.GetMetadata().DateAdded, r.GetRelease().Rating == 0, r.GetRelease().FolderId)
 			}
 		} else {

@@ -127,16 +127,19 @@ func (s *Server) syncCollection() {
 				if r.Release.Rating != record.Rating {
 					r.Release.Rating = record.Rating
 				}
+
+				r.GetMetadata().LastSyncTime = time.Now().Unix()
 			}
 		}
 
 		if !found {
-			s.collection.Records = append(s.collection.Records, &pb.Record{Release: record})
+			s.collection.Records = append(s.collection.Records, &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix()}})
 		}
 	}
 
 	s.Log(fmt.Sprintf("Synced to %v", len(s.collection.GetRecords())))
 	s.lastSyncTime = time.Now()
+	s.saveRecordCollection()
 }
 
 func (s *Server) syncWantlist() {
