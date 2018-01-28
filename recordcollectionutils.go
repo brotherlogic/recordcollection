@@ -134,7 +134,9 @@ func (s *Server) syncCollection() {
 					r.Release.Rating = record.Rating
 				}
 
-				s.Log(fmt.Sprintf("FROM %v to %v", before, len(r.GetRelease().GetFormats())))
+				if r.GetRelease().Id == 3331113 {
+					s.Log(fmt.Sprintf("TORU FROM %v to %v", before, len(r.GetRelease().GetFormats())))
+				}
 				r.GetMetadata().LastSyncTime = time.Now().Unix()
 			}
 		}
