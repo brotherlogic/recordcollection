@@ -46,6 +46,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	var record *pb.Record
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
+			if rec.GetRelease().Id == 3331113 {
+				s.Log("UPDATING TORU")
+			}
 			proto.Merge(rec, request.GetUpdate())
 			rec.GetMetadata().Dirty = true
 			record = rec

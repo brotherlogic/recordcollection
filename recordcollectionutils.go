@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
@@ -138,6 +139,9 @@ func (s *Server) syncCollection() {
 
 				if r.GetRelease().Id == 3331113 {
 					s.Log(fmt.Sprintf("TORU FROM %v to %v given %v and %v and %v", before, len(r.GetRelease().GetFormats()), now, then, record))
+				}
+				if before < len(r.GetRelease().GetFormats()) {
+					log.Fatalf("Sync has grown formats? %v -> %v", r, record)
 				}
 				r.GetMetadata().LastSyncTime = time.Now().Unix()
 			}
