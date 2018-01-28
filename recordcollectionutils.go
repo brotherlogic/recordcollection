@@ -127,7 +127,9 @@ func (s *Server) syncCollection() {
 					r.GetRelease().Images = []*pbd.Image{}
 				}
 
+				now := len(r.GetRelease().Formats)
 				proto.Merge(r.Release, record)
+				then := len(r.GetRelease().Formats)
 
 				// Override if the rating doesn't match
 				if r.Release.Rating != record.Rating {
@@ -135,7 +137,7 @@ func (s *Server) syncCollection() {
 				}
 
 				if r.GetRelease().Id == 3331113 {
-					s.Log(fmt.Sprintf("TORU FROM %v to %v", before, len(r.GetRelease().GetFormats())))
+					s.Log(fmt.Sprintf("TORU FROM %v to %v given %v and %v and %v", before, len(r.GetRelease().GetFormats()), now, then, record))
 				}
 				r.GetMetadata().LastSyncTime = time.Now().Unix()
 			}
