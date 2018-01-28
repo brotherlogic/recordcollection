@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"golang.org/x/net/context"
@@ -49,7 +50,14 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if rec.GetRelease().Id == 3331113 {
 				s.Log("UPDATING TORU")
 			}
+			before := len(rec.GetRelease().GetFormats())
 			proto.Merge(rec, request.GetUpdate())
+			after := len(rec.GetRelease().GetFormats())
+
+			if before < after {
+				log.Fatalf("BUMP IN UPDATE: %v -> %v", request, rec)
+			}
+
 			rec.GetMetadata().Dirty = true
 			record = rec
 			s.pushMutex.Lock()
