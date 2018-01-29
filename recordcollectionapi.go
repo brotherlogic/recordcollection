@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"golang.org/x/net/context"
 
+	pbgd "github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
@@ -47,16 +47,16 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	var record *pb.Record
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
-			if rec.GetRelease().Id == 3331113 {
-				s.Log("UPDATING TORU")
-			}
-			before := len(rec.GetRelease().GetFormats())
-			proto.Merge(rec, request.GetUpdate())
-			after := len(rec.GetRelease().GetFormats())
 
-			if before < after {
-				log.Fatalf("BUMP IN UPDATE: %v -> %v", request, rec)
+			// Avoid increasing repeasted fields
+			if len(request.GetUpdate().GetRelease().GetFormats()) > 0 {
+				rec.GetRelease().Images = []*pbgd.Image{}
+				rec.GetRelease().Artists = []*pbgd.Artist{}
+				rec.GetRelease().Formats = []*pbgd.Format{}
+				rec.GetRelease().Labels = []*pbgd.Label{}
 			}
+
+			proto.Merge(rec, request.GetUpdate())
 
 			rec.GetMetadata().Dirty = true
 			record = rec
