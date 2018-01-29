@@ -69,6 +69,11 @@ func (s *Server) readRecordCollection() error {
 		if r.GetMetadata() == nil {
 			r.Metadata = &pb.ReleaseMetadata{}
 		}
+
+		if r.GetMetadata().GetMoveFolder() > 0 || r.GetMetadata().GetSetRating() > 0 {
+			r.GetMetadata().Dirty = true
+		}
+
 		if r.GetMetadata().Dirty {
 			s.pushMap[r.GetRelease().InstanceId] = r
 		}
