@@ -70,6 +70,16 @@ func (s *Server) readRecordCollection() error {
 			r.Metadata = &pb.ReleaseMetadata{}
 		}
 
+		// Stop repeated fields from blowing up
+		if len(r.GetRelease().GetFormats()) > 10 {
+			s.Log(fmt.Sprintf("REDUCING %v", r.GetRelease().Id))
+			r.GetRelease().Images = []*pbd.Image{}
+			r.GetRelease().Artists = []*pbd.Artist{}
+			r.GetRelease().Formats = []*pbd.Format{}
+			r.GetRelease().Labels = []*pbd.Label{}
+			r.GetMetadata().LastCache = 1
+		}
+
 		if r.GetMetadata().GetMoveFolder() > 0 || r.GetMetadata().GetSetRating() > 0 {
 			r.GetMetadata().Dirty = true
 		}
