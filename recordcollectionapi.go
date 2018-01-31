@@ -37,7 +37,10 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 		}
 	}
 
-	s.LogFunction(fmt.Sprintf("GetRecords-%v (%v)", len(s.collection.GetRecords()), request.GetFilter()), t)
+	//Don't report if we're forcing
+	if !request.GetForce() {
+		s.LogFunction(fmt.Sprintf("GetRecords-%v", len(s.collection.GetRecords())), t)
+	}
 	return response, nil
 }
 
