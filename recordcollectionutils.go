@@ -21,15 +21,12 @@ func (s *Server) runPush() {
 	s.lastPushDone = 0
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
-		pushed := s.pushRecord(val)
+		s.pushRecord(val)
 		s.pushMutex.Lock()
 		delete(s.pushMap, key)
 		s.pushMutex.Unlock()
 		s.lastPushDone++
-
-		if pushed {
-			time.Sleep(s.cacheWait)
-		}
+		break
 	}
 	if save {
 		s.saveRecordCollection()
@@ -42,6 +39,7 @@ func (s *Server) runRecache() {
 		s.cacheRecord(val)
 		delete(s.cacheMap, key)
 		time.Sleep(s.cacheWait)
+		break
 	}
 }
 
