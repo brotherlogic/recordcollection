@@ -181,7 +181,7 @@ func main() {
 	server.RegisterServer("recordcollection", false)
 	server.RegisterRepeatingTask(server.runSync, time.Hour)
 	server.RegisterRepeatingTask(server.runRecache, time.Hour)
-	server.RegisterRepeatingTask(server.runPush, time.Hour)
+	server.RegisterRepeatingTask(server.runPush, time.Minute)
 	server.Log("Starting!")
 	server.Serve()
 }
