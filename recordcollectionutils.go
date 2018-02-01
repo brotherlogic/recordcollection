@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
@@ -118,7 +117,6 @@ func (s *Server) syncCollection() {
 
 				//Clear repeated fields first to prevent growth, but images come from
 				//a hard sync so ignore that
-				before := len(r.GetRelease().GetFormats())
 				if len(record.GetFormats()) > 0 {
 					r.GetRelease().Formats = []*pbd.Format{}
 					r.GetRelease().Artists = []*pbd.Artist{}
@@ -129,21 +127,13 @@ func (s *Server) syncCollection() {
 					r.GetRelease().Images = []*pbd.Image{}
 				}
 
-				now := len(r.GetRelease().Formats)
 				proto.Merge(r.Release, record)
-				then := len(r.GetRelease().Formats)
 
 				// Override if the rating doesn't match
 				if r.Release.Rating != record.Rating {
 					r.Release.Rating = record.Rating
 				}
 
-				if r.GetRelease().Id == 3331113 {
-					s.Log(fmt.Sprintf("TORU FROM %v to %v given %v and %v and %v", before, len(r.GetRelease().GetFormats()), now, then, record))
-				}
-				if before < len(r.GetRelease().GetFormats()) {
-					log.Fatalf("Sync has grown formats? %v -> %v", r, record)
-				}
 				r.GetMetadata().LastSyncTime = time.Now().Unix()
 			}
 		}

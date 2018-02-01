@@ -51,6 +51,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
 
+			t1 := time.Now()
 			// Avoid increasing repeasted fields
 			if len(request.GetUpdate().GetRelease().GetFormats()) > 0 {
 				rec.GetRelease().Images = []*pbgd.Image{}
@@ -60,12 +61,15 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 
 			proto.Merge(rec, request.GetUpdate())
+			s.LogFunction("UpdateRecord-Merge", t1)
 
 			rec.GetMetadata().Dirty = true
 			record = rec
+			t2 := time.Now()
 			s.pushMutex.Lock()
 			s.pushMap[rec.GetRelease().Id] = rec
 			s.pushMutex.Unlock()
+			s.LogFunction("UpdateRceord-Lock", t2)
 		}
 	}
 
