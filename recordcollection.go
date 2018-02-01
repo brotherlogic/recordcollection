@@ -147,7 +147,7 @@ func Init() *Server {
 		GoServer:       &goserver.GoServer{},
 		lastSyncTime:   time.Now(),
 		cacheMap:       make(map[int32]*pb.Record),
-		cacheWait:      time.Minute,
+		cacheWait:      time.Second,
 		cacheMutex:     &sync.Mutex{},
 		pushMap:        make(map[int32]*pb.Record),
 		pushWait:       time.Minute,
