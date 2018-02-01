@@ -49,6 +49,9 @@ message ReleaseMetadata {
     STAGED = 3;
     PRE_FRESHMAN = 4;
     FRESHMAN = 5;
+
+    PRE_PROFESSOR = 6;
+    PROFESSOR = 7;
   }
   Category category = 8;
 
