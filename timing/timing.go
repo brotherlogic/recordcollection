@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"math"
 	"strconv"
 	"time"
 
@@ -77,10 +76,9 @@ func testReadSubset() {
 		log.Fatalf("Error getting records: %v", err)
 	}
 
-	pDate := int64(math.MaxInt64)
 	count := 0
 	for _, rc := range recs.GetRecords() {
-		if rc.GetMetadata().GetDateAdded() > (time.Now().AddDate(0, -3, 0).Unix()) && rc.GetMetadata().DateAdded < pDate && rc.GetRelease().Rating == 0 {
+		if len(rc.GetRelease().GetFormats()) > 10 {
 			count++
 		}
 	}
