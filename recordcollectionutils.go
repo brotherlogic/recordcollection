@@ -21,12 +21,15 @@ func (s *Server) runPush() {
 	s.lastPushDone = 0
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
-		s.pushRecord(val)
+		pushed := s.pushRecord(val)
 		s.pushMutex.Lock()
 		delete(s.pushMap, key)
 		s.pushMutex.Unlock()
 		s.lastPushDone++
-		break
+
+		if pushed {
+			break
+		}
 	}
 	if save {
 		s.saveRecordCollection()
