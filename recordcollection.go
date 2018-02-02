@@ -44,6 +44,7 @@ type Server struct {
 	pushMutex      *sync.Mutex
 	pushMap        map[int32]*pb.Record
 	pushWait       time.Duration
+	saveNeeded     bool
 }
 
 const (
@@ -53,6 +54,13 @@ const (
 	//TOKEN for discogs
 	TOKEN = "/github.com/brotherlogic/recordcollection/token"
 )
+
+func (s *Server) saveLoop() {
+	if s.saveNeeded {
+		s.saveNeeded = false
+		s.saveRecordCollection()
+	}
+}
 
 func (s *Server) readRecordCollection() error {
 	collection := &pb.RecordCollection{}
@@ -193,6 +201,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runSync, time.Hour)
 	server.RegisterRepeatingTask(server.runRecache, time.Minute)
 	server.RegisterRepeatingTask(server.runPush, time.Minute)
+	server.RegisterRepeatingTask(server.saveLoop, time.Second)
 	server.Log("Starting!")
 	server.Serve()
 }
