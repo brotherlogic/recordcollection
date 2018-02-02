@@ -137,7 +137,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
 		&pbg.State{Key: "sync_size", Value: int64(len(s.cacheMap))},
 		&pbg.State{Key: "to_push", Value: int64(len(s.pushMap))},
-		&pbg.State{Key: "sizington", Text: fmt.Sprintf("%v and %v", len(s.collection.Records), len(s.collection.Wants))},
+		&pbg.State{Key: "sizington", Text: fmt.Sprintf("%v and %v", len(s.collection.GetRecords()), len(s.collection.GetWants()))},
 		&pbg.State{Key: "push_state", Text: fmt.Sprintf("Started %v [%v / %v]; took %v", s.lastPushTime, s.lastPushSize, s.lastPushDone, s.lastPushLength)},
 	}
 }
