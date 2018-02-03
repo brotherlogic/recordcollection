@@ -44,6 +44,38 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	return response, nil
 }
 
+// GetWants gets a bunch of records
+func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb.GetWantsResponse, error) {
+	t := time.Now()
+	response := &pb.GetWantsResponse{Wants: make([]*pbgd.Release, 0)}
+
+	for _, rec := range s.collection.GetWants() {
+		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) {
+			response.Wants = append(response.Wants, rec)
+		}
+	}
+
+	s.LogFunction("GetWants", t)
+	return response, nil
+}
+
+//UpdateWant updates the record
+func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
+	t := time.Now()
+	var want *pbgd.Release
+	for _, rec := range s.collection.GetWants() {
+		if rec.Id == request.GetUpdate().Id {
+			proto.Merge(rec, request.GetUpdate())
+
+			want = rec
+		}
+	}
+
+	s.saveNeeded = true
+	s.LogFunction("UpdateWant", t)
+	return &pb.UpdateWantResponse{Updated: want}, nil
+}
+
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	t := time.Now()
