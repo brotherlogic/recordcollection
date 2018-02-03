@@ -143,20 +143,20 @@ func TestUpdateRecords(t *testing.T) {
 
 func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
-	s.collection.Wants = append(s.collection.Wants, &pbd.Release{Id: 123, Title: "madeup1"})
+	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}})
 
-	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pbd.Release{Id: 123, Title: "madeup2"}})
+	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
 	if err != nil {
 		t.Fatalf("Error updating want")
 	}
 
-	r, err := s.GetWants(context.Background(), &pb.GetWantsRequest{Filter: &pbd.Release{}})
+	r, err := s.GetWants(context.Background(), &pb.GetWantsRequest{Filter: &pb.Want{Release: &pbd.Release{}}})
 
 	if err != nil {
 		t.Fatalf("Error in getting wants: %v", err)
 	}
 
-	if r == nil || len(r.Wants) != 1 || r.Wants[0].Title != "madeup2" {
+	if r == nil || len(r.Wants) != 1 || r.Wants[0].GetRelease().Title != "madeup2" {
 		t.Errorf("Error in updating wants: %v", r)
 	}
 }
@@ -164,7 +164,7 @@ func TestUpdateWants(t *testing.T) {
 func TestForceRecache(t *testing.T) {
 	s := InitTestServer(".testforcerecache")
 	s.cacheWait = time.Hour
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
 
 	s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})

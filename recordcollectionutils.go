@@ -153,14 +153,14 @@ func (s *Server) syncWantlist() {
 
 	for _, want := range wants {
 		found := false
-		for _, w := range s.collection.GetWants() {
-			if w.Id == want.Id {
+		for _, w := range s.collection.GetNewWants() {
+			if w.GetRelease().Id == want.Id {
 				found = true
-				proto.Merge(w, want)
+				proto.Merge(w.GetRelease(), want)
 			}
 		}
 		if !found {
-			s.collection.Wants = append(s.collection.Wants, want)
+			s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: want, Metadata: &pb.WantMetadata{Active: true}})
 		}
 	}
 }
