@@ -73,8 +73,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		}
 	}
 
+	s.saveNeeded = true
 	s.LogFunction(fmt.Sprintf("UpdateRecord-%v", len(s.collection.GetRecords())), t)
-	s.saveRecordCollection()
 	return &pb.UpdateRecordsResponse{Updated: record}, nil
 }
 
@@ -91,7 +91,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
 		s.collection.Records = append(s.collection.Records, request.GetToAdd())
 		s.cacheRecord(request.GetToAdd())
-		s.saveRecordCollection()
+		s.saveNeeded = true
 	}
 
 	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err
