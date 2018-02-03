@@ -84,12 +84,30 @@ message GetRecordsResponse {
   repeated Record records = 1;
 }
 
+// A request to get some records
+message GetWantsRequest {
+  godiscogs.Release filter = 1;
+}
+
+// A list of records in response
+message GetWantsResponse {
+  repeated godiscogs.Release wants = 1;
+}
+
 message UpdateRecordRequest {
   Record update = 1;
 }
 
 message UpdateRecordsResponse {
   Record updated = 1;
+}
+
+message UpdateWantRequest {
+  godiscogs.Release update = 1;
+}
+
+message UpdateWantResponse {
+  godiscogs.Release updated = 1;
 }
 
 message AddRecordRequest {
@@ -110,7 +128,9 @@ message GetRecordCollectionResponse {
 
 service RecordCollectionService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
+  rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
+  rpc UpdateWant(UpdateWantRequest) returns (UpdateWantResponse) {};
   rpc AddRecord(AddRecordRequest) returns (AddRecordResponse) {};
   rpc GetRecordCollection(GetRecordCollectionRequest) returns (GetRecordCollectionResponse) {};
 }

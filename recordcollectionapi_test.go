@@ -128,7 +128,7 @@ func TestUpdateRecords(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
 
-	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1}}})
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
 
@@ -138,6 +138,26 @@ func TestUpdateRecords(t *testing.T) {
 
 	if r == nil || len(r.Records) != 1 || r.Records[0].Release.Title != "madeup2" {
 		t.Errorf("Error in updating records: %v", r)
+	}
+}
+
+func TestUpdateWants(t *testing.T) {
+	s := InitTestServer(".testUpdateWant")
+	s.collection.Wants = append(s.collection.Wants, &pbd.Release{Id: 123, Title: "madeup1"})
+
+	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pbd.Release{Id: 123, Title: "madeup2"}})
+	if err != nil {
+		t.Fatalf("Error updating want")
+	}
+
+	r, err := s.GetWants(context.Background(), &pb.GetWantsRequest{Filter: &pbd.Release{}})
+
+	if err != nil {
+		t.Fatalf("Error in getting wants: %v", err)
+	}
+
+	if r == nil || len(r.Wants) != 1 || r.Wants[0].Title != "madeup2" {
+		t.Errorf("Error in updating wants: %v", r)
 	}
 }
 
