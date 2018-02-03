@@ -46,25 +46,25 @@ func (s *Server) runRecache() {
 }
 
 func (s *Server) pushRecord(r *pb.Record) bool {
-	pushed := r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetMoveFolder() > 0
+	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder())
 	// Push the score
-	if r.GetMetadata().GetSetRating() > 0 {
+	if r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
 		err := s.retr.SetRating(int(r.GetRelease().Id), int(r.GetMetadata().GetSetRating()))
 		if err != nil {
 			s.Log(fmt.Sprintf("RATING ERROR: %v", err))
 		}
 		r.GetRelease().Rating = r.GetMetadata().SetRating
-		r.GetMetadata().SetRating = 0
 	}
+	r.GetMetadata().SetRating = 0
 
-	if r.GetMetadata().GetMoveFolder() > 0 {
+	if r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder() {
 		resp := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 		if len(resp) > 0 {
 			s.Log(fmt.Sprintf("Moving record: %v", resp))
 		}
 		r.GetRelease().FolderId = r.GetMetadata().MoveFolder
-		r.GetMetadata().MoveFolder = 0
 	}
+	r.GetMetadata().MoveFolder = 0
 
 	r.GetMetadata().Dirty = false
 	return pushed
