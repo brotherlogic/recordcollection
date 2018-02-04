@@ -6,13 +6,23 @@ import "github.com/brotherlogic/godiscogs/godiscogs.proto";
 
 message RecordCollection {
   repeated Record records = 1;
-  repeated godiscogs.Release wants = 2;
+  repeated godiscogs.Release wants = 2; // DEPRECATED
+  repeated Want new_wants = 3;
 }
 
 // This is a record that we own
 message Record {
   godiscogs.Release release = 1;
   ReleaseMetadata metadata = 2;
+}
+
+message Want {
+  godiscogs.Release release = 1;
+  WantMetadata metadata = 2;
+}
+
+message WantMetadata {
+  bool active = 1;
 }
 
 // This is the discogs token
@@ -93,12 +103,12 @@ message GetRecordsResponse {
 
 // A request to get some records
 message GetWantsRequest {
-  godiscogs.Release filter = 1;
+  Want filter = 1;
 }
 
 // A list of records in response
 message GetWantsResponse {
-  repeated godiscogs.Release wants = 1;
+  repeated Want wants = 1;
 }
 
 message UpdateRecordRequest {
@@ -110,11 +120,11 @@ message UpdateRecordsResponse {
 }
 
 message UpdateWantRequest {
-  godiscogs.Release update = 1;
+  Want update = 1;
 }
 
 message UpdateWantResponse {
-  godiscogs.Release updated = 1;
+  Want updated = 1;
 }
 
 message AddRecordRequest {

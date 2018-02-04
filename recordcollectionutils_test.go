@@ -56,8 +56,8 @@ func TestGoodSync(t *testing.T) {
 	if len(s.collection.GetRecords()) != 1 {
 		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
 	}
-	if len(s.collection.GetWants()) != 1 {
-		t.Errorf("Wrong number of wants: %v", s.collection.GetWants())
+	if len(s.collection.GetNewWants()) != 1 {
+		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
 	}
 }
 
@@ -129,7 +129,7 @@ func TestDirtyAttemptToMerge(t *testing.T) {
 
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234}}}}
 	s.runSync()
 
 	// Check that we have one record and one want
@@ -139,14 +139,14 @@ func TestGoodMergeSync(t *testing.T) {
 	if s.collection.GetRecords()[0].GetRelease().Title != "Magic" {
 		t.Errorf("Incoming has not been merged: %v", s.collection.GetRecords())
 	}
-	if len(s.collection.GetWants()) != 1 {
-		t.Errorf("Wrong number of wants: %v", s.collection.GetWants())
+	if len(s.collection.GetNewWants()) != 1 {
+		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
 	}
 }
 
 func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSyncWithDirty")
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234}}}}
 	s.runSync()
 
 	// Check that we have one record and one want
@@ -156,14 +156,14 @@ func TestGoodMergeSyncWithDirty(t *testing.T) {
 	if s.collection.GetRecords()[0].GetRelease().Title != "Magic" {
 		t.Errorf("Incoming has not been merged: %v", s.collection.GetRecords())
 	}
-	if len(s.collection.GetWants()) != 1 {
-		t.Errorf("Wrong number of wants: %v", s.collection.GetWants())
+	if len(s.collection.GetNewWants()) != 1 {
+		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
 	}
 }
 
 func TestRecache(t *testing.T) {
 	s := InitTestServer(".testrecache")
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
 
 	s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
 	s.runRecache()
@@ -184,7 +184,7 @@ func TestBadPush(t *testing.T) {
 	}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{}}}}
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
 
@@ -203,7 +203,7 @@ func TestPushMove(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 
@@ -222,7 +222,7 @@ func TestPushRating(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.collection = &pb.RecordCollection{Wants: []*pbd.Release{&pbd.Release{Id: 255}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}})
 
