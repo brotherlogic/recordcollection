@@ -61,6 +61,9 @@ message ReleaseMetadata {
     PRE_FRESHMAN = 4;
     FRESHMAN = 5;
 
+    PRE_SOPHMORE = 12;
+    SOPHMORE = 13;
+
     PRE_GRADUATE = 10;
     GRADUATE = 11;
 
