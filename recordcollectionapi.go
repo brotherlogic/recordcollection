@@ -34,6 +34,9 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			} else {
 				s.cacheMap[rec.GetRelease().Id] = rec
 			}
+			if rec.GetMetadata().GetDirty() {
+				s.pushMap[rec.GetRelease().Id] = rec
+			}
 		}
 	}
 
