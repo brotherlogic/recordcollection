@@ -46,6 +46,7 @@ func (s *Server) runRecache() {
 }
 
 func (s *Server) pushRecord(r *pb.Record) bool {
+	s.Log(fmt.Sprintf("PUSH: %v", r))
 	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder())
 	// Push the score
 	if r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
@@ -67,6 +68,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 	r.GetMetadata().MoveFolder = 0
 
 	r.GetMetadata().Dirty = false
+	s.Log(fmt.Sprintf("PUSHED: %v", r))
 	return pushed
 }
 
