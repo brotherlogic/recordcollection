@@ -87,12 +87,6 @@ func (s *Server) cacheRecord(r *pb.Record) {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
 		if err == nil {
 
-			// Reset to dirty if the scores don't match
-			if release.Rating != r.GetRelease().Rating {
-				r.GetMetadata().Dirty = true
-				return
-			}
-
 			//Clear repeated fields first
 			r.GetRelease().Images = []*pbd.Image{}
 			r.GetRelease().Artists = []*pbd.Artist{}

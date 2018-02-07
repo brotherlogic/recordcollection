@@ -117,16 +117,6 @@ func TestDirtyMerge(t *testing.T) {
 	}
 }
 
-func TestDirtyAttemptToMerge(t *testing.T) {
-	s := InitTestServer(".testDirtyMerge")
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222, Rating: 4}, Metadata: &pb.ReleaseMetadata{Dirty: false}}
-	s.cacheRecord(r)
-
-	if r.GetMetadata().LastCache != 0 || !r.GetMetadata().Dirty {
-		t.Fatalf("Record has beed recached even though it should be dirty %v", r)
-	}
-}
-
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
 	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234}}}}
