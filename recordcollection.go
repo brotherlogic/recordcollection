@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,8 +18,40 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
+	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
+	pbro "github.com/brotherlogic/recordsorganiser/proto"
 )
+
+type quotaChecker interface {
+	hasQuota(folder int32) (bool, error)
+}
+
+type prodQuotaChecker struct{}
+
+func (p *prodQuotaChecker) hasQuota(folder int32) (bool, error) {
+	ip, port, err := utils.Resolve("recordsorganiser")
+	if err != nil {
+		return false, err
+	}
+
+	conn, err := grpc.Dial(ip+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
+	if err != nil {
+		return false, err
+	}
+	defer conn.Close()
+
+	client := pbro.NewOrganiserServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	quota, err := client.GetQuota(ctx, &pbro.QuotaRequest{FolderId: folder})
+	if err != nil {
+		return false, err
+	}
+
+	return !quota.GetOverQuota(), nil
+}
 
 type saver interface {
 	GetCollection() []*godiscogs.Release
