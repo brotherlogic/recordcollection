@@ -59,13 +59,19 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 	r.GetMetadata().SetRating = 0
 
 	if r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder() {
-		resp := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
-		if len(resp) > 0 {
-			s.Log(fmt.Sprintf("Moving record: %v", resp))
+		//Check that we can move this record
+		val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
+		if err != nil || !val {
+			s.Log(fmt.Sprintf("QUOTA DENIED: %v, %v", val, err))
+		} else {
+			resp := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
+			if len(resp) > 0 {
+				s.Log(fmt.Sprintf("Moving record: %v", resp))
+			}
+			r.GetRelease().FolderId = r.GetMetadata().MoveFolder
+			r.GetMetadata().MoveFolder = 0
 		}
-		r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 	}
-	r.GetMetadata().MoveFolder = 0
 
 	r.GetMetadata().Dirty = false
 	s.Log(fmt.Sprintf("PUSHED: %v", r))

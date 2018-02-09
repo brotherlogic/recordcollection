@@ -19,6 +19,7 @@ func InitTestServer(folder string) *Server {
 
 	// Create the record collection because we're not init'ing from a file
 	s.collection = &pb.RecordCollection{}
+	s.quota = &testQuota{pass: true}
 
 	os.RemoveAll(folder)
 	s.GoServer.KSclient = *keystoreclient.GetTestClient(folder)
