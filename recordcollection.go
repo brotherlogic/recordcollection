@@ -79,6 +79,7 @@ type Server struct {
 	pushMap        map[int32]*pb.Record
 	pushWait       time.Duration
 	saveNeeded     bool
+	quota          quotaChecker
 }
 
 const (
@@ -198,6 +199,7 @@ func Init() *Server {
 		lastPushTime:   time.Now(),
 		lastPushSize:   0,
 		lastPushLength: 0,
+		quota:          &prodQuotaChecker{},
 	}
 }
 

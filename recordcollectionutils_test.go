@@ -3,12 +3,24 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 
 	pbd "github.com/brotherlogic/godiscogs"
 
 	pb "github.com/brotherlogic/recordcollection/proto"
 )
+
+type testQuota struct {
+	pass bool
+}
+
+func (t *testQuota) hasQuota(folder int32) (bool, error) {
+	if t.pass {
+		return true, nil
+	}
+	return false, fmt.Errorf("Build To Fail")
+}
 
 type testSyncer struct {
 	setRatingCount  int
@@ -205,6 +217,26 @@ func TestPushMove(t *testing.T) {
 
 	if tRetr.moveRecordCount != 1 {
 		t.Errorf("Update has not run")
+	}
+}
+
+func TestPushBadQuotaMove(t *testing.T) {
+	tRetr := &testSyncer{}
+	s := InitTestServer(".testrecache")
+	s.retr = tRetr
+	s.quota = &testQuota{pass: false}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	s.runPush()
+
+	if tRetr.moveRecordCount != 0 {
+		t.Errorf("Update has run when it shouldn't")
 	}
 }
 
