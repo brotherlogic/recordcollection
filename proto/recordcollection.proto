@@ -30,6 +30,11 @@ message Token {
   string token = 1;
 }
 
+enum Purgatory {
+  UNKNOWN = 0;
+  NO_GOAL_FOLDER = 1;
+}
+
 message ReleaseMetadata {
 	// The date the release was added
 	int64 date_added = 1;
@@ -89,6 +94,8 @@ message ReleaseMetadata {
 
   // The time we were last Synced
   int64 last_sync_time= 13;
+
+  Purgatory purgatory = 14;
 }
 
 // A request to get some records
