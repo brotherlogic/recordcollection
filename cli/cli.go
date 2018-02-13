@@ -65,10 +65,24 @@ func main() {
 	case "folder":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.Atoi(os.Args[3])
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
+		if err != nil {
+		   log.Fatalf("Error: %v", err)
+}		   
+		if len(rec.GetRecords()) == 1 {
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(rec.GetRecords()[0].GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f)}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+}
+	case "spfolder":
+		i, _ := strconv.Atoi(os.Args[2])
+		f, _ := strconv.Atoi(os.Args[3])
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
-	}
 }
+	}
