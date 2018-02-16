@@ -60,6 +60,7 @@ type saver interface {
 	AddToFolder(folderID int32, releaseID int32) (int, error)
 	SetRating(releaseID int, rating int) error
 	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) string
+	DeleteInstance(folderID, releaseID, instanceID int) string
 }
 
 //Server main server type

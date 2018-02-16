@@ -60,6 +60,30 @@ func TestAddRecord(t *testing.T) {
 	}
 }
 
+func TestDeleteRecord(t *testing.T) {
+	s := InitTestServer(".testaddrecord")
+	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})
+
+	if err != nil {
+		t.Fatalf("Error in adding record: %v", err)
+	}
+
+	//Retrieve the record
+	if r.GetAdded().GetRelease().InstanceId <= 0 {
+		t.Errorf("Added record does not have an instance id: %v", r)
+	}
+
+	_, err = s.DeleteRecord(context.Background(), &pb.DeleteRecordRequest{InstanceId: r.GetAdded().GetRelease().InstanceId})
+
+	if err != nil {
+		t.Fatalf("Error in deleting record: %v", err)
+	}
+
+	if len(s.collection.Records) != 0 {
+		t.Errorf("Record has not been delete: %v", s.collection)
+	}
+}
+
 func TestAddRecordSetsDateAdded(t *testing.T) {
 	s := InitTestServer(".testaddrecord")
 	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})

@@ -12,6 +12,18 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+// DeleteRecord deletes a record
+func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordRequest) (*pb.DeleteRecordResponse, error) {
+	for i, r := range s.collection.GetRecords() {
+		if r.GetRelease().InstanceId == request.InstanceId {
+			s.retr.DeleteInstance(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId))
+			s.collection.Records = append(s.collection.Records[:i], s.collection.Records[i+1:]...)
+		}
+	}
+
+	return &pb.DeleteRecordResponse{}, nil
+}
+
 // GetRecordCollection gets the full collection
 func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordCollectionRequest) (*pb.GetRecordCollectionResponse, error) {
 	resp := &pb.GetRecordCollectionResponse{InstanceIds: make([]int32, 0)}
