@@ -60,6 +60,10 @@ func (t *testSyncer) MoveToFolder(a, b, c, d int) string {
 	return "ALL GOOD!"
 }
 
+func (t *testSyncer) DeleteInstance(a, b, c int) string {
+	return "ALL GOOD!"
+}
+
 func TestGoodSync(t *testing.T) {
 	s := InitTestServer(".testGoodSync")
 	s.runSync()
