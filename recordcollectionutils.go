@@ -49,12 +49,12 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 	s.Log(fmt.Sprintf("PUSH: %v", r))
 	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder())
 	// Push the score
-	if r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
-		err := s.retr.SetRating(int(r.GetRelease().Id), int(r.GetMetadata().GetSetRating()))
+	if (r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetSetRating() == -1) && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
+		err := s.retr.SetRating(int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
 		if err != nil {
 			s.Log(fmt.Sprintf("RATING ERROR: %v", err))
 		}
-		r.GetRelease().Rating = r.GetMetadata().SetRating
+		r.GetRelease().Rating = int32(max(0, int(r.GetMetadata().SetRating)))
 	}
 	r.GetMetadata().SetRating = 0
 
