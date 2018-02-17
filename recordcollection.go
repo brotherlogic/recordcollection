@@ -42,7 +42,7 @@ func (p *prodQuotaChecker) hasQuota(folder int32) (bool, error) {
 	defer conn.Close()
 
 	client := pbro.NewOrganiserServiceClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
 	quota, err := client.GetQuota(ctx, &pbro.QuotaRequest{FolderId: folder})
