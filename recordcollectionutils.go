@@ -62,7 +62,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 		//Check that we can move this record
 		val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
 		if err != nil || !val {
-			s.Log(fmt.Sprintf("QUOTA DENIED: %v, %v", val, err))
+			s.Log(fmt.Sprintf("QUOTA DENIED: %v, %v -> %v", val, err, r.GetMetadata().GetMoveFolder()))
 		} else {
 			resp := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 			if len(resp) > 0 {
