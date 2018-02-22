@@ -110,6 +110,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			proto.Merge(rec, request.GetUpdate())
 			s.LogFunction("UpdateRecord-Merge", t1)
 
+			s.Log(fmt.Sprintf("UPDATED: %v", request))
 			rec.GetMetadata().Dirty = true
 			record = rec
 			t2 := time.Now()

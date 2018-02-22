@@ -86,8 +86,16 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "reset":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, Category: pbrc.ReleaseMetadata_STAGED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+	case "delete":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.DeleteRecordRequest{InstanceId: int32(i)}
+		rec, err := registry.DeleteRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
