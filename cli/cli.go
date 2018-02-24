@@ -76,6 +76,20 @@ func main() {
 			}
 			fmt.Printf("Updated: %v", rec)
 		}
+	case "onetime":
+		f, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Metadata: &pbrc.ReleaseMetadata{Dirty: false}, Release: &pbgd.Release{FolderId: int32(1362206)}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+
+		for _, r := range rec.GetRecords() {
+			rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(r.GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f)}}})
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+			fmt.Printf("Updated: %v", rec)
+		}
 	case "spfolder":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.Atoi(os.Args[3])

@@ -80,6 +80,8 @@ message ReleaseMetadata {
 
     STAGED_TO_SELL = 14;
     SOLD = 15;
+
+    DIGITAL = 16;
   }
   Category category = 8;
 
