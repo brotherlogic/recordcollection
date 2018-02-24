@@ -114,6 +114,7 @@ message GetRecordsRequest {
 // A list of records in response
 message GetRecordsResponse {
   repeated Record records = 1;
+  int64 internal_processing_time = 2;
 }
 
 // A request to get some records

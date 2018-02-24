@@ -71,7 +71,7 @@ func testReadSubset() {
 
 	client := pbrc.NewRecordCollectionServiceClient(conn)
 	t := time.Now()
-	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbd.Release{FolderId: 1362206}}}, grpc.UseCompressor("gzip"), grpc.MaxCallRecvMsgSize(1024*1024*1024))
+	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbd.Release{FolderId: 268147}}}, grpc.UseCompressor("gzip"), grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if err != nil {
 		log.Fatalf("Error getting records: %v", err)
 	}
@@ -83,7 +83,7 @@ func testReadSubset() {
 		}
 	}
 
-	fmt.Printf("Got %v (%v) records in %v\n", len(recs.GetRecords()), count, time.Now().Sub(t))
+	fmt.Printf("Got %v (%v) records in %v -> %v\n", len(recs.GetRecords()), count, time.Now().Sub(t), recs.GetInternalProcessingTime())
 }
 
 func main() {
