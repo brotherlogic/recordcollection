@@ -43,6 +43,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			if request.GetStrip() {
 				r := proto.Clone(rec).(*pb.Record)
 				r.GetRelease().Images = make([]*pbgd.Image, 0)
+				r.GetRelease().Formats = make([]*pbgd.Format, 0)
 				response.Records = append(response.Records, r)
 			} else {
 				response.Records = append(response.Records, rec)

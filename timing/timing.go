@@ -86,7 +86,32 @@ func testReadSubset() {
 	fmt.Printf("Got %v (%v) records in %v -> %v\n", len(recs.GetRecords()), count, time.Now().Sub(t), recs.GetInternalProcessingTime())
 }
 
+func testReadSubsetStripped() {
+	host, port := getIP("recordcollection")
+	conn, err := grpc.Dial(host+":"+strconv.Itoa(port), grpc.WithInsecure())
+	defer conn.Close()
+	if err != nil {
+		log.Fatalf("Unable to dial : %v", err)
+	}
+
+	client := pbrc.NewRecordCollectionServiceClient(conn)
+	t := time.Now()
+	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Strip: true, Filter: &pbrc.Record{Release: &pbd.Release{FolderId: 268147}}}, grpc.UseCompressor("gzip"), grpc.MaxCallRecvMsgSize(1024*1024*1024))
+	if err != nil {
+		log.Fatalf("Error getting records: %v", err)
+	}
+
+	count := 0
+	for _, rc := range recs.GetRecords() {
+		if len(rc.GetRelease().GetFormats()) > 10 {
+			count++
+		}
+	}
+
+	fmt.Printf("Got %v (%v) records in %v -> %v\n", len(recs.GetRecords()), count, time.Now().Sub(t), recs.GetInternalProcessingTime())
+}
+
 func main() {
 	testReadSubset()
-
+	testReadSubsetStripped()
 }
