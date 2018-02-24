@@ -121,6 +121,24 @@ func TestGetRecords(t *testing.T) {
 	}
 }
 
+func TestGetRecordsStripped(t *testing.T) {
+	s := InitTestServer(".testGetRecords")
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}}})
+	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Strip: true, Filter: &pb.Record{}})
+
+	if err != nil {
+		t.Errorf("Error in getting records: %v", err)
+	}
+
+	if len(r.GetRecords()) != 1 {
+		t.Fatalf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
+	}
+
+	if len(r.GetRecords()[0].GetRelease().GetImages()) != 0 {
+		t.Errorf("Images have not been stripped: %v", r)
+	}
+}
+
 func TestGetRecordsById(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})

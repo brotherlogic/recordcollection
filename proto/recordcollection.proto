@@ -109,6 +109,9 @@ message GetRecordsRequest {
 
   //Forces a refresh on this record
   bool force = 2;
+
+  // Return a stripped response
+  bool strip = 3;
 }
 
 // A list of records in response
@@ -168,7 +171,6 @@ message DeleteRecordResponse {}
 
 service RecordCollectionService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
-  rpc GetRecordStream(GetRecordsRequest) returns (stream Record) {};
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
   rpc UpdateWant(UpdateWantRequest) returns (UpdateWantResponse) {};
