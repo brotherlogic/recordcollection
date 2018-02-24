@@ -168,6 +168,7 @@ message DeleteRecordResponse {}
 
 service RecordCollectionService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
+  rpc GetRecordStream(GetRecordsRequest) returns (stream Record) {};
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
   rpc UpdateWant(UpdateWantRequest) returns (UpdateWantResponse) {};

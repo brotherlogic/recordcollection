@@ -29,6 +29,30 @@ type quotaChecker interface {
 
 type prodQuotaChecker struct{}
 
+// GetRecordStream gets a bunch of records
+func (s *Server) GetRecordStream(request *pb.GetRecordsRequest, stream pb.RecordCollectionService_GetRecordStreamServer) error {
+
+	for _, rec := range s.collection.GetRecords() {
+		if request.Filter.GetRelease() == nil || utils.FuzzyMatch(request.Filter, rec) {
+			stream.Send(rec)
+			if request.GetForce() {
+				s.cacheRecord(rec)
+			} else {
+				s.cacheMutex.Lock()
+				s.cacheMap[rec.GetRelease().Id] = rec
+				s.cacheMutex.Unlock()
+			}
+			if rec.GetMetadata().GetDirty() {
+				s.pushMutex.Lock()
+				s.pushMap[rec.GetRelease().Id] = rec
+				s.pushMutex.Unlock()
+			}
+		}
+	}
+
+	return nil
+}
+
 func (p *prodQuotaChecker) hasQuota(folder int32) (bool, error) {
 	ip, port, err := utils.Resolve("recordsorganiser")
 	if err != nil {
