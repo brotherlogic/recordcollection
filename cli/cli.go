@@ -82,7 +82,6 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
-		log.Printf("DOING : %v", len(rec.GetRecords()))
 		time.Sleep(time.Second * 10)
 
 		for _, r := range rec.GetRecords() {

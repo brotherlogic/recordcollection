@@ -1,3 +1,3 @@
 # recordcollection
 
-Server for hosting the record collection and manipulating Discogs to our bidding.
+Service for hosting the record collection and manipulating Discogs to our bidding.
