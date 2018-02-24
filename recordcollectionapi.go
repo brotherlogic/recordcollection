@@ -44,7 +44,9 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			if request.GetForce() {
 				s.cacheRecord(rec)
 			} else {
+				s.cacheMutex.Lock()
 				s.cacheMap[rec.GetRelease().Id] = rec
+				s.cacheMutex.Unlock()
 			}
 			if rec.GetMetadata().GetDirty() {
 				s.pushMutex.Lock()

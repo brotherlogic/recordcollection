@@ -31,7 +31,7 @@ func main() {
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 	defer cancel()
 
 	switch os.Args[1] {
@@ -82,6 +82,8 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
+		log.Printf("DOING : %v", len(rec.GetRecords()))
+		time.Sleep(time.Second * 10)
 
 		for _, r := range rec.GetRecords() {
 			rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(r.GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f)}}})
