@@ -60,6 +60,8 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	if !request.GetForce() {
 		s.LogFunction(fmt.Sprintf("GetRecords-%v", len(s.collection.GetRecords())), t)
 	}
+
+	response.InternalProcessingTime = time.Now().Sub(t).Nanoseconds() / 1000000
 	return response, nil
 }
 
