@@ -116,7 +116,6 @@ func (s *Server) readRecordCollection() error {
 
 		// Stop repeated fields from blowing up
 		if len(r.GetRelease().GetFormats()) > 10 {
-			s.Log(fmt.Sprintf("REDUCING %v", r.GetRelease().Id))
 			r.GetRelease().Images = []*pbd.Image{}
 			r.GetRelease().Artists = []*pbd.Artist{}
 			r.GetRelease().Formats = []*pbd.Format{}
@@ -228,11 +227,9 @@ func main() {
 	tResp, _, err := server.KSclient.Read(TOKEN, tType)
 
 	if err != nil {
-		server.Log(fmt.Sprintf("Error reading token: %v", err))
 		return
 	}
 
-	server.Log(fmt.Sprintf("Starting record collection with %v", tResp))
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
 	server.Register = server
 
@@ -241,6 +238,5 @@ func main() {
 	server.RegisterRepeatingTask(server.runRecache, time.Minute)
 	server.RegisterRepeatingTask(server.runPush, time.Minute)
 	server.RegisterRepeatingTask(server.saveLoop, time.Second)
-	server.Log("Starting!")
 	server.Serve()
 }
