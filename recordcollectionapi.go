@@ -120,8 +120,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				rec.GetRelease().Labels = []*pbgd.Label{}
 			}
 
-			s.Log(fmt.Sprintf("UPDATED: %v", request))
-
 			proto.Merge(rec, request.GetUpdate())
 			s.LogFunction("UpdateRecord-Merge", t1)
 			rec.GetMetadata().Dirty = true

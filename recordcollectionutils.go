@@ -46,7 +46,6 @@ func (s *Server) runRecache() {
 }
 
 func (s *Server) pushRecord(r *pb.Record) bool {
-	s.Log(fmt.Sprintf("PUSH: %v", r))
 	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder())
 
 	if r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder() {
@@ -57,26 +56,19 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			return false
 		}
 
-		resp := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
-		if len(resp) > 0 {
-			s.Log(fmt.Sprintf("Moving record: %v", resp))
-		}
+		s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 		r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 		r.GetMetadata().MoveFolder = 0
 	}
 
 	// Push the score
 	if (r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetSetRating() == -1) && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
-		err := s.retr.SetRating(int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
-		if err != nil {
-			s.Log(fmt.Sprintf("RATING ERROR: %v", err))
-		}
+		s.retr.SetRating(int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
 		r.GetRelease().Rating = int32(max(0, int(r.GetMetadata().SetRating)))
 	}
 	r.GetMetadata().SetRating = 0
 
 	r.GetMetadata().Dirty = false
-	s.Log(fmt.Sprintf("PUSHED: %v", r))
 	return pushed
 }
 
@@ -110,7 +102,6 @@ func (s *Server) cacheRecord(r *pb.Record) {
 }
 
 func (s *Server) syncCollection() {
-	s.Log(fmt.Sprintf("Starting sync collection"))
 	records := s.retr.GetCollection()
 
 	for _, record := range records {
@@ -147,7 +138,6 @@ func (s *Server) syncCollection() {
 		}
 	}
 
-	s.Log(fmt.Sprintf("Synced to %v", len(s.collection.GetRecords())))
 	s.lastSyncTime = time.Now()
 	s.saveRecordCollection()
 }
