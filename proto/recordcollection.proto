@@ -34,6 +34,8 @@ enum Purgatory {
   UNKNOWN = 0;
   NO_GOAL_FOLDER = 1;
   NEEDS_STOCK_CHECK = 2;
+
+  ALL_GOOD = 3;
 }
 
 message ReleaseMetadata {
