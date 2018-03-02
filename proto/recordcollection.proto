@@ -33,6 +33,7 @@ message Token {
 enum Purgatory {
   UNKNOWN = 0;
   NO_GOAL_FOLDER = 1;
+  NEEDS_STOCK_CHECK = 2;
 }
 
 message ReleaseMetadata {
@@ -82,6 +83,8 @@ message ReleaseMetadata {
     SOLD = 15;
 
     DIGITAL = 16;
+
+    ASSESS = 17;
   }
   Category category = 8;
 
@@ -101,6 +104,9 @@ message ReleaseMetadata {
   int64 last_sync_time= 13;
 
   Purgatory purgatory = 14;
+
+  // The last time we did a stock check
+  int64 last_stock_check = 15;
 }
 
 // A request to get some records
