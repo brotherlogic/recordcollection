@@ -125,7 +125,7 @@ func TestImageMerge(t *testing.T) {
 
 func TestDirtyMerge(t *testing.T) {
 	s := InitTestServer(".testDirtyMerge")
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{Dirty: true}}
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}
 	s.cacheRecord(r)
 
 	if r.GetMetadata().LastCache != 0 {

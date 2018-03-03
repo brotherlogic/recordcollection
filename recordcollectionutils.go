@@ -77,8 +77,8 @@ func (s *Server) cacheRecord(r *pb.Record) {
 		r.Metadata = &pb.ReleaseMetadata{}
 	}
 
-	// Don't recache a dirty Record
-	if r.GetMetadata().GetDirty() {
+	// Don't recache a record that has a pending score
+	if r.GetMetadata().GetSetRating() > 0 {
 		return
 	}
 
