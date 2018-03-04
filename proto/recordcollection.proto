@@ -85,7 +85,8 @@ message ReleaseMetadata {
     SOLD = 15;
 
     DIGITAL = 16;
-
+    GOOGLE_PLAY = 18;
+    
     ASSESS = 17;
   }
   Category category = 8;

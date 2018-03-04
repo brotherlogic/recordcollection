@@ -139,12 +139,20 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "stock":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}}
-		rec, err := registry.UpdateRecord(ctx, up)
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
-		fmt.Printf("Updated: %v", rec)
+		for _, r := range recs.GetRecords() {
+			if r.GetMetadata().Category == pbrc.ReleaseMetadata_ASSESS {
+				up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}}
+				rec, err := registry.UpdateRecord(ctx, up)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+				fmt.Printf("Updated: %v", rec)
+			}
+		}
 	case "delete":
 		i, _ := strconv.Atoi(os.Args[2])
 		up := &pbrc.DeleteRecordRequest{InstanceId: int32(i)}
