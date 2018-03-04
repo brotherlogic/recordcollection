@@ -67,6 +67,14 @@ func (t *testSyncer) DeleteInstance(a, b, c int) string {
 	return "ALL GOOD!"
 }
 
+func (t *testSyncer) SellRecord(releaseID int, price float32, state string) {
+	// Do Nothing
+}
+func (t *testSyncer) GetSalePrice(releaseID int) float32 {
+	return 15.5
+}
+
+
 func TestGoodSync(t *testing.T) {
 	s := InitTestServer(".testGoodSync")
 	s.runSync()

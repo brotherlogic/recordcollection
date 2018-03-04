@@ -110,8 +110,14 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	var record *pb.Record
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
-
 			t1 := time.Now()
+
+			// If this is being sold - mark it for sale
+			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
+				price := s.retr.GetSalePrice(int(rec.GetRelease().Id))
+				s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale")
+			}
+			
 			// Avoid increasing repeasted fields
 			if len(request.GetUpdate().GetRelease().GetFormats()) > 0 {
 				rec.GetRelease().Images = []*pbgd.Image{}
