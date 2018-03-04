@@ -184,6 +184,24 @@ func TestUpdateRecords(t *testing.T) {
 	}
 }
 
+func TestUpdateRecordsForSale(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
+
+	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	if r == nil || len(r.Records) != 1 || r.Records[0].Release.Title != "madeup2" {
+		t.Errorf("Error in updating records: %v", r)
+	}
+}
+
+
 func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
 	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}})
