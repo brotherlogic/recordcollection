@@ -151,6 +151,8 @@ func (s *Server) syncCollection() {
 	for _, r := range s.collection.Records {
 		if otherMap[r.GetRelease().MasterId] > 1 {
 			r.GetMetadata().Others = true
+		} else {
+			r.GetMetadata().Others = false
 		}
 	}
 
