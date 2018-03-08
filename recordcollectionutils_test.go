@@ -30,8 +30,9 @@ type testSyncer struct {
 
 func (t *testSyncer) GetCollection() []*pbd.Release {
 	return []*pbd.Release{
-		&pbd.Release{InstanceId: 1, Id: 234, MasterId: 12,Title: "Magic", Formats: []*pbd.Format{&pbd.Format{Name: "blah"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}},
+		&pbd.Release{InstanceId: 1, Id: 234, MasterId: 12, Title: "Magic", Formats: []*pbd.Format{&pbd.Format{Name: "blah"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}},
 		&pbd.Release{InstanceId: 2, Id: 123, Title: "Johnson", MasterId: 12},
+		&pbd.Release{InstanceId: 3, Id: 1255, Title: "Johnson", MasterId: 123},
 	}
 }
 
@@ -74,13 +75,12 @@ func (t *testSyncer) GetSalePrice(releaseID int) float32 {
 	return 15.5
 }
 
-
 func TestGoodSync(t *testing.T) {
 	s := InitTestServer(".testGoodSync")
 	s.runSync()
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 2 {
+	if len(s.collection.GetRecords()) != 3 {
 		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
 	}
 	if len(s.collection.GetNewWants()) != 1 {
@@ -93,7 +93,7 @@ func TestCleanSync(t *testing.T) {
 	s.runSync()
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 2 {
+	if len(s.collection.GetRecords()) != 3 {
 		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
 	}
 	if len(s.collection.GetRecords()[0].GetRelease().GetImages()) != 1 {
@@ -105,7 +105,7 @@ func TestCleanSync(t *testing.T) {
 	}
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 2 {
+	if len(s.collection.GetRecords()) != 3 {
 		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
 	}
 	if len(s.collection.GetRecords()[0].GetRelease().GetImages()) != 1 {
@@ -153,7 +153,7 @@ func TestGoodMergeSync(t *testing.T) {
 	s.runSync()
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 2 {
+	if len(s.collection.GetRecords()) != 3 {
 		t.Errorf("Wrong number of records(%v): %v", len(s.collection.GetRecords()), s.collection.GetRecords())
 	}
 	if s.collection.GetRecords()[0].GetRelease().Title != "Magic" {
@@ -170,7 +170,7 @@ func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s.runSync()
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 2 {
+	if len(s.collection.GetRecords()) != 3 {
 		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
 	}
 	if s.collection.GetRecords()[0].GetRelease().Title != "Magic" {
