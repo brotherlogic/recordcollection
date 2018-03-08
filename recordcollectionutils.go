@@ -140,10 +140,12 @@ func (s *Server) syncCollection() {
 
 	otherMap := make(map[int32]int32)
 	for _, r := range s.collection.Records {
-		if _, ok := otherMap[r.GetRelease().MasterId]; !ok {
-			otherMap[r.GetRelease().MasterId] = 1
-		} else {
-			otherMap[r.GetRelease().MasterId] = 2
+		if r.GetRelease().MasterId > 0 {
+			if _, ok := otherMap[r.GetRelease().MasterId]; !ok {
+				otherMap[r.GetRelease().MasterId] = 1
+			} else {
+				otherMap[r.GetRelease().MasterId] = 2
+			}
 		}
 	}
 	for _, r := range s.collection.Records {

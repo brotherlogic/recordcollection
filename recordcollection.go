@@ -130,7 +130,7 @@ func (s *Server) readRecordCollection() error {
 		}
 
 		if r.GetMetadata().Dirty {
-		        s.pushMutex.Lock()
+			s.pushMutex.Lock()
 			s.pushMap[r.GetRelease().InstanceId] = r
 			s.pushMutex.Unlock()
 		}
