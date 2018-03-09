@@ -24,20 +24,20 @@ import (
 )
 
 type quotaChecker interface {
-	hasQuota(folder int32) (bool, error)
+	hasQuota(folder int32) (*pbro.QuotaResponse, error)
 }
 
 type prodQuotaChecker struct{}
 
-func (p *prodQuotaChecker) hasQuota(folder int32) (bool, error) {
+func (p *prodQuotaChecker) hasQuota(folder int32) (*pbro.QuotaResponse, error) {
 	ip, port, err := utils.Resolve("recordsorganiser")
 	if err != nil {
-		return false, err
+		return &pbro.QuotaResponse{}, err
 	}
 
 	conn, err := grpc.Dial(ip+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
 	if err != nil {
-		return false, err
+		return &pbro.QuotaResponse{}, err
 	}
 	defer conn.Close()
 
@@ -45,12 +45,7 @@ func (p *prodQuotaChecker) hasQuota(folder int32) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
-	quota, err := client.GetQuota(ctx, &pbro.QuotaRequest{FolderId: folder})
-	if err != nil {
-		return false, err
-	}
-
-	return !quota.GetOverQuota(), nil
+	return client.GetQuota(ctx, &pbro.QuotaRequest{FolderId: folder})
 }
 
 type saver interface {
