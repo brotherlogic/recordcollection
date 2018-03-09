@@ -58,7 +58,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 
 		if val.GetOverQuota() {		 
 			s.Log(fmt.Sprintf("QUOTA DENIED: %v, %v -> %v for %v", val, err, r.GetMetadata().GetMoveFolder(), r))
-			if val.SpillFolder != 0 {
+			if val.SpillFolder > 0 {
 				r.GetMetadata().MoveFolder = val.SpillFolder
 			} else {
 				return false
