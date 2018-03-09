@@ -51,14 +51,19 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 	if r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder() {
 		//Check that we can move this record
 		val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
-		if err != nil || !val {
+		if err != nil || val.GetOverQuota() {
 			s.Log(fmt.Sprintf("QUOTA DENIED: %v, %v -> %v for %v", val, err, r.GetMetadata().GetMoveFolder(), r))
-			return false
+			if val.SpillFolder != 0 {
+				r.GetMetadata().MoveFolder = val.SpillFolder
+			} else {
+				return false
+			}
 		}
 
 		s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 		r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 		r.GetMetadata().MoveFolder = 0
+
 	}
 
 	// Push the score

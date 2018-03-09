@@ -3,23 +3,23 @@ package main
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	pbd "github.com/brotherlogic/godiscogs"
-
 	pb "github.com/brotherlogic/recordcollection/proto"
+	pbro "github.com/brotherlogic/recordsorganiser/proto"
 )
 
 type testQuota struct {
-	pass bool
+	pass  bool
+	spill int32
 }
 
-func (t *testQuota) hasQuota(folder int32) (bool, error) {
+func (t *testQuota) hasQuota(folder int32) (*pbro.QuotaResponse, error) {
 	if t.pass {
-		return true, nil
+		return &pbro.QuotaResponse{OverQuota: false}, nil
 	}
-	return false, fmt.Errorf("Build To Fail")
+	return &pbro.QuotaResponse{OverQuota: true, SpillFolder: t.spill}, nil
 }
 
 type testSyncer struct {
@@ -255,6 +255,26 @@ func TestPushBadQuotaMove(t *testing.T) {
 
 	if tRetr.moveRecordCount != 0 {
 		t.Errorf("Update has run when it shouldn't")
+	}
+}
+
+func TestPushBadQuotaMoveWithSpill(t *testing.T) {
+	tRetr := &testSyncer{}
+	s := InitTestServer(".testrecache")
+	s.retr = tRetr
+	s.quota = &testQuota{pass: false, spill: 123}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	s.runPush()
+
+	if tRetr.moveRecordCount != 1 {
+		t.Errorf("Update has not run when it should've")
 	}
 }
 
