@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"log"
 	"testing"
 
 	pbd "github.com/brotherlogic/godiscogs"
@@ -10,14 +11,31 @@ import (
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
 )
 
+type testMover struct {
+	pass bool
+}
+
+func (t *testMover) moveRecord(instanceID, oldFolder, newFolder int32) error {
+	if t.pass {
+		return nil
+	}
+
+	log.Printf("HERE")
+	return errors.New("Built to fail")
+}
+
 type testQuota struct {
 	pass  bool
 	spill int32
+	fail  bool
 }
 
 func (t *testQuota) hasQuota(folder int32) (*pbro.QuotaResponse, error) {
 	if t.pass {
 		return &pbro.QuotaResponse{OverQuota: false}, nil
+	}
+	if t.fail {
+		return &pbro.QuotaResponse{}, errors.New("Built to fail")
 	}
 	return &pbro.QuotaResponse{OverQuota: true, SpillFolder: t.spill}, nil
 }
@@ -245,6 +263,45 @@ func TestPushBadQuotaMove(t *testing.T) {
 	s.quota = &testQuota{pass: false}
 	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
 
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	s.runPush()
+
+	if tRetr.moveRecordCount != 0 {
+		t.Errorf("Update has run when it shouldn't")
+	}
+}
+
+func TestPushBadHardQuotaMove(t *testing.T) {
+	tRetr := &testSyncer{}
+	s := InitTestServer(".testrecache")
+	s.retr = tRetr
+	s.quota = &testQuota{pass: false, fail: true}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	s.runPush()
+
+	if tRetr.moveRecordCount != 0 {
+		t.Errorf("Update has run when it shouldn't")
+	}
+}
+
+func TestPushBadMoveRecord(t *testing.T) {
+	tRetr := &testSyncer{}
+	s := InitTestServer(".testrecache")
+	s.retr = tRetr
+	s.mover = &testMover{pass: false}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 
 	if err != nil {

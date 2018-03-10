@@ -16,6 +16,7 @@ func InitTestServer(folder string) *Server {
 	s := Init()
 	s.cacheWait = 0
 	s.retr = &testSyncer{}
+	s.mover = &testMover{pass: true}
 
 	// Create the record collection because we're not init'ing from a file
 	s.collection = &pb.RecordCollection{}
@@ -200,7 +201,6 @@ func TestUpdateRecordsForSale(t *testing.T) {
 		t.Errorf("Error in updating records: %v", r)
 	}
 }
-
 
 func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")

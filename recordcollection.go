@@ -20,11 +20,43 @@ import (
 	pbg "github.com/brotherlogic/goserver/proto"
 	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
+	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
 )
 
 type quotaChecker interface {
 	hasQuota(folder int32) (*pbro.QuotaResponse, error)
+}
+
+type moveRecorder interface {
+	moveRecord(InstanceID, oldFolder, newFolder int32) error
+}
+
+type prodMoveRecorder struct{}
+
+func (p *prodMoveRecorder) moveRecord(InstanceID, oldFolder, newFolder int32) error {
+	ip, port, err := utils.Resolve("recordmover")
+	if err != nil {
+		return err
+	}
+
+	conn, err := grpc.Dial(ip+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
+	if err != nil {
+		return err
+	}
+	defer conn.Close()
+
+	rmclient := pbrm.NewScoreServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+
+	_, err = rmclient.RecordMove(ctx, &pbrm.MoveRequest{Move: &pbrm.RecordMove{
+		InstanceId: InstanceID,
+		FromFolder: oldFolder,
+		ToFolder:   newFolder,
+	}})
+
+	return err
 }
 
 type prodQuotaChecker struct{}
@@ -78,6 +110,7 @@ type Server struct {
 	pushWait       time.Duration
 	saveNeeded     bool
 	quota          quotaChecker
+	mover          moveRecorder
 }
 
 const (
@@ -199,6 +232,7 @@ func Init() *Server {
 		lastPushSize:   0,
 		lastPushLength: 0,
 		quota:          &prodQuotaChecker{},
+		mover:          &prodMoveRecorder{},
 	}
 }
 
