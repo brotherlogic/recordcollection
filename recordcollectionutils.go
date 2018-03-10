@@ -53,16 +53,21 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 		val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
 
 		if err != nil {
-		   return false
-}
+			return false
+		}
 
-		if val.GetOverQuota() {		 
-			s.Log(fmt.Sprintf("QUOTA DENIED: %v, %v -> %v for %v", val, err, r.GetMetadata().GetMoveFolder(), r))
+		if val.GetOverQuota() {
 			if val.SpillFolder > 0 {
 				r.GetMetadata().MoveFolder = val.SpillFolder
 			} else {
 				return false
 			}
+		}
+
+		err = s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
+		if err != nil {
+			s.Log(fmt.Sprintf("Error Recording Move: %v", err))
+			return false
 		}
 
 		s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
