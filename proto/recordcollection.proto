@@ -81,6 +81,7 @@ message ReleaseMetadata {
     PRE_PROFESSOR = 6;
     PROFESSOR = 7;
 
+    PREPARE_TO_SELL = 19;
     STAGED_TO_SELL = 14;
     SOLD = 15;
 
