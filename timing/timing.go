@@ -96,7 +96,7 @@ func testReadSubsetStripped() {
 
 	client := pbrc.NewRecordCollectionServiceClient(conn)
 	t := time.Now()
-	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Strip: true, Filter: &pbrc.Record{Release: &pbd.Release{}, Metadata: &pbrc.ReleaseMetadata{Purgatory: pbrc.Purgatory_NEEDS_STOCK_CHECK}}}, grpc.UseCompressor("gzip"), grpc.MaxCallRecvMsgSize(1024*1024*1024))
+	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Strip: true, Filter: &pbrc.Record{Release: &pbd.Release{FolderId: 242017}, Metadata: &pbrc.ReleaseMetadata{}}}, grpc.UseCompressor("gzip"), grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if err != nil {
 		log.Fatalf("Error getting records: %v", err)
 	}

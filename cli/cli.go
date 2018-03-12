@@ -77,20 +77,20 @@ func main() {
 			fmt.Printf("Updated: %v", rec)
 		}
 	case "onetime":
-		f, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Metadata: &pbrc.ReleaseMetadata{Dirty: false}, Release: &pbgd.Release{FolderId: int32(1362206)}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Metadata: &pbrc.ReleaseMetadata{Dirty: false, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}, Release: &pbgd.Release{}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		time.Sleep(time.Second * 10)
 
 		for _, r := range rec.GetRecords() {
-			rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(r.GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f)}}})
+			_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(r.GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PREPARE_TO_SELL}}})
 			if err != nil {
 				log.Fatalf("Error: %v", err)
 			}
-			fmt.Printf("Updated: %v", rec)
+			fmt.Printf("Run on %v\n", r.GetRelease().Title)
 		}
+		fmt.Printf("Updated: %v\n", len(rec.GetRecords()))
 	case "spfolder":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.Atoi(os.Args[3])
