@@ -46,7 +46,7 @@ func (p *prodMoveRecorder) moveRecord(InstanceID, oldFolder, newFolder int32) er
 	}
 	defer conn.Close()
 
-	rmclient := pbrm.NewScoreServiceClient(conn)
+	rmclient := pbrm.NewMoveServiceClient(conn)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
