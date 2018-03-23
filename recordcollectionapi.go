@@ -39,7 +39,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
 	for _, rec := range s.collection.GetRecords() {
-		if request.Filter.GetRelease() == nil || utils.FuzzyMatch(request.Filter, rec) {
+		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) {
 			if request.GetStrip() {
 				r := proto.Clone(rec).(*pb.Record)
 				r.GetRelease().Images = make([]*pbgd.Image, 0)
