@@ -122,6 +122,21 @@ func TestGetRecords(t *testing.T) {
 	}
 }
 
+func TestGetRecordsInCateogry(t *testing.T) {
+	s := InitTestServer(".testGetRecords")
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_FRESHMAN}})
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOPHMORE}})
+	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOPHMORE}}})
+
+	if err != nil {
+		t.Errorf("Error in getting records: %v", err)
+	}
+
+	if len(r.GetRecords()) != 1 {
+		t.Errorf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
+	}
+}
+
 func TestGetRecordsStripped(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}}})
