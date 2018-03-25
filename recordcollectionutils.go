@@ -33,6 +33,12 @@ func (s *Server) runPush() {
 	if save {
 		s.saveRecordCollection()
 	}
+
+	s.nextPush = nil
+	for _, val := range s.pushMap {
+	    s.nextPush = val
+	    break
+	    }
 	s.lastPushLength = time.Now().Sub(s.lastPushTime)
 }
 
