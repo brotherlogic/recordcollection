@@ -52,27 +52,27 @@ func (s *Server) runRecache() {
 }
 
 func (s *Server) pushRecord(r *pb.Record) bool {
-	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0)
+	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0 && r.GetMetadata().GetMoveFolder() != r.GetRelease().FolderId)
 
 	if r.GetMetadata().GetMoveFolder() > 0 {
 	        if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
-		//Check that we can move this record
-		val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
+		   //Check that we can move this record
+		   val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
 
-		if err != nil {
+		   if err != nil {
 			return false
-		}
+		   }
 
-		if val.GetOverQuota() {
+		   if val.GetOverQuota() {
 			if val.SpillFolder > 0 {
 				r.GetMetadata().MoveFolder = val.SpillFolder
 			} else {
 				return false
 			}
-		}
-}
+		   }
+	        }
 
-		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
+	if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 			err := s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if err != nil {
 				s.Log(fmt.Sprintf("Error Recording Move: %v", err))
