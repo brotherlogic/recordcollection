@@ -54,7 +54,8 @@ func (s *Server) runRecache() {
 func (s *Server) pushRecord(r *pb.Record) bool {
 	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0)
 
-	if r.GetMetadata().GetMoveFolder() > 0 && r.GetRelease().FolderId != r.GetMetadata().GetMoveFolder() {
+	if r.GetMetadata().GetMoveFolder() > 0 {
+	        if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 		//Check that we can move this record
 		val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
 
@@ -69,9 +70,10 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 				return false
 			}
 		}
+}
 
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
-			err = s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
+			err := s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if err != nil {
 				s.Log(fmt.Sprintf("Error Recording Move: %v", err))
 				return false
@@ -81,7 +83,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 		}
 	}
-			r.GetMetadata().MoveFolder = 0	
+	r.GetMetadata().MoveFolder = 0	
 
 	// Push the score
 	if (r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetSetRating() == -1) && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
