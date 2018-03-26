@@ -80,8 +80,8 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 			r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 		}
-			r.GetMetadata().MoveFolder = 0	
 	}
+			r.GetMetadata().MoveFolder = 0	
 
 	// Push the score
 	if (r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetSetRating() == -1) && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
