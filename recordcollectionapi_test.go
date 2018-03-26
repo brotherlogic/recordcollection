@@ -14,6 +14,7 @@ import (
 
 func InitTestServer(folder string) *Server {
 	s := Init()
+	s.PrepServer()
 	s.cacheWait = 0
 	s.retr = &testSyncer{}
 	s.mover = &testMover{pass: true}

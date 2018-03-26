@@ -110,7 +110,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	var record *pb.Record
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
-			t1 := time.Now()
+			s.LogMilestone("UpdateRecord", "FoundRecord", t)
 
 			// If this is being sold - mark it for sale
 			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
@@ -127,19 +127,17 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 
 			proto.Merge(rec, request.GetUpdate())
-			s.LogFunction("UpdateRecord-Merge", t1)
 			rec.GetMetadata().Dirty = true
 			record = rec
-			t2 := time.Now()
 			s.pushMutex.Lock()
 			s.pushMap[rec.GetRelease().Id] = rec
 			s.pushMutex.Unlock()
-			s.LogFunction("UpdateRceord-Lock", t2)
+			s.LogMilestone("UpdateRecord", "UpdatedRecord", t)
 		}
 	}
 
 	s.saveNeeded = true
-	s.LogFunction(fmt.Sprintf("UpdateRecord-%v", len(s.collection.GetRecords())), t)
+	s.LogFunction(fmt.Sprintf("UpdateRecord", len(s.collection.GetRecords())), t)
 	return &pb.UpdateRecordsResponse{Updated: record}, nil
 }
 

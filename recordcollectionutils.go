@@ -36,9 +36,9 @@ func (s *Server) runPush() {
 
 	s.nextPush = nil
 	for _, val := range s.pushMap {
-	    s.nextPush = val
-	    break
-	    }
+		s.nextPush = val
+		break
+	}
 	s.lastPushLength = time.Now().Sub(s.lastPushTime)
 }
 
@@ -81,7 +81,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 		}
 	}
-			r.GetMetadata().MoveFolder = 0	
+	r.GetMetadata().MoveFolder = 0
 
 	// Push the score
 	if (r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetSetRating() == -1) && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
