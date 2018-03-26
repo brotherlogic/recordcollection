@@ -26,6 +26,8 @@ func (s *Server) runPush() {
 		s.pushMutex.Unlock()
 		s.lastPushDone++
 
+		s.Log(fmt.Sprintf("Pushed %v to %v", val, pushed))
+
 		if pushed {
 			break
 		}
