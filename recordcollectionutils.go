@@ -26,8 +26,6 @@ func (s *Server) runPush() {
 		s.pushMutex.Unlock()
 		s.lastPushDone++
 
-		s.Log(fmt.Sprintf("Pushed %v to %v", val, pushed))
-
 		if pushed {
 			break
 		}
@@ -45,12 +43,14 @@ func (s *Server) runPush() {
 }
 
 func (s *Server) runRecache() {
+	s.cacheMutex.Lock()
 	for key, val := range s.cacheMap {
 		s.cacheRecord(val)
 		delete(s.cacheMap, key)
 		time.Sleep(s.cacheWait)
 		break
 	}
+	s.cacheMutex.Unlock()
 }
 
 func (s *Server) pushRecord(r *pb.Record) bool {

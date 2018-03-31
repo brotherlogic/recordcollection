@@ -220,7 +220,7 @@ func TestSimplePush(t *testing.T) {
 	r := &pb.Record{Release: &pbd.Release{FolderId: 268147}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_DIGITAL, GoalFolder: 268147, Dirty: true, MoveFolder: 268147}}
 	s := InitTestServer(".testsimplepush")
 	v := s.pushRecord(r)
-	if !v {
+	if v {
 		t.Fatalf("Push dirty record failed: %v")
 	}
 	if r.GetMetadata().MoveFolder != 0 {
