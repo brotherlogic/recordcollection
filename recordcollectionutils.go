@@ -110,7 +110,6 @@ func (s *Server) cacheRecord(r *pb.Record) {
 	//Force a recache if the record has no title
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" || len(r.GetRelease().GetFormats()) == 0 {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
-		s.Log(fmt.Sprintf("GOT %v with error %v", release, err))
 		if err == nil {
 
 			//Clear repeated fields first
@@ -122,6 +121,7 @@ func (s *Server) cacheRecord(r *pb.Record) {
 			proto.Merge(r.GetRelease(), release)
 
 			r.GetMetadata().LastCache = time.Now().Unix()
+			s.Log(fmt.Sprintf("GOT %v with release %v", r, release))
 			s.saveRecordCollection()
 		}
 	}
