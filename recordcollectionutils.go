@@ -77,7 +77,6 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 			err := s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if err != nil {
-				s.Log(fmt.Sprintf("Error Recording Move: %v", err))
 				return false
 			}
 
@@ -111,6 +110,7 @@ func (s *Server) cacheRecord(r *pb.Record) {
 	//Force a recache if the record has no title
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" || len(r.GetRelease().GetFormats()) == 0 {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
+		s.Log(fmt.Sprintf("GOT %v", release))
 		if err == nil {
 
 			//Clear repeated fields first
