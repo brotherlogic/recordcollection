@@ -121,10 +121,10 @@ func (s *Server) cacheRecord(r *pb.Record) {
 			proto.Merge(r.GetRelease(), release)
 
 			r.GetMetadata().LastCache = time.Now().Unix()
-			s.Log(fmt.Sprintf("GOT %v with release %v", r, release))
 			s.saveRecordCollection()
 		}
 	}
+	s.Log(fmt.Sprintf("GOT %v", r))
 }
 
 func (s *Server) syncCollection() {
