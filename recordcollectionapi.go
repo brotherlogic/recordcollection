@@ -50,6 +50,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			}
 			if request.GetForce() {
 				s.cacheRecord(rec)
+				s.Log("Cached %v into %v", rec, response)
 			} else {
 				s.cacheMutex.Lock()
 				s.cacheMap[rec.GetRelease().Id] = rec

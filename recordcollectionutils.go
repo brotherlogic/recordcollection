@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
@@ -124,7 +123,6 @@ func (s *Server) cacheRecord(r *pb.Record) {
 			s.saveRecordCollection()
 		}
 	}
-	s.Log(fmt.Sprintf("GOT %v", r))
 }
 
 func (s *Server) syncCollection() {
