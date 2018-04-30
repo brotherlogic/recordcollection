@@ -95,7 +95,7 @@ func (t *testSyncer) GetSalePrice(releaseID int) float32 {
 
 func TestGoodSync(t *testing.T) {
 	s := InitTestServer(".testGoodSync")
-	s.runSync()
+	s.runSync(context.Background())
 
 	// Check that we have one record and one want
 	if len(s.collection.GetRecords()) != 3 {
@@ -108,7 +108,7 @@ func TestGoodSync(t *testing.T) {
 
 func TestCleanSync(t *testing.T) {
 	s := InitTestServer(".testGoodSync")
-	s.runSync()
+	s.runSync(context.Background())
 
 	// Check that we have one record and one want
 	if len(s.collection.GetRecords()) != 3 {
@@ -119,7 +119,7 @@ func TestCleanSync(t *testing.T) {
 	}
 
 	for i := 0; i < 10; i++ {
-		s.runSync()
+		s.runSync(context.Background())
 	}
 
 	// Check that we have one record and one want
@@ -168,7 +168,7 @@ func TestDirtyMerge(t *testing.T) {
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
 	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}}
-	s.runSync()
+	s.runSync(context.Background())
 
 	// Check that we have one record and one want
 	if len(s.collection.GetRecords()) != 3 {
@@ -185,7 +185,7 @@ func TestGoodMergeSync(t *testing.T) {
 func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSyncWithDirty")
 	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}}
-	s.runSync()
+	s.runSync(context.Background())
 
 	// Check that we have one record and one want
 	if len(s.collection.GetRecords()) != 3 {
@@ -204,7 +204,7 @@ func TestRecache(t *testing.T) {
 	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
 
 	s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
-	s.runRecache()
+	s.runRecache(context.Background())
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
 
 	if err != nil {
@@ -245,7 +245,7 @@ func TestBadPush(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	s.runPush()
+	s.runPush(context.Background())
 
 	if tRetr.setRatingCount > 0 {
 		t.Errorf("Update has not failed")
@@ -265,7 +265,7 @@ func TestPushMove(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	s.runPush()
+	s.runPush(context.Background())
 
 	if tRetr.moveRecordCount != 1 {
 		t.Errorf("Update has not run")
@@ -285,7 +285,7 @@ func TestPushBadQuotaMove(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	s.runPush()
+	s.runPush(context.Background())
 
 	if tRetr.moveRecordCount != 0 {
 		t.Errorf("Update has run when it shouldn't")
@@ -305,7 +305,7 @@ func TestPushBadHardQuotaMove(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	s.runPush()
+	s.runPush(context.Background())
 
 	if tRetr.moveRecordCount != 0 {
 		t.Errorf("Update has run when it shouldn't")
@@ -324,7 +324,7 @@ func TestPushBadMoveRecord(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	s.runPush()
+	s.runPush(context.Background())
 
 	if tRetr.moveRecordCount != 0 {
 		t.Errorf("Update has run when it shouldn't")
@@ -344,7 +344,7 @@ func TestPushBadQuotaMoveWithSpill(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	s.runPush()
+	s.runPush(context.Background())
 
 	if tRetr.moveRecordCount != 1 {
 		t.Errorf("Update has not run when it should've")
@@ -363,7 +363,7 @@ func TestPushRating(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	s.runPush()
+	s.runPush(context.Background())
 
 	if tRetr.setRatingCount != 1 {
 		t.Errorf("Update has not run")
