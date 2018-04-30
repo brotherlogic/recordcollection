@@ -3,6 +3,8 @@ package main
 import (
 	"time"
 
+	"golang.org/x/net/context"
+
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
@@ -13,7 +15,7 @@ const (
 	RecacheDelay = 60 * 60 * 24 * 30
 )
 
-func (s *Server) runPush() {
+func (s *Server) runPush(ctx context.Context) {
 	s.lastPushTime = time.Now()
 	s.lastPushSize = len(s.pushMap)
 	s.lastPushDone = 0
@@ -41,7 +43,7 @@ func (s *Server) runPush() {
 	s.lastPushLength = time.Now().Sub(s.lastPushTime)
 }
 
-func (s *Server) runRecache() {
+func (s *Server) runRecache(ctx context.Context) {
 	s.cacheMutex.Lock()
 	for key, val := range s.cacheMap {
 		s.cacheRecord(val)
@@ -201,7 +203,7 @@ func (s *Server) syncWantlist() {
 	}
 }
 
-func (s *Server) runSync() {
+func (s *Server) runSync(ctx context.Context) {
 	s.syncCollection()
 	s.syncWantlist()
 	s.saveRecordCollection()

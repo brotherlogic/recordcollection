@@ -1,20 +1,19 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
-"log"
 	"io/ioutil"
+	"log"
 	"strconv"
 	"sync"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/keystore/client"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
@@ -122,7 +121,7 @@ const (
 	TOKEN = "/github.com/brotherlogic/recordcollection/token"
 )
 
-func (s *Server) saveLoop() {
+func (s *Server) saveLoop(ctx context.Context) {
 	if s.saveNeeded {
 		s.saveNeeded = false
 		s.saveRecordCollection()
@@ -210,8 +209,8 @@ func (s *Server) GetState() []*pbg.State {
 
 	tText := "No Next Record"
 	if s.nextPush != nil {
-	   tText = s.nextPush.GetRelease().Title
-	   }
+		tText = s.nextPush.GetRelease().Title
+	}
 
 	return []*pbg.State{
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
