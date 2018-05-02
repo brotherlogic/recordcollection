@@ -223,7 +223,7 @@ func TestSimplePush(t *testing.T) {
 	s := InitTestServer(".testsimplepush")
 	v := s.pushRecord(r)
 	if v {
-		t.Fatalf("Push dirty record failed: %v")
+		t.Fatalf("Push dirty record failed: %v", v)
 	}
 	if r.GetMetadata().MoveFolder != 0 {
 		t.Errorf("Record move has not been reset")
