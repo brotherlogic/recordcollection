@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/brotherlogic/goserver/utils"
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 
 	pbgd "github.com/brotherlogic/godiscogs"
-	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
-	"github.com/golang/protobuf/proto"
+	pbt "github.com/brotherlogic/tracer/proto"
 )
 
 // DeleteRecord deletes a record
@@ -35,6 +36,7 @@ func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordC
 
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
+	s.LogTrace(ctx, "GetRecords", time.Now(), pbt.Milestone_START_FUNCTION)
 	t := time.Now()
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
@@ -70,6 +72,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	}
 
 	response.InternalProcessingTime = time.Now().Sub(t).Nanoseconds() / 1000000
+	s.LogTrace(ctx, "GetRecords", time.Now(), pbt.Milestone_END_FUNCTION)
 	return response, nil
 }
 
@@ -138,7 +141,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	s.saveNeeded = true
-	s.LogFunction(fmt.Sprintf("UpdateRecord", len(s.collection.GetRecords())), t)
 	return &pb.UpdateRecordsResponse{Updated: record}, nil
 }
 
