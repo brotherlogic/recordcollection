@@ -35,6 +35,8 @@ enum Purgatory {
   NO_GOAL_FOLDER = 1;
   NEEDS_STOCK_CHECK = 2;
 
+  NEEDS_LABELS = 4;
+
   ALL_GOOD = 3;
 }
 
