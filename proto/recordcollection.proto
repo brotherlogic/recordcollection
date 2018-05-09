@@ -89,6 +89,7 @@ message ReleaseMetadata {
     GOOGLE_PLAY = 18;
     
     ASSESS = 17;
+    NO_LABELS = 20;
   }
   Category category = 8;
 
