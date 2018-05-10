@@ -36,7 +36,7 @@ func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordC
 
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
-	s.LogTrace(ctx, "GetRecords", time.Now(), pbt.Milestone_START_FUNCTION)
+	ctx = s.LogTrace(ctx, "GetRecords", time.Now(), pbt.Milestone_START_FUNCTION)
 	t := time.Now()
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
