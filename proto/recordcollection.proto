@@ -37,6 +37,8 @@ enum Purgatory {
 
   NEEDS_LABELS = 4;
 
+  NEEDS_RIP = 5;
+  
   ALL_GOOD = 3;
 }
 
@@ -85,6 +87,7 @@ message ReleaseMetadata {
 
     PREPARE_TO_SELL = 19;
     STAGED_TO_SELL = 14;
+    RIP_THEN_SELL = 21;
     SOLD = 15;
 
     DIGITAL = 16;
