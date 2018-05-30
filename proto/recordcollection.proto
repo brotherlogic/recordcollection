@@ -43,53 +43,53 @@ enum Purgatory {
 }
 
 message ReleaseMetadata {
-	// The date the release was added
-	int64 date_added = 1;
-
-	// The date the release was last updated
-	int64 date_updated = 2;
-
+  // The date the release was added
+  int64 date_added = 1;
+  
+  // The date the release was last updated
+  int64 date_updated = 2;
+  
   // The relative path to the release
   string file_path = 3;
-
-	// The cost of the record in cents
-	int32 cost = 4;
-
-	// If we have other copies of this
-	bool others = 5;
-
-	// The id of the release this relates to
-	int32 id = 6;
-
-	// The data we last recached this release
-	int64 last_cache = 7;
-
+  
+  // The cost of the record in cents
+  int32 cost = 4;
+  
+  // If we have other copies of this
+  bool others = 5;
+  
+  // The id of the release this relates to
+  int32 id = 6;
+  
+  // The data we last recached this release
+  int64 last_cache = 7;
+  
   enum Category {
     UNKNOWN = 0;
     PURCHASED = 1;
     UNLISTENED = 2;
     STAGED = 3;
-
+    
     PRE_FRESHMAN = 4;
     FRESHMAN = 5;
-
+    
     PRE_SOPHMORE = 12;
     SOPHMORE = 13;
 
     PRE_GRADUATE = 10;
     GRADUATE = 11;
-
+    
     PRE_POSTDOC = 8;
     POSTDOC = 9;
-
+    
     PRE_PROFESSOR = 6;
     PROFESSOR = 7;
-
+    
     PREPARE_TO_SELL = 19;
     STAGED_TO_SELL = 14;
     RIP_THEN_SELL = 21;
     SOLD = 15;
-
+    
     DIGITAL = 16;
     GOOGLE_PLAY = 18;
     
@@ -97,10 +97,10 @@ message ReleaseMetadata {
     NO_LABELS = 20;
   }
   Category category = 8;
-
+  
   // The folder this record should be placed in
   int32 goal_folder = 9;
-
+  
   // If a record is dirty, it needs to send updates to discogs
   bool dirty = 10;
 
