@@ -153,6 +153,21 @@ func main() {
 				fmt.Printf("Updated: %v", rec)
 			}
 		}
+	case "stockall":
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{FolderId: int32(1362206)}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		for _, r := range recs.GetRecords() {
+			if r.GetMetadata().Category == pbrc.ReleaseMetadata_ASSESS {
+				up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}}
+				rec, err := registry.UpdateRecord(ctx, up)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+				fmt.Printf("Updated: %v", rec)
+			}
+		}
 	case "delete":
 		i, _ := strconv.Atoi(os.Args[2])
 		up := &pbrc.DeleteRecordRequest{InstanceId: int32(i)}
