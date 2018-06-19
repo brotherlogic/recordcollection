@@ -15,6 +15,16 @@ const (
 	RecacheDelay = 60 * 60 * 24 * 30
 )
 
+func (s *Server) pushWants(ctx context.Context) {
+	for _, w := range s.collection.NewWants {
+		if s.updateWant(w) {
+			break
+		}
+	}
+
+	s.saveRecordCollection()
+}
+
 func (s *Server) runPush(ctx context.Context) {
 	s.lastPushTime = time.Now()
 	s.lastPushSize = len(s.pushMap)
@@ -52,6 +62,17 @@ func (s *Server) runRecache(ctx context.Context) {
 		break
 	}
 	s.cacheMutex.Unlock()
+}
+
+func (s *Server) updateWant(w *pb.Want) bool {
+	if w.ClearWant {
+		s.retr.RemoveFromWantlist(int(w.GetRelease().Id))
+		w.ClearWant = false
+		w.GetMetadata().Active = false
+		return true
+	}
+
+	return false
 }
 
 func (s *Server) pushRecord(r *pb.Record) bool {

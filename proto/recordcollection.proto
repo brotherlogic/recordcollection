@@ -19,6 +19,10 @@ message Record {
 message Want {
   godiscogs.Release release = 1;
   WantMetadata metadata = 2;
+  
+  // Delete this want
+  bool clear_want = 3;
+
 }
 
 message WantMetadata {
@@ -157,6 +161,7 @@ message UpdateRecordsResponse {
 
 message UpdateWantRequest {
   Want update = 1;
+  bool remove = 2;
 }
 
 message UpdateWantResponse {

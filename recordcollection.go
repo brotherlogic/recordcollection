@@ -89,6 +89,7 @@ type saver interface {
 	DeleteInstance(folderID, releaseID, instanceID int) string
 	SellRecord(releaseID int, price float32, state string)
 	GetSalePrice(releaseID int) float32
+	RemoveFromWantlist(releaseID int)
 }
 
 //Server main server type
@@ -272,6 +273,7 @@ func main() {
 
 	server.RegisterServer("recordcollection", false)
 	server.RegisterRepeatingTask(server.runSync, time.Hour)
+	server.RegisterRepeatingTask(server.pushWants, time.Minute)
 	server.RegisterRepeatingTask(server.runRecache, time.Minute)
 	server.RegisterRepeatingTask(server.runPush, time.Minute)
 	server.RegisterRepeatingTask(server.saveLoop, time.Minute)
