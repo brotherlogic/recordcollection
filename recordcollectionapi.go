@@ -98,8 +98,8 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	for _, rec := range s.collection.GetNewWants() {
 		if rec.GetRelease().Id == request.GetUpdate().GetRelease().Id {
 			proto.Merge(rec, request.GetUpdate())
-			if !request.GetUpdate().GetMetadata().Active {
-				rec.GetMetadata().Active = false
+			if request.Remove {
+				rec.ClearWant = true
 			}
 			want = rec
 		}
