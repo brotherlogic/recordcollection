@@ -90,6 +90,7 @@ type saver interface {
 	SellRecord(releaseID int, price float32, state string)
 	GetSalePrice(releaseID int) float32
 	RemoveFromWantlist(releaseID int)
+	AddToWantlist(releaseID int)
 }
 
 //Server main server type
