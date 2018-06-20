@@ -98,6 +98,10 @@ func (t *testSyncer) RemoveFromWantlist(releaseID int) {
 	t.updateWantCount++
 }
 
+func (t *testSyncer) AddToWantlist(releaseID int) {
+	// Do nothing
+}
+
 func TestUpdateWantWithPush(t *testing.T) {
 	s := InitTestServer(".testupdateWants")
 	ts := &testSyncer{}
