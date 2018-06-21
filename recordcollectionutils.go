@@ -18,6 +18,7 @@ const (
 func (s *Server) pushWants(ctx context.Context) {
 	for _, w := range s.collection.NewWants {
 		if s.updateWant(w) {
+			s.lastWantUpdate = w.GetRelease().Id
 			break
 		}
 	}
