@@ -221,6 +221,7 @@ func (s *Server) syncWantlist() {
 			if w.GetRelease().Id == want.Id {
 				found = true
 				proto.Merge(w.GetRelease(), want)
+				w.GetMetadata.Active = true
 			}
 		}
 		if !found {
