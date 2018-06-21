@@ -114,6 +114,7 @@ type Server struct {
 	mover          moveRecorder
 	nextPush       *pb.Record
 	lastWantUpdate int32
+	wantCheck      string
 }
 
 const (
@@ -223,6 +224,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "sizington", Text: fmt.Sprintf("%v and %v", len(s.collection.GetRecords()), len(s.collection.GetWants()))},
 		&pbg.State{Key: "push_state", Text: fmt.Sprintf("Started %v [%v / %v]; took %v", s.lastPushTime, s.lastPushSize, s.lastPushDone, s.lastPushLength)},
 		&pbg.State{Key: "next_push", Text: tText},
+		&pbg.State{Key: "want_check", Text: s.wantCheck},
 		&pbg.State{Key: "last_want", Value: int64(s.lastWantUpdate)},
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"golang.org/x/net/context"
@@ -17,6 +18,7 @@ const (
 
 func (s *Server) pushWants(ctx context.Context) {
 	for _, w := range s.collection.NewWants {
+		s.wantCheck = fmt.Sprintf("%v", w)
 		if s.updateWant(w) {
 			s.lastWantUpdate = w.GetRelease().Id
 			break
