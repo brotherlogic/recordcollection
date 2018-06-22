@@ -103,6 +103,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 			if request.Remove {
 				rec.ClearWant = true
 			}
+			rec.GetMetadata().Active = true
 			want = rec
 		}
 	}
