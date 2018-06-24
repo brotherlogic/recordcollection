@@ -217,6 +217,13 @@ func (s *Server) GetState() []*pbg.State {
 		tText = s.nextPush.GetRelease().Title
 	}
 
+	count := 0
+	for _, w := range s.collection.NewWants {
+		if w.GetMetadata().Active {
+			count++
+		}
+	}
+
 	return []*pbg.State{
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
@@ -228,6 +235,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "want_check", Text: s.wantCheck},
 		&pbg.State{Key: "last_want", Value: int64(s.lastWantUpdate)},
 		&pbg.State{Key: "last_want_text", Text: s.lastWantText},
+		&pbg.State{Key: "want_count", Value: int64(count)},
 	}
 }
 
