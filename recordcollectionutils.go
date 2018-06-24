@@ -21,6 +21,7 @@ func (s *Server) pushWants(ctx context.Context) {
 		if w.GetMetadata().Active {
 			s.wantCheck = fmt.Sprintf("%v", w)
 			if s.updateWant(w) {
+				s.lastWantText = fmt.Sprintf("%v", w)
 				s.lastWantUpdate = w.GetRelease().Id
 				break
 			}

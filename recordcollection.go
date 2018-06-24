@@ -115,6 +115,7 @@ type Server struct {
 	nextPush       *pb.Record
 	lastWantUpdate int32
 	wantCheck      string
+	lastWantText   string
 }
 
 const (
@@ -226,6 +227,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "next_push", Text: tText},
 		&pbg.State{Key: "want_check", Text: s.wantCheck},
 		&pbg.State{Key: "last_want", Value: int64(s.lastWantUpdate)},
+		&pbg.State{Key: "last_want_text", Text: s.lastWantText},
 	}
 }
 
@@ -245,6 +247,7 @@ func Init() *Server {
 		lastPushLength: 0,
 		quota:          &prodQuotaChecker{},
 		mover:          &prodMoveRecorder{},
+		lastWantText:   "",
 	}
 }
 
