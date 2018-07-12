@@ -107,7 +107,7 @@ func TestUpdateWantWithPush(t *testing.T) {
 	ts := &testSyncer{}
 	s.retr = ts
 	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123}, Metadata: &pb.WantMetadata{Active: true}})
-	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 12345}})
+	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 12345}, Metadata: &pb.WantMetadata{Active: true}})
 
 	s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123}}, Remove: true})
 	s.pushWants(context.Background())
@@ -196,7 +196,7 @@ func TestDirtyMerge(t *testing.T) {
 
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}}
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
@@ -213,7 +213,7 @@ func TestGoodMergeSync(t *testing.T) {
 
 func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSyncWithDirty")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}}
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want

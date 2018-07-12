@@ -220,7 +220,7 @@ func TestUpdateRecordsForSale(t *testing.T) {
 
 func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
-	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}})
+	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}, Metadata: &pb.WantMetadata{Active: true}})
 
 	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
 	if err != nil {
