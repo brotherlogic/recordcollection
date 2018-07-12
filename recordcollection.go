@@ -89,6 +89,8 @@ type saver interface {
 	DeleteInstance(folderID, releaseID, instanceID int) string
 	SellRecord(releaseID int, price float32, state string)
 	GetSalePrice(releaseID int) float32
+	RemoveFromWantlist(releaseID int)
+	AddToWantlist(releaseID int)
 }
 
 //Server main server type
@@ -111,6 +113,9 @@ type Server struct {
 	quota          quotaChecker
 	mover          moveRecorder
 	nextPush       *pb.Record
+	lastWantUpdate int32
+	wantCheck      string
+	lastWantText   string
 }
 
 const (
@@ -212,6 +217,13 @@ func (s *Server) GetState() []*pbg.State {
 		tText = s.nextPush.GetRelease().Title
 	}
 
+	count := 0
+	for _, w := range s.collection.NewWants {
+		if w.GetMetadata().Active {
+			count++
+		}
+	}
+
 	return []*pbg.State{
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
@@ -220,6 +232,10 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "sizington", Text: fmt.Sprintf("%v and %v", len(s.collection.GetRecords()), len(s.collection.GetWants()))},
 		&pbg.State{Key: "push_state", Text: fmt.Sprintf("Started %v [%v / %v]; took %v", s.lastPushTime, s.lastPushSize, s.lastPushDone, s.lastPushLength)},
 		&pbg.State{Key: "next_push", Text: tText},
+		&pbg.State{Key: "want_check", Text: s.wantCheck},
+		&pbg.State{Key: "last_want", Value: int64(s.lastWantUpdate)},
+		&pbg.State{Key: "last_want_text", Text: s.lastWantText},
+		&pbg.State{Key: "want_count", Value: int64(count)},
 	}
 }
 
@@ -239,6 +255,7 @@ func Init() *Server {
 		lastPushLength: 0,
 		quota:          &prodQuotaChecker{},
 		mover:          &prodMoveRecorder{},
+		lastWantText:   "",
 	}
 }
 
@@ -272,8 +289,9 @@ func main() {
 
 	server.RegisterServer("recordcollection", false)
 	server.RegisterRepeatingTask(server.runSync, time.Hour)
+	server.RegisterRepeatingTask(server.pushWants, time.Minute)
 	server.RegisterRepeatingTask(server.runRecache, time.Minute)
 	server.RegisterRepeatingTask(server.runPush, time.Minute)
-	server.RegisterRepeatingTask(server.saveLoop, time.Second)
+	server.RegisterRepeatingTask(server.saveLoop, time.Minute)
 	server.Serve()
 }

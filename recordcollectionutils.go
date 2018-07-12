@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"golang.org/x/net/context"
@@ -14,6 +15,21 @@ const (
 	// RecacheDelay - recache everything every 30 days
 	RecacheDelay = 60 * 60 * 24 * 30
 )
+
+func (s *Server) pushWants(ctx context.Context) {
+	for _, w := range s.collection.NewWants {
+		if w.GetMetadata().Active {
+			s.wantCheck = fmt.Sprintf("%v", w)
+			if s.updateWant(w) {
+				s.lastWantText = fmt.Sprintf("%v", w)
+				s.lastWantUpdate = w.GetRelease().Id
+				break
+			}
+		}
+	}
+
+	s.saveRecordCollection()
+}
 
 func (s *Server) runPush(ctx context.Context) {
 	s.lastPushTime = time.Now()
@@ -52,6 +68,21 @@ func (s *Server) runRecache(ctx context.Context) {
 		break
 	}
 	s.cacheMutex.Unlock()
+}
+
+func (s *Server) updateWant(w *pb.Want) bool {
+	if w.ClearWant {
+		s.retr.RemoveFromWantlist(int(w.GetRelease().Id))
+		w.ClearWant = false
+		w.GetMetadata().Active = false
+		return true
+	}
+
+	if w.GetMetadata().Active {
+		s.retr.AddToWantlist(int(w.GetRelease().Id))
+	}
+
+	return false
 }
 
 func (s *Server) pushRecord(r *pb.Record) bool {
@@ -195,6 +226,7 @@ func (s *Server) syncWantlist() {
 			if w.GetRelease().Id == want.Id {
 				found = true
 				proto.Merge(w.GetRelease(), want)
+				w.GetMetadata().Active = true
 			}
 		}
 		if !found {

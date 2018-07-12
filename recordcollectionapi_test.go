@@ -238,6 +238,15 @@ func TestUpdateWants(t *testing.T) {
 	}
 }
 
+func TestAddWant(t *testing.T) {
+	s := InitTestServer(".testUpdateWant")
+
+	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
+	if err != nil {
+		t.Fatalf("Error updating want")
+	}
+}
+
 func TestForceRecache(t *testing.T) {
 	s := InitTestServer(".testforcerecache")
 	s.cacheWait = time.Hour

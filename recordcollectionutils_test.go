@@ -44,6 +44,7 @@ type testSyncer struct {
 	setRatingCount  int
 	moveRecordCount int
 	failOnRate      bool
+	updateWantCount int
 }
 
 func (t *testSyncer) GetCollection() []*pbd.Release {
@@ -91,6 +92,34 @@ func (t *testSyncer) SellRecord(releaseID int, price float32, state string) {
 }
 func (t *testSyncer) GetSalePrice(releaseID int) float32 {
 	return 15.5
+}
+
+func (t *testSyncer) RemoveFromWantlist(releaseID int) {
+	t.updateWantCount++
+}
+
+func (t *testSyncer) AddToWantlist(releaseID int) {
+	// Do nothing
+}
+
+func TestUpdateWantWithPush(t *testing.T) {
+	s := InitTestServer(".testupdateWants")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123}, Metadata: &pb.WantMetadata{Active: true}})
+	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 12345}})
+
+	s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123}}, Remove: true})
+	s.pushWants(context.Background())
+
+	if ts.updateWantCount != 1 {
+		t.Errorf("Want not updated!")
+	}
+
+	s.pushWants(context.Background())
+	if ts.updateWantCount != 1 {
+		t.Errorf("More wants removed!")
+	}
 }
 
 func TestGoodSync(t *testing.T) {
