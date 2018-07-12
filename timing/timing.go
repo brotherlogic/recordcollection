@@ -29,8 +29,18 @@ func testRead() {
 	t := time.Now()
 	client := *keystoreclient.GetClient(getIP)
 	rc := &pbrc.RecordCollection{}
-	_, b, c := client.Read("/github.com/brotherlogic/recordcollection/collection", rc)
+	a, b, c := client.Read("/github.com/brotherlogic/recordcollection/collection", rc)
 	fmt.Printf("TOOK %v -> %v,%v\n", time.Now().Sub(t), b.GetReadTime(), c)
+
+	collection := a.(*pbrc.RecordCollection)
+
+	for _, r := range collection.Records {
+		if r.GetRelease().Id == 2370027 {
+			log.Printf("HERE %v", r)
+			log.Printf("LABELS %v", len(r.GetRelease().Labels))
+			log.Printf("FORMATS %v", len(r.GetRelease().Formats))
+		}
+	}
 }
 
 func testReadCollection() {
@@ -113,5 +123,5 @@ func testReadSubsetStripped() {
 }
 
 func main() {
-	testReadSubset()
+	testRead()
 }

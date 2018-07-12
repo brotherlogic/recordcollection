@@ -145,7 +145,7 @@ func (s *Server) readRecordCollection() error {
 		}
 
 		// Stop repeated fields from blowing up
-		if len(r.GetRelease().GetFormats()) > 10 {
+		if len(r.GetRelease().GetFormats()) > 100 {
 			r.GetRelease().Images = []*pbd.Image{}
 			r.GetRelease().Artists = []*pbd.Artist{}
 			r.GetRelease().Formats = []*pbd.Format{}
