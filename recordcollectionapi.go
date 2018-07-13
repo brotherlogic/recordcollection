@@ -138,6 +138,11 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				rec.GetRelease().Labels = []*pbgd.Label{}
 			}
 
+			//Reset the move folder
+			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().MoveFolder == -1 {
+				rec.GetMetadata().MoveFolder = 0
+			}
+
 			proto.Merge(rec, request.GetUpdate())
 			rec.GetMetadata().Dirty = true
 			record = rec
