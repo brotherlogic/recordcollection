@@ -75,6 +75,8 @@ func main() {
 				log.Fatalf("Error: %v", err)
 			}
 			fmt.Printf("Updated: %v", rec)
+		} else {
+			fmt.Printf("Not Found!")
 		}
 	case "onetime":
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Metadata: &pbrc.ReleaseMetadata{Dirty: false, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}, Release: &pbgd.Release{}}})

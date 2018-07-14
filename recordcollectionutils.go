@@ -94,7 +94,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
 
 			if err != nil {
-				s.Log(fmt.Sprintf("Error getting quota: %v", err))
+				s.Log(fmt.Sprintf("Error getting quota: %v for %v", err, r.GetRelease().Id))
 				return false
 			}
 
