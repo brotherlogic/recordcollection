@@ -288,8 +288,8 @@ func main() {
 	tType := &pb.Token{}
 	tResp, _, err := server.KSclient.Read(TOKEN, tType)
 
-	if err != nil {
-		return
+	if err != nil || len(tResp.(*pb.Token).Token) == 0 {
+		log.Fatalf("Unable to read token %v and %v", err, tResp)
 	}
 
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
