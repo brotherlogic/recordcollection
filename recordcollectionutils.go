@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
@@ -94,7 +96,10 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
 
 			if err != nil {
-				s.Log(fmt.Sprintf("Error getting quota: %v for %v", err, r.GetRelease().Id))
+				e, ok := status.FromError(err)
+				if ok && e.Code() == codes.InvalidArgument {
+					s.RaiseIssue(context.Background(), "Quota Problem", fmt.Sprintf("Error getting quota: %v for %v", err, r.GetRelease().Id))
+				}
 				return false
 			}
 
