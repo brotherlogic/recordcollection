@@ -309,5 +309,6 @@ func main() {
 	server.RegisterRepeatingTask(server.runRecache, time.Minute)
 	server.RegisterRepeatingTask(server.runPush, time.Minute)
 	server.RegisterRepeatingTask(server.saveLoop, time.Minute)
+	server.RegisterRepeatingTask(server.syncIssue, time.Hour)
 	server.Serve()
 }
