@@ -18,6 +18,15 @@ const (
 	RecacheDelay = 60 * 60 * 24 * 30
 )
 
+func (s *Server) syncIssue(ctx context.Context) {
+	for _, r := range s.collection.GetRecords() {
+		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 {
+			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r))
+		}
+	}
+
+}
+
 func (s *Server) pushWants(ctx context.Context) {
 	for _, w := range s.collection.NewWants {
 		if w.GetMetadata().Active {
