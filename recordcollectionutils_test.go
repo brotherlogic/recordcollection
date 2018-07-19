@@ -9,6 +9,8 @@ import (
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type testMover struct {
@@ -35,7 +37,7 @@ func (t *testQuota) hasQuota(folder int32) (*pbro.QuotaResponse, error) {
 		return &pbro.QuotaResponse{OverQuota: false}, nil
 	}
 	if t.fail {
-		return &pbro.QuotaResponse{}, errors.New("Built to fail")
+		return &pbro.QuotaResponse{}, status.Error(codes.InvalidArgument, "Built to fail")
 	}
 	return &pbro.QuotaResponse{OverQuota: true, SpillFolder: t.spill}, nil
 }
