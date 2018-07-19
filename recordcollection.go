@@ -231,6 +231,13 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	oldSyncCount := 0
+	for _, r := range s.collection.GetRecords() {
+		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 {
+			oldSyncCount++
+		}
+	}
+
 	return []*pbg.State{
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
@@ -243,6 +250,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_want", Value: int64(s.lastWantUpdate)},
 		&pbg.State{Key: "last_want_text", Text: s.lastWantText},
 		&pbg.State{Key: "want_count", Value: int64(count)},
+		&pbg.State{Key: "old_sync", Value: int64(oldSyncCount)},
 		&pbg.State{Key: "no_instance", Value: int64(noInstanceCount)},
 	}
 }
