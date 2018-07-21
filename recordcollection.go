@@ -224,6 +224,15 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	twelves := 0
+	for _, w := range s.collection.GetRecords() {
+		if w.GetRelease().FolderId == 242017 {
+			twelves++
+		} else if w.GetRelease().FolderId == 812802 && w.GetMetadata().GoalFolder == 242017 && w.GetMetadata().Category != pb.ReleaseMetadata_UNLISTENED {
+			twelves++
+		}
+	}
+
 	return []*pbg.State{
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
@@ -236,6 +245,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_want", Value: int64(s.lastWantUpdate)},
 		&pbg.State{Key: "last_want_text", Text: s.lastWantText},
 		&pbg.State{Key: "want_count", Value: int64(count)},
+		&pbg.State{Key: "all_twelves", Value: int64(twelves)},
 	}
 }
 
