@@ -24,6 +24,11 @@ func (s *Server) syncIssue(ctx context.Context) {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 {
 			s.Log(fmt.Sprintf("Found %v", r))
 			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r.GetRelease().Title))
+
+			// Force a recache
+			s.cacheMutex.Lock()
+			s.cacheMap[r.GetRelease().Id] = r
+			s.cacheMutex.Unlock()
 		}
 	}
 
@@ -154,6 +159,15 @@ func (s *Server) cacheRecord(r *pb.Record) {
 	// Don't recache a record that has a pending score
 	if r.GetMetadata().GetSetRating() > 0 {
 		return
+	}
+
+	//Add the record if it has not instance ID
+	if r.GetRelease().InstanceId == 0 {
+		inst, err := s.retr.AddToFolder(r.GetRelease().FolderId, r.GetRelease().Id)
+		if err == nil {
+			r.GetRelease().InstanceId = int32(inst)
+			s.saveRecordCollection()
+		}
 	}
 
 	//Force a recache if the record has no title

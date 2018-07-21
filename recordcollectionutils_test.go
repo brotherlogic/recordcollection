@@ -106,7 +106,7 @@ func (t *testSyncer) AddToWantlist(releaseID int) {
 
 func TestSyncIssues(t *testing.T) {
 	s := InitTestServer(".testsyncissues")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Metadata: &pb.ReleaseMetadata{LastSyncTime: 1}})
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123}, Metadata: &pb.ReleaseMetadata{LastSyncTime: 1}})
 	s.syncIssue(context.Background())
 }
 
