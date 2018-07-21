@@ -201,6 +201,23 @@ func TestUpdateRecords(t *testing.T) {
 	}
 }
 
+func TestUpdateRecordNullFolder(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{MoveFolder: -1}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
+
+	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	if r == nil || len(r.Records) != 1 || r.Records[0].Release.Title != "madeup2" || r.Records[0].GetMetadata().MoveFolder != 0 {
+		t.Errorf("Error in updating records: %v", r)
+	}
+}
+
 func TestUpdateRecordsForSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
@@ -220,7 +237,7 @@ func TestUpdateRecordsForSale(t *testing.T) {
 
 func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
-	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}})
+	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}, Metadata: &pb.WantMetadata{Active: true}})
 
 	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
 	if err != nil {

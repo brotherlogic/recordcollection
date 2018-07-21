@@ -150,7 +150,7 @@ func (s *Server) readRecordCollection() error {
 		}
 
 		// Stop repeated fields from blowing up
-		if len(r.GetRelease().GetFormats()) > 10 {
+		if len(r.GetRelease().GetFormats()) > 100 {
 			r.GetRelease().Images = []*pbd.Image{}
 			r.GetRelease().Artists = []*pbd.Artist{}
 			r.GetRelease().Formats = []*pbd.Format{}
@@ -233,6 +233,21 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	noInstanceCount := 0
+	for _, r := range s.collection.GetRecords() {
+		if r.GetRelease().InstanceId == 0 {
+			noInstanceCount++
+		}
+	}
+
+	oldSyncCount := 0
+	for _, r := range s.collection.GetRecords() {
+		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 {
+			oldSyncCount++
+
+		}
+	}
+
 	return []*pbg.State{
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
@@ -246,6 +261,8 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_want_text", Text: s.lastWantText},
 		&pbg.State{Key: "want_count", Value: int64(count)},
 		&pbg.State{Key: "all_twelves", Value: int64(twelves)},
+		&pbg.State{Key: "old_sync", Value: int64(oldSyncCount)},
+		&pbg.State{Key: "no_instance", Value: int64(noInstanceCount)},
 	}
 }
 
@@ -290,8 +307,8 @@ func main() {
 	tType := &pb.Token{}
 	tResp, _, err := server.KSclient.Read(TOKEN, tType)
 
-	if err != nil {
-		return
+	if err != nil || len(tResp.(*pb.Token).Token) == 0 {
+		log.Fatalf("Unable to read token %v and %v", err, tResp)
 	}
 
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
@@ -303,5 +320,6 @@ func main() {
 	server.RegisterRepeatingTask(server.runRecache, time.Minute)
 	server.RegisterRepeatingTask(server.runPush, time.Minute)
 	server.RegisterRepeatingTask(server.saveLoop, time.Minute)
+	server.RegisterRepeatingTask(server.syncIssue, time.Hour)
 	server.Serve()
 }

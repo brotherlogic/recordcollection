@@ -52,7 +52,6 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			}
 			if request.GetForce() {
 				s.cacheRecord(rec)
-				s.Log(fmt.Sprintf("Cached %v into %v", rec, response))
 			} else {
 				s.cacheMutex.Lock()
 				s.cacheMap[rec.GetRelease().Id] = rec
@@ -140,6 +139,12 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 
 			proto.Merge(rec, request.GetUpdate())
+
+			//Reset the move folder
+			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().MoveFolder == -1 {
+				rec.GetMetadata().MoveFolder = 0
+			}
+
 			rec.GetMetadata().Dirty = true
 			record = rec
 			s.pushMutex.Lock()

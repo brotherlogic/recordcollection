@@ -113,5 +113,5 @@ func testReadSubsetStripped() {
 }
 
 func main() {
-	testReadSubset()
+	testRead()
 }

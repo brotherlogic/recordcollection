@@ -5,6 +5,8 @@ import (
 	"time"
 
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
@@ -15,6 +17,17 @@ const (
 	// RecacheDelay - recache everything every 30 days
 	RecacheDelay = 60 * 60 * 24 * 30
 )
+
+func (s *Server) syncIssue(ctx context.Context) {
+	s.Log("Syncing Issues")
+	for _, r := range s.collection.GetRecords() {
+		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 {
+			s.Log(fmt.Sprintf("Found %v", r))
+			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r.GetRelease().Title))
+		}
+	}
+
+}
 
 func (s *Server) pushWants(ctx context.Context) {
 	for _, w := range s.collection.NewWants {
@@ -94,6 +107,10 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
 
 			if err != nil {
+				e, ok := status.FromError(err)
+				if ok && e.Code() == codes.InvalidArgument {
+					s.RaiseIssue(context.Background(), "Quota Problem", fmt.Sprintf("Error getting quota: %v for %v", err, r.GetRelease().Id))
+				}
 				return false
 			}
 

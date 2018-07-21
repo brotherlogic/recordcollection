@@ -70,11 +70,13 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		if len(rec.GetRecords()) == 1 {
-			rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(rec.GetRecords()[0].GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f)}}})
+			rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(rec.GetRecords()[0].GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f), MoveFolder: int32(-1)}}})
 			if err != nil {
 				log.Fatalf("Error: %v", err)
 			}
 			fmt.Printf("Updated: %v", rec)
+		} else {
+			fmt.Printf("Not Found!")
 		}
 	case "onetime":
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Metadata: &pbrc.ReleaseMetadata{Dirty: false, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}, Release: &pbgd.Release{}}})

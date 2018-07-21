@@ -9,6 +9,8 @@ import (
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 type testMover struct {
@@ -35,7 +37,7 @@ func (t *testQuota) hasQuota(folder int32) (*pbro.QuotaResponse, error) {
 		return &pbro.QuotaResponse{OverQuota: false}, nil
 	}
 	if t.fail {
-		return &pbro.QuotaResponse{}, errors.New("Built to fail")
+		return &pbro.QuotaResponse{}, status.Error(codes.InvalidArgument, "Built to fail")
 	}
 	return &pbro.QuotaResponse{OverQuota: true, SpillFolder: t.spill}, nil
 }
@@ -102,12 +104,18 @@ func (t *testSyncer) AddToWantlist(releaseID int) {
 	// Do nothing
 }
 
+func TestSyncIssues(t *testing.T) {
+	s := InitTestServer(".testsyncissues")
+	s.collection.Records = append(s.collection.Records, &pb.Record{Metadata: &pb.ReleaseMetadata{LastSyncTime: 1}})
+	s.syncIssue(context.Background())
+}
+
 func TestUpdateWantWithPush(t *testing.T) {
 	s := InitTestServer(".testupdateWants")
 	ts := &testSyncer{}
 	s.retr = ts
 	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123}, Metadata: &pb.WantMetadata{Active: true}})
-	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 12345}})
+	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 12345}, Metadata: &pb.WantMetadata{Active: true}})
 
 	s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123}}, Remove: true})
 	s.pushWants(context.Background())
@@ -196,7 +204,7 @@ func TestDirtyMerge(t *testing.T) {
 
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}}
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
@@ -213,7 +221,7 @@ func TestGoodMergeSync(t *testing.T) {
 
 func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSyncWithDirty")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}}
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
