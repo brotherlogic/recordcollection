@@ -20,6 +20,7 @@ import (
 	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
+	pbrp "github.com/brotherlogic/recordprocess/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
 )
 
@@ -93,6 +94,41 @@ type saver interface {
 	AddToWantlist(releaseID int)
 }
 
+type scorer interface {
+	GetScore(instanceID int32) (float32, error)
+}
+
+type prodScorer struct{}
+
+func (p *prodScorer) GetScore(instanceID int32) (float32, error) {
+	ip, port, err := utils.Resolve("recordprocess")
+	if err != nil {
+		return -1, err
+	}
+
+	conn, err := grpc.Dial(ip+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
+	if err != nil {
+		return -1, err
+	}
+	defer conn.Close()
+
+	client := pbrp.NewScoreServiceClient(conn)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+	defer cancel()
+
+	res, err := client.GetScore(ctx, &pbrp.GetScoreRequest{InstanceId: instanceID})
+	if err != nil {
+		return -1, err
+	}
+
+	score := float32(0)
+	for _, sc := range res.Scores {
+		score += float32(sc.Rating)
+	}
+
+	return score / float32(len(res.Scores)), nil
+}
+
 //Server main server type
 type Server struct {
 	*goserver.GoServer
@@ -116,6 +152,7 @@ type Server struct {
 	lastWantUpdate int32
 	wantCheck      string
 	lastWantText   string
+	scorer         scorer
 }
 
 const (

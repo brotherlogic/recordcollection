@@ -18,6 +18,7 @@ func InitTestServer(folder string) *Server {
 	s.cacheWait = 0
 	s.retr = &testSyncer{}
 	s.mover = &testMover{pass: true}
+	s.scorer = &testScorer{}
 
 	// Create the record collection because we're not init'ing from a file
 	s.collection = &pb.RecordCollection{}

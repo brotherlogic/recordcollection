@@ -170,6 +170,14 @@ func (s *Server) cacheRecord(r *pb.Record) {
 		}
 	}
 
+	// Update the score of the record
+	sc, err := s.scorer.GetScore(r.GetRelease().InstanceId)
+	if err == nil {
+		r.GetMetadata().OverallScore = sc
+	} else {
+		s.Log(fmt.Sprintf("Error setting score: %v", err))
+	}
+
 	//Force a recache if the record has no title
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" || len(r.GetRelease().GetFormats()) == 0 {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
@@ -184,9 +192,10 @@ func (s *Server) cacheRecord(r *pb.Record) {
 			proto.Merge(r.GetRelease(), release)
 
 			r.GetMetadata().LastCache = time.Now().Unix()
-			s.saveRecordCollection()
 		}
 	}
+
+	s.saveRecordCollection()
 }
 
 func (s *Server) syncCollection() {

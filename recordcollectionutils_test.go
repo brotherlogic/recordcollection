@@ -13,6 +13,18 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type testScorer struct {
+	fail bool
+}
+
+func (t *testScorer) GetScore(instanceID int32) (float32, error) {
+	if t.fail {
+		return -1, errors.New("Built to fail")
+	} else {
+		return 2.5, nil
+	}
+}
+
 type testMover struct {
 	pass bool
 }
