@@ -121,6 +121,9 @@ message ReleaseMetadata {
 
   // The last time we did a stock check
   int64 last_stock_check = 15;
+
+  // This is an overall score
+  int32 overall_score = 16;
 }
 
 // A request to get some records
