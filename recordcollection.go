@@ -278,10 +278,14 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	oldSyncCount := 0
+	noScoreCount := 0
 	for _, r := range s.collection.GetRecords() {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 {
 			oldSyncCount++
 
+		}
+		if r.GetMetadata().OverallScore == 0 {
+			noScoreCount++
 		}
 	}
 
@@ -300,6 +304,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "all_twelves", Value: int64(twelves)},
 		&pbg.State{Key: "old_sync", Value: int64(oldSyncCount)},
 		&pbg.State{Key: "no_instance", Value: int64(noInstanceCount)},
+		&pbg.State{Key: "no_score", Value: int64(noScoreCount)},
 	}
 }
 
