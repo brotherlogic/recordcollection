@@ -320,6 +320,7 @@ func Init() *Server {
 		quota:          &prodQuotaChecker{},
 		mover:          &prodMoveRecorder{},
 		lastWantText:   "",
+		scorer:         &prodScorer{},
 	}
 }
 
