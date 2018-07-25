@@ -19,7 +19,6 @@ const (
 )
 
 func (s *Server) syncIssue(ctx context.Context) {
-	s.Log("Syncing Issues")
 	for _, r := range s.collection.GetRecords() {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
 			s.Log(fmt.Sprintf("Found %v", r))
