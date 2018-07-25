@@ -43,19 +43,9 @@ func testReadCollection() {
 
 	client := pbrc.NewRecordCollectionServiceClient(conn)
 	t := time.Now()
-	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbd.Release{FolderId: 812802}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if err != nil {
 		log.Fatalf("Error getting records: %v", err)
-	}
-
-	for _, r := range recs.GetRecords() {
-		if r.GetMetadata().GetDateAdded() == 0 {
-			r.GetMetadata().DateAdded = time.Now().Unix()
-			_, err2 := client.UpdateRecord(context.Background(), &pbrc.UpdateRecordRequest{Update: r})
-			if err2 != nil {
-				log.Fatalf("ERRRR: %v", err2)
-			}
-		}
 	}
 
 	fmt.Printf("Got %v records in %v\n", len(recs.GetRecords()), time.Now().Sub(t))
@@ -113,5 +103,5 @@ func testReadSubsetStripped() {
 }
 
 func main() {
-	testRead()
+	testReadCollection()
 }
