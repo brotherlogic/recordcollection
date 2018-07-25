@@ -364,6 +364,5 @@ func main() {
 	server.RegisterRepeatingTask(server.runPush, time.Minute)
 	server.RegisterRepeatingTask(server.saveLoop, time.Minute)
 	server.RegisterRepeatingTask(server.syncIssue, time.Hour)
-	server.RegisterRepeatingTask(server.forceScore, time.Hour)
 	server.Serve()
 }
