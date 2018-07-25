@@ -18,6 +18,21 @@ const (
 	RecacheDelay = 60 * 60 * 24 * 30
 )
 
+func (s *Server) forceScore(ctx context.Context) {
+	for _, r := range s.collection.GetRecords() {
+		// Update the score of the record
+		sc, err := s.scorer.GetScore(r.GetRelease().InstanceId)
+		if err == nil {
+			s.Log(fmt.Sprintf("Setting score %v -> %v", r.GetRelease().Id, sc))
+			r.GetMetadata().OverallScore = sc
+		} else {
+			s.Log(fmt.Sprintf("Error setting score: %v", err))
+		}
+	}
+
+	s.saveRecordCollection()
+}
+
 func (s *Server) syncIssue(ctx context.Context) {
 	for _, r := range s.collection.GetRecords() {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
