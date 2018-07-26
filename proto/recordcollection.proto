@@ -156,6 +156,7 @@ message GetWantsResponse {
 message UpdateRecordRequest {
   Record update = 1;
   string requestor = 2;
+  bool no_sell = 3;
 }
 
 message UpdateRecordsResponse {

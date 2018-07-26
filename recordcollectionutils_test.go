@@ -20,9 +20,8 @@ type testScorer struct {
 func (t *testScorer) GetScore(instanceID int32) (float32, error) {
 	if t.fail {
 		return -1, errors.New("Built to fail")
-	} else {
-		return 2.5, nil
 	}
+	return 2.5, nil
 }
 
 type testMover struct {
@@ -185,6 +184,28 @@ func TestCleanSync(t *testing.T) {
 
 func TestImageMerge(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}}
+	s.cacheRecord(r)
+
+	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
+		t.Fatalf("Record has not been recached %v", r)
+	}
+
+	r.Metadata.LastCache = 0
+	s.cacheRecord(r)
+
+	if r.GetMetadata().LastCache == 0 {
+		t.Fatalf("Record has not been double cached: %v", r)
+	}
+
+	if len(r.GetRelease().GetImages()) != 1 {
+		t.Errorf("Image merge has failed: %v", r)
+	}
+}
+
+func TestImageMergeWithFailScore(t *testing.T) {
+	s := InitTestServer(".testImageMerge")
+	s.scorer = &testScorer{fail: true}
 	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}}
 	s.cacheRecord(r)
 

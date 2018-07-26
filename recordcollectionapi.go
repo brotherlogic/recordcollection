@@ -126,8 +126,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 			// If this is being sold - mark it for sale
 			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
-				price := s.retr.GetSalePrice(int(rec.GetRelease().Id))
-				s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale")
+				if !request.NoSell {
+					price := s.retr.GetSalePrice(int(rec.GetRelease().Id))
+					s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale")
+				}
 			}
 
 			// Avoid increasing repeasted fields
