@@ -31,7 +31,7 @@ func main() {
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
 	defer cancel()
 
 	switch os.Args[1] {
@@ -48,6 +48,26 @@ func main() {
 			}
 		} else {
 			fmt.Printf("Error: %v", err)
+		}
+	case "pget":
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{FolderId: int32(1362206)}}})
+
+		if err == nil {
+			if len(rec.GetRecords()) > 0 {
+				for _, r := range rec.GetRecords() {
+					if r.GetMetadata().Purgatory == pbrc.Purgatory_NEEDS_STOCK_CHECK {
+						fmt.Printf("Release: %v\n", r.GetRelease())
+						fmt.Printf("Metadata: %v\n", r.GetMetadata())
+						return
+					}
+				}
+
+				r := rec.GetRecords()[0]
+				fmt.Printf("Release: %v\n", r.GetRelease())
+				fmt.Printf("Metadata: %v\n", r.GetMetadata())
+			}
+		} else {
+			fmt.Printf("Req Error: %v", err)
 		}
 	case "all":
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{}})

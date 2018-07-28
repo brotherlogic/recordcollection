@@ -265,7 +265,7 @@ func (s *Server) GetState() []*pbg.State {
 	for _, w := range s.collection.GetRecords() {
 		if w.GetRelease().FolderId == 242017 {
 			twelves++
-		} else if w.GetRelease().FolderId == 812802 && w.GetMetadata().GoalFolder == 242017 && w.GetMetadata().Category != pb.ReleaseMetadata_UNLISTENED {
+		} else if w.GetRelease().FolderId == 812802 && w.GetMetadata().GoalFolder == 242017 && (w.GetMetadata().Category != pb.ReleaseMetadata_UNLISTENED || w.GetMetadata().Category != pb.ReleaseMetadata_STAGED) {
 			twelves++
 		}
 	}
