@@ -269,7 +269,7 @@ func (s *Server) GetState() []*pbg.State {
 			if w.GetMetadata().Category != pb.ReleaseMetadata_PRE_POSTDOC &&
 				w.GetMetadata().Category != pb.ReleaseMetadata_PRE_SOPHMORE &&
 				w.GetMetadata().Category != pb.ReleaseMetadata_PRE_GRADUATE {
-				s.Log(fmt.Sprintf("FOUND THIS: %v", w.GetMetadata()))
+				s.Log(fmt.Sprintf("FOUND THIS: %v [%v]", w.GetMetadata(), w.GetRelease().Id))
 			}
 			twelves++
 		}
