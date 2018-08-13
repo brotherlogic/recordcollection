@@ -266,6 +266,7 @@ func (s *Server) GetState() []*pbg.State {
 		if w.GetRelease().FolderId == 242017 {
 			twelves++
 		} else if w.GetRelease().FolderId == 812802 && w.GetMetadata().GoalFolder == 242017 && (w.GetMetadata().Category != pb.ReleaseMetadata_UNLISTENED && w.GetMetadata().Category != pb.ReleaseMetadata_STAGED && w.GetMetadata().Category != pb.ReleaseMetadata_PRE_FRESHMAN && w.GetMetadata().Category != pb.ReleaseMetadata_STAGED_TO_SELL) {
+			s.Log(fmt.Sprintf("FOUND THIS: %v", w.GetMetadata()))
 			twelves++
 		}
 	}
