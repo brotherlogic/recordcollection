@@ -45,7 +45,7 @@ func (s *Server) pushWants(ctx context.Context) {
 		}
 	}
 
-	s.saveRecordCollection()
+	s.saveRecordCollection(ctx)
 }
 
 func (s *Server) runPush(ctx context.Context) {
@@ -65,7 +65,7 @@ func (s *Server) runPush(ctx context.Context) {
 		}
 	}
 	if save {
-		s.saveRecordCollection()
+		s.saveRecordCollection(ctx)
 	}
 
 	s.nextPush = nil
@@ -79,7 +79,7 @@ func (s *Server) runPush(ctx context.Context) {
 func (s *Server) runRecache(ctx context.Context) {
 	s.cacheMutex.Lock()
 	for key, val := range s.cacheMap {
-		s.cacheRecord(val)
+		s.cacheRecord(ctx, val)
 		delete(s.cacheMap, key)
 		time.Sleep(s.cacheWait)
 		break
@@ -150,7 +150,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 	return pushed
 }
 
-func (s *Server) cacheRecord(r *pb.Record) {
+func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	if r.GetMetadata() == nil {
 		r.Metadata = &pb.ReleaseMetadata{}
 	}
@@ -165,7 +165,7 @@ func (s *Server) cacheRecord(r *pb.Record) {
 		inst, err := s.retr.AddToFolder(r.GetRelease().FolderId, r.GetRelease().Id)
 		if err == nil {
 			r.GetRelease().InstanceId = int32(inst)
-			s.saveRecordCollection()
+			s.saveRecordCollection(ctx)
 		}
 	}
 
@@ -194,10 +194,10 @@ func (s *Server) cacheRecord(r *pb.Record) {
 		}
 	}
 
-	s.saveRecordCollection()
+	s.saveRecordCollection(ctx)
 }
 
-func (s *Server) syncCollection() {
+func (s *Server) syncCollection(ctx context.Context) {
 	records := s.retr.GetCollection()
 
 	for _, record := range records {
@@ -253,7 +253,7 @@ func (s *Server) syncCollection() {
 	}
 
 	s.lastSyncTime = time.Now()
-	s.saveRecordCollection()
+	s.saveRecordCollection(ctx)
 }
 
 func (s *Server) syncWantlist() {
@@ -275,7 +275,7 @@ func (s *Server) syncWantlist() {
 }
 
 func (s *Server) runSync(ctx context.Context) {
-	s.syncCollection()
+	s.syncCollection(ctx)
 	s.syncWantlist()
-	s.saveRecordCollection()
+	s.saveRecordCollection(ctx)
 }

@@ -51,7 +51,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				response.Records = append(response.Records, rec)
 			}
 			if request.GetForce() {
-				s.cacheRecord(rec)
+				s.cacheRecord(ctx, rec)
 			} else {
 				s.cacheMutex.Lock()
 				s.cacheMap[rec.GetRelease().Id] = rec
@@ -172,7 +172,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
 		s.collection.Records = append(s.collection.Records, request.GetToAdd())
-		s.cacheRecord(request.GetToAdd())
+		s.cacheRecord(ctx, request.GetToAdd())
 		s.saveNeeded = true
 	}
 

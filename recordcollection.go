@@ -166,13 +166,13 @@ const (
 func (s *Server) saveLoop(ctx context.Context) {
 	if s.saveNeeded {
 		s.saveNeeded = false
-		s.saveRecordCollection()
+		s.saveRecordCollection(ctx)
 	}
 }
 
-func (s *Server) readRecordCollection() error {
+func (s *Server) readRecordCollection(ctx context.Context) error {
 	collection := &pb.RecordCollection{}
-	data, _, err := s.KSclient.Read(KEY, collection)
+	data, _, err := s.KSclient.Read(ctx, KEY, collection)
 
 	if err != nil {
 		return err
@@ -209,8 +209,8 @@ func (s *Server) readRecordCollection() error {
 	return nil
 }
 
-func (s *Server) saveRecordCollection() {
-	s.KSclient.Save(KEY, s.collection)
+func (s *Server) saveRecordCollection(ctx context.Context) {
+	s.KSclient.Save(ctx, KEY, s.collection)
 }
 
 // DoRegister does RPC registration
@@ -226,7 +226,7 @@ func (s *Server) ReportHealth() bool {
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
 	if master {
-		err := s.readRecordCollection()
+		err := s.readRecordCollection(ctx)
 		return err
 	}
 
@@ -355,11 +355,11 @@ func main() {
 	server.PrepServer()
 
 	if len(*token) > 0 {
-		server.KSclient.Save(TOKEN, &pb.Token{Token: *token})
+		server.KSclient.Save(context.Background(), TOKEN, &pb.Token{Token: *token})
 		log.Fatalf("Written TOKEN")
 	}
 	tType := &pb.Token{}
-	tResp, _, err := server.KSclient.Read(TOKEN, tType)
+	tResp, _, err := server.KSclient.Read(context.Background(), TOKEN, tType)
 
 	if err != nil || len(tResp.(*pb.Token).Token) == 0 {
 		log.Fatalf("Unable to read token %v and %v", err, tResp)
