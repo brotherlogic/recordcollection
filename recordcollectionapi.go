@@ -65,11 +65,6 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 		}
 	}
 
-	//Don't report if we're forcing
-	if !request.GetForce() {
-		s.LogFunction(fmt.Sprintf("GetRecords-%v", len(s.collection.GetRecords())), t)
-	}
-
 	response.InternalProcessingTime = time.Now().Sub(t).Nanoseconds() / 1000000
 	s.LogTrace(ctx, "GetRecords", time.Now(), pbt.Milestone_END_FUNCTION)
 	return response, nil
@@ -77,7 +72,6 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 
 // GetWants gets a bunch of records
 func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb.GetWantsResponse, error) {
-	t := time.Now()
 	response := &pb.GetWantsResponse{Wants: make([]*pb.Want, 0)}
 
 	for _, rec := range s.collection.GetNewWants() {
@@ -86,13 +80,11 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 		}
 	}
 
-	s.LogFunction("GetWants", t)
 	return response, nil
 }
 
 //UpdateWant updates the record
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
-	t := time.Now()
 	var want *pb.Want
 	found := false
 	for _, rec := range s.collection.GetNewWants() {
@@ -112,7 +104,6 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	}
 
 	s.saveNeeded = true
-	s.LogFunction("UpdateWant", t)
 	return &pb.UpdateWantResponse{Updated: want}, nil
 }
 

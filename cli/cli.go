@@ -123,13 +123,12 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "reset":
 		i, _ := strconv.Atoi(os.Args[2])
-		g, _ := strconv.Atoi(os.Args[3])
 		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(recs.GetRecords()[0].GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, Category: pbrc.ReleaseMetadata_STAGED, GoalFolder: int32(g)}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(recs.GetRecords()[0].GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, Category: pbrc.ReleaseMetadata_UNLISTENED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
