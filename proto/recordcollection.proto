@@ -124,6 +124,9 @@ message ReleaseMetadata {
 
   // This is an overall score
   float overall_score = 16;
+
+  // Width of spine in mm
+  int32 spine_width = 17;
 }
 
 // A request to get some records
