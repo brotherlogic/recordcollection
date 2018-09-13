@@ -93,6 +93,7 @@ message ReleaseMetadata {
     STAGED_TO_SELL = 14;
     RIP_THEN_SELL = 21;
     SOLD = 15;
+    SOLD_ARCHIVE = 22;
     
     DIGITAL = 16;
     GOOGLE_PLAY = 18;

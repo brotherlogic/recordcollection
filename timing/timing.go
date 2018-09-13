@@ -29,7 +29,7 @@ func testRead() {
 	t := time.Now()
 	client := *keystoreclient.GetClient(getIP)
 	rc := &pbrc.RecordCollection{}
-	_, b, c := client.Read("/github.com/brotherlogic/recordcollection/collection", rc)
+	_, b, c := client.Read(context.Background(), "/github.com/brotherlogic/recordcollection/collection", rc)
 	fmt.Printf("TOOK %v -> %v,%v\n", time.Now().Sub(t), b.GetReadTime(), c)
 }
 
