@@ -122,6 +122,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 				if val.SpillFolder > 0 {
 					r.GetMetadata().MoveFolder = val.SpillFolder
 				} else {
+				s.Log(fmt.Sprintf("Destination over quota"))
 					return false
 				}
 			}
@@ -130,6 +131,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 			err := s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if err != nil {
+			s.Log(fmt.Sprintf("Problem moving record: %v", err))
 				return false
 			}
 
