@@ -128,6 +128,10 @@ message ReleaseMetadata {
 
   // Width of spine in mm
   int32 spine_width = 17;
+
+  // Sale cost and ID if applicable
+  int32 sale_cost = 18;
+  int32 sale_id = 19;
 }
 
 // A request to get some records
