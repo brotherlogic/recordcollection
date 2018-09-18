@@ -347,8 +347,8 @@ func main() {
 	}
 	server := Init()
 	server.GoServer.KSclient = *keystoreclient.GetClient(server.GetIP)
-	server.PrepServer()
 
+	server.PrepServer()
 	if len(*token) > 0 {
 		server.KSclient.Save(context.Background(), TOKEN, &pb.Token{Token: *token})
 		log.Fatalf("Written TOKEN")
