@@ -22,7 +22,7 @@ func (s *Server) syncIssue(ctx context.Context) {
 	for _, r := range s.collection.GetRecords() {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
 			s.Log(fmt.Sprintf("Found %v", r))
-			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r.GetRelease().Title))
+			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r.GetRelease().Title), false)
 
 			// Force a recache
 			s.cacheMutex.Lock()
@@ -113,7 +113,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			if err != nil {
 				e, ok := status.FromError(err)
 				if ok && e.Code() == codes.InvalidArgument {
-					s.RaiseIssue(context.Background(), "Quota Problem", fmt.Sprintf("Error getting quota: %v for %v", err, r.GetRelease().Id))
+					s.RaiseIssue(context.Background(), "Quota Problem", fmt.Sprintf("Error getting quota: %v for %v", err, r.GetRelease().Id), false)
 				}
 				return false
 			}
@@ -122,7 +122,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 				if val.SpillFolder > 0 {
 					r.GetMetadata().MoveFolder = val.SpillFolder
 				} else {
-				s.Log(fmt.Sprintf("Destination over quota"))
+					s.Log(fmt.Sprintf("Destination over quota"))
 					return false
 				}
 			}
@@ -131,7 +131,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 			err := s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if err != nil {
-			s.Log(fmt.Sprintf("Problem moving record: %v", err))
+				s.Log(fmt.Sprintf("Problem moving record: %v", err))
 				return false
 			}
 
