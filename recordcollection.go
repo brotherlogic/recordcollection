@@ -226,7 +226,14 @@ func (s *Server) ReportHealth() bool {
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
 	if master {
-		err := s.readRecordCollection(ctx)
+		tType := &pb.Token{}
+		tResp, _, err := s.KSclient.Read(context.Background(), TOKEN, tType)
+		if err != nil {
+			return err
+		}
+		s.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, s.Log)
+
+		err = s.readRecordCollection(ctx)
 		return err
 	}
 
@@ -353,22 +360,15 @@ func main() {
 		server.KSclient.Save(context.Background(), TOKEN, &pb.Token{Token: *token})
 		log.Fatalf("Written TOKEN")
 	}
-	tType := &pb.Token{}
-	tResp, _, err := server.KSclient.Read(context.Background(), TOKEN, tType)
 
-	if err != nil || len(tResp.(*pb.Token).Token) == 0 {
-		log.Fatalf("Unable to read token %v and %v", err, tResp)
-	}
-
-	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
 	server.Register = server
 
 	server.RegisterServer("recordcollection", false)
-	server.RegisterRepeatingTask(server.runSync, time.Hour)
-	server.RegisterRepeatingTask(server.pushWants, time.Minute)
-	server.RegisterRepeatingTask(server.runRecache, time.Minute)
-	server.RegisterRepeatingTask(server.runPush, time.Minute)
-	server.RegisterRepeatingTask(server.saveLoop, time.Minute)
-	server.RegisterRepeatingTask(server.syncIssue, time.Hour)
+	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
+	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
+	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
+	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
+	server.RegisterRepeatingTask(server.saveLoop, "save_loop", time.Minute)
+	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
 	server.Serve()
 }
