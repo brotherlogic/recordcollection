@@ -117,7 +117,7 @@ func (s *Server) pushRecord(r *pb.Record) (bool, string) {
 				if ok && e.Code() == codes.InvalidArgument {
 					s.RaiseIssue(context.Background(), "Quota Problem", fmt.Sprintf("Error getting quota: %v for %v", err, r.GetRelease().Id), false)
 				}
-				return false, "No Quota"
+				return false, fmt.Sprintf("No Quota: %v", err)
 			}
 
 			if val.GetOverQuota() {
