@@ -54,7 +54,7 @@ func (s *Server) runPush(ctx context.Context) {
 	s.lastPushDone = 0
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
-		pushed, resp := s.pushRecord(val)
+		pushed, resp := s.pushRecord(ctx, val)
 		s.pushMutex.Lock()
 		delete(s.pushMap, key)
 		s.pushMutex.Unlock()
@@ -104,13 +104,13 @@ func (s *Server) updateWant(w *pb.Want) bool {
 	return false
 }
 
-func (s *Server) pushRecord(r *pb.Record) (bool, string) {
+func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0 && r.GetMetadata().GetMoveFolder() != r.GetRelease().FolderId)
 
 	if r.GetMetadata().GetMoveFolder() > 0 {
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 			//Check that we can move this record
-			val, err := s.quota.hasQuota(r.GetMetadata().GetMoveFolder())
+			val, err := s.quota.hasQuota(ctx, r.GetMetadata().GetMoveFolder())
 
 			if err != nil {
 				e, ok := status.FromError(err)

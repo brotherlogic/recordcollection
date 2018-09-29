@@ -1,10 +1,11 @@
 package main
 
 import (
-	"context"
 	"errors"
 	"log"
 	"testing"
+
+	"golang.org/x/net/context"
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
@@ -43,7 +44,7 @@ type testQuota struct {
 	fail  bool
 }
 
-func (t *testQuota) hasQuota(folder int32) (*pbro.QuotaResponse, error) {
+func (t *testQuota) hasQuota(ctx context.Context, folder int32) (*pbro.QuotaResponse, error) {
 	if t.pass {
 		return &pbro.QuotaResponse{OverQuota: false}, nil
 	}
@@ -291,7 +292,7 @@ func TestRecache(t *testing.T) {
 func TestSimplePush(t *testing.T) {
 	r := &pb.Record{Release: &pbd.Release{FolderId: 268147}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_DIGITAL, GoalFolder: 268147, Dirty: true, MoveFolder: 268147}}
 	s := InitTestServer(".testsimplepush")
-	v, _ := s.pushRecord(r)
+	v, _ := s.pushRecord(context.Background(), r)
 	if v {
 		t.Fatalf("Push dirty record failed: %v", v)
 	}

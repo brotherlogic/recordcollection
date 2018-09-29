@@ -25,7 +25,7 @@ import (
 )
 
 type quotaChecker interface {
-	hasQuota(folder int32) (*pbro.QuotaResponse, error)
+	hasQuota(ctx context.Context, folder int32) (*pbro.QuotaResponse, error)
 }
 
 type moveRecorder interface {
@@ -61,7 +61,7 @@ func (p *prodMoveRecorder) moveRecord(InstanceID, oldFolder, newFolder int32) er
 
 type prodQuotaChecker struct{}
 
-func (p *prodQuotaChecker) hasQuota(folder int32) (*pbro.QuotaResponse, error) {
+func (p *prodQuotaChecker) hasQuota(ctx context.Context, folder int32) (*pbro.QuotaResponse, error) {
 	ip, port, err := utils.Resolve("recordsorganiser")
 	if err != nil {
 		return &pbro.QuotaResponse{}, err
@@ -74,9 +74,6 @@ func (p *prodQuotaChecker) hasQuota(folder int32) (*pbro.QuotaResponse, error) {
 	defer conn.Close()
 
 	client := pbro.NewOrganiserServiceClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
 	return client.GetQuota(ctx, &pbro.QuotaRequest{FolderId: folder})
 }
 
