@@ -54,7 +54,7 @@ func (s *Server) runPush(ctx context.Context) {
 	s.lastPushDone = 0
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
-		pushed := s.pushRecord(val)
+		pushed, resp := s.pushRecord(val)
 		s.pushMutex.Lock()
 		delete(s.pushMap, key)
 		s.pushMutex.Unlock()
@@ -62,6 +62,8 @@ func (s *Server) runPush(ctx context.Context) {
 
 		if pushed {
 			break
+		} else {
+			val.GetMetadata().MoveFailure = resp
 		}
 	}
 	if save {
@@ -102,7 +104,7 @@ func (s *Server) updateWant(w *pb.Want) bool {
 	return false
 }
 
-func (s *Server) pushRecord(r *pb.Record) bool {
+func (s *Server) pushRecord(r *pb.Record) (bool, string) {
 	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0 && r.GetMetadata().GetMoveFolder() != r.GetRelease().FolderId)
 
 	if r.GetMetadata().GetMoveFolder() > 0 {
@@ -115,7 +117,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 				if ok && e.Code() == codes.InvalidArgument {
 					s.RaiseIssue(context.Background(), "Quota Problem", fmt.Sprintf("Error getting quota: %v for %v", err, r.GetRelease().Id), false)
 				}
-				return false
+				return false, "No Quota"
 			}
 
 			if val.GetOverQuota() {
@@ -123,7 +125,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 					r.GetMetadata().MoveFolder = val.SpillFolder
 				} else {
 					s.Log(fmt.Sprintf("Destination over quota"))
-					return false
+					return false, "Over Quota"
 				}
 			}
 		}
@@ -132,7 +134,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 			err := s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if err != nil {
 				s.Log(fmt.Sprintf("Problem moving record: %v", err))
-				return false
+				return false, fmt.Sprintf("Move fail: %v", err)
 			}
 
 			s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
@@ -149,7 +151,7 @@ func (s *Server) pushRecord(r *pb.Record) bool {
 	r.GetMetadata().SetRating = 0
 
 	r.GetMetadata().Dirty = false
-	return pushed
+	return pushed, ""
 }
 
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
