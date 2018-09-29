@@ -132,6 +132,9 @@ message ReleaseMetadata {
   // Sale cost and ID if applicable
   int32 sale_cost = 18;
   int32 sale_id = 19;
+
+  // Reason for a move failure
+  string move_failure = 20;
 }
 
 // A request to get some records
