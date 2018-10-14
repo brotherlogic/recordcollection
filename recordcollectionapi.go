@@ -109,11 +109,9 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
-	t := time.Now()
 	var record *pb.Record
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
-			s.LogMilestone("UpdateRecord", "FoundRecord", t)
 
 			// If this is being sold - mark it for sale
 			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
@@ -143,7 +141,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			s.pushMutex.Lock()
 			s.pushMap[rec.GetRelease().Id] = rec
 			s.pushMutex.Unlock()
-			s.LogMilestone("UpdateRecord", "UpdatedRecord", t)
 		}
 	}
 
