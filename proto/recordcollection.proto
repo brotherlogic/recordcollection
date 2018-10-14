@@ -94,6 +94,7 @@ message ReleaseMetadata {
     RIP_THEN_SELL = 21;
     SOLD = 15;
     SOLD_ARCHIVE = 22;
+    LISTED_TO_SELL = 23;
     
     DIGITAL = 16;
     GOOGLE_PLAY = 18;

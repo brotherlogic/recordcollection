@@ -49,6 +49,21 @@ func main() {
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
+	case "sget":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
+
+		if err == nil {
+			for _, r := range rec.GetRecords() {
+				fmt.Printf("Release: %v\n", r.GetRelease())
+				fmt.Printf("Metadata: %v\n", r.GetMetadata())
+				fmt.Printf("Labels: %v\n", len(r.GetRelease().Labels))
+				fmt.Printf("1 %v, %v, %v %v", r.GetMetadata().GetDateAdded() > (time.Now().AddDate(0, -3, 0).Unix()), r.GetMetadata().DateAdded, r.GetRelease().Rating == 0, r.GetRelease().Rating)
+			}
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
+
 	case "pget":
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{FolderId: int32(1362206)}}})
 

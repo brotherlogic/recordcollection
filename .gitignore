@@ -9,4 +9,4 @@ test.sh
 
 recordcollection
 .test*
-cli/cli
+recordcollection_cli/recordcollection_cli
