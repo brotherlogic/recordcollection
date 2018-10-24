@@ -10,18 +10,17 @@ import (
 	"time"
 
 	"github.com/brotherlogic/godiscogs"
-	"github.com/brotherlogic/goserver"
-	"github.com/brotherlogic/keystore/client"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-
 	pbd "github.com/brotherlogic/godiscogs"
+	"github.com/brotherlogic/goserver"
 	pbg "github.com/brotherlogic/goserver/proto"
 	"github.com/brotherlogic/goserver/utils"
+	"github.com/brotherlogic/keystore/client"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbrp "github.com/brotherlogic/recordprocess/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 type quotaChecker interface {
@@ -89,6 +88,7 @@ type saver interface {
 	GetSalePrice(releaseID int) float32
 	RemoveFromWantlist(releaseID int)
 	AddToWantlist(releaseID int)
+	UpdateSalePrice(saleID int, releaseID int, condition string, price float32) error
 }
 
 type scorer interface {
@@ -150,6 +150,7 @@ type Server struct {
 	wantCheck      string
 	lastWantText   string
 	scorer         scorer
+	saleMap        map[int32]*pb.Record
 }
 
 const (
@@ -315,6 +316,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "old_sync", Value: int64(oldSyncCount)},
 		&pbg.State{Key: "no_instance", Value: int64(noInstanceCount)},
 		&pbg.State{Key: "no_score", Value: int64(noScoreCount)},
+		&pbg.State{Key: "sale_map", Value: int64(len(s.saleMap))},
 	}
 }
 
@@ -336,6 +338,7 @@ func Init() *Server {
 		mover:          &prodMoveRecorder{},
 		lastWantText:   "",
 		scorer:         &prodScorer{},
+		saleMap:        make(map[int32]*pb.Record),
 	}
 }
 
@@ -367,5 +370,6 @@ func main() {
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
 	server.RegisterRepeatingTask(server.saveLoop, "save_loop", time.Minute)
 	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
+	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 	server.Serve()
 }

@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/brotherlogic/goserver/utils"
-	"github.com/golang/protobuf/proto"
-	"golang.org/x/net/context"
-
 	pbgd "github.com/brotherlogic/godiscogs"
+	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbt "github.com/brotherlogic/tracer/proto"
+	"github.com/golang/protobuf/proto"
+	"golang.org/x/net/context"
 )
 
 // DeleteRecord deletes a record
@@ -119,6 +118,11 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 					price := s.retr.GetSalePrice(int(rec.GetRelease().Id))
 					s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale")
 				}
+			}
+
+			// If this is a sale update - set the dirty flag
+			if rec.GetMetadata().SalePrice != request.GetUpdate().GetMetadata().SalePrice {
+				request.GetUpdate().GetMetadata().SaleDirty = true
 			}
 
 			// Avoid increasing repeasted fields
