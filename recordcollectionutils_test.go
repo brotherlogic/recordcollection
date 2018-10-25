@@ -5,11 +5,10 @@ import (
 	"log"
 	"testing"
 
-	"golang.org/x/net/context"
-
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -59,6 +58,10 @@ type testSyncer struct {
 	moveRecordCount int
 	failOnRate      bool
 	updateWantCount int
+}
+
+func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition string, price float32) error {
+	return nil
 }
 
 func (t *testSyncer) GetCollection() []*pbd.Release {

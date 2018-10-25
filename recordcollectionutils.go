@@ -4,13 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
-
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -31,6 +30,18 @@ func (s *Server) syncIssue(ctx context.Context) {
 		}
 	}
 
+}
+
+func (s *Server) pushSales(ctx context.Context) {
+	for _, val := range s.saleMap {
+		if val.GetMetadata().SaleDirty {
+			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Very Good Plus (VG+)", float32(val.GetMetadata().SalePrice)/100)
+			if err == nil {
+				val.GetMetadata().SaleDirty = false
+				break
+			}
+		}
+	}
 }
 
 func (s *Server) pushWants(ctx context.Context) {
