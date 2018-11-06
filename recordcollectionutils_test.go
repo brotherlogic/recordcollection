@@ -119,6 +119,10 @@ func (t *testSyncer) AddToWantlist(releaseID int) {
 	// Do nothing
 }
 
+func (t *testSyncer) GetCurrentSalePrice(saleID int) float32 {
+	return 12.34
+}
+
 func TestSyncIssues(t *testing.T) {
 	s := InitTestServer(".testsyncissues")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123}, Metadata: &pb.ReleaseMetadata{LastSyncTime: 1}})
@@ -155,6 +159,17 @@ func TestGoodSync(t *testing.T) {
 	}
 	if len(s.collection.GetNewWants()) != 1 {
 		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
+	}
+}
+
+func TestSaleSync(t *testing.T) {
+	s := InitTestServer(".testGoodSync")
+	rec := &pb.Record{Release: &pbd.Release{Id: 123}, Metadata: &pb.ReleaseMetadata{SaleId: 123}}
+	s.collection.Records = append(s.collection.Records, rec)
+	s.runSync(context.Background())
+
+	if rec.GetMetadata().SalePrice == 0 {
+		t.Errorf("Price has not synced: %v", rec)
 	}
 }
 
