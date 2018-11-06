@@ -267,6 +267,12 @@ func (s *Server) syncCollection(ctx context.Context) {
 		}
 	}
 
+	for _, r := range s.collection.Records {
+		if r.GetMetadata().SaleId > 0 && r.GetMetadata().SalePrice == 0 {
+			r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
+		}
+	}
+
 	s.lastSyncTime = time.Now()
 	s.saveRecordCollection(ctx)
 }

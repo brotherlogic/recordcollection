@@ -89,6 +89,7 @@ type saver interface {
 	RemoveFromWantlist(releaseID int)
 	AddToWantlist(releaseID int)
 	UpdateSalePrice(saleID int, releaseID int, condition string, price float32) error
+	GetCurrentSalePrice(saleID int) float32
 }
 
 type scorer interface {
