@@ -247,6 +247,13 @@ func max(a, b int) int {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
+	unknownCount := 0
+	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().SaleId > 0 && r.GetMetadata().SalePrice == 0 {
+			unknownCount++
+		}
+	}
+
 	stateCount := 0
 	for _, r := range s.collection.GetRecords() {
 		if r.GetMetadata().GetCategory() != pb.ReleaseMetadata_UNKNOWN {
@@ -317,6 +324,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "no_instance", Value: int64(noInstanceCount)},
 		&pbg.State{Key: "no_score", Value: int64(noScoreCount)},
 		&pbg.State{Key: "sale_map", Value: int64(len(s.saleMap))},
+		&pbg.State{Key: "unknow_sale_prices", Value: int64(unknownCount)},
 	}
 }
 
