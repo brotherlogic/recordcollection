@@ -206,6 +206,13 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		}
 	}
 
+	// Fill the sale map
+	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().SaleId > 0 {
+			s.saleMap[r.GetMetadata().SaleId] = r
+		}
+	}
+
 	return nil
 }
 
