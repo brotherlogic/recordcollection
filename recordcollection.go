@@ -152,6 +152,7 @@ type Server struct {
 	lastWantText   string
 	scorer         scorer
 	saleMap        map[int32]*pb.Record
+	lastSalePush   time.Time
 }
 
 const (
@@ -348,6 +349,7 @@ func Init() *Server {
 		lastWantText:   "",
 		scorer:         &prodScorer{},
 		saleMap:        make(map[int32]*pb.Record),
+		lastSalePush:   time.Now(),
 	}
 }
 

@@ -33,6 +33,7 @@ func (s *Server) syncIssue(ctx context.Context) {
 }
 
 func (s *Server) pushSales(ctx context.Context) {
+	s.lastSalePush = time.Now()
 	for _, val := range s.saleMap {
 		if val.GetMetadata().SaleDirty {
 			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Very Good Plus (VG+)", float32(val.GetMetadata().SalePrice)/100)
@@ -40,6 +41,8 @@ func (s *Server) pushSales(ctx context.Context) {
 				val.GetMetadata().SaleDirty = false
 				break
 			}
+
+			s.Log(fmt.Sprintf("Updated sale price: %v", err))
 		}
 	}
 }
