@@ -327,6 +327,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "no_score", Value: int64(noScoreCount)},
 		&pbg.State{Key: "sale_map", Value: int64(len(s.saleMap))},
 		&pbg.State{Key: "unknow_sale_prices", Value: int64(unknownCount)},
+		&pbg.State{Key: "last_sale_push", TimeValue: s.lastSalePush.Unix()},
 	}
 }
 
