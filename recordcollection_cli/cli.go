@@ -8,12 +8,12 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	pbgd "github.com/brotherlogic/godiscogs"
-
+	pbgs "github.com/brotherlogic/goserver/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
+	pbt "github.com/brotherlogic/tracer/proto"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -31,7 +31,7 @@ func main() {
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*5)
+	ctx, cancel := utils.BuildContext("recordcollectioncli-"+os.Args[1], "recordcollection", pbgs.ContextType_MEDIUM)
 	defer cancel()
 
 	switch os.Args[1] {
@@ -240,6 +240,16 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
-	}
+	case "saleprice":
+		i, _ := strconv.Atoi(os.Args[2])
+		i2, _ := strconv.Atoi(os.Args[3])
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SalePrice: int32(i2)}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 
+	}
+	utils.SendTrace(ctx, "recordcollectioncli-"+os.Args[1], time.Now(), pbt.Milestone_END, "recordcollection")
 }
