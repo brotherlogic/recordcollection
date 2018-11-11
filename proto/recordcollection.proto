@@ -90,6 +90,7 @@ message ReleaseMetadata {
     PROFESSOR = 7;
     
     PREPARE_TO_SELL = 19;
+    ASSESS_FOR_SALE = 24;
     STAGED_TO_SELL = 14;
     RIP_THEN_SELL = 21;
     SOLD = 15;
