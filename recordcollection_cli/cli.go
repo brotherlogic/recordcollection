@@ -40,6 +40,7 @@ func main() {
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
 
 		if err == nil {
+			fmt.Printf("Time Taken: %v\n", r.InternalProcessingTime)
 			for _, r := range rec.GetRecords() {
 				fmt.Printf("Release: %v\n", r.GetRelease())
 				fmt.Printf("Metadata: %v\n", r.GetMetadata())
