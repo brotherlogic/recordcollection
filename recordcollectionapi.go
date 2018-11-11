@@ -39,6 +39,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	t := time.Now()
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
+	s.LogTrace(ctx, fmt.Sprintf("GetRecords-Search-%v", len(s.collection.GetRecords())), time.Now(), pbt.Milestone_MARKER)
 	for _, rec := range s.collection.GetRecords() {
 		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) {
 			if request.GetStrip() {
