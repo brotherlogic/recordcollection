@@ -199,7 +199,7 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		for _, r := range recs.GetRecords() {
-			if r.GetMetadata().Category == pbrc.ReleaseMetadata_ASSESS {
+			if r.GetMetadata().Category == pbrc.ReleaseMetadata_ASSESS || r.GetMetadata().Category == pbrc.ReleaseMetadata_ASSESS_FOR_SALE {
 				up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}}
 				rec, err := registry.UpdateRecord(ctx, up)
 				if err != nil {
