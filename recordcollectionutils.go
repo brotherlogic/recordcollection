@@ -41,8 +41,6 @@ func (s *Server) pushSales(ctx context.Context) {
 				val.GetMetadata().SaleDirty = false
 				break
 			}
-
-			s.Log(fmt.Sprintf("Updated sale price: %v", err))
 		}
 	}
 }
@@ -145,7 +143,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 		}
 
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
-			err := s.mover.moveRecord(r.GetRelease().InstanceId, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
+			err := s.mover.moveRecord(r, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if err != nil {
 				s.Log(fmt.Sprintf("Problem moving record: %v", err))
 				return false, fmt.Sprintf("Move fail: %v", err)
