@@ -6,7 +6,6 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
-	pbt "github.com/brotherlogic/tracer/proto"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -297,11 +296,12 @@ func (s *Server) syncWantlist() {
 	}
 }
 
+func (s *Server) runSyncWants(ctx context.Context) {
+	s.syncWantlist()
+	s.saveRecordCollection(ctx)
+}
+
 func (s *Server) runSync(ctx context.Context) {
 	s.syncCollection(ctx)
-	s.LogTrace(ctx, "run_sync_synced_collection", time.Now(), pbt.Milestone_MARKER)
-	s.syncWantlist()
-	s.LogTrace(ctx, "run_sync_synced_wantlist", time.Now(), pbt.Milestone_MARKER)
 	s.saveRecordCollection(ctx)
-	s.LogTrace(ctx, "run_sync_synced_saved", time.Now(), pbt.Milestone_MARKER)
 }

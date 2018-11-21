@@ -385,6 +385,7 @@ func main() {
 
 	server.RegisterServer("recordcollection", false)
 	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
+	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
 	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
