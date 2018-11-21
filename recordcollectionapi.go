@@ -85,6 +85,7 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 
 //UpdateWant updates the record
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
+	ctx = s.LogTrace(ctx, fmt.Sprintf("UpdateWant"), time.Now(), pbt.Milestone_START_FUNCTION)
 	var want *pb.Want
 	found := false
 	for _, rec := range s.collection.GetNewWants() {
@@ -104,6 +105,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	}
 
 	s.saveNeeded = true
+	s.LogTrace(ctx, "UpdateWant", time.Now(), pbt.Milestone_END_FUNCTION)
 	return &pb.UpdateWantResponse{Updated: want}, nil
 }
 
