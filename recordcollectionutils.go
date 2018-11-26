@@ -215,6 +215,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 }
 
 func (s *Server) syncCollection(ctx context.Context) {
+	startTime := time.Now()
 	records := s.retr.GetCollection()
 	s.LogTrace(ctx, fmt.Sprintf("SyncCollection-GotCollection"), time.Now(), pbt.Milestone_MARKER)
 	for _, record := range records {
@@ -277,6 +278,7 @@ func (s *Server) syncCollection(ctx context.Context) {
 	}
 
 	s.lastSyncTime = time.Now()
+	s.lastSyncLength = time.Now().Sub(startTime)
 	s.saveRecordCollection(ctx)
 }
 
