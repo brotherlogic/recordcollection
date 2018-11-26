@@ -157,6 +157,9 @@ func TestGoodSync(t *testing.T) {
 	if len(s.collection.GetRecords()) != 3 {
 		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
 	}
+
+	s.runSyncWants(context.Background())
+
 	if len(s.collection.GetNewWants()) != 1 {
 		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
 	}
@@ -258,6 +261,7 @@ func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
 	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}}
 	s.runSync(context.Background())
+	s.runSyncWants(context.Background())
 
 	// Check that we have one record and one want
 	if len(s.collection.GetRecords()) != 3 {
