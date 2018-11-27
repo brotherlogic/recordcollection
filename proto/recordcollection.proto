@@ -73,6 +73,9 @@ message ReleaseMetadata {
     PURCHASED = 1;
     UNLISTENED = 2;
     STAGED = 3;
+
+    PRE_HIGH_SCHOOL = 25;
+    HIGH_SCHOOL = 26;
     
     PRE_FRESHMAN = 4;
     FRESHMAN = 5;
