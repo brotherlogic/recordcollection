@@ -111,6 +111,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
+	ctx = s.LogTrace(ctx, fmt.Sprintf("UpdateRecord"), time.Now(), pbt.Milestone_START_FUNCTION)
 	var record *pb.Record
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
@@ -153,6 +154,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	s.saveNeeded = true
+	s.LogTrace(ctx, "UpdateRecord", time.Now(), pbt.Milestone_END_FUNCTION)
 	return &pb.UpdateRecordsResponse{Updated: record}, nil
 }
 
