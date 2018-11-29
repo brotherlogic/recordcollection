@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 
 	pbgd "github.com/brotherlogic/godiscogs"
@@ -86,11 +87,34 @@ func main() {
 			fmt.Printf("Req Error: %v", err)
 		}
 	case "all":
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{}})
+		t1 := time.Now()
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{}}, grpc.UseCompressor("gzip"))
+		t2 := time.Now()
 
 		if err == nil {
 			fmt.Printf("%v records in the collection\n", len(rec.GetRecords()))
+			fmt.Printf("Pull took %v (%v) for %v bytes\n", t2.Sub(t1), rec.InternalProcessingTime, proto.Size(rec))
 		}
+	case "allstrip":
+		t1 := time.Now()
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Strip: true, Filter: &pbrc.Record{}})
+		t2 := time.Now()
+
+		if err == nil {
+			fmt.Printf("%v records in the collection\n", len(rec.GetRecords()))
+			fmt.Printf("Pull took %v (%v) for %v bytes\n", t2.Sub(t1), rec.InternalProcessingTime, proto.Size(rec))
+			size := 0
+			sizePb := &pbrc.Record{}
+			for _, r := range rec.GetRecords() {
+				if proto.Size(r) > size {
+					size = proto.Size(r)
+					sizePb = r
+				}
+			}
+			fmt.Printf("Largest: %v, %v\n", sizePb.GetRelease().Title, size)
+			fmt.Printf("%v\n", sizePb)
+		}
+
 	case "force":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{LastCache: 1}}})
