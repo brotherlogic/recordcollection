@@ -47,6 +47,18 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				r.GetRelease().Images = make([]*pbgd.Image, 0)
 				r.GetRelease().Formats = make([]*pbgd.Format, 0)
 				response.Records = append(response.Records, r)
+			} else if request.GetMoveStrip() {
+				cleanRecord := &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbgd.Release{}}
+
+				cleanRecord.GetMetadata().Category = rec.GetMetadata().Category
+				cleanRecord.GetRelease().FolderId = rec.GetRelease().FolderId
+				cleanRecord.GetMetadata().MoveFolder = rec.GetMetadata().MoveFolder
+				cleanRecord.GetRelease().Formats = rec.GetRelease().Formats
+				cleanRecord.GetRelease().Id = rec.GetRelease().Id
+				cleanRecord.GetRelease().Rating = rec.GetRelease().Rating
+				cleanRecord.GetMetadata().GoalFolder = rec.GetMetadata().GoalFolder
+
+				response.Records = append(response.Records, cleanRecord)
 			} else {
 				response.Records = append(response.Records, rec)
 			}

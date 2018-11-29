@@ -153,6 +153,9 @@ message GetRecordsRequest {
 
   // Return a stripped response
   bool strip = 3;
+
+  // Strip out for record mover
+  bool move_strip = 4;
 }
 
 // A list of records in response
