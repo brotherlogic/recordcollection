@@ -321,7 +321,7 @@ func (s *Server) GetState() []*pbg.State {
 	badFolder := make(map[string]bool)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetRelease().FolderId != r.GetMetadata().GoalFolder {
-			if r.GetRelase().FolderId != 673768 && r.GetRelease().FolderId != 812802 {
+			if r.GetRelease().FolderId != 673768 && r.GetRelease().FolderId != 812802 {
 				diffCount++
 				badFolder[fmt.Sprintf("%v", r.GetMetadata().Category)] = true
 			}
