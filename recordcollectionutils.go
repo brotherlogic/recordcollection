@@ -68,6 +68,7 @@ func (s *Server) runPush(ctx context.Context) {
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
 		pushed, resp := s.pushRecord(ctx, val)
+		s.LogTrace(ctx, fmt.Sprintf("RunPush-Pushed-%v", pushed), time.Now(), pbt.Milestone_MARKER)
 		s.pushMutex.Lock()
 		delete(s.pushMap, key)
 		s.pushMutex.Unlock()

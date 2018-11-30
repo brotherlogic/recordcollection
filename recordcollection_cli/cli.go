@@ -97,7 +97,7 @@ func main() {
 		}
 	case "allstrip":
 		t1 := time.Now()
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Strip: true, Filter: &pbrc.Record{}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{MoveStrip: true, Filter: &pbrc.Record{}})
 		t2 := time.Now()
 
 		if err == nil {
@@ -112,7 +112,6 @@ func main() {
 				}
 			}
 			fmt.Printf("Largest: %v, %v\n", sizePb.GetRelease().Title, size)
-			fmt.Printf("%v\n", sizePb)
 		}
 
 	case "force":
