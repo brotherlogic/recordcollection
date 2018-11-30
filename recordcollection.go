@@ -323,7 +323,8 @@ func (s *Server) GetState() []*pbg.State {
 		if r.GetRelease().FolderId != r.GetMetadata().GoalFolder {
 			if r.GetMetadata().Category != pb.ReleaseMetadata_STAGED &&
 				r.GetMetadata().Category != pb.ReleaseMetadata_UNLISTENED &&
-				r.GetMetadata().Category != pb.ReleaseMetadata_HIGH_SCHOOL {
+				r.GetMetadata().Category != pb.ReleaseMetadata_HIGH_SCHOOL &&
+				r.GetMetadata().Category != pb.ReleaseMetadata_PRE_HIGH_SCHOOL {
 				diffCount++
 				badFolder = fmt.Sprintf("%v", r.GetMetadata().Category)
 			}
