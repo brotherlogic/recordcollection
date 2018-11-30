@@ -318,7 +318,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	diffCount := 0
-	badFolder := ""
+	badFolder := make(map[string]bool)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetRelease().FolderId != r.GetMetadata().GoalFolder {
 			if r.GetMetadata().Category != pb.ReleaseMetadata_STAGED &&
@@ -326,7 +326,7 @@ func (s *Server) GetState() []*pbg.State {
 				r.GetMetadata().Category != pb.ReleaseMetadata_HIGH_SCHOOL &&
 				r.GetMetadata().Category != pb.ReleaseMetadata_PRE_HIGH_SCHOOL {
 				diffCount++
-				badFolder = fmt.Sprintf("%v", r.GetMetadata().Category)
+				badFolder[fmt.Sprintf("%v", r.GetMetadata().Category)] = true
 			}
 		}
 	}
@@ -353,7 +353,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_sale_push", TimeValue: s.lastSalePush.Unix()},
 		&pbg.State{Key: "last_sync_length", Text: fmt.Sprintf("%v", s.lastSyncLength)},
 		&pbg.State{Key: "bad_folder", Value: int64(diffCount)},
-		&pbg.State{Key: "bad_folder_category", Text: badFolder},
+		&pbg.State{Key: "bad_folder_category", Text: fmt.Sprintf("%v", badFolder)},
 	}
 }
 
