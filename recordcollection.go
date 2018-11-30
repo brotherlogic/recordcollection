@@ -317,6 +317,13 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	diffCount := 0
+	for _, r := range s.collection.GetRecords() {
+		if r.GetRelease().FolderId != r.GetMetadata().GoalFolder {
+			diffCount++
+		}
+	}
+
 	return []*pbg.State{
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
@@ -338,6 +345,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "unknow_sale_prices", Value: int64(unknownCount)},
 		&pbg.State{Key: "last_sale_push", TimeValue: s.lastSalePush.Unix()},
 		&pbg.State{Key: "last_sync_length", Text: fmt.Sprintf("%v", s.lastSyncLength)},
+		&pbg.State{Key: "bad_folder", Value: int64(diffCount)},
 	}
 }
 
@@ -394,5 +402,6 @@ func main() {
 	server.RegisterRepeatingTask(server.saveLoop, "save_loop", time.Minute)
 	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
+
 	server.Serve()
 }
