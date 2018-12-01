@@ -36,6 +36,7 @@ func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordC
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
 	ctx = s.LogTrace(ctx, fmt.Sprintf("GetRecords-%v-%v", request.GetStrip(), request.GetForce()), time.Now(), pbt.Milestone_START_FUNCTION)
+	s.LogTrace(ctx, fmt.Sprintf("GetRecords-%v", request), time.Now(), pbt.Milestone_MARKER)
 	t := time.Now()
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
