@@ -55,6 +55,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				cleanRecord.GetMetadata().MoveFolder = rec.GetMetadata().MoveFolder
 				cleanRecord.GetRelease().Formats = rec.GetRelease().Formats
 				cleanRecord.GetRelease().Id = rec.GetRelease().Id
+				cleanRecord.GetRelease().InstanceId = rec.GetRelease().InstanceId
 				cleanRecord.GetRelease().Rating = rec.GetRelease().Rating
 				cleanRecord.GetMetadata().GoalFolder = rec.GetMetadata().GoalFolder
 
