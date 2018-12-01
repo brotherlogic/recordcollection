@@ -36,6 +36,12 @@ func main() {
 	defer cancel()
 
 	switch os.Args[1] {
+	case "testing":
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: 242017}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		log.Printf("GOT %v records", len(rec.GetRecords()))
 	case "get":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
