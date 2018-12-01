@@ -42,6 +42,16 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		log.Printf("GOT %v records", len(rec.GetRecords()))
+	case "getsales":
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{SalePrice: 500}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("%v records\n", len(rec.GetRecords()))
+		for i, rec := range rec.GetRecords() {
+			fmt.Printf("%v. %v\n", i, rec.GetRelease().Title)
+		}
+
 	case "get":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
