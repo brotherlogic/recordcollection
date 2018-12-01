@@ -146,9 +146,16 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			// Avoid increasing repeasted fields
 			if len(request.GetUpdate().GetRelease().GetImages()) > 0 {
 				rec.GetRelease().Images = []*pbgd.Image{}
+			}
+			if len(request.GetUpdate().GetRelease().GetArtists()) > 0 {
 				rec.GetRelease().Artists = []*pbgd.Artist{}
+			}
+			if len(request.GetUpdate().GetRelease().GetFormats()) > 0 {
 				rec.GetRelease().Formats = []*pbgd.Format{}
+			}
+			if len(request.GetUpdate().GetRelease().GetLabels()) > 0 {
 				rec.GetRelease().Labels = []*pbgd.Label{}
+
 			}
 
 			proto.Merge(rec, request.GetUpdate())
