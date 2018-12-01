@@ -144,7 +144,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 
 			// Avoid increasing repeasted fields
-			if len(request.GetUpdate().GetRelease().GetFormats()) > 0 {
+			if len(request.GetUpdate().GetRelease().GetImages()) > 0 {
 				rec.GetRelease().Images = []*pbgd.Image{}
 				rec.GetRelease().Artists = []*pbgd.Artist{}
 				rec.GetRelease().Formats = []*pbgd.Format{}
