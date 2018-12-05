@@ -35,12 +35,12 @@ func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordC
 
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
-	ctx = s.LogTrace(ctx, fmt.Sprintf("GetRecords-%v-%v", request.GetStrip(), request.GetForce()), time.Now(), pbt.Milestone_START_FUNCTION)
-	s.LogTrace(ctx, fmt.Sprintf("GetRecords-%v", request), time.Now(), pbt.Milestone_MARKER)
+	ctx = s.LogTrace(ctx, fmt.Sprintf("GetRecords-%v", request), time.Now(), pbt.Milestone_START_FUNCTION)
 	t := time.Now()
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
-	s.LogTrace(ctx, fmt.Sprintf("GetRecords-Search-%v", len(s.collection.GetRecords())), time.Now(), pbt.Milestone_MARKER)
+	cacheLockTime := int64(0)
+	pushLockTime := int64(0)
 	for _, rec := range s.collection.GetRecords() {
 		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) {
 			if request.GetStrip() {
@@ -67,12 +67,22 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			if request.GetForce() {
 				s.cacheRecord(ctx, rec)
 			} else {
+				st := time.Now()
 				s.cacheMutex.Lock()
+				took := time.Now().Sub(st).Nanoseconds() / 10000
+				if took > cacheLockTime {
+					cacheLockTime = took
+				}
 				s.cacheMap[rec.GetRelease().Id] = rec
 				s.cacheMutex.Unlock()
 			}
 			if rec.GetMetadata().GetDirty() {
+				st := time.Now()
 				s.pushMutex.Lock()
+				took := time.Now().Sub(st).Nanoseconds() / 10000
+				if took > pushLockTime {
+					pushLockTime = took
+				}
 				s.pushMap[rec.GetRelease().Id] = rec
 				s.pushMutex.Unlock()
 			}
@@ -80,7 +90,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	}
 
 	response.InternalProcessingTime = time.Now().Sub(t).Nanoseconds() / 1000000
-	s.LogTrace(ctx, "GetRecords", time.Now(), pbt.Milestone_END_FUNCTION)
+	s.LogTrace(ctx, fmt.Sprintf("GetRecords-%v-%v", cacheLockTime, pushLockTime), time.Now(), pbt.Milestone_END_FUNCTION)
 	return response, nil
 }
 
