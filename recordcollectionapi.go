@@ -59,6 +59,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				cleanRecord.GetRelease().InstanceId = rec.GetRelease().InstanceId
 				cleanRecord.GetRelease().Rating = rec.GetRelease().Rating
 				cleanRecord.GetMetadata().GoalFolder = rec.GetMetadata().GoalFolder
+				cleanRecord.GetMetadata().FilePath = rec.GetMetadata().FilePath
 
 				response.Records = append(response.Records, cleanRecord)
 			} else {
@@ -70,7 +71,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				st := time.Now()
 				s.cacheMutex.Lock()
 				took := time.Now().Sub(st).Nanoseconds() / 10000
-				if took > cacheLockTime {
+				if took >= cacheLockTime {
 					cacheLockTime = took
 				}
 				s.cacheMap[rec.GetRelease().Id] = rec
@@ -80,7 +81,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				st := time.Now()
 				s.pushMutex.Lock()
 				took := time.Now().Sub(st).Nanoseconds() / 10000
-				if took > pushLockTime {
+				if took >= pushLockTime {
 					pushLockTime = took
 				}
 				s.pushMap[rec.GetRelease().Id] = rec
