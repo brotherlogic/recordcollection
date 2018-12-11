@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
@@ -37,17 +36,6 @@ func main() {
 	defer cancel()
 
 	switch os.Args[1] {
-	case "testing":
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{}}})
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		log.Printf("GOT %v records", len(rec.GetRecords()))
-		for _, r := range rec.GetRecords() {
-			if strings.Contains(r.GetRelease().Title, "Wind") {
-				log.Printf("%v", r.GetRelease().Title)
-			}
-		}
 	case "getsales":
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{SalePrice: 500}}})
 		if err != nil {
