@@ -278,7 +278,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	count := 0
-	for _, w := range s.collection.NewWants {
+	for _, w := range s.collection.GetNewWants() {
 		if w.GetMetadata().Active {
 			count++
 		}
