@@ -39,6 +39,7 @@ func (s *Server) pushSales(ctx context.Context) {
 		if val.GetMetadata().SaleDirty {
 			s.salesPushes++
 			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Very Good Plus (VG+)", float32(val.GetMetadata().SalePrice)/100)
+			s.Log(fmt.Sprintf("Error in push: %v", err))
 			if err == nil {
 				val.GetMetadata().SaleDirty = false
 				break
