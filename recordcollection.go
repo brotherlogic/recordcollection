@@ -155,6 +155,7 @@ type Server struct {
 	saleMap        map[int32]*pb.Record
 	lastSalePush   time.Time
 	lastSyncLength time.Duration
+	salesPushes    int64
 }
 
 const (
@@ -351,6 +352,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_sync_length", Text: fmt.Sprintf("%v", s.lastSyncLength)},
 		&pbg.State{Key: "bad_folder", Value: int64(diffCount)},
 		&pbg.State{Key: "bad_folder_category", Text: fmt.Sprintf("%v", badFolder)},
+		&pbg.State{Key: "sales_pushes", Value: s.salesPushes},
 	}
 }
 
