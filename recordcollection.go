@@ -286,9 +286,13 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	twelves := 0
+	scoredTwelves := 0
 	for _, w := range s.collection.GetRecords() {
 		if w.GetRelease().FolderId == 242017 {
 			twelves++
+			if w.GetRelease().Rating > 0 {
+				scoredTwelves++
+			}
 		} else if w.GetRelease().FolderId == 812802 && w.GetMetadata().GoalFolder == 242017 && (w.GetMetadata().Category != pb.ReleaseMetadata_UNLISTENED && w.GetMetadata().Category != pb.ReleaseMetadata_STAGED && w.GetMetadata().Category != pb.ReleaseMetadata_PRE_FRESHMAN && w.GetMetadata().Category != pb.ReleaseMetadata_STAGED_TO_SELL) {
 			twelves++
 		}
@@ -343,6 +347,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "last_want_text", Text: s.lastWantText},
 		&pbg.State{Key: "want_count", Value: int64(count)},
 		&pbg.State{Key: "all_twelves", Value: int64(twelves)},
+		&pbg.State{Key: "scoredTwelves", Value: int64(scoredTwelves)},
 		&pbg.State{Key: "old_sync", Value: int64(oldSyncCount)},
 		&pbg.State{Key: "no_instance", Value: int64(noInstanceCount)},
 		&pbg.State{Key: "no_score", Value: int64(noScoreCount)},
