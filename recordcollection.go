@@ -85,7 +85,7 @@ type saver interface {
 	SetRating(releaseID int, rating int) error
 	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) string
 	DeleteInstance(folderID, releaseID, instanceID int) string
-	SellRecord(releaseID int, price float32, state string)
+	SellRecord(releaseID int, price float32, state string) int
 	GetSalePrice(releaseID int) float32
 	RemoveFromWantlist(releaseID int)
 	AddToWantlist(releaseID int)
