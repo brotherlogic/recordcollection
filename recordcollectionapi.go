@@ -146,7 +146,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				s.Log(fmt.Sprintf("ATTEMPTING TO SELL A RECORD %v -> %v", request.GetUpdate().GetRelease().InstanceId, request.NoSell))
 				if !request.NoSell {
 					price := s.retr.GetSalePrice(int(rec.GetRelease().Id))
-					s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale")
+					saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale")
+					rec.GetMetadata().SaleId = int32(saleid)
 				}
 			}
 
