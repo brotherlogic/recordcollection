@@ -53,6 +53,7 @@ func main() {
 		if err == nil {
 			fmt.Printf("Time Taken: %v\n", rec.InternalProcessingTime)
 			for _, r := range rec.GetRecords() {
+				fmt.Println()
 				fmt.Printf("Release: %v\n", r.GetRelease())
 				fmt.Printf("Metadata: %v\n", r.GetMetadata())
 			}
