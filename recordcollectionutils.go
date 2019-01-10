@@ -21,7 +21,6 @@ const (
 func (s *Server) syncIssue(ctx context.Context) {
 	for _, r := range s.collection.GetRecords() {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
-			s.Log(fmt.Sprintf("Found %v", r))
 			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r.GetRelease().Title), false)
 
 			// Force a recache
@@ -39,7 +38,6 @@ func (s *Server) pushSales(ctx context.Context) {
 		if val.GetMetadata().SaleDirty {
 			s.salesPushes++
 			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Very Good Plus (VG+)", float32(val.GetMetadata().SalePrice)/100)
-			s.Log(fmt.Sprintf("Error in push: %v", err))
 			if err == nil {
 				val.GetMetadata().SaleDirty = false
 				break
@@ -140,7 +138,6 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 				if val.SpillFolder > 0 {
 					r.GetMetadata().MoveFolder = val.SpillFolder
 				} else {
-					s.Log(fmt.Sprintf("Destination over quota"))
 					return false, "Over Quota"
 				}
 			}
@@ -149,7 +146,6 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 			err := s.mover.moveRecord(r, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if err != nil {
-				s.Log(fmt.Sprintf("Problem moving record: %v", err))
 				return false, fmt.Sprintf("Move fail: %v", err)
 			}
 
@@ -193,8 +189,6 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	sc, err := s.scorer.GetScore(r.GetRelease().InstanceId)
 	if err == nil {
 		r.GetMetadata().OverallScore = sc
-	} else {
-		s.Log(fmt.Sprintf("Error setting score: %v", err))
 	}
 
 	//Force a recache if the record has no title
