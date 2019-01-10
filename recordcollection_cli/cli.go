@@ -37,13 +37,15 @@ func main() {
 
 	switch os.Args[1] {
 	case "getsales":
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{SalePrice: 500}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("%v records\n", len(rec.GetRecords()))
 		for i, rec := range rec.GetRecords() {
-			fmt.Printf("%v. %v\n", i, rec.GetRelease().Title)
+			if rec.GetMetadata().SalePrice <= 500 && rec.GetMetadata().SalePrice > 0 {
+				fmt.Printf("%v. %v\n", i, rec.GetRelease().Title)
+			}
 		}
 
 	case "get":
