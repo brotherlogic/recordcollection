@@ -139,9 +139,11 @@ message ReleaseMetadata {
   int32 sale_id = 19;
   bool sale_dirty = 21;
   int32 sale_price = 22;
-
+  godiscogs.SaleState sale_state = 23;
+  
   // Reason for a move failure
   string move_failure = 20;
+
 }
 
 // A request to get some records

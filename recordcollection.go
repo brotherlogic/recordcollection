@@ -91,6 +91,7 @@ type saver interface {
 	AddToWantlist(releaseID int)
 	UpdateSalePrice(saleID int, releaseID int, condition string, price float32) error
 	GetCurrentSalePrice(saleID int) float32
+	GetCurrentSaleState(saleID int) godiscogs.SaleState
 }
 
 type scorer interface {
