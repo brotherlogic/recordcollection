@@ -43,6 +43,16 @@ func (s *Server) pushSales(ctx context.Context) {
 				break
 			}
 		}
+
+		if val.GetMetadata().Category == pb.ReleaseMetadata_SOLD_OFFLINE {
+			s.soldAdjust++
+			err := s.retr.RemoveFromSale(int(val.GetMetadata().SaleId), int(val.GetRelease().Id))
+
+			if err == nil {
+				val.GetMetadata().SaleDirty = false
+				break
+			}
+		}
 	}
 }
 

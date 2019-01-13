@@ -250,6 +250,22 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 
 }
 
+func TestRemoveRecordFromSale(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_SOLD_OFFLINE, SaleDirty: true}}
+	s.collection.Records = append(s.collection.Records, rec)
+	s.saleMap[1234] = rec
+
+	s.pushSales(context.Background())
+
+	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
+
+	if err != nil || r == nil || len(r.Records) != 1 || r.Records[0].GetMetadata().SaleDirty {
+		t.Errorf("Error in updating sale prices records: %v", r)
+	}
+
+}
+
 func TestUpdateRecordNullFolder(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
