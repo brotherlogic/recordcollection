@@ -64,6 +64,10 @@ func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition string
 	return nil
 }
 
+func (t *testSyncer) RemoveFromSale(saleID int, releaseID int) error {
+	return nil
+}
+
 func (t *testSyncer) GetCollection() []*pbd.Release {
 	return []*pbd.Release{
 		&pbd.Release{InstanceId: 1, Id: 234, MasterId: 12, Title: "Magic", Formats: []*pbd.Format{&pbd.Format{Name: "blah"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}},

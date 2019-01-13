@@ -92,6 +92,7 @@ type saver interface {
 	UpdateSalePrice(saleID int, releaseID int, condition string, price float32) error
 	GetCurrentSalePrice(saleID int) float32
 	GetCurrentSaleState(saleID int) godiscogs.SaleState
+	RemoveFromSale(saleID int, releaseID int) error
 }
 
 type scorer interface {
@@ -157,6 +158,7 @@ type Server struct {
 	lastSalePush   time.Time
 	lastSyncLength time.Duration
 	salesPushes    int64
+	soldAdjust     int64
 }
 
 const (
@@ -359,6 +361,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "bad_folder", Value: int64(diffCount)},
 		&pbg.State{Key: "bad_folder_category", Text: fmt.Sprintf("%v", badFolder)},
 		&pbg.State{Key: "sales_pushes", Value: s.salesPushes},
+		&pbg.State{Key: "sold_adjust", Value: s.soldAdjust},
 	}
 }
 
