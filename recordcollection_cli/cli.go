@@ -284,6 +284,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "soldoffline":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_SOLD_OFFLINE}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 
 	}
 	utils.SendTrace(ctx, "recordcollectioncli-"+os.Args[1], time.Now(), pbt.Milestone_END, "recordcollection")
