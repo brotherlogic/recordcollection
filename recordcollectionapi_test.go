@@ -221,7 +221,7 @@ func TestUpdateRecords(t *testing.T) {
 
 func TestUpdateRecordWithSalePrice(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234}}
+	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL}}
 	s.collection.Records = append(s.collection.Records, rec)
 	s.saleMap[1234] = rec
 

@@ -35,7 +35,7 @@ func (s *Server) syncIssue(ctx context.Context) {
 func (s *Server) pushSales(ctx context.Context) {
 	s.lastSalePush = time.Now()
 	for _, val := range s.saleMap {
-		if val.GetMetadata().SaleDirty {
+		if val.GetMetadata().SaleDirty && val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL {
 			s.salesPushes++
 			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Very Good Plus (VG+)", float32(val.GetMetadata().SalePrice)/100)
 			if err == nil {
