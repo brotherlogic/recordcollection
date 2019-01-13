@@ -110,6 +110,9 @@ func (t *testSyncer) SellRecord(releaseID int, price float32, state string) int 
 func (t *testSyncer) GetSalePrice(releaseID int) float32 {
 	return 15.5
 }
+func (t *testSyncer) GetSaleState(releaseID int) pbd.SaleState {
+	return pbd.SaleState_FOR_SALE
+}
 
 func (t *testSyncer) RemoveFromWantlist(releaseID int) {
 	t.updateWantCount++
@@ -121,6 +124,10 @@ func (t *testSyncer) AddToWantlist(releaseID int) {
 
 func (t *testSyncer) GetCurrentSalePrice(saleID int) float32 {
 	return 12.34
+}
+
+func (t *testSyncer) GetCurrentSaleState(saleID int) pbd.SaleState {
+	return pbd.SaleState_FOR_SALE
 }
 
 func TestSyncIssues(t *testing.T) {
