@@ -49,6 +49,7 @@ func (s *Server) pushSales(ctx context.Context) {
 			err := s.retr.RemoveFromSale(int(val.GetMetadata().SaleId), int(val.GetRelease().Id))
 
 			if err == nil {
+				val.GetMetadata().SaleState = pbd.SaleState_SOLD
 				val.GetMetadata().SaleDirty = false
 				break
 			}
