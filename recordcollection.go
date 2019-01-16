@@ -159,6 +159,7 @@ type Server struct {
 	lastSyncLength time.Duration
 	salesPushes    int64
 	soldAdjust     int64
+	wantUpdate     string
 }
 
 const (
@@ -362,6 +363,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "bad_folder_category", Text: fmt.Sprintf("%v", badFolder)},
 		&pbg.State{Key: "sales_pushes", Value: s.salesPushes},
 		&pbg.State{Key: "sold_adjust", Value: s.soldAdjust},
+		&pbg.State{Key: "want_766489", Text: s.wantUpdate},
 	}
 }
 
@@ -385,6 +387,7 @@ func Init() *Server {
 		scorer:         &prodScorer{},
 		saleMap:        make(map[int32]*pb.Record),
 		lastSalePush:   time.Now(),
+		wantUpdate:     "unknown",
 	}
 }
 
