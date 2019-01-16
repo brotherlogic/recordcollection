@@ -473,3 +473,8 @@ func TestPushRating(t *testing.T) {
 		t.Errorf("Update has not run")
 	}
 }
+
+func TestBasic(t *testing.T) {
+	s := InitTestServer(".madeup")
+	s.updateWant(&pb.Want{Release: &pbd.Release{Id: 766489}, Metadata: &pb.WantMetadata{}})
+}

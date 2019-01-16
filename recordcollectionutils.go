@@ -115,6 +115,9 @@ func (s *Server) runRecache(ctx context.Context) {
 }
 
 func (s *Server) updateWant(w *pb.Want) bool {
+	if w.GetRelease().Id == 766489 {
+		s.wantUpdate = fmt.Sprintf("%v and %v", w.ClearWant, w.GetMetadata().Active)
+	}
 	if w.ClearWant {
 		s.retr.RemoveFromWantlist(int(w.GetRelease().Id))
 		w.ClearWant = false
