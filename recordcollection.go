@@ -412,7 +412,12 @@ func main() {
 
 	server.Register = server
 
-	server.RegisterServer("recordcollection", false)
+	t := time.Now()
+	err := server.RegisterServer("recordcollection", false)
+	if err != nil {
+		log.Fatalf("Unable to register (%v) at %v", err, time.Now().Sub(t))
+	}
+
 	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
