@@ -5,22 +5,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"strconv"
 	"sync"
 	"time"
 
 	"github.com/brotherlogic/godiscogs"
-	pbd "github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver"
-	pbg "github.com/brotherlogic/goserver/proto"
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/brotherlogic/keystore/client"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+
+	pbd "github.com/brotherlogic/godiscogs"
+	pbg "github.com/brotherlogic/goserver/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbrp "github.com/brotherlogic/recordprocess/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
+
+	_ "net/http/pprof"
 )
 
 type quotaChecker interface {
@@ -417,6 +421,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to register (%v) at %v", err, time.Now().Sub(t))
 	}
+
+	// This enables pprof
+	server.MemCap = 200000000
+	go http.ListenAndServe(":8089", nil)
 
 	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
