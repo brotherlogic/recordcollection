@@ -430,7 +430,6 @@ func main() {
 	}
 
 	// This enables pprof
-	server.MemCap = 200000000
 	go http.ListenAndServe(":8089", nil)
 
 	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
