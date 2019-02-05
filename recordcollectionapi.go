@@ -65,6 +65,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			} else {
 				response.Records = append(response.Records, rec)
 			}
+
 			if request.GetForce() {
 				s.cacheRecord(ctx, rec)
 			} else {
