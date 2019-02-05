@@ -165,6 +165,7 @@ type Server struct {
 	salesPushes    int64
 	soldAdjust     int64
 	wantUpdate     string
+	saves          int64
 }
 
 const (
@@ -229,6 +230,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 }
 
 func (s *Server) saveRecordCollection(ctx context.Context) {
+	s.saves++
 	s.KSclient.Save(ctx, KEY, s.collection)
 }
 
@@ -372,6 +374,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "sold_adjust", Value: s.soldAdjust},
 		&pbg.State{Key: "want_766489", Text: s.wantUpdate},
 		&pbg.State{Key: "collection_size", Value: int64(len(col))},
+		&pbg.State{Key: "saves", Value: s.saves},
 	}
 }
 
