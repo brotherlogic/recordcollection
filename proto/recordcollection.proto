@@ -145,6 +145,8 @@ message ReleaseMetadata {
   // Reason for a move failure
   string move_failure = 20;
 
+  // The last time we were listened to
+  int64 last_listen_time = 24;
 }
 
 // A request to get some records

@@ -335,6 +335,7 @@ func (s *Server) GetState() []*pbg.State {
 
 	diffCount := 0
 	badFolder := make(map[string]bool)
+	recentListen := int64(0)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetRelease().FolderId != r.GetMetadata().GoalFolder {
 			if r.GetRelease().FolderId != 673768 && r.GetRelease().FolderId != 812802 {
@@ -342,11 +343,16 @@ func (s *Server) GetState() []*pbg.State {
 				badFolder[fmt.Sprintf("%v", r.GetMetadata().Category)] = true
 			}
 		}
+
+		if r.GetMetadata().LastListenTime > 0 {
+			recentListen = r.GetMetadata().LastListenTime
+		}
 	}
 
 	col, _ := proto.Marshal(s.collection)
 
 	return []*pbg.State{
+		&pbg.State{Key: "oldest_rec", TimeValue: recentListen},
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
 		&pbg.State{Key: "oldest_sync", TimeValue: oldestSync},
