@@ -175,6 +175,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 	if (r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetSetRating() == -1) && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
 		s.retr.SetRating(int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
 		r.GetRelease().Rating = int32(max(0, int(r.GetMetadata().SetRating)))
+		r.GetMetadata().LastListenTime = time.Now().Unix()
 	}
 	r.GetMetadata().SetRating = 0
 
