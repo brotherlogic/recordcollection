@@ -244,6 +244,12 @@ func (s *Server) ReportHealth() bool {
 	return true
 }
 
+// Shutdown the server
+func (s *Server) Shutdown(ctx context.Context) error {
+	s.saveRecordCollection(ctx)
+	return nil
+}
+
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
 	if master {
