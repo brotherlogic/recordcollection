@@ -6,7 +6,6 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
-	pbt "github.com/brotherlogic/tracer/proto"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -79,7 +78,6 @@ func (s *Server) runPush(ctx context.Context) {
 	save := len(s.pushMap) > 0
 	for key, val := range s.pushMap {
 		pushed, resp := s.pushRecord(ctx, val)
-		s.LogTrace(ctx, fmt.Sprintf("RunPush-Pushed-%v", pushed), time.Now(), pbt.Milestone_MARKER)
 		s.pushMutex.Lock()
 		delete(s.pushMap, key)
 		s.pushMutex.Unlock()
@@ -230,7 +228,6 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 func (s *Server) syncCollection(ctx context.Context) {
 	startTime := time.Now()
 	records := s.retr.GetCollection()
-	s.LogTrace(ctx, fmt.Sprintf("SyncCollection-GotCollection"), time.Now(), pbt.Milestone_MARKER)
 	for _, record := range records {
 		found := false
 		for _, r := range s.collection.GetRecords() {
@@ -264,7 +261,6 @@ func (s *Server) syncCollection(ctx context.Context) {
 			s.collection.Records = append(s.collection.Records, &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix()}})
 		}
 	}
-	s.LogTrace(ctx, fmt.Sprintf("SyncCollection-ProcCollection"), time.Now(), pbt.Milestone_MARKER)
 
 	otherMap := make(map[int32]int32)
 	for _, r := range s.collection.Records {
