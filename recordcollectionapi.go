@@ -7,7 +7,6 @@ import (
 	pbgd "github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
-	pbt "github.com/brotherlogic/tracer/proto"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 )
@@ -35,7 +34,6 @@ func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordC
 
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
-	ctx = s.LogTrace(ctx, fmt.Sprintf("GetRecords-%v", request), time.Now(), pbt.Milestone_START_FUNCTION)
 	t := time.Now()
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
@@ -92,7 +90,6 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	}
 
 	response.InternalProcessingTime = time.Now().Sub(t).Nanoseconds() / 1000000
-	s.LogTrace(ctx, fmt.Sprintf("GetRecords-%v-%v", cacheLockTime, pushLockTime), time.Now(), pbt.Milestone_END_FUNCTION)
 	return response, nil
 }
 
@@ -111,7 +108,6 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 
 //UpdateWant updates the record
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
-	ctx = s.LogTrace(ctx, fmt.Sprintf("UpdateWant"), time.Now(), pbt.Milestone_START_FUNCTION)
 	var want *pb.Want
 	found := false
 	for _, rec := range s.collection.GetNewWants() {
@@ -131,13 +127,11 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	}
 
 	s.saveNeeded = true
-	s.LogTrace(ctx, "UpdateWant", time.Now(), pbt.Milestone_END_FUNCTION)
 	return &pb.UpdateWantResponse{Updated: want}, nil
 }
 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
-	ctx = s.LogTrace(ctx, fmt.Sprintf("UpdateRecord"), time.Now(), pbt.Milestone_START_FUNCTION)
 	var record *pb.Record
 	for _, rec := range s.collection.GetRecords() {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
@@ -187,7 +181,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	s.saveNeeded = true
-	s.LogTrace(ctx, "UpdateRecord", time.Now(), pbt.Milestone_END_FUNCTION)
 	return &pb.UpdateRecordsResponse{Updated: record}, nil
 }
 
