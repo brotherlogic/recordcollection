@@ -64,18 +64,15 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				response.Records = append(response.Records, rec)
 			}
 
-			if request.GetForce() {
-				s.cacheRecord(ctx, rec)
-			} else {
-				st := time.Now()
-				s.cacheMutex.Lock()
-				took := time.Now().Sub(st).Nanoseconds() / 10000
-				if took >= cacheLockTime {
-					cacheLockTime = took
-				}
-				s.cacheMap[rec.GetRelease().Id] = rec
-				s.cacheMutex.Unlock()
+			st := time.Now()
+			s.cacheMutex.Lock()
+			took := time.Now().Sub(st).Nanoseconds() / 10000
+			if took >= cacheLockTime {
+				cacheLockTime = took
 			}
+			s.cacheMap[rec.GetRelease().Id] = rec
+			s.cacheMutex.Unlock()
+
 			if rec.GetMetadata().GetDirty() {
 				st := time.Now()
 				s.pushMutex.Lock()
