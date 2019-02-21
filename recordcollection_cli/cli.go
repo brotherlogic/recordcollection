@@ -12,9 +12,7 @@ import (
 	"google.golang.org/grpc"
 
 	pbgd "github.com/brotherlogic/godiscogs"
-	pbgs "github.com/brotherlogic/goserver/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
-	pbt "github.com/brotherlogic/tracer/proto"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -32,7 +30,7 @@ func main() {
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
-	ctx, cancel := utils.BuildContext("recordcollectioncli-"+os.Args[1], "recordcollection", pbgs.ContextType_MEDIUM)
+	ctx, cancel := utils.BuildContext("recordcollectioncli-"+os.Args[1], "recordcollection")
 	defer cancel()
 
 	switch os.Args[1] {
@@ -43,7 +41,7 @@ func main() {
 		}
 		fmt.Printf("%v records\n", len(rec.GetRecords()))
 		for i, rec := range rec.GetRecords() {
-			if rec.GetMetadata().SalePrice <= 500 && rec.GetMetadata().SalePrice > 0 && rec.GetMetadata().Category == pbrc.ReleaseMetadata_FOR_SALE {
+			if rec.GetMetadata().SalePrice <= 500 && rec.GetMetadata().SalePrice > 0 && rec.GetMetadata().Category == pbrc.ReleaseMetadata_LISTED_TO_SELL {
 				fmt.Printf("%v. %v\n", i, rec.GetRelease().Title)
 			}
 		}
@@ -294,5 +292,4 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 
 	}
-	utils.SendTrace(ctx, "recordcollectioncli-"+os.Args[1], time.Now(), pbt.Milestone_END, "recordcollection")
 }
