@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/keystore/client"
@@ -326,32 +325,5 @@ func TestAddWant(t *testing.T) {
 	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
 	if err != nil {
 		t.Fatalf("Error updating want")
-	}
-}
-
-func TestForceRecache(t *testing.T) {
-	s := InitTestServer(".testforcerecache")
-	s.cacheWait = time.Hour
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
-
-	s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
-
-	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
-	}
-
-	if len(r.GetRecords()) != 1 || r.GetRecords()[0].GetRelease().Title == "On The Wall" {
-		t.Errorf("Record has been recached: %v", r)
-	}
-
-	r, err = s.GetRecords(context.Background(), &pb.GetRecordsRequest{Force: true, Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
-
-	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
-	}
-
-	if len(r.GetRecords()) != 1 || r.GetRecords()[0].GetRelease().Title != "On The Wall" {
-		t.Errorf("Record has not been recached: %v", r)
 	}
 }
