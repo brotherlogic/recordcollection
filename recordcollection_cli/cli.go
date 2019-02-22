@@ -293,5 +293,5 @@ func main() {
 
 	}
 
-	log.Printf("Context: %v", ctx)
+	fmt.Printf("Context: %v\n", ctx)
 }
