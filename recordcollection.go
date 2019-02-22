@@ -434,6 +434,7 @@ func main() {
 	}
 
 	server.Register = server
+	server.SendTrace = true
 
 	t := time.Now()
 	err := server.RegisterServer("recordcollection", false)
