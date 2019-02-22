@@ -292,4 +292,6 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 
 	}
+
+	fmt.Printf("Context: %v\n", ctx)
 }
