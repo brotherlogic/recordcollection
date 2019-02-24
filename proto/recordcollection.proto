@@ -147,6 +147,9 @@ message ReleaseMetadata {
 
   // The last time we were listened to
   int64 last_listen_time = 24;
+
+  // The path to cd rip of this record
+  string cd_path = 25;
 }
 
 // A request to get some records
