@@ -208,6 +208,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	//Force a recache if the record has no title
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" || len(r.GetRelease().GetFormats()) == 0 {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
+		s.Log(fmt.Sprintf("%v leads to %v", release.Id, len(release.Tracklist)))
 		if err == nil {
 
 			//Clear repeated fields first
