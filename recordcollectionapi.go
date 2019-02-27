@@ -70,7 +70,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			if took >= cacheLockTime {
 				cacheLockTime = took
 			}
-			s.cacheMap[rec.GetRelease().Id] = rec
+			//s.cacheMap[rec.GetRelease().Id] = rec
 			s.cacheMutex.Unlock()
 
 			if rec.GetMetadata().GetDirty() {

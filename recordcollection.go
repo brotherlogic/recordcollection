@@ -261,6 +261,16 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 		s.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, s.Log)
 
 		err = s.readRecordCollection(ctx)
+
+		if err == nil {
+			for _, r := range s.collection.GetRecords() {
+				if r.GetRelease().Id == 1161277 {
+					s.cacheMap[r.GetRelease().Id] = r
+				}
+			}
+
+		}
+
 		return err
 	}
 
