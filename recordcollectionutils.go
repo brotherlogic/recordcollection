@@ -200,7 +200,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	}
 
 	// Update the score of the record
-	sc, err := s.scorer.GetScore(r.GetRelease().InstanceId)
+	sc, err := s.scorer.GetScore(ctx, r.GetRelease().InstanceId)
 	if err == nil {
 		r.GetMetadata().OverallScore = sc
 	}
