@@ -101,27 +101,21 @@ type saver interface {
 }
 
 type scorer interface {
-	GetScore(instanceID int32) (float32, error)
+	GetScore(ctx context.Context, instanceID int32) (float32, error)
 }
 
-type prodScorer struct{}
+type prodScorer struct {
+	dial func(server string) (*grpc.ClientConn, error)
+}
 
-func (p *prodScorer) GetScore(instanceID int32) (float32, error) {
-	ip, port, err := utils.Resolve("recordprocess")
-	if err != nil {
-		return -1, err
-	}
-
-	conn, err := grpc.Dial(ip+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
+func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, error) {
+	conn, err := p.dial("recordprocess")
 	if err != nil {
 		return -1, err
 	}
 	defer conn.Close()
 
 	client := pbrp.NewScoreServiceClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-
 	res, err := client.GetScore(ctx, &pbrp.GetScoreRequest{InstanceId: instanceID})
 	if err != nil {
 		return -1, err
@@ -402,7 +396,7 @@ func (s *Server) GetState() []*pbg.State {
 
 // Init builds out a server
 func Init() *Server {
-	return &Server{
+	s := &Server{
 		GoServer:       &goserver.GoServer{},
 		lastSyncTime:   time.Now(),
 		cacheMap:       make(map[int32]*pb.Record),
@@ -422,6 +416,8 @@ func Init() *Server {
 		lastSalePush:   time.Now(),
 		wantUpdate:     "unknown",
 	}
+	s.scorer = &prodScorer{s.DialMaster}
+	return s
 }
 
 func main() {
