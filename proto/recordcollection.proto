@@ -100,6 +100,7 @@ message ReleaseMetadata {
     SOLD_ARCHIVE = 22;
     LISTED_TO_SELL = 23;
     SOLD_OFFLINE = 27;
+    STALE_SALE = 28;
     
     DIGITAL = 16;
     GOOGLE_PLAY = 18;
