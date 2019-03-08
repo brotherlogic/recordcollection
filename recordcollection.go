@@ -269,9 +269,19 @@ func max(a, b int) int {
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	inPile := int64(0)
+	newRecord := int64(0)
+	listenRecord := int64(0)
+	sampleMove := int32(0)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetRelease().FolderId == 812802 {
 			inPile++
+			if r.GetMetadata().Category == pb.ReleaseMetadata_PRE_FRESHMAN {
+				listenRecord++
+			} else if r.GetMetadata().Category == pb.ReleaseMetadata_UNLISTENED {
+				newRecord++
+			} else {
+				sampleMove = r.GetRelease().Id
+			}
 		}
 	}
 
@@ -362,6 +372,9 @@ func (s *Server) GetState() []*pbg.State {
 
 	return []*pbg.State{
 		&pbg.State{Key: "in_pile", Value: inPile},
+		&pbg.State{Key: "unlistened", Value: newRecord},
+		&pbg.State{Key: "pre_file", Value: listenRecord},
+		&pbg.State{Key: "investigate", Value: int64(sampleMove)},
 		&pbg.State{Key: "stales", Value: stales},
 		&pbg.State{Key: "oldest_rec", TimeValue: recentListen},
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
