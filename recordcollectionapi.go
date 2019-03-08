@@ -37,7 +37,6 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	t := time.Now()
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
-	cacheLockTime := int64(0)
 	pushLockTime := int64(0)
 	for _, rec := range s.collection.GetRecords() {
 		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) {
@@ -63,15 +62,6 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 			} else {
 				response.Records = append(response.Records, rec)
 			}
-
-			st := time.Now()
-			s.cacheMutex.Lock()
-			took := time.Now().Sub(st).Nanoseconds() / 10000
-			if took >= cacheLockTime {
-				cacheLockTime = took
-			}
-			//s.cacheMap[rec.GetRelease().Id] = rec
-			s.cacheMutex.Unlock()
 
 			if rec.GetMetadata().GetDirty() {
 				st := time.Now()

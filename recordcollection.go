@@ -139,8 +139,6 @@ type Server struct {
 	lastPushLength time.Duration
 	lastPushDone   int
 	lastPushSize   int
-	cacheMutex     *sync.Mutex
-	cacheMap       map[int32]*pb.Record
 	cacheWait      time.Duration
 	pushMutex      *sync.Mutex
 	pushMap        map[int32]*pb.Record
@@ -255,16 +253,6 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 		s.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, s.Log)
 
 		err = s.readRecordCollection(ctx)
-
-		if err == nil {
-			for _, r := range s.collection.GetRecords() {
-				if r.GetRelease().Id == 1161277 {
-					s.cacheMap[r.GetRelease().Id] = r
-				}
-			}
-
-		}
-
 		return err
 	}
 
@@ -280,6 +268,13 @@ func max(a, b int) int {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
+	inPile := int64(0)
+	for _, r := range s.collection.GetRecords() {
+		if r.GetRelease().FolderId == 812802 {
+			inPile++
+		}
+	}
+
 	unknownCount := 0
 	stales := int64(0)
 	for _, r := range s.collection.GetRecords() {
@@ -366,12 +361,12 @@ func (s *Server) GetState() []*pbg.State {
 	col, _ := proto.Marshal(s.collection)
 
 	return []*pbg.State{
+		&pbg.State{Key: "in_pile", Value: inPile},
 		&pbg.State{Key: "stales", Value: stales},
 		&pbg.State{Key: "oldest_rec", TimeValue: recentListen},
 		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
 		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
 		&pbg.State{Key: "oldest_sync", TimeValue: oldestSync},
-		&pbg.State{Key: "sync_size", Value: int64(len(s.cacheMap))},
 		&pbg.State{Key: "to_push", Value: int64(len(s.pushMap))},
 		&pbg.State{Key: "sizington", Text: fmt.Sprintf("%v and %v", len(s.collection.GetRecords()), len(s.collection.GetWants()))},
 		&pbg.State{Key: "push_state", Text: fmt.Sprintf("Started %v [%v / %v]; took %v", s.lastPushTime, s.lastPushSize, s.lastPushDone, s.lastPushLength)},
@@ -404,9 +399,6 @@ func Init() *Server {
 	s := &Server{
 		GoServer:       &goserver.GoServer{},
 		lastSyncTime:   time.Now(),
-		cacheMap:       make(map[int32]*pb.Record),
-		cacheWait:      time.Second,
-		cacheMutex:     &sync.Mutex{},
 		pushMap:        make(map[int32]*pb.Record),
 		pushWait:       time.Minute,
 		pushMutex:      &sync.Mutex{},
@@ -459,7 +451,6 @@ func main() {
 	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
-	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
 	server.RegisterRepeatingTask(server.saveLoop, "save_loop", time.Minute)
 	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)

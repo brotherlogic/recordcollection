@@ -236,6 +236,23 @@ func TestImageMerge(t *testing.T) {
 	}
 }
 
+func TestInstanceIdCache(t *testing.T) {
+	s := InitTestServer(".testImageMerge")
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982}}
+	s.cacheRecord(context.Background(), r)
+
+	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
+		t.Fatalf("Record has not been recached %v", r)
+	}
+
+	r.Metadata.LastCache = 0
+	s.cacheRecord(context.Background(), r)
+
+	if r.GetMetadata().LastCache == 0 {
+		t.Fatalf("Record has not been double cached: %v", r)
+	}
+}
+
 func TestImageMergeWithFailScore(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
 	s.scorer = &testScorer{fail: true}
@@ -301,25 +318,6 @@ func TestGoodMergeSyncWithDirty(t *testing.T) {
 	if len(s.collection.GetNewWants()) != 1 {
 		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
 	}
-}
-
-func TestRecache(t *testing.T) {
-	s := InitTestServer(".testrecache")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{Id: 234}}}}
-
-	s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
-	s.runRecache(context.Background())
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{Id: 234}}})
-
-	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
-	}
-
-	if len(r.GetRecords()) != 1 || r.GetRecords()[0].GetRelease().Title != "On The Wall" {
-		//t.Errorf("Error in reading records: %v", r)
-	}
-
-	log.Printf("WHAT = %v", r.GetRecords()[0])
 }
 
 func TestSimplePush(t *testing.T) {
