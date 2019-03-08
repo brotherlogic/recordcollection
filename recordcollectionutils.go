@@ -21,11 +21,6 @@ func (s *Server) syncIssue(ctx context.Context) {
 	for _, r := range s.collection.GetRecords() {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
 			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r.GetRelease().Title), false)
-
-			// Force a recache
-			s.cacheMutex.Lock()
-			s.cacheMap[r.GetRelease().Id] = r
-			s.cacheMutex.Unlock()
 		}
 	}
 
@@ -99,17 +94,6 @@ func (s *Server) runPush(ctx context.Context) {
 		break
 	}
 	s.lastPushLength = time.Now().Sub(s.lastPushTime)
-}
-
-func (s *Server) runRecache(ctx context.Context) {
-	s.cacheMutex.Lock()
-	for key, val := range s.cacheMap {
-		s.cacheRecord(ctx, val)
-		delete(s.cacheMap, key)
-		time.Sleep(s.cacheWait)
-		break
-	}
-	s.cacheMutex.Unlock()
 }
 
 func (s *Server) updateWant(w *pb.Want) bool {
