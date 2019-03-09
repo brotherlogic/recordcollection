@@ -216,7 +216,6 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		if r.GetMetadata().SaleId > 0 {
 			s.saleMap[r.GetMetadata().SaleId] = r
 		}
-		r.GetMetadata().CdPath = ""
 	}
 
 	return nil
