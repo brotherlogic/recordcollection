@@ -216,6 +216,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		if r.GetMetadata().SaleId > 0 {
 			s.saleMap[r.GetMetadata().SaleId] = r
 		}
+		r.GetMetadata().CdPath = ""
 	}
 
 	return nil
@@ -253,6 +254,7 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 		s.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, s.Log)
 
 		err = s.readRecordCollection(ctx)
+
 		return err
 	}
 
