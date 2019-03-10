@@ -318,6 +318,7 @@ func (s *Server) GetState() []*pbg.State {
 
 	twelves := 0
 	scoredTwelves := 0
+	burnCount := 0
 	for _, w := range s.collection.GetRecords() {
 		if w.GetRelease().FolderId == 242017 {
 			twelves++
@@ -326,6 +327,10 @@ func (s *Server) GetState() []*pbg.State {
 			}
 		} else if w.GetRelease().FolderId == 812802 && w.GetMetadata().GoalFolder == 242017 && (w.GetMetadata().Category != pb.ReleaseMetadata_UNLISTENED && w.GetMetadata().Category != pb.ReleaseMetadata_STAGED && w.GetMetadata().Category != pb.ReleaseMetadata_PRE_FRESHMAN && w.GetMetadata().Category != pb.ReleaseMetadata_STAGED_TO_SELL) {
 			twelves++
+
+			if time.Now().Sub(time.Unix(w.GetMetadata().LastListenTime, 0)) < time.Hour*24*30 {
+				burnCount++
+			}
 		}
 	}
 
@@ -372,6 +377,7 @@ func (s *Server) GetState() []*pbg.State {
 	col, _ := proto.Marshal(s.collection)
 
 	return []*pbg.State{
+		&pbg.State{Key: "burn_count", Value: int64(burnCount)},
 		&pbg.State{Key: "in_pile", Value: inPile},
 		&pbg.State{Key: "unlistened", Value: newRecord},
 		&pbg.State{Key: "pre_file", Value: listenRecord},
