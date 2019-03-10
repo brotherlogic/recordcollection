@@ -253,6 +253,7 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 		s.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, s.Log)
 
 		err = s.readRecordCollection(ctx)
+
 		return err
 	}
 
