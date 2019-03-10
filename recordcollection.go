@@ -355,7 +355,7 @@ func (s *Server) GetState() []*pbg.State {
 
 	diffCount := 0
 	badFolder := make(map[string]bool)
-	recentListen := int64(0)
+	recentListen := time.Now().Unix()
 	for _, r := range s.collection.GetRecords() {
 		if r.GetRelease().FolderId != r.GetMetadata().GoalFolder {
 			if r.GetRelease().FolderId != 673768 && r.GetRelease().FolderId != 812802 {
@@ -364,7 +364,7 @@ func (s *Server) GetState() []*pbg.State {
 			}
 		}
 
-		if r.GetMetadata().LastListenTime > 0 {
+		if r.GetMetadata().LastListenTime > 0 && r.GetMetadata().LastListenTime < recentListen {
 			recentListen = r.GetMetadata().LastListenTime
 		}
 	}
