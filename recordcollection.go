@@ -365,7 +365,11 @@ func (s *Server) GetState() []*pbg.State {
 	diffCount := 0
 	badFolder := make(map[string]bool)
 	recentListen := time.Now().Unix()
+	uncached := int64(0)
 	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().LastCache <= 1 {
+			uncached++
+		}
 		if r.GetRelease().FolderId != r.GetMetadata().GoalFolder {
 			if r.GetRelease().FolderId != 673768 && r.GetRelease().FolderId != 812802 {
 				diffCount++
@@ -381,6 +385,7 @@ func (s *Server) GetState() []*pbg.State {
 	col, _ := proto.Marshal(s.collection)
 
 	return []*pbg.State{
+		&pbg.State{Key: "uncached", Value: uncached},
 		&pbg.State{Key: "burn_count", Value: int64(burnCount)},
 		&pbg.State{Key: "in_pile", Value: inPile},
 		&pbg.State{Key: "unlistened", Value: newRecord},
@@ -441,6 +446,15 @@ func Init() *Server {
 	return s
 }
 
+func (s *Server) cacheLoop(ctx context.Context) {
+	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().LastCache <= 1 {
+			s.cacheRecord(ctx, r)
+			return
+		}
+	}
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
@@ -479,6 +493,7 @@ func main() {
 	server.RegisterRepeatingTask(server.saveLoop, "save_loop", time.Minute)
 	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
+	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
 
 	server.Serve()
 }
