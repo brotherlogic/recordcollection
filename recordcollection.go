@@ -322,6 +322,10 @@ func (s *Server) GetState() []*pbg.State {
 	for _, w := range s.collection.GetRecords() {
 		if w.GetRelease().FolderId == 242017 {
 			twelves++
+			if time.Now().Sub(time.Unix(w.GetMetadata().LastListenTime, 0)) < time.Hour*24*30 {
+				burnCount++
+			}
+
 			if w.GetRelease().Rating > 0 {
 				scoredTwelves++
 			}
