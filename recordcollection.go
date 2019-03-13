@@ -209,6 +209,10 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 			s.pushMap[r.GetRelease().InstanceId] = r
 			s.pushMutex.Unlock()
 		}
+
+		if len(r.GetRelease().GetTracklist()) == 0 {
+			r.GetMetadata().LastCache = 1
+		}
 	}
 
 	// Fill the sale map
