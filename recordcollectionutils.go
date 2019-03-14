@@ -200,6 +200,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 			r.GetRelease().Artists = []*pbd.Artist{}
 			r.GetRelease().Formats = []*pbd.Format{}
 			r.GetRelease().Labels = []*pbd.Label{}
+			r.GetRelease().Tracklist = []*pbd.Track{}
 
 			proto.Merge(r.GetRelease(), release)
 
