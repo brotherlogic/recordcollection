@@ -17,5 +17,5 @@ before_install:
   fi
 
 script:
-- fgt golint $(find . | grep .go$ | grep -v recordcollection.pb.go)
+- fgt golint $(ls *.go)
 - $HOME/gopath/bin/goveralls -service=travis-ci -ignore=recordcollection.go -package github.com/brotherlogic/recordcollection
