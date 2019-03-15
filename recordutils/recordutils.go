@@ -2,6 +2,7 @@ package recordutils
 
 import (
 	"regexp"
+	"strings"
 
 	pbgd "github.com/brotherlogic/godiscogs"
 )
@@ -12,9 +13,13 @@ type TrackSet struct {
 	disk     string
 }
 
-func getPosition(t *pbgd.Track) string {
+func getPosition(t *pbgd.Track) (string, string) {
 	re := regexp.MustCompile("\\d+")
-	return re.FindString(t.Position)
+	if strings.Contains(t.Position, "-") {
+		elems := strings.Split(t.Position, "-")
+		return elems[0], re.FindString(t.Position)
+	}
+	return "1", re.FindString(t.Position)
 }
 
 //TrackExtract extracts a trackset from a release
@@ -24,14 +29,16 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 	for _, track := range r.Tracklist {
 		found := false
 		for _, set := range trackset {
-			if getPosition(track) == set.position {
+			disk, tr := getPosition(track)
+			if tr == set.position && disk == set.disk {
 				set.tracks = append(set.tracks, track)
 				found = true
 			}
 		}
 
+		disk, tr := getPosition(track)
 		if !found {
-			trackset = append(trackset, &TrackSet{tracks: []*pbgd.Track{track}, position: getPosition(track)})
+			trackset = append(trackset, &TrackSet{disk: disk, tracks: []*pbgd.Track{track}, position: tr})
 		}
 	}
 
