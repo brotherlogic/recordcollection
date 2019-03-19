@@ -292,7 +292,11 @@ func (s *Server) GetState() []*pbg.State {
 
 	unknownCount := 0
 	stales := int64(0)
+	missingSale := int64(0)
 	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().SaleId == 0 && r.GetRelease().FolderId == 488127 {
+			missingSale++
+		}
 		if r.GetMetadata().SaleId > 0 && r.GetMetadata().SalePrice == 0 {
 			unknownCount++
 		}
@@ -389,6 +393,7 @@ func (s *Server) GetState() []*pbg.State {
 	col, _ := proto.Marshal(s.collection)
 
 	return []*pbg.State{
+		&pbg.State{Key: "missingSales", Value: missingSale},
 		&pbg.State{Key: "uncached", Value: uncached},
 		&pbg.State{Key: "burn_count", Value: int64(burnCount)},
 		&pbg.State{Key: "in_pile", Value: inPile},
