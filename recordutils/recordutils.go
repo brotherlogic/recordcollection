@@ -30,7 +30,7 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 		found := false
 		for _, set := range trackset {
 			disk, tr := getPosition(track)
-			if tr == set.position && disk == set.disk {
+			if tr == set.Position && disk == set.Disk {
 				set.tracks = append(set.tracks, track)
 				found = true
 			}
@@ -38,7 +38,7 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 
 		disk, tr := getPosition(track)
 		if !found {
-			trackset = append(trackset, &TrackSet{disk: disk, tracks: []*pbgd.Track{track}, position: tr})
+			trackset = append(trackset, &TrackSet{Disk: disk, tracks: []*pbgd.Track{track}, Position: tr})
 		}
 	}
 
