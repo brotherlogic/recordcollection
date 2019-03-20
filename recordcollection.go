@@ -14,7 +14,6 @@ import (
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/brotherlogic/keystore/client"
-	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
@@ -390,8 +389,6 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
-	col, _ := proto.Marshal(s.collection)
-
 	return []*pbg.State{
 		&pbg.State{Key: "missingSales", Value: missingSale},
 		&pbg.State{Key: "uncached", Value: uncached},
@@ -427,7 +424,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "sales_pushes", Value: s.salesPushes},
 		&pbg.State{Key: "sold_adjust", Value: s.soldAdjust},
 		&pbg.State{Key: "want_766489", Text: s.wantUpdate},
-		&pbg.State{Key: "collection_size", Value: int64(len(col))},
 		&pbg.State{Key: "saves", Value: s.saves},
 	}
 }
