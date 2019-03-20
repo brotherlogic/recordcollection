@@ -9,8 +9,8 @@ import (
 
 type TrackSet struct {
 	tracks   []*pbgd.Track
-	position string
-	disk     string
+	Position string
+	Disk     string
 }
 
 func getPosition(t *pbgd.Track) (string, string) {
