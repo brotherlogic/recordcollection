@@ -19,6 +19,10 @@ func getPosition(t *pbgd.Track) (string, string) {
 		elems := strings.Split(t.Position, "-")
 		return elems[0], re.FindString(t.Position)
 	}
+
+	if t.TrackType != pbgd.Track_TRACK {
+		return "0", ""
+	}
 	return "1", re.FindString(t.Position)
 }
 
@@ -37,7 +41,7 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 		}
 
 		disk, tr := getPosition(track)
-		if !found {
+		if !found && disk != "0" {
 			trackset = append(trackset, &TrackSet{Disk: disk, tracks: []*pbgd.Track{track}, Position: tr})
 		}
 	}
