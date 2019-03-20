@@ -157,6 +157,7 @@ type Server struct {
 	soldAdjust     int64
 	wantUpdate     string
 	saves          int64
+	saveMutex      *sync.Mutex
 }
 
 const (
@@ -166,13 +167,6 @@ const (
 	//TOKEN for discogs
 	TOKEN = "/github.com/brotherlogic/recordcollection/token"
 )
-
-func (s *Server) saveLoop(ctx context.Context) {
-	if s.saveNeeded {
-		s.saveNeeded = false
-		s.saveRecordCollection(ctx)
-	}
-}
 
 func (s *Server) readRecordCollection(ctx context.Context) error {
 	collection := &pb.RecordCollection{}
@@ -225,6 +219,8 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 }
 
 func (s *Server) saveRecordCollection(ctx context.Context) {
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
 	s.saves++
 	s.KSclient.Save(ctx, KEY, s.collection)
 }
@@ -446,6 +442,7 @@ func Init() *Server {
 		saleMap:        make(map[int32]*pb.Record),
 		lastSalePush:   time.Now(),
 		wantUpdate:     "unknown",
+		saveMutex:      &sync.Mutex{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	return s
@@ -495,7 +492,6 @@ func main() {
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
-	server.RegisterRepeatingTask(server.saveLoop, "save_loop", time.Minute)
 	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
