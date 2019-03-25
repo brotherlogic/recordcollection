@@ -323,6 +323,7 @@ func (s *Server) GetState() []*pbg.State {
 	scoredTwelves := 0
 	burnCount := 0
 	toListenTo := int64(0)
+	toListen := int32(0)
 	for _, w := range s.collection.GetRecords() {
 		if w.GetRelease().FolderId == 242017 {
 			twelves++
@@ -332,6 +333,7 @@ func (s *Server) GetState() []*pbg.State {
 
 			if w.GetRelease().Rating == 0 && w.GetMetadata().LastListenTime == 0 {
 				toListenTo++
+				toListen = w.GetRelease().Id
 			}
 			if w.GetRelease().Rating > 0 {
 				scoredTwelves++
@@ -391,6 +393,7 @@ func (s *Server) GetState() []*pbg.State {
 
 	return []*pbg.State{
 		&pbg.State{Key: "needs_listen", Value: toListenTo},
+		&pbg.State{Key: "needs_listen_id", Value: int64(toListen)},
 		&pbg.State{Key: "missingSales", Value: missingSale},
 		&pbg.State{Key: "uncached", Value: uncached},
 		&pbg.State{Key: "burn_count", Value: int64(burnCount)},
