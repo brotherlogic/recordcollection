@@ -13,7 +13,7 @@ type TrackSet struct {
 	Disk     string
 }
 
-func getPosition(t *pbgd.Track) (string, string) {
+func getPosition(t *pbgd.Track, lastTrack string) (string, string) {
 	re := regexp.MustCompile("\\d+")
 	if strings.Contains(t.Position, "-") {
 		elems := strings.Split(t.Position, "-")
@@ -21,26 +21,34 @@ func getPosition(t *pbgd.Track) (string, string) {
 	}
 
 	if t.TrackType != pbgd.Track_TRACK {
-		return "0", ""
+		return "0", re.FindString(t.Title)
 	}
-	return "1", re.FindString(t.Position)
+	pos := re.FindString(t.Position)
+	if pos == "" {
+		pos = lastTrack
+	}
+	return "1", pos
 }
 
 //TrackExtract extracts a trackset from a release
 func TrackExtract(r *pbgd.Release) []*TrackSet {
 	trackset := make([]*TrackSet, 0)
 
+	lastTrack := ""
 	for _, track := range r.Tracklist {
 		found := false
 		for _, set := range trackset {
-			disk, tr := getPosition(track)
+			disk, tr := getPosition(track, lastTrack)
 			if tr == set.Position && disk == set.Disk {
 				set.tracks = append(set.tracks, track)
 				found = true
 			}
 		}
 
-		disk, tr := getPosition(track)
+		disk, tr := getPosition(track, lastTrack)
+		if disk == "0" {
+			lastTrack = tr
+		}
 		if !found && disk != "0" {
 			trackset = append(trackset, &TrackSet{Disk: disk, tracks: []*pbgd.Track{track}, Position: tr})
 		}
