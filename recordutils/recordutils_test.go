@@ -2,6 +2,7 @@ package recordutils
 
 import (
 	"io/ioutil"
+	"log"
 	"testing"
 
 	pbgd "github.com/brotherlogic/godiscogs"
@@ -47,6 +48,35 @@ func TestRunExtract(t *testing.T) {
 				t.Errorf("Bad title: %v", GetTitle(tr))
 			}
 		}
+	}
+
+}
+
+func TestRunExtractTatay(t *testing.T) {
+	data, _ := ioutil.ReadFile("testdata/565473.file")
+
+	release := &pbgd.Release{}
+	proto.Unmarshal(data, release)
+
+	tracks := TrackExtract(release)
+
+	if len(tracks) != 13 {
+		t.Errorf("Wrong number of tracks: %v", len(tracks))
+	}
+
+	found := false
+	for _, tr := range tracks {
+		log.Printf("%v - %v", tr.Position, GetTitle(tr))
+		if tr.Position == "13" {
+			found = true
+			if GetTitle(tr) != "Anna Apera / Gegin Nos / Silff Ffenest / Backward Dog" {
+				t.Errorf("Bad title: %v", GetTitle(tr))
+			}
+		}
+	}
+
+	if !found {
+		t.Errorf("Track 13 was not found")
 	}
 
 }
