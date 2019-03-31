@@ -107,6 +107,8 @@ message ReleaseMetadata {
     
     ASSESS = 17;
     NO_LABELS = 20;
+
+    PARENTS = 29;
   }
   Category category = 8;
   
