@@ -456,13 +456,14 @@ func Init() *Server {
 	return s
 }
 
-func (s *Server) cacheLoop(ctx context.Context) {
+func (s *Server) cacheLoop(ctx context.Context) error {
 	for _, r := range s.collection.GetRecords() {
 		if r.GetMetadata().LastCache <= 1 {
 			s.cacheRecord(ctx, r)
-			return
+			return nil
 		}
 	}
+	return nil
 }
 
 func main() {

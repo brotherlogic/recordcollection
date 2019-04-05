@@ -17,16 +17,16 @@ const (
 	RecacheDelay = 60 * 60 * 24 * 30
 )
 
-func (s *Server) syncIssue(ctx context.Context) {
+func (s *Server) syncIssue(ctx context.Context) error {
 	for _, r := range s.collection.GetRecords() {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
 			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r.GetRelease().Title), false)
 		}
 	}
-
+	return nil
 }
 
-func (s *Server) pushSales(ctx context.Context) {
+func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
 	for _, val := range s.saleMap {
 		if val.GetMetadata().SaleDirty && val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL {
@@ -49,9 +49,10 @@ func (s *Server) pushSales(ctx context.Context) {
 			}
 		}
 	}
+	return nil
 }
 
-func (s *Server) pushWants(ctx context.Context) {
+func (s *Server) pushWants(ctx context.Context) error {
 	for _, w := range s.collection.NewWants {
 		if w.GetMetadata().Active {
 			s.wantCheck = fmt.Sprintf("%v", w)
@@ -64,9 +65,10 @@ func (s *Server) pushWants(ctx context.Context) {
 	}
 
 	s.saveRecordCollection(ctx)
+	return nil
 }
 
-func (s *Server) runPush(ctx context.Context) {
+func (s *Server) runPush(ctx context.Context) error {
 	s.lastPushTime = time.Now()
 	s.lastPushSize = len(s.pushMap)
 	s.lastPushDone = 0
@@ -94,6 +96,7 @@ func (s *Server) runPush(ctx context.Context) {
 		break
 	}
 	s.lastPushLength = time.Now().Sub(s.lastPushTime)
+	return nil
 }
 
 func (s *Server) updateWant(w *pb.Want) bool {
@@ -299,12 +302,14 @@ func (s *Server) syncWantlist() {
 	}
 }
 
-func (s *Server) runSyncWants(ctx context.Context) {
+func (s *Server) runSyncWants(ctx context.Context) error {
 	s.syncWantlist()
 	s.saveRecordCollection(ctx)
+	return nil
 }
 
-func (s *Server) runSync(ctx context.Context) {
+func (s *Server) runSync(ctx context.Context) error {
 	s.syncCollection(ctx)
 	s.saveRecordCollection(ctx)
+	return nil
 }
