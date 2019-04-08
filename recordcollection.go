@@ -168,6 +168,7 @@ func (s *Server) findBiggest(ctx context.Context) error {
 		data, _ := proto.Marshal(r)
 		if len(data) > biggestb {
 			s.biggest = int64(r.GetRelease().Id)
+			biggestb = len(data)
 		}
 	}
 	return nil
