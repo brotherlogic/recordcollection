@@ -149,7 +149,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 			if len(request.GetUpdate().GetRelease().GetLabels()) > 0 {
 				rec.GetRelease().Labels = []*pbgd.Label{}
-
+			}
+			if len(request.GetUpdate().GetRelease().GetTracklist()) > 0 {
+				rec.GetRelease().Tracklist = []*pbgd.Track{}
 			}
 
 			proto.Merge(rec, request.GetUpdate())
