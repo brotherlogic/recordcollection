@@ -207,6 +207,11 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 			r.GetMetadata().LastCache = 1
 		}
 
+		if len(r.GetRelease().GetTracklisting()) > 100 {
+			r.GetRelease().Tracklisting = []*pbd.Track{}
+			r.GetMetadata().LastCache = 1
+		}
+
 		if r.GetMetadata().GetMoveFolder() > 0 || r.GetMetadata().GetSetRating() > 0 {
 			r.GetMetadata().Dirty = true
 		}
