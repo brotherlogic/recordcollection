@@ -234,6 +234,9 @@ func (s *Server) syncCollection(ctx context.Context) {
 				if len(record.GetImages()) > 0 {
 					r.GetRelease().Images = []*pbd.Image{}
 				}
+				if len(record.GetTracklist()) > 0 {
+					r.GetRelease().Tracklist = []*pbd.Track{}
+				}
 
 				proto.Merge(r.Release, record)
 
