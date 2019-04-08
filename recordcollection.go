@@ -207,8 +207,8 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 			r.GetMetadata().LastCache = 1
 		}
 
-		if len(r.GetRelease().GetTracklisting()) > 100 {
-			r.GetRelease().Tracklisting = []*pbd.Track{}
+		if len(r.GetRelease().GetTracklist()) > 100 {
+			r.GetRelease().Tracklist = []*pbd.Track{}
 			r.GetMetadata().LastCache = 1
 		}
 
