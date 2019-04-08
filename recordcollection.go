@@ -14,6 +14,7 @@ import (
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/brotherlogic/keystore/client"
+	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
@@ -158,6 +159,18 @@ type Server struct {
 	wantUpdate     string
 	saves          int64
 	saveMutex      *sync.Mutex
+	biggest        int64
+}
+
+func (s *Server) findBiggest(ctx context.Context) error {
+	biggestb := 0
+	for _, r := range s.collection.GetRecords() {
+		data, _ := proto.Marshal(r)
+		if len(data) > biggestb {
+			s.biggest = int64(r.GetRelease().Id)
+		}
+	}
+	return nil
 }
 
 const (
@@ -392,6 +405,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
+		&pbg.State{Key: "biggest", Value: s.biggest},
 		&pbg.State{Key: "needs_listen", Text: toListen},
 		&pbg.State{Key: "needs_listen_id", Value: int64(toListenTo)},
 		&pbg.State{Key: "missingSales", Value: missingSale},
@@ -504,6 +518,7 @@ func main() {
 	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
+	server.RegisterRepeatingTask(server.findBiggest, "find_biggest", time.Minute*5)
 
 	server.Serve()
 }
