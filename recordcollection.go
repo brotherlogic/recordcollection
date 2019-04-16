@@ -288,14 +288,15 @@ func (s *Server) GetState() []*pbg.State {
 	listenRecord := int64(0)
 	sampleMove := int32(0)
 	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().Category == pb.ReleaseMetadata_UNKNOWN {
+			unRecord++
+		}
 		if r.GetRelease().FolderId == 812802 {
 			inPile++
 			if r.GetMetadata().Category == pb.ReleaseMetadata_PRE_FRESHMAN {
 				listenRecord++
 			} else if r.GetMetadata().Category == pb.ReleaseMetadata_UNLISTENED {
 				newRecord++
-			} else if r.GetMetadata().Category == pb.ReleaseMetadata_UNKNOWN {
-				unRecord++
 			} else {
 				sampleMove = r.GetRelease().Id
 			}
