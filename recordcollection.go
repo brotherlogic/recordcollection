@@ -284,6 +284,7 @@ func max(a, b int) int {
 func (s *Server) GetState() []*pbg.State {
 	inPile := int64(0)
 	newRecord := int64(0)
+	unRecord := int64(0)
 	listenRecord := int64(0)
 	sampleMove := int32(0)
 	for _, r := range s.collection.GetRecords() {
@@ -293,6 +294,8 @@ func (s *Server) GetState() []*pbg.State {
 				listenRecord++
 			} else if r.GetMetadata().Category == pb.ReleaseMetadata_UNLISTENED {
 				newRecord++
+			} else if r.GetMetadata().Category == pb.ReleaseMetadata_UNKNOWN {
+				unRecord++
 			} else {
 				sampleMove = r.GetRelease().Id
 			}
@@ -413,6 +416,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "uncached", Value: uncached},
 		&pbg.State{Key: "burn_count", Value: int64(burnCount)},
 		&pbg.State{Key: "in_pile", Value: inPile},
+		&pbg.State{Key: "unknown", Value: unRecord},
 		&pbg.State{Key: "unlistened", Value: newRecord},
 		&pbg.State{Key: "pre_file", Value: listenRecord},
 		&pbg.State{Key: "investigate", Value: int64(sampleMove)},
