@@ -194,10 +194,6 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 
 	//Fill the push map
 	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata() == nil {
-			r.Metadata = &pb.ReleaseMetadata{}
-		}
-
 		// Stop repeated fields from blowing up
 		if len(r.GetRelease().GetFormats()) > 100 {
 			r.GetRelease().Images = []*pbd.Image{}
