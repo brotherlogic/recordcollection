@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -278,173 +277,14 @@ func max(a, b int) int {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	inPile := int64(0)
-	newRecord := int64(0)
-	unRecord := int64(0)
-	listenRecord := int64(0)
-	sampleMove := int32(0)
+	noGoal := int64(0)
 	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata().Category == pb.ReleaseMetadata_UNKNOWN {
-			unRecord++
-		}
-		if r.GetRelease().FolderId == 812802 {
-			inPile++
-			if r.GetMetadata().Category == pb.ReleaseMetadata_PRE_FRESHMAN {
-				listenRecord++
-			} else if r.GetMetadata().Category == pb.ReleaseMetadata_UNLISTENED {
-				newRecord++
-			} else {
-				sampleMove = r.GetRelease().Id
-			}
+		if r.GetMetadata().GoalFolder == 0 {
+			noGoal++
 		}
 	}
-
-	unknownCount := 0
-	stales := int64(0)
-	missingSale := int64(0)
-	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata().SaleId == 0 && r.GetRelease().FolderId == 488127 {
-			missingSale++
-		}
-		if r.GetMetadata().SaleId > 0 && r.GetMetadata().SalePrice == 0 {
-			unknownCount++
-		}
-		if r.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE {
-			stales++
-		}
-	}
-
-	stateCount := 0
-	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata().GetCategory() != pb.ReleaseMetadata_UNKNOWN {
-			stateCount++
-		}
-	}
-
-	tText := "No Next Record"
-	if s.nextPush != nil {
-		tText = s.nextPush.GetRelease().Title
-	}
-
-	count := 0
-	for _, w := range s.collection.GetNewWants() {
-		if w.GetMetadata().Active {
-			count++
-		}
-	}
-
-	twelves := 0
-	scoredTwelves := 0
-	burnCount := 0
-	toListenTo := int64(0)
-	toListen := ""
-	for _, w := range s.collection.GetRecords() {
-		if w.GetRelease().FolderId == 242017 {
-			twelves++
-			if time.Now().Sub(time.Unix(w.GetMetadata().LastListenTime, 0)) < time.Hour*24*30 {
-				burnCount++
-			}
-
-			if w.GetRelease().Rating == 0 && w.GetMetadata().LastListenTime == 0 {
-				toListenTo++
-				toListen = w.GetRelease().Title
-			}
-			if w.GetRelease().Rating > 0 {
-				scoredTwelves++
-			}
-		} else if w.GetRelease().FolderId == 812802 && w.GetMetadata().GoalFolder == 242017 && (w.GetMetadata().Category != pb.ReleaseMetadata_UNLISTENED && w.GetMetadata().Category != pb.ReleaseMetadata_STAGED && w.GetMetadata().Category != pb.ReleaseMetadata_PRE_FRESHMAN && w.GetMetadata().Category != pb.ReleaseMetadata_STAGED_TO_SELL) {
-			twelves++
-
-			if time.Now().Sub(time.Unix(w.GetMetadata().LastListenTime, 0)) < time.Hour*24*30 {
-				burnCount++
-			}
-		}
-	}
-
-	noInstanceCount := 0
-	for _, r := range s.collection.GetRecords() {
-		if r.GetRelease().InstanceId == 0 {
-			noInstanceCount++
-		}
-	}
-
-	oldSyncCount := 0
-	noScoreCount := 0
-	oldestSync := time.Now().Unix()
-	for _, r := range s.collection.GetRecords() {
-		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 {
-			oldSyncCount++
-
-		}
-		if r.GetMetadata().OverallScore == 0 {
-			noScoreCount++
-		}
-
-		if r.GetMetadata().LastSyncTime < oldestSync {
-			oldestSync = r.GetMetadata().LastSyncTime
-		}
-	}
-
-	diffCount := 0
-	badFolder := make(map[string]bool)
-	recentListen := time.Now().Unix()
-	uncached := int64(0)
-	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata().LastCache <= 1 {
-			uncached++
-		}
-		if r.GetRelease().FolderId != r.GetMetadata().GoalFolder {
-			if r.GetRelease().FolderId != 673768 && r.GetRelease().FolderId != 812802 {
-				diffCount++
-				badFolder[fmt.Sprintf("%v", r.GetMetadata().Category)] = true
-			}
-		}
-
-		if r.GetMetadata().LastListenTime > 0 && r.GetMetadata().LastListenTime < recentListen {
-			recentListen = r.GetMetadata().LastListenTime
-		}
-	}
-
 	return []*pbg.State{
-		&pbg.State{Key: "biggest", Value: s.biggest},
-		&pbg.State{Key: "needs_listen", Text: toListen},
-		&pbg.State{Key: "needs_listen_id", Value: int64(toListenTo)},
-		&pbg.State{Key: "missingSales", Value: missingSale},
-		&pbg.State{Key: "uncached", Value: uncached},
-		&pbg.State{Key: "burn_count", Value: int64(burnCount)},
-		&pbg.State{Key: "in_pile", Value: inPile},
-		&pbg.State{Key: "unknown", Value: unRecord},
-		&pbg.State{Key: "unlistened", Value: newRecord},
-		&pbg.State{Key: "pre_file", Value: listenRecord},
-		&pbg.State{Key: "investigate", Value: int64(sampleMove)},
-		&pbg.State{Key: "stales", Value: stales},
-		&pbg.State{Key: "oldest_rec", TimeValue: recentListen},
-		&pbg.State{Key: "core", Value: int64((stateCount * 100) / max(1, len(s.collection.GetRecords())))},
-		&pbg.State{Key: "last_sync_time", TimeValue: s.lastSyncTime.Unix()},
-		&pbg.State{Key: "oldest_sync", TimeValue: oldestSync},
-		&pbg.State{Key: "to_push", Value: int64(len(s.pushMap))},
-		&pbg.State{Key: "sizington", Text: fmt.Sprintf("%v and %v", len(s.collection.GetRecords()), len(s.collection.GetWants()))},
-		&pbg.State{Key: "push_state", Text: fmt.Sprintf("Started %v [%v / %v]; took %v", s.lastPushTime, s.lastPushSize, s.lastPushDone, s.lastPushLength)},
-		&pbg.State{Key: "next_push", Text: tText},
-		&pbg.State{Key: "want_check", Text: s.wantCheck},
-		&pbg.State{Key: "last_want", Value: int64(s.lastWantUpdate)},
-		&pbg.State{Key: "last_want_text", Text: s.lastWantText},
-		&pbg.State{Key: "want_count", Value: int64(count)},
-		&pbg.State{Key: "all_twelves", Value: int64(twelves)},
-		&pbg.State{Key: "scoredTwelves", Value: int64(scoredTwelves)},
-		&pbg.State{Key: "old_sync", Value: int64(oldSyncCount)},
-		&pbg.State{Key: "no_instance", Value: int64(noInstanceCount)},
-		&pbg.State{Key: "no_score", Value: int64(noScoreCount)},
-		&pbg.State{Key: "sale_map", Value: int64(len(s.saleMap))},
-		&pbg.State{Key: "unknow_sale_prices", Value: int64(unknownCount)},
-		&pbg.State{Key: "last_sale_push", TimeValue: s.lastSalePush.Unix()},
-		&pbg.State{Key: "last_sync_length", Text: fmt.Sprintf("%v", s.lastSyncLength)},
-		&pbg.State{Key: "bad_folder", Value: int64(diffCount)},
-		&pbg.State{Key: "bad_folder_category", Text: fmt.Sprintf("%v", badFolder)},
-		&pbg.State{Key: "sales_pushes", Value: s.salesPushes},
-		&pbg.State{Key: "sold_adjust", Value: s.soldAdjust},
-		&pbg.State{Key: "want_766489", Text: s.wantUpdate},
-		&pbg.State{Key: "saves", Value: s.saves},
+		&pbg.State{Key: "no_goal", Value: noGoal},
 	}
 }
 
