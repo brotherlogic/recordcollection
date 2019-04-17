@@ -278,13 +278,16 @@ func max(a, b int) int {
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	noGoal := int64(0)
+	example := int64(0)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetMetadata().GoalFolder == 0 {
 			noGoal++
+			example = int64(r.GetRelease().Id)
 		}
 	}
 	return []*pbg.State{
 		&pbg.State{Key: "no_goal", Value: noGoal},
+		&pbg.State{Key: "no_goal_example", Value: example},
 	}
 }
 
