@@ -279,15 +279,20 @@ func max(a, b int) int {
 func (s *Server) GetState() []*pbg.State {
 	noGoal := int64(0)
 	example := int64(0)
+	needsBump := int64(0)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetMetadata().GoalFolder == 0 {
 			noGoal++
 			example = int64(r.GetRelease().Id)
 		}
+		if r.GetMetadata().DateAdded > 155311600 {
+			needsBump++
+		}
 	}
 	return []*pbg.State{
 		&pbg.State{Key: "no_goal", Value: noGoal},
 		&pbg.State{Key: "no_goal_example", Value: example},
+		&pbg.State{Key: "needs_date", Value: needsBump},
 	}
 }
 

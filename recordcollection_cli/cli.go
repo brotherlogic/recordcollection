@@ -290,6 +290,20 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "massgoal":
+		i, _ := strconv.Atoi(os.Args[2])
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{FolderId: int32(i)}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		for _, r := range recs.GetRecords() {
+			update := &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(r.GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(i)}}
+			log.Printf("%v", update)
+			_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: update})
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+		}
 
 	}
 
