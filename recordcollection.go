@@ -286,7 +286,7 @@ func (s *Server) GetState() []*pbg.State {
 			noGoal++
 			example = int64(r.GetRelease().Id)
 		}
-		if r.GetMetadata().DateAdded > 155311600 {
+		if r.GetMetadata().DateAdded > 1555311600 {
 			nbExample = int64(r.GetRelease().InstanceId)
 			needsBump++
 		}
