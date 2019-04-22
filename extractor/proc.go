@@ -85,7 +85,6 @@ func main() {
 	for id, date := range set {
 		update := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{DateAdded: date}}}
 
-		log.Printf("%v", update)
 		_, err := registry.UpdateRecord(ctx, update)
 		if err != nil {
 			log.Fatalf("Error %v", err)

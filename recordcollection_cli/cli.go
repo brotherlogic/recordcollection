@@ -298,7 +298,6 @@ func main() {
 		}
 		for _, r := range recs.GetRecords() {
 			update := &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(r.GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(i)}}
-			log.Printf("%v", update)
 			_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: update})
 			if err != nil {
 				log.Fatalf("Error: %v", err)
