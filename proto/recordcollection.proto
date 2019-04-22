@@ -153,6 +153,9 @@ message ReleaseMetadata {
 
   // The path to cd rip of this record
   string cd_path = 25;
+
+  // The time we last moved this record
+  int64 last_move_time = 26;
 }
 
 // A request to get some records

@@ -151,6 +151,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 
 			s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 			r.GetRelease().FolderId = r.GetMetadata().MoveFolder
+			r.GetMetadata().LastMoveTime = time.Now().Unix()
 		}
 	}
 	r.GetMetadata().MoveFolder = 0
