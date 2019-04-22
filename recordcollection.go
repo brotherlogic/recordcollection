@@ -281,7 +281,11 @@ func (s *Server) GetState() []*pbg.State {
 	example := int64(0)
 	needsBump := int64(0)
 	nbExample := int64(0)
+	numUnlistened := int64(0)
 	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().Category == pb.ReleaseMetadata_UNLISTENED {
+			numUnlistened++
+		}
 		if r.GetMetadata().GoalFolder == 0 {
 			noGoal++
 			example = int64(r.GetRelease().Id)
@@ -296,6 +300,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "no_goal_example", Value: example},
 		&pbg.State{Key: "needs_date", Value: needsBump},
 		&pbg.State{Key: "needs_date_example", Value: nbExample},
+		&pbg.State{Key: "unlistened", Value: numUnlistened},
 	}
 }
 
