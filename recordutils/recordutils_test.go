@@ -30,6 +30,27 @@ func TestTrackExtract(t *testing.T) {
 
 }
 
+func TestTrackExtractWithVideo(t *testing.T) {
+	r := &pbgd.Release{
+		Title: "Testing",
+		Tracklist: []*pbgd.Track{
+			&pbgd.Track{Title: "Hello", Position: "1", TrackType: pbgd.Track_TRACK},
+			&pbgd.Track{Title: "There", Position: "Video", TrackType: pbgd.Track_TRACK},
+		},
+	}
+
+	tracks := TrackExtract(r)
+
+	if len(tracks) != 1 {
+		t.Fatalf("Tracks not extracted")
+	}
+
+	if GetTitle(tracks[0]) != "Hello" {
+		t.Errorf("Unable to get track title: %v", GetTitle(tracks[0]))
+	}
+
+}
+
 func TestRunExtract(t *testing.T) {
 	data, _ := ioutil.ReadFile("testdata/1018055.file")
 

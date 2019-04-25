@@ -14,6 +14,10 @@ type TrackSet struct {
 }
 
 func getPosition(t *pbgd.Track, lastTrack string) (string, string) {
+	if t.Position == "Video" {
+		return "0", t.Title
+	}
+
 	re := regexp.MustCompile("\\d+")
 	if strings.Contains(t.Position, "-") {
 		elems := strings.Split(t.Position, "-")
