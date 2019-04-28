@@ -156,6 +156,9 @@ message ReleaseMetadata {
 
   // The time we last moved this record
   int64 last_move_time = 26;
+
+  // Ref to the release instance id
+  int32 instance_id = 27;
 }
 
 // A request to get some records

@@ -193,6 +193,12 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 
 	//Fill the push map
 	for _, r := range s.collection.GetRecords() {
+
+		//Copy over the instance id if needed
+		if r.GetMetadata().InstanceId == 0 {
+			r.GetMetadata().InstanceId = r.GetRelease().InstanceId
+		}
+
 		// Stop repeated fields from blowing up
 		if len(r.GetRelease().GetFormats()) > 100 {
 			r.GetRelease().Images = []*pbd.Image{}
