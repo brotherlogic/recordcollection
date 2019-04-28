@@ -342,6 +342,21 @@ func main() {
 				log.Fatalf("Error: %v", err)
 			}
 		}
+	case "massfix":
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{FolderId: int32(673768)}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		for _, r := range recs.GetRecords() {
+			if r.GetMetadata().Category == pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*30*3 {
+				fmt.Printf("Update: %v\n", r.GetRelease().Title)
+				update := &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(r.GetRelease().InstanceId)}, Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}
+				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: update})
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+			}
+		}
 
 	}
 

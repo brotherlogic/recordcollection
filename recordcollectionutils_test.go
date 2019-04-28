@@ -217,7 +217,7 @@ func TestCleanSync(t *testing.T) {
 
 func TestImageMerge(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}}
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{}}
 	s.cacheRecord(context.Background(), r)
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
@@ -238,7 +238,7 @@ func TestImageMerge(t *testing.T) {
 
 func TestInstanceIdCache(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982}}
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982}, Metadata: &pb.ReleaseMetadata{}}
 	s.cacheRecord(context.Background(), r)
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
@@ -256,7 +256,7 @@ func TestInstanceIdCache(t *testing.T) {
 func TestImageMergeWithFailScore(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
 	s.scorer = &testScorer{fail: true}
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}}
+	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{}}
 	s.cacheRecord(context.Background(), r)
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
