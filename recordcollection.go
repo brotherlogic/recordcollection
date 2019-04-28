@@ -288,7 +288,11 @@ func (s *Server) GetState() []*pbg.State {
 	needsBump := int64(0)
 	nbExample := int64(0)
 	numUnlistened := int64(0)
+	dirties := int64(0)
 	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().Dirty {
+			dirties++
+		}
 		if r.GetMetadata().Category == pb.ReleaseMetadata_UNLISTENED {
 			numUnlistened++
 		}
@@ -302,6 +306,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "dirty", Value: dirties},
 		&pbg.State{Key: "no_goal", Value: noGoal},
 		&pbg.State{Key: "no_goal_example", Value: example},
 		&pbg.State{Key: "needs_date", Value: needsBump},
