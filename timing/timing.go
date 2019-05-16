@@ -43,7 +43,7 @@ func testReadCollection() {
 
 	client := pbrc.NewRecordCollectionServiceClient(conn)
 	t := time.Now()
-	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbd.Release{FolderId: 812802}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+	recs, err := client.GetRecords(context.Background(), &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbd.Release{}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 	if err != nil {
 		log.Fatalf("Error getting records: %v", err)
 	}

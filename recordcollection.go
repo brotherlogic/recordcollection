@@ -289,7 +289,11 @@ func (s *Server) GetState() []*pbg.State {
 	nbExample := int64(0)
 	numUnlistened := int64(0)
 	dirties := int64(0)
+	stocks := int64(0)
 	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().NeedsStockCheck {
+			stocks++
+		}
 		if r.GetMetadata().Dirty {
 			dirties++
 		}
@@ -306,6 +310,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "needs_stock_check", Value: stocks},
 		&pbg.State{Key: "dirty", Value: dirties},
 		&pbg.State{Key: "no_goal", Value: noGoal},
 		&pbg.State{Key: "no_goal_example", Value: example},

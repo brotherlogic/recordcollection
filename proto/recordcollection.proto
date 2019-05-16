@@ -159,6 +159,9 @@ message ReleaseMetadata {
 
   // Ref to the release instance id
   int32 instance_id = 27;
+
+  // If we need to stock check this record
+  bool needs_stock_check = 28;
 }
 
 // A request to get some records
