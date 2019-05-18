@@ -242,6 +242,11 @@ func (s *Server) syncCollection(ctx context.Context) {
 					r.Release.Rating = record.Rating
 				}
 
+				// Records with others don't need to be stock checked
+				if r.GetMetadata().Others {
+					r.GetMetadata().NeedsStockCheck = false
+				}
+
 				r.GetMetadata().LastSyncTime = time.Now().Unix()
 			}
 		}
