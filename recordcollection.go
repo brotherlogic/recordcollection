@@ -291,7 +291,7 @@ func (s *Server) GetState() []*pbg.State {
 	dirties := int64(0)
 	stocks := int64(0)
 	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata().NeedsStockCheck {
+		if r.GetMetadata().NeedsStockCheck && r.GetRelease().FolderId == 242017 {
 			stocks++
 		}
 		if r.GetMetadata().Dirty {
