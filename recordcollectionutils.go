@@ -246,6 +246,9 @@ func (s *Server) syncCollection(ctx context.Context) {
 				if r.GetMetadata().Others {
 					r.GetMetadata().NeedsStockCheck = false
 				}
+				if time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck)) < time.Hour*24*30*6 {
+					r.GetMetadata().NeedsStockCheck = false
+				}
 
 				r.GetMetadata().LastSyncTime = time.Now().Unix()
 			}
