@@ -162,6 +162,13 @@ message ReleaseMetadata {
 
   // If we need to stock check this record
   bool needs_stock_check = 28;
+
+  enum KeepState {
+    KEEP_UNKNOWN = 0;
+    NOT_KEEPER = 1;
+    KEEPER = 2;
+  }
+  KeepState keep = 29;
 }
 
 // A request to get some records

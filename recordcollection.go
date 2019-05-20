@@ -221,6 +221,10 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		if len(r.GetRelease().GetTracklist()) == 0 {
 			r.GetMetadata().LastCache = 1
 		}
+
+		if r.GetMetadata().Keep == pb.ReleaseMetadata_KEEP_UNKNOWN {
+			r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
+		}
 	}
 
 	// Fill the sale map
