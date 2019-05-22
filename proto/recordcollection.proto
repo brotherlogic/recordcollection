@@ -169,6 +169,14 @@ message ReleaseMetadata {
     KEEPER = 2;
   }
   KeepState keep = 29;
+
+  enum MatchState {
+    MATCH_UNKNOWN = 0;
+    NO_MATCH = 1;
+    PARTIAL_MATCH = 2;
+    FULL_MATCH = 3;
+  }
+  MatchState match = 30;
 }
 
 // A request to get some records
