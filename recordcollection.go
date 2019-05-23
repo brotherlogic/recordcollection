@@ -298,12 +298,16 @@ func (s *Server) GetState() []*pbg.State {
 	numUnlistened := int64(0)
 	dirties := int64(0)
 	stocks := int64(0)
+	keepers := int64(0)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetMetadata().NeedsStockCheck && r.GetRelease().FolderId == 242017 {
 			stocks++
 		}
 		if r.GetMetadata().Dirty {
 			dirties++
+		}
+		if r.GetMetadata().Keep == pb.ReleaseMetadata_KEEPER {
+			keepers++
 		}
 		if r.GetMetadata().Category == pb.ReleaseMetadata_UNLISTENED {
 			numUnlistened++
@@ -318,6 +322,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "keepers", Value: keepers},
 		&pbg.State{Key: "needs_stock_check", Value: stocks},
 		&pbg.State{Key: "dirty", Value: dirties},
 		&pbg.State{Key: "no_goal", Value: noGoal},
