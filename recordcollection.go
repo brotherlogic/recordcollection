@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -367,6 +368,20 @@ func (s *Server) cacheLoop(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) updateSalePrice(ctx context.Context) error {
+	for _, r := range s.collection.GetRecords() {
+		if time.Now().Sub(time.Unix(r.GetMetadata().SalePriceUpdate, 0)) > time.Hour*24*30 {
+			price := s.retr.GetSalePrice(int(r.GetRelease().Id))
+			r.GetMetadata().CurrentSalePrice = int32(price * 100)
+			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
+			s.Log(fmt.Sprintf("Updating %v", r.GetRelease().Id))
+			return nil
+		}
+	}
+
+	return nil
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
@@ -406,6 +421,7 @@ func main() {
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
 	server.RegisterRepeatingTask(server.findBiggest, "find_biggest", time.Minute*5)
+	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
 
 	server.Serve()
 }

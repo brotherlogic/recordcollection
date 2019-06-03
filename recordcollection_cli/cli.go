@@ -245,14 +245,12 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		for _, r := range recs.GetRecords() {
-			if r.GetMetadata().Category == pbrc.ReleaseMetadata_ASSESS || r.GetMetadata().Category == pbrc.ReleaseMetadata_ASSESS_FOR_SALE || r.GetMetadata().NeedsStockCheck || r.GetMetadata().Purgatory == pbrc.Purgatory_NEEDS_STOCK_CHECK {
-				up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}}
-				rec, err := registry.UpdateRecord(ctx, up)
-				if err != nil {
-					log.Fatalf("Error: %v", err)
-				}
-				fmt.Printf("Updated: %v", rec)
+			up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}}
+			rec, err := registry.UpdateRecord(ctx, up)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
 			}
+			fmt.Printf("Updated: %v", rec)
 		}
 	case "stockall":
 		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{FolderId: int32(1362206)}}})
@@ -337,7 +335,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
-
+	case "reset_cd":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "massgoal":
 		i, _ := strconv.Atoi(os.Args[2])
 		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{FolderId: int32(i)}}})
@@ -363,6 +368,18 @@ func main() {
 				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: update})
 				if err != nil {
 					log.Fatalf("Error: %v", err)
+				}
+			}
+		}
+	case "need_pricing":
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		for _, r := range recs.GetRecords() {
+			if time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) < time.Hour*24*7*12 {
+				if r.GetMetadata().Cost == 0 && r.GetMetadata().GoalFolder != 1433217 && r.GetMetadata().GoalFolder != 1727264 {
+					fmt.Printf("%v - %v\n", r.GetRelease().Id, r.GetRelease().Title)
 				}
 			}
 		}
