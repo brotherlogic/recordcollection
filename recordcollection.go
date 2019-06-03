@@ -373,6 +373,7 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 		if time.Now().Sub(time.Unix(r.GetMetadata().SalePriceUpdate, 0)) > time.Hour*24*30 {
 			price := s.retr.GetSalePrice(int(r.GetRelease().Id))
 			r.GetMetadata().CurrentSalePrice = int32(price * 100)
+			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
 			s.Log(fmt.Sprintf("Updating %v", r.GetRelease().Id))
 			return nil
 		}
