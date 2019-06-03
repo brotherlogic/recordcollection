@@ -177,6 +177,9 @@ message ReleaseMetadata {
     FULL_MATCH = 3;
   }
   MatchState match = 30;
+
+  int32 current_sale_price = 31;
+  int64 sale_price_update = 32;
 }
 
 // A request to get some records
