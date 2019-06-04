@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
@@ -275,7 +276,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
-
+	case "save":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		data, _ := proto.Marshal(rec.GetRecords()[0])
+		ioutil.WriteFile(fmt.Sprintf("%v.data", rec.GetRecords()[0].GetRelease().Id), data, 0644)
 	case "addsale":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.Atoi(os.Args[3])
