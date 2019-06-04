@@ -21,7 +21,7 @@ func getPosition(t *pbgd.Track, lastTrack string) (string, string) {
 	re := regexp.MustCompile("\\d+")
 	if strings.Contains(t.Position, "-") {
 		elems := strings.Split(t.Position, "-")
-		return elems[0], re.FindString(t.Position)
+		return elems[0], elems[1]
 	}
 
 	if t.TrackType != pbgd.Track_TRACK {

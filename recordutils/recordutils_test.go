@@ -2,10 +2,10 @@ package recordutils
 
 import (
 	"io/ioutil"
-	"log"
 	"testing"
 
 	pbgd "github.com/brotherlogic/godiscogs"
+	pbrc "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 )
 
@@ -87,7 +87,6 @@ func TestRunExtractTatay(t *testing.T) {
 
 	found := false
 	for _, tr := range tracks {
-		log.Printf("%v - %v", tr.Position, GetTitle(tr))
 		if tr.Position == "13" {
 			found = true
 			if GetTitle(tr) != "Anna Apera / Gegin Nos / Silff Ffenest / Backward Dog" {
@@ -100,4 +99,20 @@ func TestRunExtractTatay(t *testing.T) {
 		t.Errorf("Track 13 was not found")
 	}
 
+}
+
+func TestRunExtractLiveVariousYears(t *testing.T) {
+	data, err := ioutil.ReadFile("testdata/1997688.file")
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	record := &pbrc.Record{}
+	proto.Unmarshal(data, record)
+
+	tracks := TrackExtract(record.GetRelease())
+
+	if len(tracks) != 14 {
+		t.Errorf("Wrong number of tracks: %v, from %v", len(tracks), len(record.GetRelease().Tracklist))
+	}
 }
