@@ -64,15 +64,12 @@ func (p *prodMoveRecorder) moveRecord(record *pb.Record, oldFolder, newFolder in
 	return err
 }
 
-type prodQuotaChecker struct{}
+type prodQuotaChecker struct {
+	dial func(server string) (*grpc.ClientConn, error)
+}
 
 func (p *prodQuotaChecker) hasQuota(ctx context.Context, folder int32) (*pbro.QuotaResponse, error) {
-	ip, port, err := utils.Resolve("recordsorganiser")
-	if err != nil {
-		return &pbro.QuotaResponse{}, err
-	}
-
-	conn, err := grpc.Dial(ip+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
+	conn, err := p.dial("recordsorganiser")
 	if err != nil {
 		return &pbro.QuotaResponse{}, err
 	}
@@ -355,6 +352,7 @@ func Init() *Server {
 		saveMutex:      &sync.Mutex{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
+	s.quota = &prodQuotaChecker{s.DialMaster}
 	return s
 }
 
