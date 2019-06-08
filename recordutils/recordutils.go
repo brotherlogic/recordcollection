@@ -2,7 +2,6 @@ package recordutils
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -55,8 +54,6 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 		multiFormat = true
 	}
 
-	log.Printf("%v", formatCounts)
-
 	diskIncrement := 0
 	if multiFormat {
 		diskIncrement--
@@ -68,8 +65,6 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 		if track.TrackType == pbgd.Track_HEADING {
 			diskIncrement++
 		}
-
-		log.Printf("INCREMENT %v from %v", diskIncrement, track.TrackType)
 
 		for _, set := range trackset {
 			disk, tr := getPosition(track, lastTrack, diskIncrement)
