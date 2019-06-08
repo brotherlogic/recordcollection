@@ -1,7 +1,10 @@
 package recordutils
 
 import (
+	"fmt"
+	"log"
 	"regexp"
+	"strconv"
 	"strings"
 
 	pbgd "github.com/brotherlogic/godiscogs"
@@ -11,9 +14,10 @@ type TrackSet struct {
 	tracks   []*pbgd.Track
 	Position string
 	Disk     string
+	Format   string
 }
 
-func getPosition(t *pbgd.Track, lastTrack string) (string, string) {
+func getPosition(t *pbgd.Track, lastTrack string, diskIncrement int) (string, string) {
 	if t.Position == "Video" {
 		return "0", t.Title
 	}
@@ -31,25 +35,51 @@ func getPosition(t *pbgd.Track, lastTrack string) (string, string) {
 	if pos == "" {
 		pos = lastTrack
 	}
-	return "1", pos
+
+	// Add the increment
+	val, _ := strconv.Atoi(pos)
+	return "1", fmt.Sprintf("%v", val+diskIncrement)
 }
 
 //TrackExtract extracts a trackset from a release
 func TrackExtract(r *pbgd.Release) []*TrackSet {
 	trackset := make([]*TrackSet, 0)
 
+	multiFormat := false
+	formatCounts := make(map[string]int)
+	for _, form := range r.GetFormats() {
+		formatCounts[form.GetName()]++
+	}
+
+	if len(formatCounts) > 1 {
+		multiFormat = true
+	}
+
+	log.Printf("%v", formatCounts)
+
+	diskIncrement := 0
+	if multiFormat {
+		diskIncrement--
+	}
+
 	lastTrack := ""
 	for _, track := range r.Tracklist {
 		found := false
+		if track.TrackType == pbgd.Track_HEADING {
+			diskIncrement++
+		}
+
+		log.Printf("INCREMENT %v from %v", diskIncrement, track.TrackType)
+
 		for _, set := range trackset {
-			disk, tr := getPosition(track, lastTrack)
+			disk, tr := getPosition(track, lastTrack, diskIncrement)
 			if tr == set.Position && disk == set.Disk {
 				set.tracks = append(set.tracks, track)
 				found = true
 			}
 		}
 
-		disk, tr := getPosition(track, lastTrack)
+		disk, tr := getPosition(track, lastTrack, diskIncrement)
 		if disk == "0" {
 			lastTrack = tr
 		}
