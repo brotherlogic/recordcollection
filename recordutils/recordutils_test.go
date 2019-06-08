@@ -116,3 +116,19 @@ func TestRunExtractLiveVariousYears(t *testing.T) {
 		t.Errorf("Wrong number of tracks: %v, from %v", len(tracks), len(record.GetRelease().Tracklist))
 	}
 }
+
+func TestRunExtractSplitDecisionBand(t *testing.T) {
+	data, err := ioutil.ReadFile("testdata/10313832.data")
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	record := &pbrc.Record{}
+	proto.Unmarshal(data, record)
+
+	tracks := TrackExtract(record.GetRelease())
+
+	if len(tracks) != 24 {
+		t.Errorf("Wrong number of tracks: %v, from %v -> %+v", len(tracks), len(record.GetRelease().Tracklist), tracks[0].tracks[2])
+	}
+}
