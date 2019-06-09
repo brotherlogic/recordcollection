@@ -3,8 +3,6 @@ package recordutils
 import (
 	"fmt"
 	"regexp"
-	"strconv"
-	"strings"
 
 	pbgd "github.com/brotherlogic/godiscogs"
 )
@@ -16,28 +14,9 @@ type TrackSet struct {
 	Format   string
 }
 
-func getPosition(t *pbgd.Track, lastTrack string, diskIncrement int) (string, string) {
-	if t.Position == "Video" {
-		return "0", t.Title
-	}
-
-	re := regexp.MustCompile("\\d+")
-	if strings.Contains(t.Position, "-") {
-		elems := strings.Split(t.Position, "-")
-		return elems[0], elems[1]
-	}
-
-	if t.TrackType != pbgd.Track_TRACK {
-		return "0", re.FindString(t.Title)
-	}
-	pos := re.FindString(t.Position)
-	if pos == "" {
-		pos = lastTrack
-	}
-
-	// Add the increment
-	val, _ := strconv.Atoi(pos)
-	return "1", fmt.Sprintf("%v", val+diskIncrement)
+func shouldMerge(t1, t2 *TrackSet) bool {
+	matcher := regexp.MustCompile("^[a-z]")
+	return matcher.MatchString(t1.tracks[0].Position) && matcher.MatchString(t2.tracks[0].Position)
 }
 
 //TrackExtract extracts a trackset from a release
@@ -54,35 +33,39 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 		multiFormat = true
 	}
 
-	diskIncrement := 0
+	disk := 1
 	if multiFormat {
-		diskIncrement--
+		disk = 0
 	}
 
-	lastTrack := ""
-	for _, track := range r.Tracklist {
-		found := false
-		if track.TrackType == pbgd.Track_HEADING {
-			diskIncrement++
-		}
+	currTrack := 1
+	if multiFormat {
+		currTrack = 0
+	}
 
-		for _, set := range trackset {
-			disk, tr := getPosition(track, lastTrack, diskIncrement)
-			if tr == set.Position && disk == set.Disk {
-				set.tracks = append(set.tracks, track)
+	for _, track := range r.Tracklist {
+		if track.TrackType == pbgd.Track_HEADING {
+			disk++
+			currTrack = 1
+		} else if track.TrackType == pbgd.Track_TRACK {
+			trackset = append(trackset, &TrackSet{Disk: fmt.Sprintf("%v", disk), tracks: []*pbgd.Track{track}, Position: fmt.Sprintf("%v", currTrack)})
+			currTrack++
+		}
+	}
+
+	//Perform la merge
+	found := true
+	for found {
+		found = false
+		for i := range trackset[1:] {
+			if shouldMerge(trackset[i], trackset[i+1]) {
+				trackset[i].tracks = append(trackset[i].tracks, trackset[i+1].tracks...)
+				trackset = append(trackset[:i+1], trackset[i+2:]...)
 				found = true
+				break
 			}
 		}
-
-		disk, tr := getPosition(track, lastTrack, diskIncrement)
-		if disk == "0" {
-			lastTrack = tr
-		}
-		if !found && disk != "0" {
-			trackset = append(trackset, &TrackSet{Disk: disk, tracks: []*pbgd.Track{track}, Position: tr})
-		}
 	}
-
 	return trackset
 }
 
