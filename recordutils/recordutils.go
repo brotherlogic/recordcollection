@@ -54,13 +54,15 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 		currTrack = 0
 	}
 
+	currFormat := ""
 	for _, track := range r.Tracklist {
 		if track.TrackType == pbgd.Track_HEADING {
 			disk++
 			currTrack = 1
+			currFormat = track.Title
 		} else if track.TrackType == pbgd.Track_TRACK {
 			if track.Position != "Video" {
-				trackset = append(trackset, &TrackSet{Disk: fmt.Sprintf("%v", disk), tracks: []*pbgd.Track{track}, Position: fmt.Sprintf("%v", currTrack)})
+				trackset = append(trackset, &TrackSet{Format: currFormat, Disk: fmt.Sprintf("%v", disk), tracks: []*pbgd.Track{track}, Position: fmt.Sprintf("%v", currTrack)})
 				currTrack++
 			}
 		}

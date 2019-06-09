@@ -138,4 +138,8 @@ func TestRunExtractSplitDecisionBand(t *testing.T) {
 			}
 		}
 	}
+
+	if tracks[23].Format != "CD" {
+		t.Errorf("Format was not extracted %+v", tracks[23])
+	}
 }
