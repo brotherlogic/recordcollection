@@ -2,6 +2,7 @@ package recordutils
 
 import (
 	"io/ioutil"
+	"log"
 	"testing"
 
 	pbgd "github.com/brotherlogic/godiscogs"
@@ -129,6 +130,16 @@ func TestRunExtractSplitDecisionBand(t *testing.T) {
 	tracks := TrackExtract(record.GetRelease())
 
 	if len(tracks) != 24 {
-		t.Errorf("Wrong number of tracks: %v, from %v -> %+v", len(tracks), len(record.GetRelease().Tracklist), tracks[0].tracks[2])
+		t.Errorf("Wrong number of tracks: %v, from %v", len(tracks), len(record.GetRelease().Tracklist))
+		for i, t := range tracks {
+			log.Printf("%v. %v", i, len(t.tracks))
+			for j, tr := range t.tracks {
+				log.Printf(" %v. %v", j, tr.Title)
+			}
+		}
+	}
+
+	if tracks[23].Format != "CD" {
+		t.Errorf("Format was not extracted %+v", tracks[23])
 	}
 }

@@ -3,8 +3,6 @@ package recordutils
 import (
 	"fmt"
 	"regexp"
-	"strconv"
-	"strings"
 
 	pbgd "github.com/brotherlogic/godiscogs"
 )
@@ -16,28 +14,20 @@ type TrackSet struct {
 	Format   string
 }
 
-func getPosition(t *pbgd.Track, lastTrack string, diskIncrement int) (string, string) {
-	if t.Position == "Video" {
-		return "0", t.Title
+func shouldMerge(t1, t2 *TrackSet) bool {
+	matcher := regexp.MustCompile("^[a-z]")
+	if matcher.MatchString(t1.tracks[0].Position) && matcher.MatchString(t2.tracks[0].Position) {
+		return true
 	}
 
-	re := regexp.MustCompile("\\d+")
-	if strings.Contains(t.Position, "-") {
-		elems := strings.Split(t.Position, "-")
-		return elems[0], elems[1]
+	cdJoin := regexp.MustCompile("^\\d[A-Z]")
+	if cdJoin.MatchString(t1.tracks[0].Position) && cdJoin.MatchString(t2.tracks[0].Position) {
+		if t1.tracks[0].Position[0] == t2.tracks[0].Position[0] {
+			return true
+		}
 	}
 
-	if t.TrackType != pbgd.Track_TRACK {
-		return "0", re.FindString(t.Title)
-	}
-	pos := re.FindString(t.Position)
-	if pos == "" {
-		pos = lastTrack
-	}
-
-	// Add the increment
-	val, _ := strconv.Atoi(pos)
-	return "1", fmt.Sprintf("%v", val+diskIncrement)
+	return false
 }
 
 //TrackExtract extracts a trackset from a release
@@ -54,35 +44,43 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 		multiFormat = true
 	}
 
-	diskIncrement := 0
+	disk := 1
 	if multiFormat {
-		diskIncrement--
+		disk = 0
 	}
 
-	lastTrack := ""
-	for _, track := range r.Tracklist {
-		found := false
-		if track.TrackType == pbgd.Track_HEADING {
-			diskIncrement++
-		}
+	currTrack := 1
+	if multiFormat {
+		currTrack = 0
+	}
 
-		for _, set := range trackset {
-			disk, tr := getPosition(track, lastTrack, diskIncrement)
-			if tr == set.Position && disk == set.Disk {
-				set.tracks = append(set.tracks, track)
-				found = true
+	currFormat := ""
+	for _, track := range r.Tracklist {
+		if track.TrackType == pbgd.Track_HEADING {
+			disk++
+			currTrack = 1
+			currFormat = track.Title
+		} else if track.TrackType == pbgd.Track_TRACK {
+			if track.Position != "Video" {
+				trackset = append(trackset, &TrackSet{Format: currFormat, Disk: fmt.Sprintf("%v", disk), tracks: []*pbgd.Track{track}, Position: fmt.Sprintf("%v", currTrack)})
+				currTrack++
 			}
 		}
-
-		disk, tr := getPosition(track, lastTrack, diskIncrement)
-		if disk == "0" {
-			lastTrack = tr
-		}
-		if !found && disk != "0" {
-			trackset = append(trackset, &TrackSet{Disk: disk, tracks: []*pbgd.Track{track}, Position: tr})
-		}
 	}
 
+	//Perform la merge
+	found := true
+	for found {
+		found = false
+		for i := range trackset[1:] {
+			if shouldMerge(trackset[i], trackset[i+1]) {
+				trackset[i].tracks = append(trackset[i].tracks, trackset[i+1].tracks...)
+				trackset = append(trackset[:i+1], trackset[i+2:]...)
+				found = true
+				break
+			}
+		}
+	}
 	return trackset
 }
 
