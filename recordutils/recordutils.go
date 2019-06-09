@@ -54,7 +54,7 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 		currTrack = 0
 	}
 
-	currFormat := ""
+	currFormat := r.GetFormats()[0].Name
 	for _, track := range r.Tracklist {
 		if track.TrackType == pbgd.Track_HEADING {
 			disk++
