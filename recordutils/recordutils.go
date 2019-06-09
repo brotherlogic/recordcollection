@@ -16,7 +16,18 @@ type TrackSet struct {
 
 func shouldMerge(t1, t2 *TrackSet) bool {
 	matcher := regexp.MustCompile("^[a-z]")
-	return matcher.MatchString(t1.tracks[0].Position) && matcher.MatchString(t2.tracks[0].Position)
+	if matcher.MatchString(t1.tracks[0].Position) && matcher.MatchString(t2.tracks[0].Position) {
+		return true
+	}
+
+	cdJoin := regexp.MustCompile("^\\d[A-Z]")
+	if cdJoin.MatchString(t1.tracks[0].Position) && cdJoin.MatchString(t2.tracks[0].Position) {
+		if t1.tracks[0].Position[0] == t2.tracks[0].Position[0] {
+			return true
+		}
+	}
+
+	return false
 }
 
 //TrackExtract extracts a trackset from a release
@@ -48,8 +59,10 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 			disk++
 			currTrack = 1
 		} else if track.TrackType == pbgd.Track_TRACK {
-			trackset = append(trackset, &TrackSet{Disk: fmt.Sprintf("%v", disk), tracks: []*pbgd.Track{track}, Position: fmt.Sprintf("%v", currTrack)})
-			currTrack++
+			if track.Position != "Video" {
+				trackset = append(trackset, &TrackSet{Disk: fmt.Sprintf("%v", disk), tracks: []*pbgd.Track{track}, Position: fmt.Sprintf("%v", currTrack)})
+				currTrack++
+			}
 		}
 	}
 
