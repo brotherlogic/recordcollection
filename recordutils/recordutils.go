@@ -3,6 +3,7 @@ package recordutils
 import (
 	"fmt"
 	"regexp"
+	"strings"
 
 	pbgd "github.com/brotherlogic/godiscogs"
 )
@@ -55,7 +56,18 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 	}
 
 	currFormat := r.GetFormats()[0].Name
+	oldPosition := "1"
 	for _, track := range r.Tracklist {
+
+		// Deal with multi CDs
+		if strings.Contains(track.Position, "-") {
+			posString := strings.Split(track.Position, "-")
+			if posString[0] != oldPosition {
+				disk++
+				oldPosition = posString[0]
+			}
+		}
+
 		if track.TrackType == pbgd.Track_HEADING {
 			disk++
 			currTrack = 1
