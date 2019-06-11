@@ -143,3 +143,29 @@ func TestRunExtractSplitDecisionBand(t *testing.T) {
 		t.Errorf("Format was not extracted %+v", tracks[23])
 	}
 }
+
+func TestRunExtractElektra(t *testing.T) {
+	data, err := ioutil.ReadFile("testdata/4467031.data")
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	record := &pbrc.Record{}
+	proto.Unmarshal(data, record)
+
+	tracks := TrackExtract(record.GetRelease())
+
+	if len(tracks) != 117 {
+		t.Errorf("Wrong number of tracks: %v, from %v", len(tracks), len(record.GetRelease().Tracklist))
+		for i, t := range tracks {
+			log.Printf("%v. %v", i, len(t.tracks))
+			for j, tr := range t.tracks {
+				log.Printf(" %v. %v", j, tr.Title)
+			}
+		}
+	}
+
+	if tracks[0].Position != "1" || tracks[0].Disk != "1" {
+		t.Errorf("Format was not extracted %+v", tracks[0])
+	}
+}

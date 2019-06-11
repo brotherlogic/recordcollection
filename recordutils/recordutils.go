@@ -37,7 +37,9 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 	multiFormat := false
 	formatCounts := make(map[string]int)
 	for _, form := range r.GetFormats() {
-		formatCounts[form.GetName()]++
+		if form.GetName() != "Box Set" {
+			formatCounts[form.GetName()]++
+		}
 	}
 
 	if len(formatCounts) > 1 {
