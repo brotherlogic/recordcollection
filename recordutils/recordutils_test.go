@@ -169,3 +169,29 @@ func TestRunExtractElektra(t *testing.T) {
 		t.Errorf("Format was not extracted %+v", tracks[0])
 	}
 }
+
+func TestRunExtractSunRa(t *testing.T) {
+	data, err := ioutil.ReadFile("testdata/1075530.data")
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	record := &pbrc.Record{}
+	proto.Unmarshal(data, record)
+
+	tracks := TrackExtract(record.GetRelease())
+
+	if len(tracks) != 12 {
+		t.Errorf("Wrong number of tracks: %v, from %v", len(tracks), len(record.GetRelease().Tracklist))
+		for i, t := range tracks {
+			log.Printf("%v. %v", i, len(t.tracks))
+			for j, tr := range t.tracks {
+				log.Printf(" %v. %v", j, tr.Title)
+			}
+		}
+	}
+
+	if tracks[6].Position != "1" || tracks[6].Disk != "2" {
+		t.Errorf("Format was not extracted %+v", tracks[6])
+	}
+}
