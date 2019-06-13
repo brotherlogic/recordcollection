@@ -225,3 +225,29 @@ func TestRunExtractBehindCounter(t *testing.T) {
 		t.Errorf("Format was not extracted %+v", tracks[38])
 	}
 }
+
+func TestRunExtractARMAchines(t *testing.T) {
+	data, err := ioutil.ReadFile("testdata/11060000.data")
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	record := &pbrc.Record{}
+	proto.Unmarshal(data, record)
+
+	tracks := TrackExtract(record.GetRelease())
+
+	if len(tracks) != 100 {
+		t.Errorf("Wrong number of tracks: %v, from %v", len(tracks), len(record.GetRelease().Tracklist))
+		for i, t := range tracks {
+			log.Printf("%v. %v", i, len(t.tracks))
+			for j, tr := range t.tracks {
+				log.Printf(" %v. %v", j, tr.Title)
+			}
+		}
+	}
+
+	if tracks[99].Disk != "10" {
+		t.Errorf("Bad disk extract %+v:", tracks[99])
+	}
+}

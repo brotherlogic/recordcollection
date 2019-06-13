@@ -31,6 +31,15 @@ func shouldMerge(t1, t2 *TrackSet) bool {
 	return false
 }
 
+func flatten(tracklist []*pbgd.Track) []*pbgd.Track {
+	tracks := make([]*pbgd.Track, 0)
+	for _, track := range tracklist {
+		tracks = append(tracks, track)
+		tracks = append(tracks, flatten(track.SubTracks)...)
+	}
+	return tracks
+}
+
 //TrackExtract extracts a trackset from a release
 func TrackExtract(r *pbgd.Release) []*TrackSet {
 	trackset := make([]*TrackSet, 0)
@@ -59,8 +68,14 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 
 	currFormat := r.GetFormats()[0].Name
 	currDisk := "1"[0]
-	currStart := r.Tracklist[0].Position[0]
-	for _, track := range r.Tracklist {
+
+	currStart := "A"[0]
+	if r.Tracklist[0].TrackType == pbgd.Track_TRACK {
+		currStart = r.Tracklist[0].Position[0]
+	} else {
+		currStart = r.Tracklist[1].Position[0]
+	}
+	for _, track := range flatten(r.Tracklist) {
 		if track.TrackType == pbgd.Track_HEADING {
 			disk++
 			currTrack = 1
