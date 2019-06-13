@@ -195,3 +195,33 @@ func TestRunExtractSunRa(t *testing.T) {
 		t.Errorf("Format was not extracted %+v", tracks[6])
 	}
 }
+
+func TestRunExtractBehindCounter(t *testing.T) {
+	data, err := ioutil.ReadFile("testdata/10404409.data")
+	if err != nil {
+		t.Fatalf("Error: %v", err)
+	}
+
+	record := &pbrc.Record{}
+	proto.Unmarshal(data, record)
+
+	tracks := TrackExtract(record.GetRelease())
+
+	if len(tracks) != 39 {
+		t.Errorf("Wrong number of tracks: %v, from %v", len(tracks), len(record.GetRelease().Tracklist))
+		for i, t := range tracks {
+			log.Printf("%v. %v", i, len(t.tracks))
+			for j, tr := range t.tracks {
+				log.Printf(" %v. %v", j, tr.Title)
+			}
+		}
+	}
+
+	if tracks[0].Format != "Vinyl" || tracks[0].Disk != "1" {
+		t.Errorf("First track poor extract: %+v", tracks[0])
+	}
+
+	if tracks[38].Position != "10" || tracks[38].Format != "CD" || tracks[38].Disk != "5" {
+		t.Errorf("Format was not extracted %+v", tracks[38])
+	}
+}

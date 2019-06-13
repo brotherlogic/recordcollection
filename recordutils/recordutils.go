@@ -48,23 +48,30 @@ func TrackExtract(r *pbgd.Release) []*TrackSet {
 	}
 
 	disk := 1
-	if multiFormat {
+	if multiFormat && r.Tracklist[0].TrackType == pbgd.Track_HEADING {
 		disk = 0
 	}
 
 	currTrack := 1
 	if multiFormat {
-		currTrack = 0
+		currTrack = 1
 	}
 
 	currFormat := r.GetFormats()[0].Name
 	currDisk := "1"[0]
+	currStart := r.Tracklist[0].Position[0]
 	for _, track := range r.Tracklist {
 		if track.TrackType == pbgd.Track_HEADING {
 			disk++
 			currTrack = 1
 			currFormat = track.Title
 		} else if track.TrackType == pbgd.Track_TRACK {
+			if track.Position[0] != currStart {
+				if track.Position[0] == 'C' || track.Position[0] == 'E' {
+					disk++
+				}
+				currStart = track.Position[0]
+			}
 			if strings.Contains(track.Position, "-") && track.Position[0] != currDisk {
 				disk++
 				currTrack = 1
