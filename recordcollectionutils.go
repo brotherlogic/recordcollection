@@ -29,7 +29,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 	for _, val := range s.saleMap {
 		if val.GetMetadata().SaleDirty && val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL {
 			s.salesPushes++
-			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Very Good Plus (VG+)", float32(val.GetMetadata().SalePrice)/100)
+			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Near Mint (NM or M-)", float32(val.GetMetadata().SalePrice)/100)
 			if err == nil {
 				val.GetMetadata().SaleDirty = false
 				break
