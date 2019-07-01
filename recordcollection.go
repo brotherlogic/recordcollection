@@ -270,6 +270,11 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 		if err != nil {
 			return err
 		}
+
+		if len(tResp.(*pb.Token).Token) == 0 {
+			return fmt.Errorf("Empty token: %v", tResp)
+		}
+
 		s.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, s.Log)
 
 		err = s.readRecordCollection(ctx)
