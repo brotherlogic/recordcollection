@@ -18,7 +18,7 @@ const (
 func (s *Server) syncIssue(ctx context.Context) error {
 	for _, r := range s.collection.GetRecords() {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
-			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v hasn't synced in a week!", r.GetRelease().Title), false)
+			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v [%v] hasn't synced in a week!", r.GetRelease().Title, r.GetRelease().InstanceId), false)
 		}
 	}
 	return nil

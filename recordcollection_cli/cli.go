@@ -36,7 +36,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "getsales":
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -389,6 +389,16 @@ func main() {
 				if r.GetMetadata().Cost == 0 && r.GetMetadata().GoalFolder != 1433217 && r.GetMetadata().GoalFolder != 1727264 {
 					fmt.Printf("%v - %v\n", r.GetRelease().Id, r.GetRelease().Title)
 				}
+			}
+		}
+	case "need_stock":
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		for _, r := range recs.GetRecords() {
+			if r.GetRelease().FolderId == 673768 && time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) > time.Hour*24*265 {
+				fmt.Printf("%v %v\n", r.GetRelease().Id, r.GetRelease().Title)
 			}
 		}
 	case "massfix2":
