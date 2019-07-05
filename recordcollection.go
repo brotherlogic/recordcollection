@@ -157,6 +157,7 @@ type Server struct {
 	saves          int64
 	saveMutex      *sync.Mutex
 	biggest        int64
+	lastSale       int64
 }
 
 func (s *Server) findBiggest(ctx context.Context) error {
@@ -305,9 +306,11 @@ func (s *Server) GetState() []*pbg.State {
 	topseller := int64(0)
 	topsale := int32(0)
 	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata().CurrentSalePrice > topsale {
-			topseller = int64(r.GetRelease().Id)
-			topsale = r.GetMetadata().CurrentSalePrice
+		if r.GetMetadata().Category != pb.ReleaseMetadata_DIGITAL {
+			if r.GetMetadata().CurrentSalePrice > topsale {
+				topseller = int64(r.GetRelease().Id)
+				topsale = r.GetMetadata().CurrentSalePrice
+			}
 		}
 		if r.GetMetadata().NeedsStockCheck && r.GetRelease().FolderId == 242017 {
 			stocks++
@@ -331,6 +334,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "last_sale", Value: s.lastSale},
 		&pbg.State{Key: "top_sale", Value: topseller},
 		&pbg.State{Key: "keepers", Value: keepers},
 		&pbg.State{Key: "needs_stock_check", Value: stocks},
