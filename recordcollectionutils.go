@@ -34,6 +34,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 				val.GetMetadata().SaleDirty = false
 				break
 			}
+			return err
 		}
 
 		if val.GetMetadata().Category == pb.ReleaseMetadata_SOLD_OFFLINE {
