@@ -310,7 +310,8 @@ func (s *Server) GetState() []*pbg.State {
 		if r.GetMetadata().SaleDirty {
 			countSaleDirty++
 		}
-		if r.GetMetadata().Category != pb.ReleaseMetadata_DIGITAL {
+		if r.GetMetadata().Category != pb.ReleaseMetadata_DIGITAL &&
+			r.GetMetadata().Category != pb.ReleaseMetadata_GOOGLE_PLAY {
 			if r.GetMetadata().CurrentSalePrice > topsale {
 				topseller = int64(r.GetRelease().Id)
 				topsale = r.GetMetadata().CurrentSalePrice
