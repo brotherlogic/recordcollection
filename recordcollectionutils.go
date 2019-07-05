@@ -33,7 +33,6 @@ func (s *Server) pushSales(ctx context.Context) error {
 			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Near Mint (NM or M-)", float32(val.GetMetadata().SalePrice)/100)
 			if err == nil {
 				val.GetMetadata().SaleDirty = false
-				break
 			}
 			return err
 		}
@@ -45,8 +44,8 @@ func (s *Server) pushSales(ctx context.Context) error {
 			if err == nil {
 				val.GetMetadata().SaleState = pbd.SaleState_SOLD
 				val.GetMetadata().SaleDirty = false
-				break
 			}
+			return err
 		}
 	}
 	return nil
