@@ -306,9 +306,11 @@ func (s *Server) GetState() []*pbg.State {
 	topseller := int64(0)
 	topsale := int32(0)
 	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata().CurrentSalePrice > topsale {
-			topseller = int64(r.GetRelease().Id)
-			topsale = r.GetMetadata().CurrentSalePrice
+		if r.GetMetadata().Category != pb.ReleaseMetadata_DIGITAL {
+			if r.GetMetadata().CurrentSalePrice > topsale {
+				topseller = int64(r.GetRelease().Id)
+				topsale = r.GetMetadata().CurrentSalePrice
+			}
 		}
 		if r.GetMetadata().NeedsStockCheck && r.GetRelease().FolderId == 242017 {
 			stocks++
