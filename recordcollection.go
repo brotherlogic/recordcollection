@@ -305,7 +305,11 @@ func (s *Server) GetState() []*pbg.State {
 	keepers := int64(0)
 	topseller := int64(0)
 	topsale := int32(0)
+	countSaleDirty := int64(0)
 	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().SaleDirty {
+			countSaleDirty++
+		}
 		if r.GetMetadata().Category != pb.ReleaseMetadata_DIGITAL {
 			if r.GetMetadata().CurrentSalePrice > topsale {
 				topseller = int64(r.GetRelease().Id)
@@ -334,6 +338,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "sale_dirty", Value: countSaleDirty},
 		&pbg.State{Key: "last_sale", Value: s.lastSale},
 		&pbg.State{Key: "top_sale", Value: topseller},
 		&pbg.State{Key: "keepers", Value: keepers},
