@@ -249,6 +249,37 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 
 }
 
+func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL}}
+	s.collection.Records = append(s.collection.Records, rec)
+	s.saleMap[1234] = rec
+
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SaleDirty: true}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}}})
+	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	if r == nil || len(r.Records) != 1 || !r.Records[0].GetMetadata().SaleDirty {
+		t.Errorf("Error in updating records: %v", r)
+	}
+
+	s.pushSales(context.Background())
+
+	r, err = s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
+
+	if err != nil {
+		t.Fatalf("Error in getting records: %v", err)
+	}
+
+	if r == nil || len(r.Records) != 1 || r.Records[0].GetMetadata().SaleDirty {
+		t.Errorf("Error in updating sale prices records: %v", r)
+	}
+
+}
+
 func TestRemoveRecordFromSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_SOLD_OFFLINE, SaleDirty: true}}
