@@ -28,6 +28,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
 	for _, val := range s.saleMap {
 		if val.GetMetadata().SaleDirty && val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL {
+			s.lastSale = int64(val.GetRelease().InstanceId)
 			s.salesPushes++
 			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Near Mint (NM or M-)", float32(val.GetMetadata().SalePrice)/100)
 			if err == nil {

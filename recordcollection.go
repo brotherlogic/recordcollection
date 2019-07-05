@@ -157,6 +157,7 @@ type Server struct {
 	saves          int64
 	saveMutex      *sync.Mutex
 	biggest        int64
+	lastSale       int64
 }
 
 func (s *Server) findBiggest(ctx context.Context) error {
@@ -331,6 +332,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "last_sale", Value: s.lastSale},
 		&pbg.State{Key: "top_sale", Value: topseller},
 		&pbg.State{Key: "keepers", Value: keepers},
 		&pbg.State{Key: "needs_stock_check", Value: stocks},
