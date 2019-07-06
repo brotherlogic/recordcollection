@@ -72,9 +72,9 @@ func main() {
 					r.GetMetadata().SaleDirty = true
 					up, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r})
 					if err != nil {
-						log.Printf("Error: %v", err)
+						fmt.Printf("Error: %v", err)
 					} else {
-						log.Printf("Update %v", up)
+						fmt.Printf("Update %v", up)
 					}
 				}
 			}
