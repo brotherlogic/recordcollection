@@ -61,6 +61,27 @@ func main() {
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
+	case "adjust_sales":
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+
+		if err == nil {
+			fmt.Printf("Time Taken: %v\n", rec.InternalProcessingTime)
+			for _, r := range rec.GetRecords() {
+				if r.GetMetadata().Category == pbrc.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().Category == pbrc.ReleaseMetadata_STALE_SALE {
+					r.GetMetadata().SalePrice = r.GetMetadata().CurrentSalePrice
+					r.GetMetadata().SaleDirty = true
+					up, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r})
+					if err != nil {
+						log.Printf("Error: %v", err)
+					} else {
+						log.Printf("Update %v", up)
+					}
+				}
+			}
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
+
 	case "sget":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
