@@ -26,7 +26,7 @@ func (s *Server) syncIssue(ctx context.Context) error {
 
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
-	for _, val := range s.saleMap {
+	for _, val := range s.collection.GetRecords() {
 		if val.GetMetadata().SaleDirty &&
 			(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
 				val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
