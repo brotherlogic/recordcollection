@@ -309,7 +309,8 @@ func (s *Server) GetState() []*pbg.State {
 	saleId := int64(0)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetMetadata().SaleDirty &&
-			r.GetMetadata().Category != pb.ReleaseMetadata_SOLD_ARCHIVE {
+			r.GetMetadata().Category != pb.ReleaseMetadata_SOLD_ARCHIVE &&
+			r.GetMetadata().Category != pb.ReleaseMetadata_GOOGLE_PLAY {
 			countSaleDirty++
 			saleId = int64(r.GetRelease().InstanceId)
 		}
