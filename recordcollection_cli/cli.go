@@ -442,7 +442,7 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		for _, r := range recs.GetRecords() {
-			if r.GetRelease().FolderId == 673768 && time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) > time.Hour*24*265 {
+			if (r.GetRelease().FolderId == 812802 || r.GetRelease().FolderId == 673768) && time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) > time.Hour*24*265 {
 				fmt.Printf("%v %v\n", r.GetRelease().Id, r.GetRelease().Title)
 			}
 		}
