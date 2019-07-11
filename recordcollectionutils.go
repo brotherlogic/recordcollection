@@ -35,6 +35,8 @@ func (s *Server) pushSales(ctx context.Context) error {
 			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Near Mint (NM or M-)", float32(val.GetMetadata().SalePrice)/100)
 			if err == nil {
 				val.GetMetadata().SaleDirty = false
+			} else {
+				s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale: %v", err), false)
 			}
 			return err
 		}
