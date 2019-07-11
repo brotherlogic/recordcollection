@@ -306,12 +306,12 @@ func (s *Server) GetState() []*pbg.State {
 	topseller := int64(0)
 	topsale := int32(0)
 	countSaleDirty := int64(0)
-	saleId := int64(0)
+	saleID := int64(0)
 	for _, r := range s.collection.GetRecords() {
 		if r.GetMetadata().SaleDirty &&
 			r.GetMetadata().Category != pb.ReleaseMetadata_SOLD_ARCHIVE {
 			countSaleDirty++
-			saleId = int64(r.GetRelease().InstanceId)
+			saleID = int64(r.GetRelease().InstanceId)
 		}
 		if r.GetMetadata().Category != pb.ReleaseMetadata_DIGITAL &&
 			r.GetMetadata().Category != pb.ReleaseMetadata_GOOGLE_PLAY {
@@ -343,7 +343,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 	return []*pbg.State{
 		&pbg.State{Key: "sale_dirty", Value: countSaleDirty},
-		&pbg.State{Key: "example_sale_dirty", Value: saleId},
+		&pbg.State{Key: "example_sale_dirty", Value: saleID},
 		&pbg.State{Key: "last_sale", Value: s.lastSale},
 		&pbg.State{Key: "top_sale", Value: topseller},
 		&pbg.State{Key: "keepers", Value: keepers},
