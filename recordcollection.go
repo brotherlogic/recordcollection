@@ -88,7 +88,7 @@ type saver interface {
 	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) string
 	DeleteInstance(folderID, releaseID, instanceID int) string
 	SellRecord(releaseID int, price float32, state string) int
-	GetSalePrice(releaseID int) float32
+	GetSalePrice(releaseID int) (float32, error)
 	RemoveFromWantlist(releaseID int)
 	AddToWantlist(releaseID int)
 	UpdateSalePrice(saleID int, releaseID int, condition string, price float32) error
@@ -400,7 +400,8 @@ func (s *Server) cacheLoop(ctx context.Context) error {
 func (s *Server) updateSalePrice(ctx context.Context) error {
 	for _, r := range s.collection.GetRecords() {
 		if r.GetMetadata().CurrentSalePrice == 0 || time.Now().Sub(time.Unix(r.GetMetadata().SalePriceUpdate, 0)) > time.Hour*24*30 {
-			price := s.retr.GetSalePrice(int(r.GetRelease().Id))
+			price, err := s.retr.GetSalePrice(int(r.GetRelease().Id))
+			s.Log(fmt.Sprintf("Retrieved %v, %v", price, err))
 			r.GetMetadata().CurrentSalePrice = int32(price * 100)
 			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
 			s.Log(fmt.Sprintf("Updating %v", r.GetRelease().Id))
