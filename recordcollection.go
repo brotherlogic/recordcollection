@@ -394,7 +394,7 @@ func (s *Server) cacheLoop(ctx context.Context) error {
 
 func (s *Server) updateSalePrice(ctx context.Context) error {
 	for _, r := range s.collection.GetRecords() {
-		if time.Now().Sub(time.Unix(r.GetMetadata().SalePriceUpdate, 0)) > time.Hour*24*30 {
+		if r.GetMetadata().CurrentSalePrice == 0 || time.Now().Sub(time.Unix(r.GetMetadata().SalePriceUpdate, 0)) > time.Hour*24*30 {
 			price := s.retr.GetSalePrice(int(r.GetRelease().Id))
 			r.GetMetadata().CurrentSalePrice = int32(price * 100)
 			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
