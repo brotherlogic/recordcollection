@@ -111,8 +111,8 @@ func (t *testSyncer) DeleteInstance(a, b, c int) string {
 func (t *testSyncer) SellRecord(releaseID int, price float32, state string) int {
 	return 0
 }
-func (t *testSyncer) GetSalePrice(releaseID int) float32 {
-	return 15.5
+func (t *testSyncer) GetSalePrice(releaseID int) (float32, error) {
+	return 15.5, nil
 }
 func (t *testSyncer) GetSaleState(releaseID int) pbd.SaleState {
 	return pbd.SaleState_FOR_SALE
