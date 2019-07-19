@@ -423,7 +423,7 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	server := Init()
-	server.GoServer.KSclient = *keystoreclient.GetClient(server.GetIP)
+	server.GoServer.KSclient = *keystoreclient.GetClient(server.DialMaster)
 
 	server.PrepServer()
 	if len(*token) > 0 {

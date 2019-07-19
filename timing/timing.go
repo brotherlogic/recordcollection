@@ -10,6 +10,7 @@ import (
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/brotherlogic/keystore/client"
 
+	pbgd "github.com/brotherlogic/discovery/proto"
 	pbd "github.com/brotherlogic/godiscogs"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 
@@ -18,24 +19,29 @@ import (
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
-func getIP(server string) (string, int) {
-	t := time.Now()
-	h, p, _ := utils.Resolve(server)
-	fmt.Printf("GOT %v\n", time.Now().Sub(t))
-	return h, int(p)
+func doDial(entry *pbgd.RegistryEntry) (*grpc.ClientConn, error) {
+	return grpc.Dial(entry.Ip+":"+strconv.Itoa(int(entry.Port)), grpc.WithInsecure())
+}
+
+func dialMaster(server string) (*grpc.ClientConn, error) {
+	ip, port, err := utils.Resolve(server)
+	if err != nil {
+		return nil, err
+	}
+
+	return doDial(&pbgd.RegistryEntry{Ip: ip, Port: port})
 }
 
 func testRead() {
 	t := time.Now()
-	client := *keystoreclient.GetClient(getIP)
+	client := *keystoreclient.GetClient(dialMaster)
 	rc := &pbrc.RecordCollection{}
 	_, b, c := client.Read(context.Background(), "/github.com/brotherlogic/recordcollection/collection", rc)
 	fmt.Printf("TOOK %v -> %v,%v\n", time.Now().Sub(t), b.GetReadTime(), c)
 }
 
 func testReadCollection() {
-	host, port := getIP("recordcollection")
-	conn, err := grpc.Dial(host+":"+strconv.Itoa(port), grpc.WithInsecure(), grpc.WithDefaultCallOptions(grpc.UseCompressor("gzip")))
+	conn, err := dialMaster("recordcollection")
 	defer conn.Close()
 	if err != nil {
 		log.Fatalf("Unable to dial : %v", err)
@@ -52,8 +58,7 @@ func testReadCollection() {
 }
 
 func testReadSubset() {
-	host, port := getIP("recordcollection")
-	conn, err := grpc.Dial(host+":"+strconv.Itoa(port), grpc.WithInsecure())
+	conn, err := dialMaster("recordcollection")
 	defer conn.Close()
 	if err != nil {
 		log.Fatalf("Unable to dial : %v", err)
@@ -77,8 +82,7 @@ func testReadSubset() {
 }
 
 func testReadSubsetStripped() {
-	host, port := getIP("recordcollection")
-	conn, err := grpc.Dial(host+":"+strconv.Itoa(port), grpc.WithInsecure())
+	conn, err := dialMaster("recordcollection")
 	defer conn.Close()
 	if err != nil {
 		log.Fatalf("Unable to dial : %v", err)
