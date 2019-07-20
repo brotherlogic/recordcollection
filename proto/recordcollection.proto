@@ -91,6 +91,9 @@ message ReleaseMetadata {
     
     PRE_PROFESSOR = 6;
     PROFESSOR = 7;
+
+    PRE_DISTINGUISHED = 30;
+    DISTINGUISHED = 31;
     
     PREPARE_TO_SELL = 19;
     ASSESS_FOR_SALE = 24;
