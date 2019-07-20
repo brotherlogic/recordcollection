@@ -308,7 +308,11 @@ func (s *Server) GetState() []*pbg.State {
 	countSaleDirty := int64(0)
 	saleID := int64(0)
 	noPrice := int64(0)
+	twelveCount := int64(0)
 	for _, r := range s.collection.GetRecords() {
+		if r.GetRelease().FolderId == 242017 {
+			twelveCount++
+		}
 		if r.GetMetadata().CurrentSalePrice == 0 {
 			noPrice++
 		}
@@ -346,6 +350,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "12_count", Value: twelveCount},
 		&pbg.State{Key: "needs_price", Value: noPrice},
 		&pbg.State{Key: "sale_dirty", Value: countSaleDirty},
 		&pbg.State{Key: "example_sale_dirty", Value: saleID},
