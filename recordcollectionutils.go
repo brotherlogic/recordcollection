@@ -202,6 +202,8 @@ func (s *Server) syncCollection(ctx context.Context) {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
 
+				hasCondition := len(r.GetRelease().RecordCondition) > 0
+
 				//Clear repeated fields first to prevent growth, but images come from
 				//a hard sync so ignore that
 				if len(record.GetFormats()) > 0 {
@@ -218,6 +220,11 @@ func (s *Server) syncCollection(ctx context.Context) {
 				}
 
 				proto.Merge(r.Release, record)
+
+				// Set sale dirty if the condition is new
+				if !hasCondition && len(r.Release.RecordCondition) > 0 {
+					r.Metadata.SaleDirty = true
+				}
 
 				// Override if the rating doesn't match
 				if r.Release.Rating != record.Rating {
