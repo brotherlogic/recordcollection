@@ -87,11 +87,11 @@ type saver interface {
 	SetRating(releaseID int, rating int) error
 	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) string
 	DeleteInstance(folderID, releaseID, instanceID int) string
-	SellRecord(releaseID int, price float32, state string) int
+	SellRecord(releaseID int, price float32, state string, condition, sleeve string) int
 	GetSalePrice(releaseID int) (float32, error)
 	RemoveFromWantlist(releaseID int)
 	AddToWantlist(releaseID int)
-	UpdateSalePrice(saleID int, releaseID int, condition string, price float32) error
+	UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error
 	GetCurrentSalePrice(saleID int) float32
 	GetCurrentSaleState(saleID int) godiscogs.SaleState
 	RemoveFromSale(saleID int, releaseID int) error

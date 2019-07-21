@@ -30,9 +30,15 @@ func (s *Server) pushSales(ctx context.Context) error {
 		if val.GetMetadata().SaleDirty &&
 			(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
 				val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
+
+			if len(val.GetRelease().RecordCondition) == 0 {
+				s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id), false)
+				return fmt.Errorf("Condition is missing")
+			}
+
 			s.lastSale = int64(val.GetRelease().InstanceId)
 			s.salesPushes++
-			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), "Near Mint (NM or M-)", float32(val.GetMetadata().SalePrice)/100)
+			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().SalePrice)/100)
 			if err == nil {
 				val.GetMetadata().SaleDirty = false
 			} else {
