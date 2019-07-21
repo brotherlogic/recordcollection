@@ -60,7 +60,7 @@ type testSyncer struct {
 	updateWantCount int
 }
 
-func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition string, price float32) error {
+func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error {
 	return nil
 }
 
@@ -108,7 +108,7 @@ func (t *testSyncer) DeleteInstance(a, b, c int) string {
 	return "ALL GOOD!"
 }
 
-func (t *testSyncer) SellRecord(releaseID int, price float32, state string) int {
+func (t *testSyncer) SellRecord(releaseID int, price float32, state string, condition, sleeve string) int {
 	return 0
 }
 func (t *testSyncer) GetSalePrice(releaseID int) (float32, error) {
