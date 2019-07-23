@@ -43,6 +43,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 				val.GetMetadata().SaleDirty = false
 			} else {
 				s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
+				return fmt.Errorf("PUSH ERROR FOR %v -> %v", val.GetRelease().Id, err)
 			}
 			return err
 		}
