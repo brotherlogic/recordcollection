@@ -33,7 +33,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 
 			// Adjust sale price if needed
 			if val.GetMetadata().SalePrice == 0 {
-				val.GetMetadata().SalePrice == val.GetMetadata().CurrentSalePrice
+				val.GetMetadata().SalePrice = val.GetMetadata().CurrentSalePrice
 			}
 			if len(val.GetRelease().RecordCondition) == 0 {
 				s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id), false)
