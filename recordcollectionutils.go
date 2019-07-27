@@ -24,7 +24,7 @@ func (s *Server) syncIssue(ctx context.Context) error {
 	return nil
 }
 
-func (s *Server) pushSale(ctx context.Context, val *pb.Record) error {
+func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	if val.GetMetadata().SaleDirty &&
 		(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
 			val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
@@ -35,7 +35,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) error {
 		}
 		if len(val.GetRelease().RecordCondition) == 0 {
 			s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id), false)
-			return fmt.Errorf("%v [%v/%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id, val.GetRelease().InstanceId)
+			return false, fmt.Errorf("%v [%v/%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id, val.GetRelease().InstanceId)
 		}
 
 		s.lastSale = int64(val.GetRelease().InstanceId)
@@ -45,9 +45,9 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) error {
 			val.GetMetadata().SaleDirty = false
 		} else {
 			s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
-			return fmt.Errorf("PUSH ERROR FOR %v -> %v", val.GetRelease().Id, err)
+			return false, fmt.Errorf("PUSH ERROR FOR %v -> %v", val.GetRelease().Id, err)
 		}
-		return err
+		return true, err
 	}
 
 	if val.GetMetadata().Category == pb.ReleaseMetadata_SOLD_OFFLINE {
@@ -58,18 +58,21 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) error {
 			val.GetMetadata().SaleState = pbd.SaleState_SOLD
 			val.GetMetadata().SaleDirty = false
 		}
-		return err
+		return true, err
 	}
 
-	return nil
+	return false, nil
 }
 
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
 	for _, val := range s.collection.GetRecords() {
-		err := s.pushSale(ctx, val)
+		success, err := s.pushSale(ctx, val)
 		if err != nil {
 			return err
+		}
+		if success {
+			return nil
 		}
 	}
 	return nil

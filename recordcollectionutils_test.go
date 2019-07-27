@@ -459,7 +459,7 @@ func TestPushSaleWithFail(t *testing.T) {
 	s.retr = &testSyncer{failSalePrice: true}
 
 	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, CurrentSalePrice: 100, SaleDirty: true}}
-	err := s.pushSale(context.Background(), record)
+	_, err := s.pushSale(context.Background(), record)
 	if err == nil {
 		t.Errorf("Sale push did not fail")
 	}
@@ -470,7 +470,7 @@ func TestPushSaleBasic(t *testing.T) {
 	s := InitTestServer(".saleadjust")
 
 	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true}}
-	err := s.pushSale(context.Background(), record)
+	_, err := s.pushSale(context.Background(), record)
 	if err != nil {
 		t.Errorf("Sale push failed: %v", err)
 	}
@@ -493,6 +493,15 @@ func TestSyncRecordTracklist(t *testing.T) {
 
 	if record.GetMetadata().NeedsStockCheck {
 		t.Errorf("Stock check not updated")
+	}
+
+}
+
+func TestPushSaleBasicWithNone(t *testing.T) {
+	s := InitTestServer(".saleadjustnone")
+	err := s.pushSales(context.Background())
+	if err != nil {
+		t.Errorf("Sale push failed: %v", err)
 	}
 
 }
