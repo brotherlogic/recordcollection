@@ -205,7 +205,7 @@ func TestUpdateRecords(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
 
-	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}}}})
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
 
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
 
@@ -215,6 +215,17 @@ func TestUpdateRecords(t *testing.T) {
 
 	if r == nil || len(r.Records) != 1 || r.Records[0].Release.Title != "madeup2" {
 		t.Errorf("Error in updating records: %v", r)
+	}
+}
+
+func TestUpdateRecordsNoCondition(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
+
+	if err == nil {
+		t.Errorf("Should have triggered condition issue")
 	}
 }
 
