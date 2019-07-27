@@ -459,6 +459,16 @@ func main() {
 				}
 			}
 		}
+	case "needcondition":
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		for _, r := range recs.GetRecords() {
+			if r.GetMetadata().Category == pbrc.ReleaseMetadata_LISTED_TO_SELL && len(r.GetRelease().RecordCondition) == 0 {
+				fmt.Printf("Update: %v - %v\n", r.GetRelease().InstanceId, r.GetRelease().Title)
+			}
+		}
 
 	}
 }

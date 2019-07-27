@@ -35,7 +35,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) error {
 		}
 		if len(val.GetRelease().RecordCondition) == 0 {
 			s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id), false)
-			return fmt.Errorf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id)
+			return fmt.Errorf("%v [%v/%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id, val.GetRelease().InstanceId)
 		}
 
 		s.lastSale = int64(val.GetRelease().InstanceId)
