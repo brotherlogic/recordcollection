@@ -24,42 +24,51 @@ func (s *Server) syncIssue(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) pushSale(ctx context.Context, val *pb.Record) error {
+	if val.GetMetadata().SaleDirty &&
+		(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
+			val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
+
+		// Adjust sale price if needed
+		if val.GetMetadata().SalePrice == 0 {
+			val.GetMetadata().SalePrice = val.GetMetadata().CurrentSalePrice
+		}
+		if len(val.GetRelease().RecordCondition) == 0 {
+			s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id), false)
+			return fmt.Errorf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id)
+		}
+
+		s.lastSale = int64(val.GetRelease().InstanceId)
+		s.salesPushes++
+		err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().SalePrice)/100)
+		if err == nil {
+			val.GetMetadata().SaleDirty = false
+		} else {
+			s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
+			return fmt.Errorf("PUSH ERROR FOR %v -> %v", val.GetRelease().Id, err)
+		}
+		return err
+	}
+
+	if val.GetMetadata().Category == pb.ReleaseMetadata_SOLD_OFFLINE {
+		s.soldAdjust++
+		err := s.retr.RemoveFromSale(int(val.GetMetadata().SaleId), int(val.GetRelease().Id))
+
+		if err == nil {
+			val.GetMetadata().SaleState = pbd.SaleState_SOLD
+			val.GetMetadata().SaleDirty = false
+		}
+		return err
+	}
+
+	return nil
+}
+
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
 	for _, val := range s.collection.GetRecords() {
-		if val.GetMetadata().SaleDirty &&
-			(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
-				val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
-
-			// Adjust sale price if needed
-			if val.GetMetadata().SalePrice == 0 {
-				val.GetMetadata().SalePrice = val.GetMetadata().CurrentSalePrice
-			}
-			if len(val.GetRelease().RecordCondition) == 0 {
-				s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id), false)
-				return fmt.Errorf("Condition is missing")
-			}
-
-			s.lastSale = int64(val.GetRelease().InstanceId)
-			s.salesPushes++
-			err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().SalePrice)/100)
-			if err == nil {
-				val.GetMetadata().SaleDirty = false
-			} else {
-				s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
-				return fmt.Errorf("PUSH ERROR FOR %v -> %v", val.GetRelease().Id, err)
-			}
-			return err
-		}
-
-		if val.GetMetadata().Category == pb.ReleaseMetadata_SOLD_OFFLINE {
-			s.soldAdjust++
-			err := s.retr.RemoveFromSale(int(val.GetMetadata().SaleId), int(val.GetRelease().Id))
-
-			if err == nil {
-				val.GetMetadata().SaleState = pbd.SaleState_SOLD
-				val.GetMetadata().SaleDirty = false
-			}
+		err := s.pushSale(ctx, val)
+		if err != nil {
 			return err
 		}
 	}
@@ -204,6 +213,48 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	s.saveRecordCollection(ctx)
 }
 
+func (s *Server) syncRecords(r *pb.Record, record *pbd.Release) {
+	hasCondition := len(r.GetRelease().RecordCondition) > 0
+
+	//Clear repeated fields first to prevent growth, but images come from
+	//a hard sync so ignore that
+	if len(record.GetFormats()) > 0 {
+		r.GetRelease().Formats = []*pbd.Format{}
+		r.GetRelease().Artists = []*pbd.Artist{}
+		r.GetRelease().Labels = []*pbd.Label{}
+	}
+
+	if len(record.GetImages()) > 0 {
+		r.GetRelease().Images = []*pbd.Image{}
+	}
+	if len(record.GetTracklist()) > 0 {
+		r.GetRelease().Tracklist = []*pbd.Track{}
+	}
+
+	proto.Merge(r.Release, record)
+
+	// Set sale dirty if the condition is new
+	if !hasCondition && len(r.Release.RecordCondition) > 0 {
+		r.Metadata.SaleDirty = true
+	}
+
+	// Override if the rating doesn't match
+	if r.Release.Rating != record.Rating {
+		r.Release.Rating = record.Rating
+	}
+
+	// Records with others don't need to be stock checked
+	if r.GetMetadata().Others {
+		r.GetMetadata().NeedsStockCheck = false
+	}
+	if time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) < time.Hour*24*30*6 {
+		r.GetMetadata().NeedsStockCheck = false
+	}
+
+	r.GetMetadata().LastSyncTime = time.Now().Unix()
+
+}
+
 func (s *Server) syncCollection(ctx context.Context) {
 	startTime := time.Now()
 	records := s.retr.GetCollection()
@@ -212,45 +263,7 @@ func (s *Server) syncCollection(ctx context.Context) {
 		for _, r := range s.collection.GetRecords() {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
-
-				hasCondition := len(r.GetRelease().RecordCondition) > 0
-
-				//Clear repeated fields first to prevent growth, but images come from
-				//a hard sync so ignore that
-				if len(record.GetFormats()) > 0 {
-					r.GetRelease().Formats = []*pbd.Format{}
-					r.GetRelease().Artists = []*pbd.Artist{}
-					r.GetRelease().Labels = []*pbd.Label{}
-				}
-
-				if len(record.GetImages()) > 0 {
-					r.GetRelease().Images = []*pbd.Image{}
-				}
-				if len(record.GetTracklist()) > 0 {
-					r.GetRelease().Tracklist = []*pbd.Track{}
-				}
-
-				proto.Merge(r.Release, record)
-
-				// Set sale dirty if the condition is new
-				if !hasCondition && len(r.Release.RecordCondition) > 0 {
-					r.Metadata.SaleDirty = true
-				}
-
-				// Override if the rating doesn't match
-				if r.Release.Rating != record.Rating {
-					r.Release.Rating = record.Rating
-				}
-
-				// Records with others don't need to be stock checked
-				if r.GetMetadata().Others {
-					r.GetMetadata().NeedsStockCheck = false
-				}
-				if time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) < time.Hour*24*30*6 {
-					r.GetMetadata().NeedsStockCheck = false
-				}
-
-				r.GetMetadata().LastSyncTime = time.Now().Unix()
+				s.syncRecords(r, record)
 			}
 		}
 

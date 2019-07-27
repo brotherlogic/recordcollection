@@ -2,8 +2,10 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
@@ -58,9 +60,13 @@ type testSyncer struct {
 	moveRecordCount int
 	failOnRate      bool
 	updateWantCount int
+	failSalePrice   bool
 }
 
 func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error {
+	if t.failSalePrice {
+		return fmt.Errorf("built to fail")
+	}
 	return nil
 }
 
@@ -435,4 +441,58 @@ func TestPushRating(t *testing.T) {
 func TestBasic(t *testing.T) {
 	s := InitTestServer(".madeup")
 	s.updateWant(&pb.Want{Release: &pbd.Release{Id: 766489}, Metadata: &pb.WantMetadata{}})
+}
+
+func TestPushSaleWithAdjust(t *testing.T) {
+	s := InitTestServer(".saleadjust")
+
+	record := &pb.Record{Release: &pbd.Release{}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, CurrentSalePrice: 100, SaleDirty: true}}
+	s.pushSale(context.Background(), record)
+
+	if record.GetMetadata().SalePrice != 100 {
+		t.Errorf("Sale price was not adjusted: %v", record)
+	}
+}
+
+func TestPushSaleWithFail(t *testing.T) {
+	s := InitTestServer(".saleadjust")
+	s.retr = &testSyncer{failSalePrice: true}
+
+	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, CurrentSalePrice: 100, SaleDirty: true}}
+	err := s.pushSale(context.Background(), record)
+	if err == nil {
+		t.Errorf("Sale push did not fail")
+	}
+
+}
+
+func TestPushSaleBasic(t *testing.T) {
+	s := InitTestServer(".saleadjust")
+
+	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true}}
+	err := s.pushSale(context.Background(), record)
+	if err != nil {
+		t.Errorf("Sale push failed: %v", err)
+	}
+
+}
+
+func TestSyncRecordTracklist(t *testing.T) {
+	s := InitTestServer(".syncrecord")
+
+	record := &pb.Record{Release: &pbd.Release{Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
+	s.syncRecords(record, &pbd.Release{Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"})
+
+	if len(record.GetRelease().GetTracklist()) != 2 {
+		t.Errorf("Tracklisting not updated correctly")
+	}
+
+	if !record.GetMetadata().SaleDirty {
+		t.Errorf("Sale dirty not set")
+	}
+
+	if record.GetMetadata().NeedsStockCheck {
+		t.Errorf("Stock check not updated")
+	}
+
 }
