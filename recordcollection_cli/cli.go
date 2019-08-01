@@ -35,6 +35,16 @@ func main() {
 	defer cancel()
 
 	switch os.Args[1] {
+	case "wants":
+		fmt.Printf("WANTS\n")
+		rec, err := registry.GetWants(ctx, &pbrc.GetWantsRequest{})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Found %v wants\n", len(rec.GetWants()))
+		for i, want := range rec.GetWants() {
+			fmt.Printf("%v. %v\n", i, want)
+		}
 	case "getsales":
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{}, Metadata: &pbrc.ReleaseMetadata{}}}, grpc.MaxCallRecvMsgSize(1024*1024*1024))
 		if err != nil {

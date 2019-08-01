@@ -8,6 +8,8 @@ import (
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -44,8 +46,11 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		if err == nil {
 			val.GetMetadata().SaleDirty = false
 		} else {
-			s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
-			return false, fmt.Errorf("PUSH ERROR FOR %v -> %v", val.GetRelease().Id, err)
+			// Unavailable is a valid response from a sales push
+			if st, ok := status.FromError(err); !ok || st.Code() != codes.Unavailable {
+				s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
+				return false, fmt.Errorf("PUSH ERROR FOR %v -> %v", val.GetRelease().Id, err)
+			}
 		}
 		return true, err
 	}
