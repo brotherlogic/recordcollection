@@ -57,6 +57,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				cleanRecord.GetRelease().Rating = rec.GetRelease().Rating
 				cleanRecord.GetMetadata().GoalFolder = rec.GetMetadata().GoalFolder
 				cleanRecord.GetMetadata().FilePath = rec.GetMetadata().FilePath
+				cleanRecord.GetMetadata().CdPath = rec.GetMetadata().CdPath
 				cleanRecord.GetMetadata().Dirty = rec.GetMetadata().Dirty
 
 				response.Records = append(response.Records, cleanRecord)
