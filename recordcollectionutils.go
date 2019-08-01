@@ -155,7 +155,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 	if r.GetMetadata().GetMoveFolder() > 0 {
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 			err := s.mover.moveRecord(r, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
-			if err != nil {
+			if r.GetRelease().FolderId != 1 && err != nil {
 				return false, fmt.Sprintf("Move fail %v -> %v: %v (%v)", r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder(), err, ctx)
 			}
 
