@@ -53,7 +53,7 @@ func main() {
 		fmt.Printf("%v records\n", len(rec.GetRecords()))
 		for i, rec := range rec.GetRecords() {
 			if rec.GetMetadata().SalePrice <= 500 && rec.GetMetadata().SalePrice > 0 && rec.GetMetadata().Category == pbrc.ReleaseMetadata_LISTED_TO_SELL {
-				fmt.Printf("%v. %v\n", i, rec.GetRelease().Title)
+				fmt.Printf("%v. %v - %v\n", i, rec.GetRelease().Title, rec.GetRelease().GetFormats())
 			}
 		}
 
