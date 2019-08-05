@@ -129,7 +129,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
 				if !request.NoSell {
 					if len(rec.GetRelease().SleeveCondition) == 0 {
-						s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", rec.GetRelease().Title, rec.GetRelease().Id), false)
 						return nil, fmt.Errorf("No Condition info")
 					}
 					price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
