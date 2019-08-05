@@ -300,11 +300,12 @@ func (s *Server) syncCollection(ctx context.Context) {
 
 	// Update sale info
 	for _, r := range s.collection.Records {
-		if r.GetMetadata().SaleId > 0 && r.GetMetadata().SalePrice == 0 && !r.GetMetadata().SaleDirty {
+		if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
 			r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
 		}
 		if r.GetMetadata().SaleId > 0 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
 			r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
+
 		}
 	}
 
