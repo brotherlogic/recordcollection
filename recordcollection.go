@@ -317,7 +317,8 @@ func (s *Server) GetState() []*pbg.State {
 			noPrice++
 		}
 		if r.GetMetadata().SaleDirty &&
-			r.GetMetadata().Category != pb.ReleaseMetadata_SOLD_ARCHIVE {
+			r.GetMetadata().Category != pb.ReleaseMetadata_SOLD_ARCHIVE &&
+			r.GetMetadata().SaleId > 0 {
 			countSaleDirty++
 			saleID = int64(r.GetRelease().InstanceId)
 		}
