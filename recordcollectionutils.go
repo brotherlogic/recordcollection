@@ -74,7 +74,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 	for _, val := range s.collection.GetRecords() {
 		success, err := s.pushSale(ctx, val)
 		if err != nil {
-			return fmt.Errorf("Error pushing %v: %v", val.GetRelease().InstanceId, err)
+			return fmt.Errorf("Error pushing %v (%v): %v", val.GetRelease().InstanceId, val.GetMetadata().Category, err)
 		}
 		if success {
 			return nil
