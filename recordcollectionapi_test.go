@@ -365,6 +365,18 @@ func TestUpdateRecordsForSale(t *testing.T) {
 	}
 }
 
+func TestUpdateRecordsForSaleSellingIsDisabled(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	s.disableSales = true
+	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{}})
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
+
+	if err == nil {
+		t.Errorf("Disabling sales did not cause error")
+	}
+}
+
 func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
 	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}, Metadata: &pb.WantMetadata{Active: true}})

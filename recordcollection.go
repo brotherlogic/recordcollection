@@ -158,6 +158,7 @@ type Server struct {
 	saveMutex      *sync.Mutex
 	biggest        int64
 	lastSale       int64
+	disableSales   bool
 }
 
 func (s *Server) findBiggest(ctx context.Context) error {
@@ -458,6 +459,8 @@ func main() {
 	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
 	server.RegisterRepeatingTask(server.findBiggest, "find_biggest", time.Minute*5)
 	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
+
+	server.disableSales = true
 
 	server.Serve()
 }
