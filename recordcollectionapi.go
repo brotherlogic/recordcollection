@@ -131,6 +131,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 					if len(rec.GetRelease().SleeveCondition) == 0 {
 						return nil, fmt.Errorf("No Condition info")
 					}
+					if s.disableSales {
+						return nil, fmt.Errorf("Sales are disabled")
+					}
 					price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
 					saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition)
 					rec.GetMetadata().SaleId = int32(saleid)
