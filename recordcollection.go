@@ -460,7 +460,7 @@ func main() {
 	server.RegisterRepeatingTask(server.findBiggest, "find_biggest", time.Minute*5)
 	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
 
-	server.disableSales = true
+	//server.disableSales = true
 
 	server.Serve()
 }
