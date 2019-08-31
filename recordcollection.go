@@ -13,7 +13,6 @@ import (
 	"github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/goserver/utils"
-	"github.com/brotherlogic/keystore/client"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -430,9 +429,9 @@ func main() {
 		log.SetOutput(ioutil.Discard)
 	}
 	server := Init()
-	server.GoServer.KSclient = *keystoreclient.GetClient(server.DialMaster)
 
 	server.PrepServer()
+
 	if len(*token) > 0 {
 		server.KSclient.Save(context.Background(), TOKEN, &pb.Token{Token: *token})
 		log.Fatalf("Written TOKEN")
