@@ -35,6 +35,12 @@ func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordC
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
 	t := time.Now()
+
+	//Fast break on empty filter
+	if request.Filter == nil {
+		return &pb.GetRecordsResponse{Records: s.collection.GetRecords()}, nil
+	}
+
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
 	pushLockTime := int64(0)
