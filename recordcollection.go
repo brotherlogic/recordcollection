@@ -351,6 +351,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "unlistened", Value: numUnlistened},
 		&pbg.State{Key: "needs_price", Value: noPrice},
 		&pbg.State{Key: "12_count", Value: twelveCount},
 		&pbg.State{Key: "example_sale_dirty", Value: saleID},
@@ -364,7 +365,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "no_goal_example", Value: example},
 		&pbg.State{Key: "needs_date", Value: needsBump},
 		&pbg.State{Key: "needs_date_example", Value: nbExample},
-		&pbg.State{Key: "unlistened", Value: numUnlistened},
 	}
 }
 
