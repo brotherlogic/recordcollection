@@ -351,7 +351,6 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
-		&pbg.State{Key: "biggest", Value: s.biggest},
 		&pbg.State{Key: "unlistened", Value: numUnlistened},
 		&pbg.State{Key: "needs_price", Value: noPrice},
 		&pbg.State{Key: "12_count", Value: twelveCount},
@@ -450,18 +449,14 @@ func main() {
 	// This enables pprof
 	go http.ListenAndServe(":8089", nil)
 
-	server.RegisterRepeatingTask(server.findBiggest, "find_biggest", time.Minute*5)
-	// Disable all repeating tasks
-	/*
-		server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
-		server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
-		server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
-		server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
-		server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
-		server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
-		server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
-		server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
-	*/
+	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
+	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
+	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
+	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
+	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
+	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
+	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
+	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
 
 	//server.disableSales = true
 
