@@ -5,9 +5,11 @@ package recordcollection;
 import "github.com/brotherlogic/godiscogs/godiscogs.proto";
 
 message RecordCollection {
-  repeated Record records = 1;
+  repeated Record records = 1; // Deprecated
   repeated godiscogs.Release wants = 2; // DEPRECATED
   repeated Want new_wants = 3;
+  repeated int32 instances = 4;
+  int64 collection_number = 5;
 }
 
 // This is a record that we own
@@ -183,6 +185,8 @@ message ReleaseMetadata {
 
   int32 current_sale_price = 31;
   int64 sale_price_update = 32;
+
+  int64 last_save_time = 33;
 }
 
 // A request to get some records
