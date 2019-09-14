@@ -197,6 +197,9 @@ message GetRecordsRequest {
 
   // Strip out for record mover
   bool move_strip = 4;
+
+  // Reference the caller
+  string caller = 5;
 }
 
 // A list of records in response

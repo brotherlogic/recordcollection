@@ -34,12 +34,12 @@ func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordC
 
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
-	t := time.Now()
-
-	//Fast break on empty filter
-	if request.Filter == nil {
-		return &pb.GetRecordsResponse{Records: s.collection.GetRecords()}, nil
+	//Fail request with no caller
+	if request.Caller == "" {
+		return nil, fmt.Errorf("Failing request as it has no caller")
 	}
+
+	t := time.Now()
 
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
