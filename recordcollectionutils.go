@@ -340,6 +340,7 @@ func (s *Server) runSyncWants(ctx context.Context) error {
 
 func (s *Server) runSync(ctx context.Context) error {
 	s.syncCollection(ctx)
+	s.collection.CollectionNumber++
 	s.saveRecordCollection(ctx)
 	return nil
 }
