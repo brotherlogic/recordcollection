@@ -46,7 +46,7 @@ func TestGetRecordsComplex(t *testing.T) {
 	proto.Unmarshal(data, s.collection)
 
 	ts := time.Now()
-	v, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{Release: &pbd.Release{FolderId: 1}}})
+	v, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{Release: &pbd.Release{FolderId: 1}}})
 	diff := time.Now().Sub(ts)
 
 	if err != nil {
