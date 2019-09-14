@@ -295,76 +295,9 @@ func max(a, b int) int {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	noGoal := int64(0)
-	example := int64(0)
-	needsBump := int64(0)
-	nbExample := int64(0)
-	numUnlistened := int64(0)
-	dirties := int64(0)
-	stocks := int64(0)
-	keepers := int64(0)
-	topseller := int64(0)
-	topsale := int32(0)
-	countSaleDirty := int64(0)
-	saleID := int64(0)
-	noPrice := int64(0)
-	twelveCount := int64(0)
-	for _, r := range s.collection.GetRecords() {
-		if r.GetRelease().FolderId == 242017 {
-			twelveCount++
-		}
-		if r.GetMetadata().CurrentSalePrice == 0 {
-			noPrice++
-		}
-		if r.GetMetadata().SaleDirty &&
-			r.GetMetadata().Category != pb.ReleaseMetadata_SOLD_ARCHIVE &&
-			r.GetMetadata().SaleId > 0 {
-			countSaleDirty++
-			saleID = int64(r.GetRelease().InstanceId)
-		}
-		if r.GetMetadata().Category != pb.ReleaseMetadata_DIGITAL &&
-			r.GetMetadata().Category != pb.ReleaseMetadata_GOOGLE_PLAY {
-			if r.GetMetadata().CurrentSalePrice > topsale {
-				topseller = int64(r.GetRelease().Id)
-				topsale = r.GetMetadata().CurrentSalePrice
-			}
-		}
-		if r.GetMetadata().NeedsStockCheck && r.GetRelease().FolderId == 242017 {
-			stocks++
-		}
-		if r.GetMetadata().Dirty {
-			dirties++
-		}
-		if r.GetMetadata().Keep == pb.ReleaseMetadata_KEEPER {
-			keepers++
-		}
-		if r.GetMetadata().Category == pb.ReleaseMetadata_UNLISTENED {
-			numUnlistened++
-		}
-		if r.GetMetadata().GoalFolder == 0 {
-			noGoal++
-			example = int64(r.GetRelease().Id)
-		}
-		if r.GetMetadata().DateAdded > 1555311600 {
-			nbExample = int64(r.GetRelease().InstanceId)
-			needsBump++
-		}
-	}
 	return []*pbg.State{
-		&pbg.State{Key: "unlistened", Value: numUnlistened},
-		&pbg.State{Key: "needs_price", Value: noPrice},
-		&pbg.State{Key: "12_count", Value: twelveCount},
-		&pbg.State{Key: "example_sale_dirty", Value: saleID},
-		&pbg.State{Key: "sale_dirty", Value: countSaleDirty},
-		&pbg.State{Key: "last_sale", Value: s.lastSale},
-		&pbg.State{Key: "top_sale", Value: topseller},
-		&pbg.State{Key: "keepers", Value: keepers},
-		&pbg.State{Key: "needs_stock_check", Value: stocks},
-		&pbg.State{Key: "dirty", Value: dirties},
-		&pbg.State{Key: "no_goal", Value: noGoal},
-		&pbg.State{Key: "no_goal_example", Value: example},
-		&pbg.State{Key: "needs_date", Value: needsBump},
-		&pbg.State{Key: "needs_date_example", Value: nbExample},
+		&pbg.State{Key: "records", Value: int64(len(s.collection.Instances))},
+		&pbg.State{Key: "iteration", Value: s.collection.CollectionNumber},
 	}
 }
 
