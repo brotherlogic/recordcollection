@@ -187,6 +187,7 @@ message ReleaseMetadata {
   int64 sale_price_update = 32;
 
   int64 last_save_time = 33;
+  int64 save_iteration = 34;
 }
 
 // A request to get some records
