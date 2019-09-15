@@ -442,3 +442,17 @@ func TestQueryRecordsWithFolderId(t *testing.T) {
 		t.Errorf("Wrong number of results: %v", q)
 	}
 }
+
+func TestGetRecord(t *testing.T) {
+	s := InitTestServer(".testgetrecord")
+	s.recordCache[1234] = &pb.Record{Release: &pbd.Release{Id: 12345}}
+
+	q, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1234})
+	if err != nil {
+		t.Errorf("Error on get record: %v", err)
+	}
+
+	if q.GetRecord().GetRelease().GetId() != 12345 {
+		t.Errorf("Bad pull on get record")
+	}
+}
