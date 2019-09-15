@@ -226,6 +226,7 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 	//Update record if releases don't match
 	save := false
 	if !utils.FuzzyMatch(r.GetRelease(), record) {
+		s.RaiseIssue(ctx, "Mismatch on release pull", fmt.Sprintf("%v vs %v", r.GetRelease(), record), false)
 		s.Log(fmt.Sprintf("Release mismatch: %v, %v", r.GetRelease(), record))
 		save = true
 	}
