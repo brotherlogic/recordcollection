@@ -293,7 +293,7 @@ func TestDirtyMerge(t *testing.T) {
 
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
 	s.runSync(context.Background())
 	s.runSyncWants(context.Background())
 
@@ -311,7 +311,7 @@ func TestGoodMergeSync(t *testing.T) {
 
 func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSyncWithDirty")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}}
+	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
@@ -481,7 +481,7 @@ func TestSyncRecordTracklist(t *testing.T) {
 	s := InitTestServer(".syncrecord")
 
 	record := &pb.Record{Release: &pbd.Release{Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
-	s.syncRecords(context.Background(), record, &pbd.Release{Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
+	s.syncRecords(context.Background(), record, &pbd.Release{FolderId: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
 
 	if len(record.GetRelease().GetTracklist()) != 2 {
 		t.Errorf("Tracklisting not updated correctly")
