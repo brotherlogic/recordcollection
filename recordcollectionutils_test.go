@@ -481,7 +481,7 @@ func TestSyncRecordTracklist(t *testing.T) {
 	s := InitTestServer(".syncrecord")
 
 	record := &pb.Record{Release: &pbd.Release{Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
-	s.syncRecords(record, &pbd.Release{Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
+	s.syncRecords(context.Background(), record, &pbd.Release{Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
 
 	if len(record.GetRelease().GetTracklist()) != 2 {
 		t.Errorf("Tracklisting not updated correctly")

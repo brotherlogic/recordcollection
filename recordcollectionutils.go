@@ -222,10 +222,12 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	s.saveRecordCollection(ctx)
 }
 
-func (s *Server) syncRecords(r *pb.Record, record *pbd.Release, num int64) {
+func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Release, num int64) {
 	//Update record if releases don't match
+	save := false
 	if !utils.FuzzyMatch(r.GetRelease(), record) {
 		s.Log(fmt.Sprintf("Release mismatch"))
+		save = true
 	}
 
 	hasCondition := len(r.GetRelease().RecordCondition) > 0
@@ -267,6 +269,9 @@ func (s *Server) syncRecords(r *pb.Record, record *pbd.Release, num int64) {
 
 	r.GetMetadata().LastSyncTime = time.Now().Unix()
 
+	if save {
+		s.saveRecord(ctx, r)
+	}
 }
 
 func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
@@ -277,7 +282,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 		for _, r := range s.collection.GetRecords() {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
-				s.syncRecords(r, record, colNumber)
+				s.syncRecords(ctx, r, record, colNumber)
 			}
 		}
 
