@@ -176,6 +176,9 @@ const (
 	// KEY The main collection
 	KEY = "/github.com/brotherlogic/recordcollection/collection"
 
+	// SAVEKEY individual saves
+	SAVEKEY = "/github.com/brotherlogic/recordcollection/records/"
+
 	//TOKEN for discogs
 	TOKEN = "/github.com/brotherlogic/recordcollection/token"
 )
@@ -247,6 +250,11 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 	s.KSclient.Save(ctx, KEY, s.collection)
 }
 
+func (s *Server) saveRecord(ctx context.Context, r *pb.Record) {
+	r.GetMetadata().SaveIteration = s.collection.CollectionNumber
+	s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
+}
+
 // DoRegister does RPC registration
 func (s *Server) DoRegister(server *grpc.Server) {
 	pb.RegisterRecordCollectionServiceServer(server, s)
@@ -295,9 +303,16 @@ func max(a, b int) int {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
+	unsaved := int64(0)
+	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().SaveIteration == 0 {
+			unsaved++
+		}
+	}
 	return []*pbg.State{
 		&pbg.State{Key: "records", Value: int64(len(s.collection.Instances))},
 		&pbg.State{Key: "iteration", Value: s.collection.CollectionNumber},
+		&pbg.State{Key: "unsaved", Value: unsaved},
 	}
 }
 
