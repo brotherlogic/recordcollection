@@ -278,6 +278,16 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 	startTime := time.Now()
 	records := s.retr.GetCollection()
 	for _, record := range records {
+		foundInList := false
+		for _, iid := range s.collection.Instances {
+			if iid == record.InstanceId {
+				foundInList = true
+			}
+		}
+		if !foundInList {
+			s.collection.Instances = append(s.collection.Instances, record.InstanceId)
+		}
+
 		found := false
 		for _, r := range s.collection.GetRecords() {
 			if r.GetRelease().InstanceId == record.InstanceId {
