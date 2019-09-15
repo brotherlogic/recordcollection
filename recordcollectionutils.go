@@ -5,6 +5,7 @@ import (
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
+	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
@@ -221,7 +222,12 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	s.saveRecordCollection(ctx)
 }
 
-func (s *Server) syncRecords(r *pb.Record, record *pbd.Release) {
+func (s *Server) syncRecords(r *pb.Record, record *pbd.Release, num int64) {
+	//Update record if releases don't match
+	if !utils.FuzzyMatch(r.GetRelease(), record) {
+		s.Log(fmt.Sprintf("Release mismatch"))
+	}
+
 	hasCondition := len(r.GetRelease().RecordCondition) > 0
 
 	//Clear repeated fields first to prevent growth, but images come from
@@ -263,7 +269,7 @@ func (s *Server) syncRecords(r *pb.Record, record *pbd.Release) {
 
 }
 
-func (s *Server) syncCollection(ctx context.Context) {
+func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 	startTime := time.Now()
 	records := s.retr.GetCollection()
 	for _, record := range records {
@@ -271,7 +277,7 @@ func (s *Server) syncCollection(ctx context.Context) {
 		for _, r := range s.collection.GetRecords() {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
-				s.syncRecords(r, record)
+				s.syncRecords(r, record, colNumber)
 			}
 		}
 
@@ -339,7 +345,7 @@ func (s *Server) runSyncWants(ctx context.Context) error {
 }
 
 func (s *Server) runSync(ctx context.Context) error {
-	s.syncCollection(ctx)
+	s.syncCollection(ctx, s.collection.CollectionNumber+1)
 	s.collection.CollectionNumber++
 	s.saveRecordCollection(ctx)
 	return nil
