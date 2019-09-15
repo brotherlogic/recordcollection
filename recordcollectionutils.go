@@ -5,7 +5,6 @@ import (
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
-	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
@@ -225,7 +224,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Release, num int64) {
 	//Update record if releases don't match
 	save := false
-	if !utils.FuzzyMatch(r.GetRelease(), record) {
+	if record.FolderId != r.GetRelease().FolderId {
 		s.RaiseIssue(ctx, "Mismatch on release pull", fmt.Sprintf("%v vs %v", r.GetRelease(), record), false)
 		s.Log(fmt.Sprintf("Release mismatch: %v, %v", r.GetRelease(), record))
 		save = true
