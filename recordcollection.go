@@ -250,9 +250,9 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 	s.KSclient.Save(ctx, KEY, s.collection)
 }
 
-func (s *Server) saveRecord(ctx context.Context, r *pb.Record) {
+func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	r.GetMetadata().SaveIteration = s.collection.CollectionNumber
-	s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
+	return s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
 }
 
 // DoRegister does RPC registration
@@ -366,6 +366,17 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) fullSave(ctx context.Context) error {
+	for _, r := range s.collection.GetRecords() {
+		if r.GetMetadata().SaveIteration == 0 {
+			return s.saveRecord(ctx, r)
+		}
+	}
+
+	s.RaiseIssue(ctx, "Remove save process", fmt.Sprintf("We're done saving"), false)
+	return fmt.Errorf("Fully saved")
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
@@ -405,6 +416,7 @@ func main() {
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
 	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
+	server.RegisterRepeatingTask(server.fullSave, "full_save", time.Second*5)
 
 	//server.disableSales = true
 
