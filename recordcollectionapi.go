@@ -222,3 +222,9 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 
 	return nil, fmt.Errorf("Bad request: %v", req)
 }
+
+// GetRecord gets a sigle record
+func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.GetRecordResponse, error) {
+	rec, err := s.getRecord(ctx, req.InstanceId)
+	return &pb.GetRecordResponse{Record: rec}, err
+}

@@ -275,6 +275,14 @@ message QueryRecordsResponse {
   repeated int32 instance_ids = 1;
 }
 
+message GetRecordRequest {
+  int32 instance_id = 1;
+}
+
+message GetRecordResponse {
+  Record record = 1;
+}
+
 service RecordCollectionService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
@@ -284,4 +292,5 @@ service RecordCollectionService {
   rpc GetRecordCollection(GetRecordCollectionRequest) returns (GetRecordCollectionResponse) {};
   rpc DeleteRecord(DeleteRecordRequest) returns (DeleteRecordResponse) {};
   rpc QueryRecords(QueryRecordsRequest) returns (QueryRecordsResponse) {};
+  rpc GetRecord(GetRecordRequest) returns (GetRecordResponse) {};
 }

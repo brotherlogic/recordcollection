@@ -158,6 +158,7 @@ type Server struct {
 	biggest        int64
 	lastSale       int64
 	disableSales   bool
+	recordCache    map[int32]*pb.Record
 }
 
 func (s *Server) findBiggest(ctx context.Context) error {
@@ -255,6 +256,26 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	return s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
 }
 
+func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
+	record := &pb.Record{}
+	data, _, err := s.KSclient.Read(ctx, fmt.Sprintf("%v%v", SAVEKEY, id), record)
+
+	if err != nil {
+		return nil, err
+	}
+
+	recordToReturn := data.(*pb.Record)
+	s.recordCache[id] = recordToReturn
+	return recordToReturn, nil
+}
+
+func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
+	if val, ok := s.recordCache[id]; ok {
+		return val, nil
+	}
+	return s.loadRecord(ctx, id)
+}
+
 // DoRegister does RPC registration
 func (s *Server) DoRegister(server *grpc.Server) {
 	pb.RegisterRecordCollectionServiceServer(server, s)
@@ -310,6 +331,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.InstanceToFolder))},
 		&pbg.State{Key: "records", Value: int64(len(s.collection.Instances))},
 		&pbg.State{Key: "iteration", Value: s.collection.CollectionNumber},
@@ -336,6 +358,7 @@ func Init() *Server {
 		lastSalePush:   time.Now(),
 		wantUpdate:     "unknown",
 		saveMutex:      &sync.Mutex{},
+		recordCache:    make(map[int32]*pb.Record),
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
