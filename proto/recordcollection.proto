@@ -10,6 +10,7 @@ message RecordCollection {
   repeated Want new_wants = 3;
   repeated int32 instances = 4;
   int64 collection_number = 5;
+  map<int32, int32> instance_to_folder = 6;
 }
 
 // This is a record that we own

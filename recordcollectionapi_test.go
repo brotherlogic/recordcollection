@@ -20,6 +20,7 @@ func InitTestServer(folder string) *Server {
 
 	// Create the record collection because we're not init'ing from a file
 	s.collection = &pb.RecordCollection{}
+	s.collection.InstanceToFolder = make(map[int32]int32)
 	s.quota = &testQuota{pass: true}
 
 	os.RemoveAll(folder)

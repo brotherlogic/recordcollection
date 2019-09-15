@@ -224,6 +224,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Release, num int64) {
 	//Update record if releases don't match
 	save := false
+	s.collection.InstanceToFolder[record.InstanceId] = record.FolderId
 	if record.FolderId != r.GetRelease().FolderId {
 		s.RaiseIssue(ctx, "Mismatch on release pull", fmt.Sprintf("%v vs %v", r.GetRelease(), record), false)
 		s.Log(fmt.Sprintf("Release mismatch: %v, %v", r.GetRelease(), record))
