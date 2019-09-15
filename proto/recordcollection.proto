@@ -265,6 +265,16 @@ message DeleteRecordRequest {
 
 message DeleteRecordResponse {}
 
+message QueryRecordsRequest {
+  oneof query {
+    int32 folder_id = 1;
+  }
+}
+
+message QueryRecordsResponse {
+  repeated int32 instance_ids = 1;
+}
+
 service RecordCollectionService {
   rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
@@ -273,4 +283,5 @@ service RecordCollectionService {
   rpc AddRecord(AddRecordRequest) returns (AddRecordResponse) {};
   rpc GetRecordCollection(GetRecordCollectionRequest) returns (GetRecordCollectionResponse) {};
   rpc DeleteRecord(DeleteRecordRequest) returns (DeleteRecordResponse) {};
+  rpc QueryRecords(QueryRecordsRequest) returns (QueryRecordsResponse) {};
 }
