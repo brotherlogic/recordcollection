@@ -417,3 +417,28 @@ func TestAddWant(t *testing.T) {
 		t.Fatalf("Error updating want")
 	}
 }
+
+func TestQueryRecordsBad(t *testing.T) {
+	s := InitTestServer(".testqueryrecords")
+
+	_, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{})
+
+	if err == nil {
+		t.Errorf("No error on empty query")
+	}
+}
+
+func TestQueryRecordsWithFolderId(t *testing.T) {
+	s := InitTestServer(".testqueryrecords")
+	s.collection.InstanceToFolder[12] = 12
+
+	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_FolderId{12}})
+
+	if err != nil {
+		t.Errorf("Error on query: %v", err)
+	}
+
+	if len(q.GetInstanceIds()) != 1 {
+		t.Errorf("Wrong number of results: %v", q)
+	}
+}
