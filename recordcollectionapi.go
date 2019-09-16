@@ -210,9 +210,10 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 
 // QueryRecords gets a record using the new schema
 func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
+	ids := make([]int32, 0)
 	switch x := req.Query.(type) {
+
 	case *pb.QueryRecordsRequest_FolderId:
-		ids := make([]int32, 0)
 		for id, folder := range s.collection.InstanceToFolder {
 			if folder == x.FolderId {
 				ids = append(ids, id)
@@ -220,6 +221,15 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		}
 
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
+
+	case *pb.QueryRecordsRequest_UpdateTime:
+		for id, updateTime := range s.collection.InstanceToUpdate {
+			if updateTime <= x.UpdateTime {
+				ids = append(ids, id)
+			}
+		}
+		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
+
 	}
 
 	return nil, fmt.Errorf("Bad request: %v", req)

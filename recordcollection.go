@@ -241,6 +241,11 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		}
 	}
 
+	// Fill the update map
+	for _, r := range s.collection.GetRecords() {
+		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().NextUpdateTime
+	}
+
 	return nil
 }
 
@@ -333,6 +338,7 @@ func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.InstanceToFolder))},
+		&pbg.State{Key: "update_map", Value: int64(len(s.collection.InstanceToUpdate))},
 		&pbg.State{Key: "records", Value: int64(len(s.collection.Instances))},
 		&pbg.State{Key: "iteration", Value: s.collection.CollectionNumber},
 		&pbg.State{Key: "unsaved", Text: fmt.Sprintf("%v/%v", unsaved, len(s.collection.GetRecords()))},
