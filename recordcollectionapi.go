@@ -39,6 +39,8 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 		return nil, fmt.Errorf("Failing request as it has no caller")
 	}
 
+	s.Log(fmt.Sprintf("%v is still using GetRecords"))
+
 	t := time.Now()
 
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
