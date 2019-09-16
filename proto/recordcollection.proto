@@ -11,6 +11,7 @@ message RecordCollection {
   repeated int32 instances = 4;
   int64 collection_number = 5;
   map<int32, int32> instance_to_folder = 6;
+  map<int32, int64> instance_to_update = 7;
 }
 
 // This is a record that we own
@@ -189,6 +190,8 @@ message ReleaseMetadata {
 
   int64 last_save_time = 33;
   int64 save_iteration = 34;
+
+  int64 next_update_time = 35;
 }
 
 // A request to get some records
@@ -268,6 +271,7 @@ message DeleteRecordResponse {}
 message QueryRecordsRequest {
   oneof query {
     int32 folder_id = 1;
+    int64 update_time = 2;
   }
 }
 

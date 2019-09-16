@@ -21,6 +21,7 @@ func InitTestServer(folder string) *Server {
 	// Create the record collection because we're not init'ing from a file
 	s.collection = &pb.RecordCollection{}
 	s.collection.InstanceToFolder = make(map[int32]int32)
+	s.collection.InstanceToUpdate = make(map[int32]int64)
 	s.quota = &testQuota{pass: true}
 
 	os.RemoveAll(folder)
@@ -433,6 +434,21 @@ func TestQueryRecordsWithFolderId(t *testing.T) {
 	s.collection.InstanceToFolder[12] = 12
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_FolderId{12}})
+
+	if err != nil {
+		t.Errorf("Error on query: %v", err)
+	}
+
+	if len(q.GetInstanceIds()) != 1 {
+		t.Errorf("Wrong number of results: %v", q)
+	}
+}
+
+func TestQueryRecordsWithUpdateTime(t *testing.T) {
+	s := InitTestServer(".testqueryrecords")
+	s.collection.InstanceToUpdate[12] = 0
+
+	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_UpdateTime{12}})
 
 	if err != nil {
 		t.Errorf("Error on query: %v", err)
