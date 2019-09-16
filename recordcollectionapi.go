@@ -39,7 +39,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 		return nil, fmt.Errorf("Failing request as it has no caller")
 	}
 
-	s.Log(fmt.Sprintf("%v is still using GetRecords, move to something else please"))
+	s.Log(fmt.Sprintf("%v is still using GetRecords, move to something else please", request.Caller))
 
 	t := time.Now()
 
