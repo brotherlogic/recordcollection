@@ -242,6 +242,9 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	}
 
 	// Fill the update map
+	if s.collection.InstanceToUpdate == nil {
+		s.collection.InstanceToUpdate = make(map[int32]int64)
+	}
 	for _, r := range s.collection.GetRecords() {
 		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().NextUpdateTime
 	}
