@@ -128,37 +128,38 @@ func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, e
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	collection     *pb.RecordCollection
-	retr           saver
-	lastSyncTime   time.Time
-	lastPushTime   time.Time
-	lastPushLength time.Duration
-	lastPushDone   int
-	lastPushSize   int
-	cacheWait      time.Duration
-	pushMutex      *sync.Mutex
-	pushMap        map[int32]*pb.Record
-	pushWait       time.Duration
-	saveNeeded     bool
-	quota          quotaChecker
-	mover          moveRecorder
-	nextPush       *pb.Record
-	lastWantUpdate int32
-	wantCheck      string
-	lastWantText   string
-	scorer         scorer
-	saleMap        map[int32]*pb.Record
-	lastSalePush   time.Time
-	lastSyncLength time.Duration
-	salesPushes    int64
-	soldAdjust     int64
-	wantUpdate     string
-	saves          int64
-	saveMutex      *sync.Mutex
-	biggest        int64
-	lastSale       int64
-	disableSales   bool
-	recordCache    map[int32]*pb.Record
+	collection            *pb.RecordCollection
+	retr                  saver
+	lastSyncTime          time.Time
+	lastPushTime          time.Time
+	lastPushLength        time.Duration
+	lastPushDone          int
+	lastPushSize          int
+	cacheWait             time.Duration
+	pushMutex             *sync.Mutex
+	pushMap               map[int32]*pb.Record
+	pushWait              time.Duration
+	saveNeeded            bool
+	quota                 quotaChecker
+	mover                 moveRecorder
+	nextPush              *pb.Record
+	lastWantUpdate        int32
+	wantCheck             string
+	lastWantText          string
+	scorer                scorer
+	saleMap               map[int32]*pb.Record
+	lastSalePush          time.Time
+	lastSyncLength        time.Duration
+	salesPushes           int64
+	soldAdjust            int64
+	wantUpdate            string
+	saves                 int64
+	saveMutex             *sync.Mutex
+	biggest               int64
+	lastSale              int64
+	disableSales          bool
+	recordCache           map[int32]*pb.Record
+	instanceToFolderMutex *sync.Mutex
 }
 
 func (s *Server) findBiggest(ctx context.Context) error {
@@ -342,6 +343,8 @@ func (s *Server) GetState() []*pbg.State {
 			unsaved++
 		}
 	}
+	s.instanceToFolderMutex.Lock()
+	defer s.instanceToFolderMutex.Unlock()
 	return []*pbg.State{
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.InstanceToFolder))},
@@ -355,23 +358,24 @@ func (s *Server) GetState() []*pbg.State {
 // Init builds out a server
 func Init() *Server {
 	s := &Server{
-		GoServer:       &goserver.GoServer{},
-		lastSyncTime:   time.Now(),
-		pushMap:        make(map[int32]*pb.Record),
-		pushWait:       time.Minute,
-		pushMutex:      &sync.Mutex{},
-		lastPushTime:   time.Now(),
-		lastPushSize:   0,
-		lastPushLength: 0,
-		quota:          &prodQuotaChecker{},
-		mover:          &prodMoveRecorder{},
-		lastWantText:   "",
-		scorer:         &prodScorer{},
-		saleMap:        make(map[int32]*pb.Record),
-		lastSalePush:   time.Now(),
-		wantUpdate:     "unknown",
-		saveMutex:      &sync.Mutex{},
-		recordCache:    make(map[int32]*pb.Record),
+		GoServer:              &goserver.GoServer{},
+		lastSyncTime:          time.Now(),
+		pushMap:               make(map[int32]*pb.Record),
+		pushWait:              time.Minute,
+		pushMutex:             &sync.Mutex{},
+		lastPushTime:          time.Now(),
+		lastPushSize:          0,
+		lastPushLength:        0,
+		quota:                 &prodQuotaChecker{},
+		mover:                 &prodMoveRecorder{},
+		lastWantText:          "",
+		scorer:                &prodScorer{},
+		saleMap:               make(map[int32]*pb.Record),
+		lastSalePush:          time.Now(),
+		wantUpdate:            "unknown",
+		saveMutex:             &sync.Mutex{},
+		recordCache:           make(map[int32]*pb.Record),
+		instanceToFolderMutex: &sync.Mutex{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
