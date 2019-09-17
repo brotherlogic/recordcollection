@@ -238,5 +238,10 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 // GetRecord gets a sigle record
 func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.GetRecordResponse, error) {
 	rec, err := s.getRecord(ctx, req.InstanceId)
+
+	if err != nil {
+		s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found"), false)
+	}
+
 	return &pb.GetRecordResponse{Record: rec}, err
 }

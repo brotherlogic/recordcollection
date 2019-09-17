@@ -94,7 +94,7 @@ func main() {
 
 	case "sget":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Caller: "sget", Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
 
 		if err == nil {
 			for _, r := range rec.GetRecords() {
