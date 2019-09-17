@@ -211,6 +211,8 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 // QueryRecords gets a record using the new schema
 func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
 	ids := make([]int32, 0)
+	s.instanceToFolderMutex.Lock()
+	defer s.instanceToFolderMutex.Unlock()
 	switch x := req.Query.(type) {
 
 	case *pb.QueryRecordsRequest_FolderId:
