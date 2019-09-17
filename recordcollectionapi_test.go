@@ -472,3 +472,12 @@ func TestGetRecord(t *testing.T) {
 		t.Errorf("Bad pull on get record")
 	}
 }
+
+func TestGetRecordFail(t *testing.T) {
+	s := InitTestServer(".testgetrecord")
+
+	q, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1234})
+	if err == nil {
+		t.Errorf("Managed to receive no such record: %v", q)
+	}
+}

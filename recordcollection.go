@@ -272,6 +272,10 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 		return nil, err
 	}
 
+	if proto.Size(data) == 0 {
+		return nil, fmt.Errorf("Error on read for %v", id)
+	}
+
 	recordToReturn := data.(*pb.Record)
 	s.recordCache[id] = recordToReturn
 	return recordToReturn, nil
