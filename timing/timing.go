@@ -24,7 +24,7 @@ func doDial(entry *pbgd.RegistryEntry) (*grpc.ClientConn, error) {
 }
 
 func dialMaster(server string) (*grpc.ClientConn, error) {
-	ip, port, err := utils.Resolve(server)
+	ip, port, err := utils.Resolve(server, "rc-timing")
 	if err != nil {
 		return nil, err
 	}
