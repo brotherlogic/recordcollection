@@ -68,7 +68,7 @@ func main() {
 		}
 	}
 
-	host, port, err := utils.Resolve("recordcollection")
+	host, port, err := utils.Resolve("recordcollection", "recordcollection-extr")
 
 	if err != nil {
 		log.Fatalf("Unable to locate recordcollection server")
