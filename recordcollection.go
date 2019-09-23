@@ -6,13 +6,11 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 
 	"github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver"
-	"github.com/brotherlogic/goserver/utils"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -35,15 +33,12 @@ type moveRecorder interface {
 	moveRecord(record *pb.Record, oldFolder, newFolder int32) error
 }
 
-type prodMoveRecorder struct{}
+type prodMoveRecorder struct {
+	dial func(server string) (*grpc.ClientConn, error)
+}
 
 func (p *prodMoveRecorder) moveRecord(record *pb.Record, oldFolder, newFolder int32) error {
-	ip, port, err := utils.Resolve("recordmover")
-	if err != nil {
-		return err
-	}
-
-	conn, err := grpc.Dial(ip+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
+	conn, err := p.dial("recordmover")
 	if err != nil {
 		return err
 	}
@@ -379,6 +374,7 @@ func Init() *Server {
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
+	s.mover = &prodMoveRecorder{s.DialMaster}
 	return s
 }
 
