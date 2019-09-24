@@ -155,6 +155,7 @@ type Server struct {
 	disableSales          bool
 	recordCache           map[int32]*pb.Record
 	instanceToFolderMutex *sync.Mutex
+	allrecords            []*pb.Record
 }
 
 func (s *Server) findBiggest(ctx context.Context) error {
@@ -178,6 +179,9 @@ const (
 
 	//TOKEN for discogs
 	TOKEN = "/github.com/brotherlogic/recordcollection/token"
+
+	//RECORDS for all the records
+	RECORDS = "/github.com/brotherlogic/recordcollection/allrecords"
 )
 
 func (s *Server) readRecordCollection(ctx context.Context) error {
@@ -249,7 +253,14 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
 	}
 
+	// Fill the records
+	s.allrecords = s.collection.GetRecords()
+
 	return nil
+}
+
+func (s *Server) getRecords(ctx context.Context, caller string) []*pb.Record {
+	return s.allrecords
 }
 
 func (s *Server) saveRecordCollection(ctx context.Context) {
@@ -257,6 +268,7 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 	defer s.saveMutex.Unlock()
 	s.saves++
 	s.KSclient.Save(ctx, KEY, s.collection)
+	s.KSclient.Save(ctx, RECORDS, &pb.AllRecords{Records: s.allrecords})
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
@@ -346,6 +358,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.instanceToFolderMutex.Lock()
 	defer s.instanceToFolderMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "all_records", Value: int64(len(s.allrecords))},
 		&pbg.State{Key: "categories", Value: int64(len(s.collection.GetInstanceToCategory()))},
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.InstanceToFolder))},

@@ -15,6 +15,10 @@ message RecordCollection {
   map<int32, ReleaseMetadata.Category> instance_to_category = 8;
 }
 
+message AllRecords {
+  repeated Record records = 1;
+}
+
 // This is a record that we own
 message Record {
   godiscogs.Release release = 1;
