@@ -59,7 +59,7 @@ func main() {
 
 	case "get":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Caller: "cli-get", Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
 
 		if err == nil {
 			fmt.Printf("Time Taken: %v\n", rec.InternalProcessingTime)

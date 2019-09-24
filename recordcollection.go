@@ -240,9 +240,11 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	// Fill the update map
 	if s.collection.InstanceToUpdate == nil {
 		s.collection.InstanceToUpdate = make(map[int32]int64)
+		s.collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
 	}
 	for _, r := range s.collection.GetRecords() {
 		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().NextUpdateTime
+		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
 	}
 
 	return nil
@@ -341,6 +343,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.instanceToFolderMutex.Lock()
 	defer s.instanceToFolderMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "categories", Value: int64(len(s.collection.InstanceToCategory))},
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.InstanceToFolder))},
 		&pbg.State{Key: "update_map", Value: int64(len(s.collection.InstanceToUpdate))},

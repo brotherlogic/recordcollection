@@ -12,6 +12,7 @@ message RecordCollection {
   int64 collection_number = 5;
   map<int32, int32> instance_to_folder = 6;
   map<int32, int64> instance_to_update = 7;
+  map<int32, ReleaseMetadata.Category> instance_to_category = 8;
 }
 
 // This is a record that we own
