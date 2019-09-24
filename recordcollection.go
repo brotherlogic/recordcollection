@@ -342,10 +342,11 @@ func (s *Server) GetState() []*pbg.State {
 			unsaved++
 		}
 	}
+
 	s.instanceToFolderMutex.Lock()
 	defer s.instanceToFolderMutex.Unlock()
 	return []*pbg.State{
-		&pbg.State{Key: "categories", Value: int64(len(s.collection.InstanceToCategory))},
+		&pbg.State{Key: "categories", Value: int64(len(s.collection.GetInstanceToCategory()))},
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.InstanceToFolder))},
 		&pbg.State{Key: "update_map", Value: int64(len(s.collection.InstanceToUpdate))},
