@@ -464,5 +464,6 @@ func main() {
 
 	//server.disableSales = true
 
+	server.MemCap = 200000000
 	server.Serve()
 }
