@@ -277,6 +277,7 @@ message QueryRecordsRequest {
   oneof query {
     int32 folder_id = 1;
     int64 update_time = 2;
+    ReleaseMetadata.Category category = 3;
   }
 }
 

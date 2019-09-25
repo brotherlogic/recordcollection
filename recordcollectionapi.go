@@ -232,6 +232,14 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		}
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
+	case *pb.QueryRecordsRequest_Category:
+		for id, category := range s.collection.InstanceToCategory {
+			if category == x.Category {
+				ids = append(ids, id)
+			}
+		}
+		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
+
 	}
 
 	return nil, fmt.Errorf("Bad request: %v", req)

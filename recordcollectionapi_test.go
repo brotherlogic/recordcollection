@@ -22,6 +22,7 @@ func InitTestServer(folder string) *Server {
 	s.collection = &pb.RecordCollection{}
 	s.collection.InstanceToFolder = make(map[int32]int32)
 	s.collection.InstanceToUpdate = make(map[int32]int64)
+	s.collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
 	s.quota = &testQuota{pass: true}
 
 	os.RemoveAll(folder)
@@ -449,6 +450,21 @@ func TestQueryRecordsWithUpdateTime(t *testing.T) {
 	s.collection.InstanceToUpdate[12] = 0
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_UpdateTime{12}})
+
+	if err != nil {
+		t.Errorf("Error on query: %v", err)
+	}
+
+	if len(q.GetInstanceIds()) != 1 {
+		t.Errorf("Wrong number of results: %v", q)
+	}
+}
+
+func TestQueryRecordsWithCategory(t *testing.T) {
+	s := InitTestServer(".testqueryrecords")
+	s.collection.InstanceToCategory[12] = pb.ReleaseMetadata_PRE_DISTINGUISHED
+
+	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_Category{pb.ReleaseMetadata_PRE_DISTINGUISHED}})
 
 	if err != nil {
 		t.Errorf("Error on query: %v", err)
