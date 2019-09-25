@@ -294,7 +294,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "stock":
 		i, _ := strconv.Atoi(os.Args[2])
-		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Caller: "cli-stock", Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
