@@ -357,6 +357,7 @@ func (s *Server) syncWantlist() {
 }
 
 func (s *Server) runSyncWants(ctx context.Context) error {
+	s.Log(fmt.Sprintf("RUNNING SYNC"))
 	s.syncWantlist()
 	s.saveRecordCollection(ctx)
 	return nil
