@@ -253,13 +253,19 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
 	}
 
-	// Fill the records
-	s.allrecords = s.collection.GetRecords()
-
 	return nil
 }
 
 func (s *Server) getRecords(ctx context.Context, caller string) []*pb.Record {
+	if len(s.allrecords) == 0 {
+		data, _, err := s.KSclient.Read(ctx, RECORDS, &pb.AllRecords{})
+
+		if err != nil {
+			return nil
+		}
+
+		s.allrecords = (data.(*pb.AllRecords)).GetRecords()
+	}
 	return s.allrecords
 }
 
@@ -268,7 +274,9 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 	defer s.saveMutex.Unlock()
 	s.saves++
 	s.KSclient.Save(ctx, KEY, s.collection)
-	s.KSclient.Save(ctx, RECORDS, &pb.AllRecords{Records: s.allrecords})
+	if len(s.allrecords) > 0 {
+		s.KSclient.Save(ctx, RECORDS, &pb.AllRecords{Records: s.allrecords})
+	}
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
