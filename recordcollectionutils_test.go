@@ -142,7 +142,7 @@ func (t *testSyncer) GetCurrentSaleState(saleID int) pbd.SaleState {
 
 func TestSyncIssues(t *testing.T) {
 	s := InitTestServer(".testsyncissues")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123}, Metadata: &pb.ReleaseMetadata{LastSyncTime: 1}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123}, Metadata: &pb.ReleaseMetadata{LastSyncTime: 1}})
 	s.syncIssue(context.Background())
 }
 
@@ -171,8 +171,8 @@ func TestGoodSync(t *testing.T) {
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 3 {
-		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
+	if len(s.allrecords) != 3 {
+		t.Errorf("Wrong number of records: %v", s.allrecords)
 	}
 
 	s.runSyncWants(context.Background())
@@ -185,7 +185,7 @@ func TestGoodSync(t *testing.T) {
 func TestSaleSync(t *testing.T) {
 	s := InitTestServer(".testGoodSync")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123}, Metadata: &pb.ReleaseMetadata{SaleId: 123}}
-	s.collection.Records = append(s.collection.Records, rec)
+	s.allrecords = append(s.allrecords, rec)
 	s.runSync(context.Background())
 
 	if rec.GetMetadata().SalePrice == 0 {
@@ -198,10 +198,10 @@ func TestCleanSync(t *testing.T) {
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 3 {
-		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
+	if len(s.allrecords) != 3 {
+		t.Errorf("Wrong number of records: %v", s.allrecords)
 	}
-	if len(s.collection.GetRecords()[0].GetRelease().GetImages()) != 1 {
+	if len(s.allrecords[0].GetRelease().GetImages()) != 1 {
 		t.Errorf("Wrong number of images in synced record: %v", s.collection.GetRecords()[0].GetRelease())
 	}
 
@@ -210,13 +210,13 @@ func TestCleanSync(t *testing.T) {
 	}
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 3 {
+	if len(s.allrecords) != 3 {
 		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
 	}
-	if len(s.collection.GetRecords()[0].GetRelease().GetImages()) != 1 {
+	if len(s.allrecords[0].GetRelease().GetImages()) != 1 {
 		t.Errorf("Wrong number of images in synced record: %v", s.collection.GetRecords()[0].GetRelease())
 	}
-	if !s.collection.GetRecords()[0].GetMetadata().Others {
+	if !s.allrecords[0].GetMetadata().Others {
 		t.Errorf("Sync has not set other correctly: %v", s.collection.GetRecords()[0])
 	}
 }
@@ -298,11 +298,11 @@ func TestGoodMergeSync(t *testing.T) {
 	s.runSyncWants(context.Background())
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 3 {
-		t.Errorf("Wrong number of records(%v): %v", len(s.collection.GetRecords()), s.collection.GetRecords())
+	if len(s.allrecords) != 3 {
+		t.Errorf("Wrong number of records(%v): %v", len(s.allrecords), s.allrecords)
 	}
-	if s.collection.GetRecords()[0].GetRelease().Title != "Magic" {
-		t.Errorf("Incoming has not been merged: %v", s.collection.GetRecords()[0])
+	if s.allrecords[0].GetRelease().Title != "Magic" {
+		t.Errorf("Incoming has not been merged: %v", s.allrecords[0])
 	}
 	if len(s.collection.GetNewWants()) != 1 {
 		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
@@ -315,11 +315,11 @@ func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
-	if len(s.collection.GetRecords()) != 3 {
-		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
+	if len(s.allrecords) != 3 {
+		t.Errorf("Wrong number of records: %v", s.allrecords)
 	}
-	if s.collection.GetRecords()[0].GetRelease().Title != "Magic" {
-		t.Errorf("Incoming has not been merged: %v", s.collection.GetRecords())
+	if s.allrecords[0].GetRelease().Title != "Magic" {
+		t.Errorf("Incoming has not been merged: %v", s.allrecords)
 	}
 	if len(s.collection.GetNewWants()) != 1 {
 		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
@@ -364,7 +364,7 @@ func TestPushMove(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testpushmove")
 	s.retr = tRetr
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{}}, &pb.Record{Release: &pbd.Release{InstanceId: 1235, Id: 23466}, Metadata: &pb.ReleaseMetadata{}}}}
+	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{}}, &pb.Record{Release: &pbd.Release{InstanceId: 1235, Id: 23466}, Metadata: &pb.ReleaseMetadata{}}}
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 1235}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
@@ -404,7 +404,7 @@ func TestPushBadQuotaMoveWithSpill(t *testing.T) {
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
 	s.quota = &testQuota{pass: false, spill: 123}
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 
@@ -423,7 +423,7 @@ func TestPushRating(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}})
 

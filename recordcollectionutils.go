@@ -280,6 +280,7 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 	startTime := time.Now()
 	records := s.retr.GetCollection()
+	s.getRecords(ctx, "sync-collection")
 	for _, record := range records {
 		foundInList := false
 		for _, iid := range s.collection.Instances {
@@ -301,6 +302,8 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 
 		if !found {
 			s.collection.InstanceToFolder[record.InstanceId] = record.FolderId
+			s.allrecords = append(s.allrecords, &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix()}})
+
 		}
 	}
 
