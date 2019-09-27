@@ -13,10 +13,10 @@ import (
 
 // DeleteRecord deletes a record
 func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordRequest) (*pb.DeleteRecordResponse, error) {
-	for i, r := range s.collection.GetRecords() {
+	for i, r := range s.getRecords(ctx, "delete-record") {
 		if r.GetRelease().InstanceId == request.InstanceId {
 			s.retr.DeleteInstance(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId))
-			s.collection.Records = append(s.collection.Records[:i], s.collection.Records[i+1:]...)
+			s.allrecords = append(s.allrecords[:i], s.allrecords[i+1:]...)
 		}
 	}
 
@@ -26,7 +26,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 // GetRecordCollection gets the full collection
 func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordCollectionRequest) (*pb.GetRecordCollectionResponse, error) {
 	resp := &pb.GetRecordCollectionResponse{InstanceIds: make([]int32, 0)}
-	for _, r := range s.collection.GetRecords() {
+	for _, r := range s.getRecords(ctx, "get-record-collection") {
 		resp.InstanceIds = append(resp.InstanceIds, r.GetRelease().InstanceId)
 	}
 	return resp, nil
@@ -46,7 +46,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
 	pushLockTime := int64(0)
-	for _, rec := range s.collection.GetRecords() {
+	for _, rec := range s.getRecords(ctx, "get-records") {
 		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) {
 			if request.GetStrip() {
 				r := proto.Clone(rec).(*pb.Record)
@@ -130,7 +130,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	var record *pb.Record
-	for _, rec := range s.collection.GetRecords() {
+	for _, rec := range s.getRecords(ctx, "update-record") {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
 
 			// If this is being sold - mark it for sale
@@ -200,7 +200,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
-		s.collection.Records = append(s.collection.Records, request.GetToAdd())
+		s.collection.InstanceToFolder[int32(instanceID)] = int32(812802)
 		s.cacheRecord(ctx, request.GetToAdd())
 		s.saveNeeded = true
 	}

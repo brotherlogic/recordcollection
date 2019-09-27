@@ -160,7 +160,7 @@ type Server struct {
 
 func (s *Server) findBiggest(ctx context.Context) error {
 	biggestb := 0
-	for _, r := range s.collection.GetRecords() {
+	for _, r := range s.getRecords(ctx, "findBiggest") {
 		data, _ := proto.Marshal(r)
 		if len(data) > biggestb {
 			s.biggest = int64(r.GetRelease().Id)
@@ -195,7 +195,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	s.collection = data.(*pb.RecordCollection)
 
 	//Fill the push map
-	for _, r := range s.collection.GetRecords() {
+	for _, r := range s.getRecords(ctx, "fillpushmap") {
 
 		//Copy over the instance id if needed
 		if r.GetMetadata().InstanceId == 0 {
@@ -235,7 +235,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	}
 
 	// Fill the sale map
-	for _, r := range s.collection.GetRecords() {
+	for _, r := range s.getRecords(ctx, "fillsalemap") {
 		if r.GetMetadata().SaleId > 0 {
 			s.saleMap[r.GetMetadata().SaleId] = r
 		}
@@ -248,7 +248,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	if s.collection.InstanceToCategory == nil {
 		s.collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
 	}
-	for _, r := range s.collection.GetRecords() {
+	for _, r := range s.getRecords(ctx, "fillinstancemap") {
 		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().NextUpdateTime
 		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
 	}
@@ -356,13 +356,6 @@ func max(a, b int) int {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	unsaved := int64(0)
-	for _, r := range s.collection.GetRecords() {
-		if r.GetMetadata().SaveIteration == 0 {
-			unsaved++
-		}
-	}
-
 	s.instanceToFolderMutex.Lock()
 	defer s.instanceToFolderMutex.Unlock()
 	return []*pbg.State{
@@ -373,7 +366,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "update_map", Value: int64(len(s.collection.InstanceToUpdate))},
 		&pbg.State{Key: "records", Value: int64(len(s.collection.Instances))},
 		&pbg.State{Key: "iteration", Value: s.collection.CollectionNumber},
-		&pbg.State{Key: "unsaved", Text: fmt.Sprintf("%v/%v", unsaved, len(s.collection.GetRecords()))},
 	}
 }
 
@@ -406,7 +398,7 @@ func Init() *Server {
 }
 
 func (s *Server) cacheLoop(ctx context.Context) error {
-	for _, r := range s.collection.GetRecords() {
+	for _, r := range s.getRecords(ctx, "cacheloop") {
 		if r.GetMetadata().LastCache <= 1 {
 			s.cacheRecord(ctx, r)
 			return nil
@@ -416,7 +408,7 @@ func (s *Server) cacheLoop(ctx context.Context) error {
 }
 
 func (s *Server) updateSalePrice(ctx context.Context) error {
-	for _, r := range s.collection.GetRecords() {
+	for _, r := range s.getRecords(ctx, "updatesaleprice") {
 		if r.GetMetadata().CurrentSalePrice == 0 || time.Now().Sub(time.Unix(r.GetMetadata().SalePriceUpdate, 0)) > time.Hour*24*30 {
 			price, err := s.retr.GetSalePrice(int(r.GetRelease().Id))
 			s.Log(fmt.Sprintf("Retrieved %v, %v", price, err))

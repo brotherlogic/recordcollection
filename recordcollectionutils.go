@@ -18,7 +18,7 @@ const (
 )
 
 func (s *Server) syncIssue(ctx context.Context) error {
-	for _, r := range s.collection.GetRecords() {
+	for _, r := range s.getRecords(ctx, "sync-issue") {
 		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
 			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v [%v] hasn't synced in a week!", r.GetRelease().Title, r.GetRelease().InstanceId), false)
 		}
@@ -71,7 +71,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
-	for _, val := range s.collection.GetRecords() {
+	for _, val := range s.getRecords(ctx, "push-sales") {
 		success, err := s.pushSale(ctx, val)
 		if err != nil {
 			return fmt.Errorf("Error pushing %v (%v): %v", val.GetRelease().InstanceId, val.GetMetadata().Category, err)
@@ -292,7 +292,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 		}
 
 		found := false
-		for _, r := range s.collection.GetRecords() {
+		for _, r := range s.getRecords(ctx, "sync-collection") {
 			if r.GetRelease().InstanceId == record.InstanceId {
 				found = true
 				s.syncRecords(ctx, r, record, colNumber)
@@ -300,12 +300,12 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 		}
 
 		if !found {
-			s.collection.Records = append(s.collection.Records, &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix()}})
+			s.collection.InstanceToFolder[record.InstanceId] = record.FolderId
 		}
 	}
 
 	otherMap := make(map[int32]int32)
-	for _, r := range s.collection.Records {
+	for _, r := range s.getRecords(ctx, "sync-searchforothers") {
 		if r.GetRelease().MasterId > 0 {
 			if _, ok := otherMap[r.GetRelease().MasterId]; !ok {
 				otherMap[r.GetRelease().MasterId] = 1
@@ -314,7 +314,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 			}
 		}
 	}
-	for _, r := range s.collection.Records {
+	for _, r := range s.getRecords(ctx, "sync-searchForMaster") {
 		if otherMap[r.GetRelease().MasterId] > 1 {
 			r.GetMetadata().Others = true
 		} else {
@@ -323,7 +323,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 	}
 
 	// Update sale info
-	for _, r := range s.collection.Records {
+	for _, r := range s.getRecords(ctx, "sync-saleinfo") {
 		if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
 			r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
 		}
