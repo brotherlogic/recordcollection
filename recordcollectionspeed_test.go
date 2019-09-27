@@ -21,7 +21,7 @@ func TestGetRecordsSpeed(t *testing.T) {
 	s := InitTestServer(".testing")
 
 	for i := 0; i < NumRecords; i++ {
-		s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: int32(i), Title: "madeup1", InstanceId: int32(i + 1)}})
+		s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: int32(i), Title: "madeup1", InstanceId: int32(i + 1)}})
 	}
 
 	ts := time.Now()
@@ -44,6 +44,7 @@ func TestGetRecordsComplex(t *testing.T) {
 		t.Fatalf("Error reading file: %v", err)
 	}
 	proto.Unmarshal(data, s.collection)
+	s.allrecords = s.collection.GetRecords()
 
 	ts := time.Now()
 	v, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{Release: &pbd.Release{FolderId: 1}}})

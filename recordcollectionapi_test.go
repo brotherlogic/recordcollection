@@ -28,6 +28,7 @@ func InitTestServer(folder string) *Server {
 	os.RemoveAll(folder)
 	s.GoServer.KSclient = *keystoreclient.GetTestClient(folder)
 	s.SkipLog = true
+
 	return s
 }
 
@@ -112,8 +113,8 @@ func TestAddRecordNoCost(t *testing.T) {
 
 func TestGetRecords(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}, Caller: "test"})
 
 	if err != nil {
@@ -127,8 +128,8 @@ func TestGetRecords(t *testing.T) {
 
 func TestGetRecordsWithCallerFail(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}})
 	_, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
 
 	if err == nil {
@@ -138,8 +139,8 @@ func TestGetRecordsWithCallerFail(t *testing.T) {
 
 func TestGetRecordsInCateogry(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_FRESHMAN}})
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOPHMORE}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_FRESHMAN}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOPHMORE}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOPHMORE}}})
 
 	if err != nil {
@@ -153,7 +154,7 @@ func TestGetRecordsInCateogry(t *testing.T) {
 
 func TestGetRecordsStripped(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Strip: true, Filter: &pb.Record{}})
 
 	if err != nil {
@@ -171,7 +172,7 @@ func TestGetRecordsStripped(t *testing.T) {
 
 func TestGetRecordsMoveStripped(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}}})
+	s.allrecords = append(s.allrecords, &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", MoveStrip: true, Filter: &pb.Record{}})
 
 	if err != nil {
@@ -189,7 +190,7 @@ func TestGetRecordsMoveStripped(t *testing.T) {
 
 func TestGetRecordsById(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{Release: &pbd.Release{Id: 123}}})
 
 	if err != nil {
@@ -203,7 +204,7 @@ func TestGetRecordsById(t *testing.T) {
 
 func TestGetRecordsByFolder(t *testing.T) {
 	s := InitTestServer(".testGetRecordsByFolder")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, FolderId: 70}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, FolderId: 70}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{Release: &pbd.Release{FolderId: 70}}})
 
 	if err != nil {
@@ -217,7 +218,7 @@ func TestGetRecordsByFolder(t *testing.T) {
 
 func TestUpdateRecords(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
 
@@ -234,7 +235,7 @@ func TestUpdateRecords(t *testing.T) {
 
 func TestUpdateRecordsNoCondition(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
 
@@ -246,7 +247,7 @@ func TestUpdateRecordsNoCondition(t *testing.T) {
 func TestUpdateRecordWithSalePrice(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL}}
-	s.collection.Records = append(s.collection.Records, rec)
+	s.allrecords = append(s.allrecords, rec)
 	s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SalePrice: 1235}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}}})
@@ -277,7 +278,7 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL}}
-	s.collection.Records = append(s.collection.Records, rec)
+	s.allrecords = append(s.allrecords, rec)
 	s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SaleDirty: true}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}}})
@@ -308,7 +309,7 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL}}
-	s.collection.Records = append(s.collection.Records, rec)
+	s.allrecords = append(s.allrecords, rec)
 	s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SaleDirty: true}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}}})
@@ -332,7 +333,7 @@ func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 func TestRemoveRecordFromSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_SOLD_OFFLINE, SaleDirty: true}}
-	s.collection.Records = append(s.collection.Records, rec)
+	s.allrecords = append(s.allrecords, rec)
 	s.saleMap[1234] = rec
 
 	s.pushSales(context.Background())
@@ -347,7 +348,7 @@ func TestRemoveRecordFromSale(t *testing.T) {
 
 func TestUpdateRecordNullFolder(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{MoveFolder: -1}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
@@ -364,7 +365,7 @@ func TestUpdateRecordNullFolder(t *testing.T) {
 
 func TestUpdateRecordsForSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
@@ -382,7 +383,7 @@ func TestUpdateRecordsForSale(t *testing.T) {
 func TestUpdateRecordsForSaleSellingIsDisabled(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.disableSales = true
-	s.collection.Records = append(s.collection.Records, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{}})
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
