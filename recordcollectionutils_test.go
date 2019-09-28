@@ -338,6 +338,16 @@ func TestSimplePush(t *testing.T) {
 	}
 }
 
+func TestFailPush(t *testing.T) {
+	r := &pb.Record{Release: &pbd.Release{FolderId: 268147}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_DIGITAL, GoalFolder: 268148, Dirty: true, MoveFolder: 268150}}
+	s := InitTestServer(".testsimplepush")
+	s.mover = &testMover{pass: false}
+	v, _ := s.pushRecord(context.Background(), r)
+	if v {
+		t.Fatalf("Push dirty record failed: %v", v)
+	}
+}
+
 func TestBadPush(t *testing.T) {
 	tRetr := &testSyncer{
 		failOnRate: true,
@@ -480,8 +490,8 @@ func TestPushSaleBasic(t *testing.T) {
 func TestSyncRecordTracklist(t *testing.T) {
 	s := InitTestServer(".syncrecord")
 
-	record := &pb.Record{Release: &pbd.Release{Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
-	s.syncRecords(context.Background(), record, &pbd.Release{FolderId: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
+	record := &pb.Record{Release: &pbd.Release{Rating: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
+	s.syncRecords(context.Background(), record, &pbd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
 
 	if len(record.GetRelease().GetTracklist()) != 2 {
 		t.Errorf("Tracklisting not updated correctly")
