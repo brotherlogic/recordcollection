@@ -248,9 +248,13 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	if s.collection.InstanceToCategory == nil {
 		s.collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
 	}
+	if s.collection.InstanceToFolder == nil {
+		s.collection.InstanceToFolder = make(map[int32]int32)
+	}
 	for _, r := range s.getRecords(ctx, "fillinstancemap") {
 		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().NextUpdateTime
 		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
+		s.collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
 	}
 
 	return nil
