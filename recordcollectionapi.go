@@ -254,7 +254,15 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	rec, err := s.getRecord(ctx, req.InstanceId)
 
 	if err != nil {
-		s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found", req.InstanceId), false)
+		s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v", req.InstanceId, err), false)
+		recs := s.getRecords(ctx, "getrecord-cachemiss")
+		for _, r := range recs {
+			if r.GetRelease().InstanceId == req.InstanceId {
+				return &pb.GetRecordResponse{Record: r}, nil
+			}
+		}
+
+		return nil, fmt.Errorf("Could not locate %v -> %v", req.InstanceId, err)
 	}
 
 	return &pb.GetRecordResponse{Record: rec}, err
