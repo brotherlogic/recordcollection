@@ -254,7 +254,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	rec, err := s.getRecord(ctx, req.InstanceId)
 
 	if err != nil {
-		s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found"), false)
+		s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found", req.InstanceId), false)
 	}
 
 	return &pb.GetRecordResponse{Record: rec}, err
