@@ -498,3 +498,18 @@ func TestGetRecordFail(t *testing.T) {
 		t.Errorf("Managed to receive no such record: %v", q)
 	}
 }
+
+func TestGetRecordCacheMiss(t *testing.T) {
+	s := InitTestServer(".testcachemiss")
+	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 12}}}
+
+	q, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 12})
+
+	if err != nil {
+		t.Errorf("Error in getting record: %v", err)
+	}
+
+	if q.GetRecord().GetRelease().GetInstanceId() != 12 {
+		t.Errorf("bad record returned: %v", q)
+	}
+}

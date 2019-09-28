@@ -111,10 +111,9 @@ func (s *Server) runPush(ctx context.Context) error {
 		s.pushMutex.Unlock()
 		s.lastPushDone++
 
+		val.GetMetadata().MoveFailure = resp
 		if pushed {
 			break
-		} else {
-			val.GetMetadata().MoveFailure = resp
 		}
 	}
 	if save {
@@ -255,11 +254,6 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 	// Set sale dirty if the condition is new
 	if !hasCondition && len(r.Release.RecordCondition) > 0 {
 		r.Metadata.SaleDirty = true
-	}
-
-	// Override if the rating doesn't match
-	if r.Release.Rating != record.Rating {
-		r.Release.Rating = record.Rating
 	}
 
 	// Records with others don't need to be stock checked

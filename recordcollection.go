@@ -156,6 +156,7 @@ type Server struct {
 	recordCache           map[int32]*pb.Record
 	instanceToFolderMutex *sync.Mutex
 	allrecords            []*pb.Record
+	mismatches            int
 }
 
 func (s *Server) findBiggest(ctx context.Context) error {
@@ -426,6 +427,29 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) checkMatch(ctx context.Context) error {
+	mismatches := 0
+	for _, r := range s.getRecords(ctx, "checkMatch") {
+		rSaved, err := s.loadRecord(ctx, r.GetRelease().InstanceId)
+
+		if err == nil {
+			if !proto.Equal(r, rSaved) {
+				mismatches++
+				s.RaiseIssue(ctx, "Record mismatch", fmt.Sprintf("%v does not match\n%v\n\n%v", r.GetRelease().InstanceId, r, rSaved), false)
+			}
+		} else {
+			s.RaiseIssue(ctx, "Bad Load", fmt.Sprintf("Cannot load %v -> %v", r.GetRelease().InstanceId, err), false)
+		}
+	}
+
+	if mismatches == 0 {
+		s.RaiseIssue(ctx, "No Mismatch", fmt.Sprintf("No mismatches found, dial back checking"), false)
+	}
+
+	s.mismatches = mismatches
+	return nil
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
@@ -457,6 +481,7 @@ func main() {
 	// This enables pprof
 	go http.ListenAndServe(":8089", nil)
 
+	server.RegisterRepeatingTask(server.checkMatch, "check_match", time.Hour)
 	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
