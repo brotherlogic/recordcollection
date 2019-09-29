@@ -17,6 +17,7 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
+	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbrp "github.com/brotherlogic/recordprocess/proto"
@@ -442,7 +443,7 @@ func (s *Server) checkMatch(ctx context.Context) error {
 			r.GetMetadata().LastSyncTime = 0
 			rSaved.GetMetadata().LastSyncTime = 0
 
-			if !proto.Equal(r, rSaved) {
+			if !utils.FuzzyMatch(r, rSaved) {
 				mismatches++
 				s.RaiseIssue(ctx, "Record mismatch", fmt.Sprintf("%v does not match\n%v\n\n%v", r.GetRelease().InstanceId, r, rSaved), false)
 			}
