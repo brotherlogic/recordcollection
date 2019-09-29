@@ -340,7 +340,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "save":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
+		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Caller: "rccli-save", Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
