@@ -140,12 +140,6 @@ func (t *testSyncer) GetCurrentSaleState(saleID int) pbd.SaleState {
 	return pbd.SaleState_FOR_SALE
 }
 
-func TestSyncIssues(t *testing.T) {
-	s := InitTestServer(".testsyncissues")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123}, Metadata: &pb.ReleaseMetadata{LastSyncTime: 1}})
-	s.syncIssue(context.Background())
-}
-
 func TestUpdateWantWithPush(t *testing.T) {
 	s := InitTestServer(".testupdateWants")
 	ts := &testSyncer{}

@@ -433,6 +433,10 @@ func (s *Server) checkMatch(ctx context.Context) error {
 		rSaved, err := s.loadRecord(ctx, r.GetRelease().InstanceId)
 
 		if err == nil {
+			//Force zero sync times
+			r.GetMetadata().LastSyncTime = 0
+			rSaved.GetMetadata().LastSyncTime = 0
+
 			if !proto.Equal(r, rSaved) {
 				mismatches++
 				s.RaiseIssue(ctx, "Record mismatch", fmt.Sprintf("%v does not match\n%v\n\n%v", r.GetRelease().InstanceId, r, rSaved), false)
@@ -486,7 +490,6 @@ func main() {
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
-	server.RegisterRepeatingTask(server.syncIssue, "sync_issue", time.Hour)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
 	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
