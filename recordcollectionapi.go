@@ -132,6 +132,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	var record *pb.Record
+	var err error
 	for _, rec := range s.getRecords(ctx, "update-record") {
 		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
 
@@ -184,11 +185,12 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			s.pushMutex.Lock()
 			s.pushMap[rec.GetRelease().Id] = rec
 			s.pushMutex.Unlock()
+			err = s.saveRecord(ctx, rec)
 		}
 	}
 
 	s.saveNeeded = true
-	return &pb.UpdateRecordsResponse{Updated: record}, nil
+	return &pb.UpdateRecordsResponse{Updated: record}, err
 }
 
 // AddRecord adds a record directly to the listening pile
