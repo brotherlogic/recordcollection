@@ -105,6 +105,15 @@ func main() {
 			fmt.Printf("Error: %v", err)
 		}
 
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+
+		if err == nil {
+			fmt.Printf("Release: %v\n", srec.GetRecord().GetRelease())
+			fmt.Printf("Metadata: %v\n", srec.GetRecord().GetMetadata())
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
+
 	case "pget":
 		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{FolderId: int32(1362206)}}})
 

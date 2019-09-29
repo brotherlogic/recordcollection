@@ -203,8 +203,8 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
 		s.collection.InstanceToFolder[int32(instanceID)] = int32(812802)
-		s.saveRecord(ctx, request.GetToAdd())
 		s.cacheRecord(ctx, request.GetToAdd())
+		s.saveRecord(ctx, request.GetToAdd())
 		s.saveNeeded = true
 
 		s.getRecords(ctx, "add-record")

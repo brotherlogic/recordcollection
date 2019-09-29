@@ -208,6 +208,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 		}
 	}
 
+	s.saveRecord(ctx, r)
 	s.saveRecordCollection(ctx)
 }
 
