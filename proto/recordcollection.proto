@@ -136,8 +136,7 @@ message ReleaseMetadata {
   // This is the rating that should be set on the record
   int32 set_rating = 12;
 
-  // The time we were last Synced
-  int64 last_sync_time= 13;
+  int64 last_sync_time= 13; // DEPRECATED
 
   Purgatory purgatory = 14;
 

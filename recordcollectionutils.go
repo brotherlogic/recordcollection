@@ -17,15 +17,6 @@ const (
 	RecacheDelay = 60 * 60 * 24 * 30
 )
 
-func (s *Server) syncIssue(ctx context.Context) error {
-	for _, r := range s.getRecords(ctx, "sync-issue") {
-		if time.Now().Sub(time.Unix(r.GetMetadata().LastSyncTime, 0)) > time.Hour*24*7 && time.Now().Sub(time.Unix(r.GetMetadata().DateAdded, 0)) > time.Hour*24*7 {
-			s.RaiseIssue(ctx, "Sync Issue", fmt.Sprintf("%v [%v] hasn't synced in a week!", r.GetRelease().Title, r.GetRelease().InstanceId), false)
-		}
-	}
-	return nil
-}
-
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	if val.GetMetadata().SaleDirty &&
 		(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
@@ -261,8 +252,6 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 	if time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) < time.Hour*24*30*6 {
 		r.GetMetadata().NeedsStockCheck = false
 	}
-
-	r.GetMetadata().LastSyncTime = time.Now().Unix()
 
 	s.saveRecord(ctx, r)
 }
