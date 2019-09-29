@@ -9,6 +9,8 @@ import (
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // DeleteRecord deletes a record
@@ -254,11 +256,14 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	rec, err := s.getRecord(ctx, req.InstanceId)
 
 	if err != nil {
-		s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v", req.InstanceId, err), false)
-		recs := s.getRecords(ctx, "getrecord-cachemiss")
-		for _, r := range recs {
-			if r.GetRelease().InstanceId == req.InstanceId {
-				return &pb.GetRecordResponse{Record: r}, nil
+		st := status.Convert(err)
+		if st.Code() != codes.DeadlineExceeded {
+			s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v", req.InstanceId, err), false)
+			recs := s.getRecords(ctx, "getrecord-cachemiss")
+			for _, r := range recs {
+				if r.GetRelease().InstanceId == req.InstanceId {
+					return &pb.GetRecordResponse{Record: r}, nil
+				}
 			}
 		}
 
