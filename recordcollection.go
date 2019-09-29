@@ -258,6 +258,9 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		s.collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
 	}
 
+	//Clear the existing set of records
+	s.collection.Records = make([]*pb.Record, 0)
+
 	return nil
 }
 
