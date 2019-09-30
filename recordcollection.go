@@ -290,7 +290,9 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	r.GetMetadata().SaveIteration = s.collection.CollectionNumber
-	return s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
+	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
+	s.Log(fmt.Sprintf("Saving %v -> %v", r.GetRelease().InstanceId, err))
+	return err
 }
 
 func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
