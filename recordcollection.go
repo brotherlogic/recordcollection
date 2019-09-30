@@ -154,7 +154,6 @@ type Server struct {
 	biggest               int64
 	lastSale              int64
 	disableSales          bool
-	recordCache           map[int32]*pb.Record
 	instanceToFolderMutex *sync.Mutex
 	allrecords            []*pb.Record
 	mismatches            int
@@ -291,7 +290,6 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	r.GetMetadata().SaveIteration = s.collection.CollectionNumber
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
-	s.Log(fmt.Sprintf("Saving %v -> %v %v", r.GetRelease().InstanceId, err, r))
 	return err
 }
 
@@ -308,14 +306,10 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	}
 
 	recordToReturn := data.(*pb.Record)
-	s.recordCache[id] = recordToReturn
 	return recordToReturn, nil
 }
 
 func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
-	if val, ok := s.recordCache[id]; ok {
-		return val, nil
-	}
 	return s.loadRecord(ctx, id)
 }
 
@@ -374,7 +368,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "collection_size", Value: int64(proto.Size(s.collection))},
 		&pbg.State{Key: "all_records", Value: int64(len(s.allrecords))},
 		&pbg.State{Key: "categories", Value: int64(len(s.collection.GetInstanceToCategory()))},
-		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.InstanceToFolder))},
 		&pbg.State{Key: "update_map", Value: int64(len(s.collection.InstanceToUpdate))},
 		&pbg.State{Key: "records", Value: int64(len(s.collection.Instances))},
@@ -401,7 +394,6 @@ func Init() *Server {
 		lastSalePush:          time.Now(),
 		wantUpdate:            "unknown",
 		saveMutex:             &sync.Mutex{},
-		recordCache:           make(map[int32]*pb.Record),
 		instanceToFolderMutex: &sync.Mutex{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}

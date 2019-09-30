@@ -478,7 +478,7 @@ func TestQueryRecordsWithCategory(t *testing.T) {
 
 func TestGetRecord(t *testing.T) {
 	s := InitTestServer(".testgetrecord")
-	s.recordCache[1234] = &pb.Record{Release: &pbd.Release{Id: 12345}}
+	s.saveRecord(context.Background(), &pb.Record{Release: &pbd.Release{Id: 12345, InstanceId: 1234}, Metadata: &pb.ReleaseMetadata{}})
 
 	q, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1234})
 	if err != nil {
@@ -501,7 +501,7 @@ func TestGetRecordFail(t *testing.T) {
 
 func TestGetRecordCacheMiss(t *testing.T) {
 	s := InitTestServer(".testcachemiss")
-	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 12}}}
+	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 12}, Metadata: &pb.ReleaseMetadata{}}}
 
 	q, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 12})
 
