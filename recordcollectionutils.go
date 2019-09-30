@@ -165,6 +165,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 	r.GetMetadata().SetRating = 0
 
 	r.GetMetadata().Dirty = false
+	s.saveRecord(ctx, r)
 	return pushed, ""
 }
 
