@@ -247,7 +247,7 @@ func main() {
 
 	case "hreset":
 		i, _ := strconv.Atoi(os.Args[2])
-		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
+		recs, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Caller: "hreset-cli", Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}

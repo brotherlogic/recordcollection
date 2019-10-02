@@ -437,9 +437,11 @@ func (s *Server) checkMatch(ctx context.Context) error {
 			r.GetMetadata().LastSyncTime = 0
 			rSaved.GetMetadata().LastSyncTime = 0
 
-			if !utils.FuzzyMatch(r, rSaved) {
+			err := utils.FuzzyMatch(r, rSaved)
+			if err != nil {
 				mismatches++
-				s.RaiseIssue(ctx, "Record mismatch", fmt.Sprintf("%v does not match\n%v\n\n%v", r.GetRelease().InstanceId, r, rSaved), false)
+
+				s.RaiseIssue(ctx, "Record mismatch", fmt.Sprintf("%v does not match->%v\n%v\n\n%v", r.GetRelease().InstanceId, err, r, rSaved), false)
 			}
 		} else {
 			s.RaiseIssue(ctx, "Bad Load", fmt.Sprintf("Cannot load %v -> %v", r.GetRelease().InstanceId, err), false)

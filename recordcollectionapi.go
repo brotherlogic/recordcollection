@@ -49,7 +49,7 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 
 	pushLockTime := int64(0)
 	for _, rec := range s.getRecords(ctx, "get-records") {
-		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) {
+		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) == nil {
 			if request.GetStrip() {
 				r := proto.Clone(rec).(*pb.Record)
 				r.GetRelease().Images = make([]*pbgd.Image, 0)
@@ -97,7 +97,7 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 	response := &pb.GetWantsResponse{Wants: make([]*pb.Want, 0)}
 
 	for _, rec := range s.collection.GetNewWants() {
-		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) {
+		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) == nil {
 			response.Wants = append(response.Wants, rec)
 		}
 	}
