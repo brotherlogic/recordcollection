@@ -294,6 +294,22 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 
 	r.GetMetadata().SaveIteration = s.collection.CollectionNumber
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
+
+	save := false
+	if s.collection.InstanceToFolder[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
+		s.collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
+		save = true
+	}
+
+	if s.collection.InstanceToCategory[r.GetRelease().InstanceId] != r.GetMetadata().Category {
+		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
+		save = true
+	}
+
+	if save {
+		s.saveRecordCollection(ctx)
+	}
+
 	return err
 }
 
