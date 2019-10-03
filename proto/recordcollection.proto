@@ -196,6 +196,7 @@ message ReleaseMetadata {
   int64 save_iteration = 34;
 
   int64 next_update_time = 35;
+  int64 last_update_time = 36;
 }
 
 // A request to get some records
