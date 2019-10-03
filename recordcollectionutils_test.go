@@ -378,6 +378,7 @@ func TestPushMove(t *testing.T) {
 	}
 
 	s.runPush(context.Background())
+	s.runPush(context.Background())
 
 	if tRetr.moveRecordCount != 1 {
 		t.Errorf("Update has not run")
