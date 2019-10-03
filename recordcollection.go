@@ -420,11 +420,12 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 	for _, r := range s.getRecords(ctx, "updatesaleprice") {
 		if r.GetMetadata().CurrentSalePrice == 0 || time.Now().Sub(time.Unix(r.GetMetadata().SalePriceUpdate, 0)) > time.Hour*24*30 {
 			price, err := s.retr.GetSalePrice(int(r.GetRelease().Id))
-			s.Log(fmt.Sprintf("Retrieved %v, %v", price, err))
-			r.GetMetadata().CurrentSalePrice = int32(price * 100)
-			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
-			s.Log(fmt.Sprintf("Updating %v", r.GetRelease().Id))
-			return nil
+			if err != nil {
+				r.GetMetadata().CurrentSalePrice = int32(price * 100)
+				r.GetMetadata().SalePriceUpdate = time.Now().Unix()
+				s.saveRecord(ctx, r)
+				return nil
+			}
 		}
 	}
 
