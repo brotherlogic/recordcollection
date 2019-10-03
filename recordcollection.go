@@ -288,8 +288,9 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
-	if r.GetMetadata().Cost == 0 {
-		s.RaiseIssue(ctx, "Save Error", fmt.Sprintf("Trying to save a record without a cost: %v", r), false)
+	if r.GetMetadata().GoalFolder == 0 {
+		s.RaiseIssue(ctx, "Save Error", fmt.Sprintf("Trying to save a record without a goal folder: %v", r), false)
+		return fmt.Errorf("No goal folder")
 	}
 
 	r.GetMetadata().SaveIteration = s.collection.CollectionNumber

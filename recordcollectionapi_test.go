@@ -113,8 +113,8 @@ func TestAddRecordNoCost(t *testing.T) {
 
 func TestGetRecords(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}, Metadata: &pb.ReleaseMetadata{GoalFolder: 1}})
+	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}, Metadata: &pb.ReleaseMetadata{GoalFolder: 1}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}, Caller: "test"})
 
 	if err != nil {
@@ -478,7 +478,7 @@ func TestQueryRecordsWithCategory(t *testing.T) {
 
 func TestGetRecord(t *testing.T) {
 	s := InitTestServer(".testgetrecord")
-	s.saveRecord(context.Background(), &pb.Record{Release: &pbd.Release{Id: 12345, InstanceId: 1234}, Metadata: &pb.ReleaseMetadata{}})
+	s.saveRecord(context.Background(), &pb.Record{Release: &pbd.Release{Id: 12345, InstanceId: 1234}, Metadata: &pb.ReleaseMetadata{GoalFolder: 12}})
 
 	q, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1234})
 	if err != nil {
