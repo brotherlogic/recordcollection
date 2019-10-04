@@ -253,7 +253,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		s.collection.InstanceToFolder = make(map[int32]int32)
 	}
 	for _, r := range s.getRecords(ctx, "fillinstancemap") {
-		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().NextUpdateTime
+		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
 		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
 		s.collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
 	}
@@ -304,6 +304,11 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 
 	if s.collection.InstanceToCategory[r.GetRelease().InstanceId] != r.GetMetadata().Category {
 		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
+		save = true
+	}
+
+	if s.collection.InstanceToUpdate[r.GetRelease().InstanceId] != r.GetMetadata().LastUpdateTime {
+		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
 		save = true
 	}
 

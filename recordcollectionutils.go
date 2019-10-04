@@ -206,6 +206,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 			proto.Merge(r.GetRelease(), release)
 
 			r.GetMetadata().LastCache = time.Now().Unix()
+			r.GetMetadata().LastUpdateTime = time.Now().Unix()
 		}
 	}
 

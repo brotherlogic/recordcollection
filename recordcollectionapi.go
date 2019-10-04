@@ -180,6 +180,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				rec.GetMetadata().MoveFolder = 0
 			}
 
+			rec.GetMetadata().LastUpdateTime = time.Now().Unix()
 			rec.GetMetadata().Dirty = true
 			record = rec
 			s.pushMutex.Lock()
