@@ -390,7 +390,6 @@ func (s *Server) GetState() []*pbg.State {
 	s.instanceToFolderMutex.Lock()
 	defer s.instanceToFolderMutex.Unlock()
 	return []*pbg.State{
-		&pbg.State{Key: "mismatches", Value: int64(s.mismatches)},
 		&pbg.State{Key: "collection_size", Value: int64(proto.Size(s.collection))},
 		&pbg.State{Key: "all_records", Value: int64(len(s.allrecords))},
 		&pbg.State{Key: "categories", Value: int64(len(s.collection.GetInstanceToCategory()))},
@@ -398,6 +397,7 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "update_map", Value: int64(len(s.collection.InstanceToUpdate))},
 		&pbg.State{Key: "records", Value: int64(len(s.collection.Instances))},
 		&pbg.State{Key: "iteration", Value: s.collection.CollectionNumber},
+		&pbg.State{Key: "mismatches", Value: int64(s.mismatches)},
 	}
 }
 
