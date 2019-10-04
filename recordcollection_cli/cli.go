@@ -94,17 +94,6 @@ func main() {
 
 	case "sget":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Caller: "sget", Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}}})
-
-		if err == nil {
-			for _, r := range rec.GetRecords() {
-				fmt.Printf("Release: %v\n", r.GetRelease())
-				fmt.Printf("Metadata: %v\n", r.GetMetadata())
-			}
-		} else {
-			fmt.Printf("Error: %v", err)
-		}
-
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
 
 		if err == nil {
