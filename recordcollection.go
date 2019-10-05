@@ -252,10 +252,18 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	if s.collection.InstanceToFolder == nil {
 		s.collection.InstanceToFolder = make(map[int32]int32)
 	}
+
+	if s.collection.InstanceToMaster == nil {
+		s.collection.InstanceToMaster = make(map[int32]int32)
+	}
+
 	for _, r := range s.getRecords(ctx, "fillinstancemap") {
 		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
 		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
 		s.collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
+		if r.GetRelease().MasterId > 0 {
+			s.collection.InstanceToMaster[r.GetRelease().InstanceId] = r.GetRelease().MasterId
+		}
 	}
 
 	//Clear the existing set of records
@@ -390,6 +398,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.instanceToFolderMutex.Lock()
 	defer s.instanceToFolderMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "master_size", Value: int64(len(s.collection.InstanceToMaster))},
 		&pbg.State{Key: "collection_size", Value: int64(proto.Size(s.collection))},
 		&pbg.State{Key: "all_records", Value: int64(len(s.allrecords))},
 		&pbg.State{Key: "categories", Value: int64(len(s.collection.GetInstanceToCategory()))},
