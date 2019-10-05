@@ -15,6 +15,12 @@ import (
 
 // DeleteRecord deletes a record
 func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordRequest) (*pb.DeleteRecordResponse, error) {
+	//Remove the record from the maps
+	delete(s.collection.InstanceToUpdate, request.InstanceId)
+	delete(s.collection.InstanceToFolder, request.InstanceId)
+	delete(s.collection.InstanceToMaster, request.InstanceId)
+	delete(s.collection.InstanceToCategory, request.InstanceId)
+
 	for i, r := range s.getRecords(ctx, "delete-record") {
 		if r.GetRelease().InstanceId == request.InstanceId {
 			s.retr.DeleteInstance(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId))
@@ -22,6 +28,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 		}
 	}
 
+	s.saveRecordCollection(ctx)
 	return &pb.DeleteRecordResponse{}, nil
 }
 
