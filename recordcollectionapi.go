@@ -261,7 +261,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	if err != nil {
 		st := status.Convert(err)
 		if st.Code() != codes.DeadlineExceeded {
-			s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v", req.InstanceId, err), false)
+			s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v, [%v,%v,%v,%v]", req.InstanceId, err, s.collection.InstanceToFolder[req.InstanceId], s.collection.InstanceToMaster[req.InstanceId], s.collection.InstanceToCategory[req.InstanceId], s.collection.InstanceToUpdate[req.InstanceId]), false)
 			recs := s.getRecords(ctx, "getrecord-cachemiss")
 			for _, r := range recs {
 				if r.GetRelease().InstanceId == req.InstanceId {
