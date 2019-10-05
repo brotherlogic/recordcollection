@@ -249,6 +249,14 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		}
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
+	case *pb.QueryRecordsRequest_MasterId:
+		for id, masterID := range s.collection.InstanceToMaster {
+			if masterID == x.MasterId {
+				ids = append(ids, id)
+			}
+		}
+		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
+
 	}
 
 	return nil, fmt.Errorf("Bad request: %v", req)
