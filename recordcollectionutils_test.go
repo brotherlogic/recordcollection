@@ -346,9 +346,14 @@ func TestBadPush(t *testing.T) {
 	}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{}}, &pb.Record{Release: &pbd.Release{InstanceId: 1235, Id: 234}, Metadata: &pb.ReleaseMetadata{}}}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title2", InstanceId: 1235, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
+	if err != nil {
+		t.Fatalf("Error in adding record: %v", err)
+	}
+
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
 	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 1235}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
 
 	if err != nil {
@@ -366,9 +371,14 @@ func TestPushMove(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testpushmove")
 	s.retr = tRetr
-	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{GoalFolder: 12}}, &pb.Record{Release: &pbd.Release{InstanceId: 1235, Id: 23466}, Metadata: &pb.ReleaseMetadata{GoalFolder: 12}}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title2", InstanceId: 1235, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+	if err != nil {
+		t.Fatalf("Error in adding record: %v", err)
+	}
+
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 1235}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
 
 	if err != nil {
@@ -379,7 +389,7 @@ func TestPushMove(t *testing.T) {
 	s.runPush(context.Background())
 
 	if tRetr.moveRecordCount != 1 {
-		t.Errorf("Update has not run")
+		t.Errorf("Update has not run: %v", tRetr.moveRecordCount)
 	}
 }
 
@@ -388,7 +398,7 @@ func TestPushBadMoveRecord(t *testing.T) {
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
 	s.mover = &testMover{pass: false}
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}}}, Records: []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{}}}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 
 	if err != nil {
@@ -407,7 +417,7 @@ func TestPushBadQuotaMoveWithSpill(t *testing.T) {
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
 	s.quota = &testQuota{pass: false, spill: 123}
-	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{GoalFolder: 12}}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 
@@ -426,7 +436,7 @@ func TestPushRating(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 123, Id: 234, FolderId: 23}, Metadata: &pb.ReleaseMetadata{GoalFolder: 12}}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}})
 
@@ -475,6 +485,28 @@ func TestPushSaleBasic(t *testing.T) {
 	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true}}
 	_, err := s.pushSale(context.Background(), record)
 	if err != nil {
+		t.Errorf("Sale push failed: %v", err)
+	}
+
+}
+
+func TestPushSaleBasicLoadFail(t *testing.T) {
+	s := InitTestServer(".saleadjust")
+	s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(100))
+
+	err := s.pushSales(context.Background())
+	if err == nil {
+		t.Errorf("Sale push failed: %v", err)
+	}
+
+}
+
+func TestPushBasicLoadFail(t *testing.T) {
+	s := InitTestServer(".saleadjust")
+	s.collection.NeedsPush = append(s.collection.NeedsPush, int32(100))
+
+	err := s.runPush(context.Background())
+	if err == nil {
 		t.Errorf("Sale push failed: %v", err)
 	}
 
