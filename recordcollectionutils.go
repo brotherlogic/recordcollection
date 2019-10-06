@@ -62,13 +62,17 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
-	for _, val := range s.getRecords(ctx, "push-sales") {
+	for _, id := range s.collection.SaleUpdates {
+		val, err := s.loadRecord(ctx, id)
+		if err != nil {
+			return err
+		}
 		success, err := s.pushSale(ctx, val)
 		if err != nil {
 			return fmt.Errorf("Error pushing %v (%v): %v", val.GetRelease().InstanceId, val.GetMetadata().Category, err)
 		}
 		if success {
-			return nil
+			return s.saveRecord(ctx, val)
 		}
 	}
 	return nil
@@ -92,14 +96,15 @@ func (s *Server) pushWants(ctx context.Context) error {
 
 func (s *Server) runPush(ctx context.Context) error {
 	s.lastPushTime = time.Now()
-	s.lastPushSize = len(s.pushMap)
+	s.lastPushSize = len(s.collection.NeedsPush)
 	s.lastPushDone = 0
-	save := len(s.pushMap) > 0
-	for key, val := range s.pushMap {
+	save := len(s.collection.NeedsPush) > 0
+	for _, id := range s.collection.NeedsPush {
+		val, err := s.getRecord(ctx, id)
+		if err != nil {
+			return err
+		}
 		pushed, resp := s.pushRecord(ctx, val)
-		s.pushMutex.Lock()
-		delete(s.pushMap, key)
-		s.pushMutex.Unlock()
 		s.lastPushDone++
 
 		val.GetMetadata().MoveFailure = resp
@@ -111,11 +116,6 @@ func (s *Server) runPush(ctx context.Context) error {
 		s.saveRecordCollection(ctx)
 	}
 
-	s.nextPush = nil
-	for _, val := range s.pushMap {
-		s.nextPush = val
-		break
-	}
 	s.lastPushLength = time.Now().Sub(s.lastPushTime)
 	return nil
 }
@@ -191,7 +191,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	}
 
 	//Force a recache if the record has no title
-	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" || len(r.GetRelease().GetFormats()) == 0 {
+	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
 		s.Log(fmt.Sprintf("%v leads to %v", release.Id, len(release.Tracklist)))
 		if err == nil {

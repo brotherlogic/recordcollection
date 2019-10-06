@@ -54,7 +54,6 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 
 	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
 
-	pushLockTime := int64(0)
 	for _, rec := range s.getRecords(ctx, "get-records") {
 		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) == nil {
 			if request.GetStrip() {
@@ -82,16 +81,6 @@ func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) 
 				response.Records = append(response.Records, rec)
 			}
 
-			if rec.GetMetadata().GetDirty() {
-				st := time.Now()
-				s.pushMutex.Lock()
-				took := time.Now().Sub(st).Nanoseconds() / 10000
-				if took >= pushLockTime {
-					pushLockTime = took
-				}
-				s.pushMap[rec.GetRelease().Id] = rec
-				s.pushMutex.Unlock()
-			}
 		}
 	}
 
@@ -140,62 +129,62 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	var record *pb.Record
 	var err error
-	for _, rec := range s.getRecords(ctx, "update-record") {
-		if rec.GetRelease().InstanceId == request.GetUpdate().GetRelease().InstanceId {
 
-			// If this is being sold - mark it for sale
-			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
-				if !request.NoSell {
-					if len(rec.GetRelease().SleeveCondition) == 0 {
-						return nil, fmt.Errorf("No Condition info")
-					}
-					if s.disableSales {
-						return nil, fmt.Errorf("Sales are disabled")
-					}
-					price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
-					saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition)
-					rec.GetMetadata().SaleId = int32(saleid)
-				}
-			}
+	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId)
+	if err != nil {
+		return nil, err
+	}
 
-			// If this is a sale update - set the dirty flag
-			if rec.GetMetadata().SalePrice != request.GetUpdate().GetMetadata().SalePrice {
-				request.GetUpdate().GetMetadata().SaleDirty = true
+	// If this is being sold - mark it for sale
+	if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
+		if !request.NoSell {
+			if len(rec.GetRelease().SleeveCondition) == 0 {
+				return nil, fmt.Errorf("No Condition info")
 			}
-
-			// Avoid increasing repeasted fields
-			if len(request.GetUpdate().GetRelease().GetImages()) > 0 {
-				rec.GetRelease().Images = []*pbgd.Image{}
+			if s.disableSales {
+				return nil, fmt.Errorf("Sales are disabled")
 			}
-			if len(request.GetUpdate().GetRelease().GetArtists()) > 0 {
-				rec.GetRelease().Artists = []*pbgd.Artist{}
-			}
-			if len(request.GetUpdate().GetRelease().GetFormats()) > 0 {
-				rec.GetRelease().Formats = []*pbgd.Format{}
-			}
-			if len(request.GetUpdate().GetRelease().GetLabels()) > 0 {
-				rec.GetRelease().Labels = []*pbgd.Label{}
-			}
-			if len(request.GetUpdate().GetRelease().GetTracklist()) > 0 {
-				rec.GetRelease().Tracklist = []*pbgd.Track{}
-			}
-
-			proto.Merge(rec, request.GetUpdate())
-
-			//Reset the move folder
-			if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().MoveFolder == -1 {
-				rec.GetMetadata().MoveFolder = 0
-			}
-
-			rec.GetMetadata().LastUpdateTime = time.Now().Unix()
-			rec.GetMetadata().Dirty = true
-			record = rec
-			s.pushMutex.Lock()
-			s.pushMap[rec.GetRelease().Id] = rec
-			s.pushMutex.Unlock()
-			err = s.saveRecord(ctx, rec)
+			price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
+			saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition)
+			rec.GetMetadata().SaleId = int32(saleid)
 		}
 	}
+
+	// If this is a sale update - set the dirty flag
+	if rec.GetMetadata().SalePrice != request.GetUpdate().GetMetadata().SalePrice {
+		request.GetUpdate().GetMetadata().SaleDirty = true
+		s.collection.SaleUpdates = append(s.collection.SaleUpdates, rec.GetRelease().InstanceId)
+	}
+
+	// Avoid increasing repeasted fields
+	if len(request.GetUpdate().GetRelease().GetImages()) > 0 {
+		rec.GetRelease().Images = []*pbgd.Image{}
+	}
+	if len(request.GetUpdate().GetRelease().GetArtists()) > 0 {
+		rec.GetRelease().Artists = []*pbgd.Artist{}
+	}
+	if len(request.GetUpdate().GetRelease().GetFormats()) > 0 {
+		rec.GetRelease().Formats = []*pbgd.Format{}
+	}
+	if len(request.GetUpdate().GetRelease().GetLabels()) > 0 {
+		rec.GetRelease().Labels = []*pbgd.Label{}
+	}
+	if len(request.GetUpdate().GetRelease().GetTracklist()) > 0 {
+		rec.GetRelease().Tracklist = []*pbgd.Track{}
+	}
+
+	proto.Merge(rec, request.GetUpdate())
+
+	//Reset the move folder
+	if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().MoveFolder == -1 {
+		rec.GetMetadata().MoveFolder = 0
+	}
+
+	rec.GetMetadata().LastUpdateTime = time.Now().Unix()
+	rec.GetMetadata().Dirty = true
+	record = rec
+	s.collection.NeedsPush = append(s.collection.NeedsPush, rec.GetRelease().InstanceId)
+	err = s.saveRecord(ctx, rec)
 
 	s.saveNeeded = true
 	return &pb.UpdateRecordsResponse{Updated: record}, err
@@ -208,7 +197,11 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder")
 	}
 
-	instanceID, err := s.retr.AddToFolder(812802, request.GetToAdd().GetRelease().Id)
+	var err error
+	instanceID := int(request.GetToAdd().GetRelease().InstanceId)
+	if instanceID == 0 {
+		instanceID, err = s.retr.AddToFolder(812802, request.GetToAdd().GetRelease().Id)
+	}
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()

@@ -133,7 +133,6 @@ type Server struct {
 	lastPushSize          int
 	cacheWait             time.Duration
 	pushMutex             *sync.Mutex
-	pushMap               map[int32]*pb.Record
 	pushWait              time.Duration
 	saveNeeded            bool
 	quota                 quotaChecker
@@ -217,9 +216,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		}
 
 		if r.GetMetadata().Dirty {
-			s.pushMutex.Lock()
-			s.pushMap[r.GetRelease().InstanceId] = r
-			s.pushMutex.Unlock()
+			s.collection.NeedsPush = append(s.collection.NeedsPush, r.GetRelease().InstanceId)
 		}
 
 		if len(r.GetRelease().GetTracklist()) == 0 {
@@ -410,6 +407,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.instanceToFolderMutex.Lock()
 	defer s.instanceToFolderMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "to_sell", Value: int64(len(s.collection.SaleUpdates))},
 		&pbg.State{Key: "master_size", Value: int64(len(s.collection.InstanceToMaster))},
 		&pbg.State{Key: "collection_size", Value: int64(proto.Size(s.collection))},
 		&pbg.State{Key: "all_records", Value: int64(len(s.allrecords))},
@@ -427,7 +425,6 @@ func Init() *Server {
 	s := &Server{
 		GoServer:              &goserver.GoServer{},
 		lastSyncTime:          time.Now(),
-		pushMap:               make(map[int32]*pb.Record),
 		pushWait:              time.Minute,
 		pushMutex:             &sync.Mutex{},
 		lastPushTime:          time.Now(),

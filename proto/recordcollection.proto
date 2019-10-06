@@ -15,6 +15,8 @@ message RecordCollection {
   map<int32, ReleaseMetadata.Category> instance_to_category = 8;
   map<int32, int32> instance_to_master = 9;
   map<int32, int32> instance_to_id = 10;
+  repeated int32 sale_updates = 11;
+  repeated int32 needs_push = 12;
 }
 
 message AllRecords {

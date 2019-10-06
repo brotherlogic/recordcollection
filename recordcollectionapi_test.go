@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/keystore/client"
@@ -220,24 +221,37 @@ func TestGetRecordsByFolder(t *testing.T) {
 
 func TestUpdateRecords(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	if err != nil {
+		t.Errorf("Error adding record: %v", err)
+	}
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
 
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{}})
+	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	if r == nil || len(r.Records) != 1 || r.Records[0].Release.Title != "madeup2" {
+	if r == nil || r.GetRecord().Release.Title != "madeup2" {
 		t.Errorf("Error in updating records: %v", r)
+	}
+}
+
+func TestBadUpdateRecords(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
+
+	if err == nil {
+		t.Errorf("Update did not fail")
 	}
 }
 
 func TestUpdateRecordsNoCondition(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
 
@@ -248,30 +262,33 @@ func TestUpdateRecordsNoCondition(t *testing.T) {
 
 func TestUpdateRecordWithSalePrice(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL}}
-	s.allrecords = append(s.allrecords, rec)
+	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL, LastCache: time.Now().Unix(), Cost: 100, GoalFolder: 100}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
 	s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SalePrice: 1235}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{}})
+	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	if r == nil || len(r.Records) != 1 || !r.Records[0].GetMetadata().SaleDirty {
+	if r == nil || !r.GetRecord().GetMetadata().SaleDirty {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
-	s.pushSales(context.Background())
+	err = s.pushSales(context.Background())
+	if err != nil {
+		t.Errorf("Error pushing sales: %v", err)
+	}
 
-	r, err = s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "Test", Filter: &pb.Record{}})
+	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	if r == nil || len(r.Records) != 1 || r.Records[0].GetMetadata().SaleDirty {
+	if r == nil || r.GetRecord().GetMetadata().SaleDirty {
 		t.Errorf("Error in updating sale prices records: %v", r)
 	}
 
@@ -279,30 +296,30 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 
 func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL}}
-	s.allrecords = append(s.allrecords, rec)
+	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL, Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
 	s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SaleDirty: true}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "Test", Filter: &pb.Record{}})
+	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	if r == nil || len(r.Records) != 1 || !r.Records[0].GetMetadata().SaleDirty {
+	if r == nil || !r.GetRecord().GetMetadata().SaleDirty {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
 	s.pushSales(context.Background())
 
-	r, err = s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{}})
+	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	if r == nil || len(r.Records) != 1 || r.Records[0].GetMetadata().SaleDirty {
+	if r == nil || r.GetRecord().GetMetadata().SaleDirty {
 		t.Errorf("Error in updating sale prices records: %v", r)
 	}
 
@@ -310,18 +327,18 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 
 func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL}}
-	s.allrecords = append(s.allrecords, rec)
+	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL, GoalFolder: 100, Cost: 100, LastCache: time.Now().Unix()}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
 	s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SaleDirty: true}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{}})
+	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	if r == nil || len(r.Records) != 1 || !r.Records[0].GetMetadata().SaleDirty {
+	if r == nil || !r.GetRecord().GetMetadata().SaleDirty {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
@@ -334,15 +351,15 @@ func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 
 func TestRemoveRecordFromSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_SOLD_OFFLINE, SaleDirty: true}}
-	s.allrecords = append(s.allrecords, rec)
-	s.saleMap[1234] = rec
+	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_SOLD_OFFLINE, SaleDirty: true, Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
+	s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(1))
 
-	s.pushSales(context.Background())
+	err := s.pushSales(context.Background())
 
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{}})
+	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
-	if err != nil || r == nil || len(r.Records) != 1 || r.Records[0].GetMetadata().SaleDirty {
+	if err != nil || r == nil || r.GetRecord().GetMetadata().SaleDirty {
 		t.Errorf("Error in updating sale prices records: %v", r)
 	}
 
@@ -350,34 +367,34 @@ func TestRemoveRecordFromSale(t *testing.T) {
 
 func TestUpdateRecordNullFolder(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{MoveFolder: -1}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{}})
+	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	if r == nil || len(r.Records) != 1 || r.Records[0].Release.Title != "madeup2" || r.Records[0].GetMetadata().MoveFolder != 0 {
+	if r == nil || r.GetRecord().Release.Title != "madeup2" || r.GetRecord().GetMetadata().MoveFolder != 0 {
 		t.Errorf("Error in updating records: %v", r)
 	}
 }
 
-func TestUpdateRecordsForSale(t *testing.T) {
+func TestDoUpdateRecordsForSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{}})
+	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	if r == nil || len(r.Records) != 1 || r.Records[0].Release.Title != "madeup2" {
+	if r == nil || r.GetRecord().Release.Title != "madeup2" {
 		t.Errorf("Error in updating records: %v", r)
 	}
 }
@@ -385,7 +402,7 @@ func TestUpdateRecordsForSale(t *testing.T) {
 func TestUpdateRecordsForSaleSellingIsDisabled(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.disableSales = true
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
 	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
