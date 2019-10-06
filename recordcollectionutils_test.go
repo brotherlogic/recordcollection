@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"testing"
 	"time"
 
@@ -35,7 +34,6 @@ func (t *testMover) moveRecord(record *pb.Record, oldFolder, newFolder int32) er
 		return nil
 	}
 
-	log.Printf("HERE")
 	return errors.New("Built to fail")
 }
 
@@ -90,7 +88,7 @@ func (t *testSyncer) GetRelease(id int32) (*pbd.Release, error) {
 	if id == 4707982 {
 		return &pbd.Release{Id: 4707982, Title: "Future", Images: []*pbd.Image{&pbd.Image{Type: "primary", Uri: "http://magic"}}}, nil
 	}
-	return &pbd.Release{Id: 234, Title: "On The Wall", Labels: []*pbd.Label{&pbd.Label{Name: "madeup", Id: 123}}}, nil
+	return &pbd.Release{Id: id, InstanceId: 456, Title: "On The Wall", Labels: []*pbd.Label{&pbd.Label{Name: "madeup", Id: 123}}}, nil
 }
 
 func (t *testSyncer) AddToFolder(id int32, folderID int32) (int, error) {

@@ -24,6 +24,7 @@ func InitTestServer(folder string) *Server {
 	s.collection.InstanceToUpdate = make(map[int32]int64)
 	s.collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
 	s.collection.InstanceToMaster = make(map[int32]int32)
+	s.collection.InstanceToId = make(map[int32]int32)
 	s.quota = &testQuota{pass: true}
 
 	os.RemoveAll(folder)
@@ -485,6 +486,24 @@ func TestQueryRecordsWithMasterId(t *testing.T) {
 	}
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_MasterId{100}})
+
+	if err != nil {
+		t.Errorf("Error on query: %v", err)
+	}
+
+	if len(q.GetInstanceIds()) != 1 {
+		t.Errorf("Wrong number of results: %v", q)
+	}
+}
+
+func TestQueryRecordsWithReleaseId(t *testing.T) {
+	s := InitTestServer(".testqueryrecords")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{InstanceId: 100, Id: 100}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100}}})
+	if err != nil {
+		t.Fatalf("Error adding record: %v", err)
+	}
+
+	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{100}})
 
 	if err != nil {
 		t.Errorf("Error on query: %v", err)
