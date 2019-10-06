@@ -14,6 +14,7 @@ message RecordCollection {
   map<int32, int64> instance_to_update = 7;
   map<int32, ReleaseMetadata.Category> instance_to_category = 8;
   map<int32, int32> instance_to_master = 9;
+  map<int32, int32> instance_to_id = 10;
 }
 
 message AllRecords {
@@ -280,6 +281,7 @@ message QueryRecordsRequest {
     int64 update_time = 2;
     ReleaseMetadata.Category category = 3;
     int32 master_id = 4;
+    int32 release_id = 5;
   }
 }
 

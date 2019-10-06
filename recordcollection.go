@@ -256,6 +256,9 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	if s.collection.InstanceToMaster == nil {
 		s.collection.InstanceToMaster = make(map[int32]int32)
 	}
+	if s.collection.InstanceToId == nil {
+		s.collection.InstanceToId = make(map[int32]int32)
+	}
 
 	for _, r := range s.getRecords(ctx, "fillinstancemap") {
 		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
@@ -264,6 +267,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		if r.GetRelease().MasterId > 0 {
 			s.collection.InstanceToMaster[r.GetRelease().InstanceId] = r.GetRelease().MasterId
 		}
+		s.collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
 	}
 
 	//Clear the existing set of records
@@ -322,6 +326,10 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 
 	if s.collection.InstanceToMaster[r.GetRelease().InstanceId] != r.GetRelease().MasterId {
 		s.collection.InstanceToMaster[r.GetRelease().InstanceId] = r.GetRelease().MasterId
+	}
+
+	if s.collection.InstanceToId[r.GetRelease().InstanceId] != r.GetRelease().Id {
+		s.collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
 	}
 
 	if save {
