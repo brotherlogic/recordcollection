@@ -59,14 +59,17 @@ func main() {
 
 	case "get":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.GetRecords(ctx, &pbrc.GetRecordsRequest{Caller: "cli-get", Force: true, Filter: &pbrc.Record{Release: &pbgd.Release{Id: int32(i)}}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{int32(i)}})
 
 		if err == nil {
-			fmt.Printf("Time Taken: %v\n", rec.InternalProcessingTime)
-			for _, r := range rec.GetRecords() {
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+				}
 				fmt.Println()
-				fmt.Printf("Release: %v\n", r.GetRelease())
-				fmt.Printf("Metadata: %v\n", r.GetMetadata())
+				fmt.Printf("Release: %v\n", r.GetRecord().GetRelease())
+				fmt.Printf("Metadata: %v\n", r.GetRecord().GetMetadata())
 			}
 		} else {
 			fmt.Printf("Error: %v", err)
