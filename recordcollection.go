@@ -156,6 +156,8 @@ type Server struct {
 	instanceToFolderMutex *sync.Mutex
 	allrecords            []*pb.Record
 	mismatches            int
+	recordCache           map[int32]*pb.Record
+	recordCacheMutex      *sync.Mutex
 }
 
 func (s *Server) findBiggest(ctx context.Context) error {
@@ -294,6 +296,7 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 	if len(s.allrecords) > 0 {
 		s.KSclient.Save(ctx, RECORDS, &pb.AllRecords{Records: s.allrecords})
 	}
+
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
@@ -333,10 +336,20 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		s.saveRecordCollection(ctx)
 	}
 
+	s.recordCacheMutex.Lock()
+	defer s.recordCacheMutex.Unlock()
+	s.recordCache[r.GetRelease().InstanceId] = r
+
 	return err
 }
 
 func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
+	s.recordCacheMutex.Lock()
+	defer s.recordCacheMutex.Unlock()
+	if val, ok := s.recordCache[id]; ok {
+		return val, nil
+	}
+
 	record := &pb.Record{}
 	data, _, err := s.KSclient.Read(ctx, fmt.Sprintf("%v%v", SAVEKEY, id), record)
 
@@ -349,6 +362,8 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	}
 
 	recordToReturn := data.(*pb.Record)
+	s.recordCache[recordToReturn.GetRelease().InstanceId] = recordToReturn
+
 	return recordToReturn, nil
 }
 
@@ -406,7 +421,10 @@ func max(a, b int) int {
 func (s *Server) GetState() []*pbg.State {
 	s.instanceToFolderMutex.Lock()
 	defer s.instanceToFolderMutex.Unlock()
+	s.recordCacheMutex.Lock()
+	defer s.recordCacheMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "to_sell", Value: int64(len(s.collection.SaleUpdates))},
 		&pbg.State{Key: "master_size", Value: int64(len(s.collection.InstanceToMaster))},
 		&pbg.State{Key: "collection_size", Value: int64(proto.Size(s.collection))},
@@ -439,6 +457,8 @@ func Init() *Server {
 		wantUpdate:            "unknown",
 		saveMutex:             &sync.Mutex{},
 		instanceToFolderMutex: &sync.Mutex{},
+		recordCache:           make(map[int32]*pb.Record),
+		recordCacheMutex:      &sync.Mutex{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
