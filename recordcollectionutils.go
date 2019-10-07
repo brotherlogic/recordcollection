@@ -104,10 +104,12 @@ func (s *Server) runPush(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		pushed, resp := s.pushRecord(ctx, val)
+		pushed, err := s.pushRecord(ctx, val)
+		if err != nil {
+			return err
+		}
 		s.lastPushDone++
 
-		val.GetMetadata().MoveFailure = resp
 		if pushed {
 			break
 		}
@@ -139,14 +141,14 @@ func (s *Server) updateWant(w *pb.Want) bool {
 	return false
 }
 
-func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
+func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 	pushed := (r.GetMetadata().GetSetRating() > 0 && r.GetRelease().Rating != r.GetMetadata().GetSetRating()) || (r.GetMetadata().GetMoveFolder() > 0 && r.GetMetadata().GetMoveFolder() != r.GetRelease().FolderId)
 
 	if r.GetMetadata().GetMoveFolder() > 0 {
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
 			err := s.mover.moveRecord(r, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if r.GetRelease().FolderId != 1 && err != nil {
-				return false, fmt.Sprintf("Move fail %v -> %v: %v (%v)", r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder(), err, ctx)
+				return false, fmt.Errorf("Move fail %v -> %v: %v (%v)", r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder(), err, ctx)
 			}
 
 			s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
@@ -166,7 +168,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, string) {
 
 	r.GetMetadata().Dirty = false
 	s.saveRecord(ctx, r)
-	return pushed, ""
+	return pushed, nil
 }
 
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
