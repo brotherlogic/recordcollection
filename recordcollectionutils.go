@@ -251,10 +251,7 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 	}
 
 	// Records with others don't need to be stock checked
-	if r.GetMetadata().Others {
-		r.GetMetadata().NeedsStockCheck = false
-	}
-	if time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) < time.Hour*24*30*6 {
+	if time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) < time.Hour*24*30*6 || r.GetMetadata().Others {
 		r.GetMetadata().NeedsStockCheck = false
 	}
 
@@ -267,45 +264,20 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 	s.getRecords(ctx, "sync-collection")
 	for _, record := range records {
 		foundInList := false
-		for _, iid := range s.collection.Instances {
+		for iid := range s.collection.InstanceToFolder {
 			if iid == record.InstanceId {
 				foundInList = true
-			}
-		}
-		if !foundInList {
-			s.collection.Instances = append(s.collection.Instances, record.InstanceId)
-		}
-
-		found := false
-		for _, r := range s.getRecords(ctx, "sync-collection") {
-			if r.GetRelease().InstanceId == record.InstanceId {
-				found = true
+				r, err := s.loadRecord(ctx, record.InstanceId)
+				if err != nil {
+					return
+				}
 				s.syncRecords(ctx, r, record, colNumber)
 			}
 		}
 
-		if !found {
-			s.collection.InstanceToFolder[record.InstanceId] = record.FolderId
-			s.allrecords = append(s.allrecords, &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix()}})
-
-		}
-	}
-
-	otherMap := make(map[int32]int32)
-	for _, r := range s.getRecords(ctx, "sync-searchforothers") {
-		if r.GetRelease().MasterId > 0 {
-			if _, ok := otherMap[r.GetRelease().MasterId]; !ok {
-				otherMap[r.GetRelease().MasterId] = 1
-			} else {
-				otherMap[r.GetRelease().MasterId] = 2
-			}
-		}
-	}
-	for _, r := range s.getRecords(ctx, "sync-searchForMaster") {
-		if otherMap[r.GetRelease().MasterId] > 1 {
-			r.GetMetadata().Others = true
-		} else {
-			r.GetMetadata().Others = false
+		if !foundInList {
+			nrec := &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix(), GoalFolder: record.FolderId}}
+			s.saveRecord(ctx, nrec)
 		}
 	}
 
@@ -338,13 +310,13 @@ func (s *Server) syncWantlist() {
 			}
 		}
 		if !found {
+
 			s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: want, Metadata: &pb.WantMetadata{Active: true}})
 		}
 	}
 }
 
 func (s *Server) runSyncWants(ctx context.Context) error {
-	s.Log(fmt.Sprintf("RUNNING SYNC"))
 	s.syncWantlist()
 	s.saveRecordCollection(ctx)
 	return nil

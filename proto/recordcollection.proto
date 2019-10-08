@@ -8,7 +8,7 @@ message RecordCollection {
   repeated Record records = 1; // Deprecated
   repeated godiscogs.Release wants = 2; // DEPRECATED
   repeated Want new_wants = 3;
-  repeated int32 instances = 4;
+  repeated int32 instances = 4; // DEPRECATED
   int64 collection_number = 5;
   map<int32, int32> instance_to_folder = 6;
   map<int32, int64> instance_to_update = 7;
