@@ -557,7 +557,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
-	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
+	//server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
 	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
 
