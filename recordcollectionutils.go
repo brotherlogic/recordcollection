@@ -267,10 +267,16 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 			if iid == record.InstanceId {
 				foundInList = true
 				r, err := s.loadRecord(ctx, record.InstanceId)
-				if err != nil {
+				if err == nil {
+					s.syncRecords(ctx, r, record, colNumber)
+				}
+
+				// If we can't find the record, need to resync
+				if status.Convert(err).Code() == codes.NotFound {
+					foundInList = false
+				} else {
 					return
 				}
-				s.syncRecords(ctx, r, record, colNumber)
 			}
 		}
 
