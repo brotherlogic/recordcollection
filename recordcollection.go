@@ -230,6 +230,12 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		save = true
 	}
 
+	if r.GetMetadata().LastCache == 0 {
+		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
+	} else {
+		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Unix(r.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
+	}
+
 	if save {
 		s.saveRecordCollection(ctx)
 	}
@@ -325,6 +331,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.recordCacheMutex.Lock()
 	defer s.recordCacheMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "recache_size", Value: int64(len(s.collection.InstanceToRecache))},
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "to_sell", Value: int64(len(s.collection.SaleUpdates))},
 		&pbg.State{Key: "master_size", Value: int64(len(s.collection.InstanceToMaster))},
