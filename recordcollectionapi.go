@@ -43,49 +43,8 @@ func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordC
 
 // GetRecords gets a bunch of records
 func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
-	//Fail request with no caller
-	if request.Caller == "" {
-		return nil, fmt.Errorf("Failing request as it has no caller")
-	}
-
-	s.RaiseIssue(ctx, "DEPRECATE", fmt.Sprintf("%v is still using GetRecords, move to something else please", request.Caller), false)
-
-	t := time.Now()
-
-	response := &pb.GetRecordsResponse{Records: make([]*pb.Record, 0)}
-
-	for _, rec := range s.getRecords(ctx, "get-records") {
-		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) == nil {
-			if request.GetStrip() {
-				r := proto.Clone(rec).(*pb.Record)
-				r.GetRelease().Images = make([]*pbgd.Image, 0)
-				r.GetRelease().Formats = make([]*pbgd.Format, 0)
-				response.Records = append(response.Records, r)
-			} else if request.GetMoveStrip() {
-				cleanRecord := &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbgd.Release{}}
-
-				cleanRecord.GetMetadata().Category = rec.GetMetadata().Category
-				cleanRecord.GetRelease().FolderId = rec.GetRelease().FolderId
-				cleanRecord.GetMetadata().MoveFolder = rec.GetMetadata().MoveFolder
-				cleanRecord.GetRelease().Formats = rec.GetRelease().Formats
-				cleanRecord.GetRelease().Id = rec.GetRelease().Id
-				cleanRecord.GetRelease().InstanceId = rec.GetRelease().InstanceId
-				cleanRecord.GetRelease().Rating = rec.GetRelease().Rating
-				cleanRecord.GetMetadata().GoalFolder = rec.GetMetadata().GoalFolder
-				cleanRecord.GetMetadata().FilePath = rec.GetMetadata().FilePath
-				cleanRecord.GetMetadata().CdPath = rec.GetMetadata().CdPath
-				cleanRecord.GetMetadata().Dirty = rec.GetMetadata().Dirty
-
-				response.Records = append(response.Records, cleanRecord)
-			} else {
-				response.Records = append(response.Records, rec)
-			}
-
-		}
-	}
-
-	response.InternalProcessingTime = time.Now().Sub(t).Nanoseconds() / 1000000
-	return response, nil
+	//Fail all requests
+	return nil, fmt.Errorf("DEPRECATED")
 }
 
 // GetWants gets a bunch of records

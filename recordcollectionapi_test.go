@@ -116,107 +116,12 @@ func TestAddRecordNoCost(t *testing.T) {
 
 func TestGetRecords(t *testing.T) {
 	s := InitTestServer(".testGetRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}, Metadata: &pb.ReleaseMetadata{GoalFolder: 1}})
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}, Metadata: &pb.ReleaseMetadata{GoalFolder: 1}})
 	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}, Caller: "test"})
 
-	if err != nil {
-		t.Errorf("Error in getting records: %v", err)
-	}
-
-	if len(r.GetRecords()) != 2 {
-		t.Errorf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
-	}
-}
-
-func TestGetRecordsWithCallerFail(t *testing.T) {
-	s := InitTestServer(".testGetRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}})
-	_, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}})
-
 	if err == nil {
-		t.Errorf("Error in getting records: %v", err)
-	}
-}
-
-func TestGetRecordsInCateogry(t *testing.T) {
-	s := InitTestServer(".testGetRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_FRESHMAN}})
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 124, Title: "madeup2", InstanceId: 3}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOPHMORE}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOPHMORE}}})
-
-	if err != nil {
-		t.Errorf("Error in getting records: %v", err)
+		t.Errorf("Error in getting records: %v", r)
 	}
 
-	if len(r.GetRecords()) != 1 {
-		t.Errorf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
-	}
-}
-
-func TestGetRecordsStripped(t *testing.T) {
-	s := InitTestServer(".testGetRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Strip: true, Filter: &pb.Record{}})
-
-	if err != nil {
-		t.Errorf("Error in getting records: %v", err)
-	}
-
-	if len(r.GetRecords()) != 1 {
-		t.Fatalf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
-	}
-
-	if len(r.GetRecords()[0].GetRelease().GetImages()) != 0 {
-		t.Errorf("Images have not been stripped: %v", r)
-	}
-}
-
-func TestGetRecordsMoveStripped(t *testing.T) {
-	s := InitTestServer(".testGetRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", MoveStrip: true, Filter: &pb.Record{}})
-
-	if err != nil {
-		t.Errorf("Error in getting records: %v", err)
-	}
-
-	if len(r.GetRecords()) != 1 {
-		t.Fatalf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
-	}
-
-	if len(r.GetRecords()[0].GetRelease().GetImages()) != 0 {
-		t.Errorf("Images have not been stripped: %v", r)
-	}
-}
-
-func TestGetRecordsById(t *testing.T) {
-	s := InitTestServer(".testGetRecords")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{Release: &pbd.Release{Id: 123}}})
-
-	if err != nil {
-		t.Errorf("Error in getting records: %v", err)
-	}
-
-	if len(r.GetRecords()) != 1 {
-		t.Errorf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
-	}
-}
-
-func TestGetRecordsByFolder(t *testing.T) {
-	s := InitTestServer(".testGetRecordsByFolder")
-	s.allrecords = append(s.allrecords, &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 2, FolderId: 70}})
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Caller: "test", Filter: &pb.Record{Release: &pbd.Release{FolderId: 70}}})
-
-	if err != nil {
-		t.Errorf("Error in getting records: %v", err)
-	}
-
-	if len(r.GetRecords()) != 1 {
-		t.Errorf("Wrong number of records returned: (%v) %v", len(r.GetRecords()), r)
-	}
 }
 
 func TestUpdateRecords(t *testing.T) {
@@ -270,7 +175,7 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
+		t.Errorf("Error in getting records: %v", err)
 	}
 
 	if r == nil || !r.GetRecord().GetMetadata().SaleDirty {
@@ -285,7 +190,7 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
+		t.Errorf("Error in getting records: %v", err)
 	}
 
 	if r == nil || r.GetRecord().GetMetadata().SaleDirty {
@@ -304,7 +209,7 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
+		t.Errorf("Error in getting records: %v", err)
 	}
 
 	if r == nil || !r.GetRecord().GetMetadata().SaleDirty {
@@ -316,7 +221,7 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
+		t.Errorf("Error in getting records: %v", err)
 	}
 
 	if r == nil || r.GetRecord().GetMetadata().SaleDirty {
@@ -335,7 +240,7 @@ func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
+		t.Errorf("Error in getting records: %v", err)
 	}
 
 	if r == nil || !r.GetRecord().GetMetadata().SaleDirty {
@@ -374,7 +279,7 @@ func TestUpdateRecordNullFolder(t *testing.T) {
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
+		t.Errorf("Error in getting records: %v", err)
 	}
 
 	if r == nil || r.GetRecord().Release.Title != "madeup2" || r.GetRecord().GetMetadata().MoveFolder != 0 {
@@ -391,7 +296,7 @@ func TestDoUpdateRecordsForSale(t *testing.T) {
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
 
 	if err != nil {
-		t.Fatalf("Error in getting records: %v", err)
+		t.Errorf("Error in getting records: %v", err)
 	}
 
 	if r == nil || r.GetRecord().Release.Title != "madeup2" {
