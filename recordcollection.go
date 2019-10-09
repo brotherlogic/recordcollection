@@ -188,11 +188,11 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 	return nil
 }
 
-func (s *Server) saveRecordCollection(ctx context.Context) {
+func (s *Server) saveRecordCollection(ctx context.Context) error {
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
 	s.saves++
-	s.KSclient.Save(ctx, KEY, s.collection)
+	return s.KSclient.Save(ctx, KEY, s.collection)
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {

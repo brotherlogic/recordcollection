@@ -90,8 +90,7 @@ func (s *Server) pushWants(ctx context.Context) error {
 		}
 	}
 
-	s.saveRecordCollection(ctx)
-	return nil
+	return s.saveRecordCollection(ctx)
 }
 
 func (s *Server) runPush(ctx context.Context) error {
@@ -258,7 +257,7 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 	s.saveRecord(ctx, r)
 }
 
-func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
+func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 	startTime := time.Now()
 	records := s.retr.GetCollection()
 	for _, record := range records {
@@ -269,13 +268,13 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 				r, err := s.loadRecord(ctx, record.InstanceId)
 				if err == nil {
 					s.syncRecords(ctx, r, record, colNumber)
-				}
-
-				// If we can't find the record, need to resync
-				if status.Convert(err).Code() == codes.NotFound {
-					foundInList = false
 				} else {
-					return
+					// If we can't find the record, need to resync
+					if status.Convert(err).Code() == codes.NotFound {
+						foundInList = false
+					} else {
+						return err
+					}
 				}
 			}
 		}
@@ -288,7 +287,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 
 	s.lastSyncTime = time.Now()
 	s.lastSyncLength = time.Now().Sub(startTime)
-	s.saveRecordCollection(ctx)
+	return s.saveRecordCollection(ctx)
 }
 
 func (s *Server) syncWantlist() {
@@ -317,8 +316,8 @@ func (s *Server) runSyncWants(ctx context.Context) error {
 }
 
 func (s *Server) runSync(ctx context.Context) error {
-	s.syncCollection(ctx, s.collection.CollectionNumber+1)
+	err := s.syncCollection(ctx, s.collection.CollectionNumber+1)
 	s.collection.CollectionNumber++
 	s.saveRecordCollection(ctx)
-	return nil
+	return err
 }
