@@ -545,3 +545,23 @@ func TestPushSaleBasicWithNone(t *testing.T) {
 	}
 
 }
+
+func TestRecache(t *testing.T) {
+	s := InitTestServer(".runrecache")
+	record := &pb.Record{Release: &pbd.Release{Rating: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
+	s.syncRecords(context.Background(), record, &pbd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
+
+	s.recache(context.Background(), record)
+}
+
+func TestRecacheWithPendingScore(t *testing.T) {
+	s := InitTestServer(".runrecache")
+	record := &pb.Record{Release: &pbd.Release{Rating: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix(), SetRating: 12}}
+	s.syncRecords(context.Background(), record, &pbd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
+
+	err := s.recache(context.Background(), record)
+
+	if err == nil {
+		t.Errorf("recache failed")
+	}
+}

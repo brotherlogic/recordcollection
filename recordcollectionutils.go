@@ -321,3 +321,35 @@ func (s *Server) runSync(ctx context.Context) error {
 	s.saveRecordCollection(ctx)
 	return err
 }
+
+func (s *Server) recache(ctx context.Context, r *pb.Record) error {
+	// Don't recache a record that has a pending score
+	if r.GetMetadata().GetSetRating() > 0 {
+		return fmt.Errorf("Has pending score")
+	}
+
+	// Update the score of the record
+	sc, err := s.scorer.GetScore(ctx, r.GetRelease().InstanceId)
+	if err == nil {
+		r.GetMetadata().OverallScore = sc
+	}
+
+	//Force a recache if the record has no title
+	release, err := s.retr.GetRelease(r.GetRelease().Id)
+	if err == nil {
+
+		//Clear repeated fields first
+		r.GetRelease().Images = []*pbd.Image{}
+		r.GetRelease().Artists = []*pbd.Artist{}
+		r.GetRelease().Formats = []*pbd.Format{}
+		r.GetRelease().Labels = []*pbd.Label{}
+		r.GetRelease().Tracklist = []*pbd.Track{}
+
+		proto.Merge(r.GetRelease(), release)
+
+		r.GetMetadata().LastCache = time.Now().Unix()
+		r.GetMetadata().LastUpdateTime = time.Now().Unix()
+	}
+
+	return nil
+}
