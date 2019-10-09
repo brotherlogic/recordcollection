@@ -17,7 +17,6 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
-	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbrp "github.com/brotherlogic/recordprocess/proto"
@@ -154,22 +153,9 @@ type Server struct {
 	lastSale              int64
 	disableSales          bool
 	instanceToFolderMutex *sync.Mutex
-	allrecords            []*pb.Record
 	mismatches            int
 	recordCache           map[int32]*pb.Record
 	recordCacheMutex      *sync.Mutex
-}
-
-func (s *Server) findBiggest(ctx context.Context) error {
-	biggestb := 0
-	for _, r := range s.getRecords(ctx, "findBiggest") {
-		data, _ := proto.Marshal(r)
-		if len(data) > biggestb {
-			s.biggest = int64(r.GetRelease().Id)
-			biggestb = len(data)
-		}
-	}
-	return nil
 }
 
 const (
@@ -196,96 +182,7 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 
 	s.collection = data.(*pb.RecordCollection)
 
-	//Fill the push map
-	for _, r := range s.getRecords(ctx, "fillpushmap") {
-
-		//Copy over the instance id if needed
-		if r.GetMetadata().InstanceId == 0 {
-			r.GetMetadata().InstanceId = r.GetRelease().InstanceId
-		}
-
-		// Stop repeated fields from blowing up
-		if len(r.GetRelease().GetFormats()) > 100 {
-			r.GetRelease().Images = []*pbd.Image{}
-			r.GetRelease().Artists = []*pbd.Artist{}
-			r.GetRelease().Formats = []*pbd.Format{}
-			r.GetRelease().Labels = []*pbd.Label{}
-			r.GetMetadata().LastCache = 1
-		}
-
-		if r.GetMetadata().GetMoveFolder() > 0 || r.GetMetadata().GetSetRating() > 0 {
-			r.GetMetadata().Dirty = true
-		}
-
-		if r.GetMetadata().Dirty {
-			s.collection.NeedsPush = append(s.collection.NeedsPush, r.GetRelease().InstanceId)
-		}
-
-		if len(r.GetRelease().GetTracklist()) == 0 {
-			r.GetMetadata().LastCache = 1
-		}
-
-		if r.GetMetadata().Keep == pb.ReleaseMetadata_KEEP_UNKNOWN {
-			r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
-		}
-
-		if r.GetMetadata().Keep == pb.ReleaseMetadata_KEEPER {
-			r.GetMetadata().NeedsStockCheck = false
-		}
-	}
-
-	// Fill the sale map
-	for _, r := range s.getRecords(ctx, "fillsalemap") {
-		if r.GetMetadata().SaleId > 0 {
-			s.saleMap[r.GetMetadata().SaleId] = r
-		}
-	}
-
-	// Fill the update map
-	if s.collection.InstanceToUpdate == nil {
-		s.collection.InstanceToUpdate = make(map[int32]int64)
-	}
-	if s.collection.InstanceToCategory == nil {
-		s.collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
-	}
-	if s.collection.InstanceToFolder == nil {
-		s.collection.InstanceToFolder = make(map[int32]int32)
-	}
-
-	if s.collection.InstanceToMaster == nil {
-		s.collection.InstanceToMaster = make(map[int32]int32)
-	}
-	if s.collection.InstanceToId == nil {
-		s.collection.InstanceToId = make(map[int32]int32)
-	}
-
-	for _, r := range s.getRecords(ctx, "fillinstancemap") {
-		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
-		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
-		s.collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
-		if r.GetRelease().MasterId > 0 {
-			s.collection.InstanceToMaster[r.GetRelease().InstanceId] = r.GetRelease().MasterId
-		}
-		s.collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
-	}
-
-	//Clear the existing set of records
-	s.collection.Records = make([]*pb.Record, 0)
-
 	return nil
-}
-
-func (s *Server) getRecords(ctx context.Context, caller string) []*pb.Record {
-	if len(s.allrecords) == 0 {
-		data, _, err := s.KSclient.Read(ctx, RECORDS, &pb.AllRecords{})
-
-		if err != nil {
-			return nil
-		}
-
-		s.allrecords = (data.(*pb.AllRecords)).GetRecords()
-	}
-	return s.allrecords
 }
 
 func (s *Server) saveRecordCollection(ctx context.Context) {
@@ -293,10 +190,6 @@ func (s *Server) saveRecordCollection(ctx context.Context) {
 	defer s.saveMutex.Unlock()
 	s.saves++
 	s.KSclient.Save(ctx, KEY, s.collection)
-	if len(s.allrecords) > 0 {
-		s.KSclient.Save(ctx, RECORDS, &pb.AllRecords{Records: s.allrecords})
-	}
-
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
@@ -430,7 +323,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "to_sell", Value: int64(len(s.collection.SaleUpdates))},
 		&pbg.State{Key: "master_size", Value: int64(len(s.collection.InstanceToMaster))},
 		&pbg.State{Key: "collection_size", Value: int64(proto.Size(s.collection))},
-		&pbg.State{Key: "all_records", Value: int64(len(s.allrecords))},
 		&pbg.State{Key: "categories", Value: int64(len(s.collection.GetInstanceToCategory()))},
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.InstanceToFolder))},
 		&pbg.State{Key: "update_map", Value: int64(len(s.collection.InstanceToUpdate))},
@@ -468,61 +360,6 @@ func Init() *Server {
 	return s
 }
 
-func (s *Server) cacheLoop(ctx context.Context) error {
-	for _, r := range s.getRecords(ctx, "cacheloop") {
-		if r.GetMetadata().LastCache <= 1 {
-			s.cacheRecord(ctx, r)
-			return nil
-		}
-	}
-	return nil
-}
-
-func (s *Server) updateSalePrice(ctx context.Context) error {
-	for _, r := range s.getRecords(ctx, "updatesaleprice") {
-		if r.GetMetadata().CurrentSalePrice == 0 || time.Now().Sub(time.Unix(r.GetMetadata().SalePriceUpdate, 0)) > time.Hour*24*30 {
-			price, err := s.retr.GetSalePrice(int(r.GetRelease().Id))
-			if err != nil {
-				r.GetMetadata().CurrentSalePrice = int32(price * 100)
-				r.GetMetadata().SalePriceUpdate = time.Now().Unix()
-				s.saveRecord(ctx, r)
-				return nil
-			}
-		}
-	}
-
-	return nil
-}
-
-func (s *Server) checkMatch(ctx context.Context) error {
-	mismatches := 0
-	for _, r := range s.getRecords(ctx, "checkMatch") {
-		rSaved, err := s.loadRecord(ctx, r.GetRelease().InstanceId)
-
-		if err == nil {
-			//Force zero sync times
-			r.GetMetadata().LastSyncTime = 0
-			rSaved.GetMetadata().LastSyncTime = 0
-
-			err := utils.FuzzyMatch(r, rSaved)
-			if err != nil {
-				mismatches++
-
-				s.RaiseIssue(ctx, "Record mismatch", fmt.Sprintf("%v does not match->%v\n%v\n\n%v", r.GetRelease().InstanceId, err, r, rSaved), false)
-			}
-		} else {
-			s.RaiseIssue(ctx, "Bad Load", fmt.Sprintf("Cannot load %v -> %v", r.GetRelease().InstanceId, err), false)
-		}
-	}
-
-	if mismatches == 0 {
-		s.RaiseIssue(ctx, "No Mismatch", fmt.Sprintf("No mismatches found, dial back checking"), false)
-	}
-
-	s.mismatches = mismatches
-	return nil
-}
-
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
@@ -554,14 +391,11 @@ func main() {
 	// This enables pprof
 	go http.ListenAndServe(":8089", nil)
 
-	server.RegisterRepeatingTask(server.checkMatch, "check_match", time.Hour)
 	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
 	//server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
-	server.RegisterRepeatingTask(server.cacheLoop, "cache_loop", time.Minute)
-	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
 
 	server.disableSales = true
 

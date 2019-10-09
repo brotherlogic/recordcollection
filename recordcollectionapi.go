@@ -21,30 +21,8 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	delete(s.collection.InstanceToMaster, request.InstanceId)
 	delete(s.collection.InstanceToCategory, request.InstanceId)
 
-	for i, r := range s.getRecords(ctx, "delete-record") {
-		if r.GetRelease().InstanceId == request.InstanceId {
-			s.retr.DeleteInstance(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId))
-			s.allrecords = append(s.allrecords[:i], s.allrecords[i+1:]...)
-		}
-	}
-
 	s.saveRecordCollection(ctx)
 	return &pb.DeleteRecordResponse{}, nil
-}
-
-// GetRecordCollection gets the full collection
-func (s *Server) GetRecordCollection(ctx context.Context, request *pb.GetRecordCollectionRequest) (*pb.GetRecordCollectionResponse, error) {
-	resp := &pb.GetRecordCollectionResponse{InstanceIds: make([]int32, 0)}
-	for _, r := range s.getRecords(ctx, "get-record-collection") {
-		resp.InstanceIds = append(resp.InstanceIds, r.GetRelease().InstanceId)
-	}
-	return resp, nil
-}
-
-// GetRecords gets a bunch of records
-func (s *Server) GetRecords(ctx context.Context, request *pb.GetRecordsRequest) (*pb.GetRecordsResponse, error) {
-	//Fail all requests
-	return nil, fmt.Errorf("DEPRECATED")
 }
 
 // GetWants gets a bunch of records
@@ -168,9 +146,6 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		s.cacheRecord(ctx, request.GetToAdd())
 		s.saveRecord(ctx, request.GetToAdd())
 		s.saveNeeded = true
-
-		s.getRecords(ctx, "add-record")
-		s.allrecords = append(s.allrecords, request.GetToAdd())
 	}
 
 	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err
@@ -237,12 +212,6 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 		st := status.Convert(err)
 		if st.Code() != codes.DeadlineExceeded {
 			s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v, [%v,%v,%v,%v]", req.InstanceId, err, s.collection.InstanceToFolder[req.InstanceId], s.collection.InstanceToMaster[req.InstanceId], s.collection.InstanceToCategory[req.InstanceId], s.collection.InstanceToUpdate[req.InstanceId]), false)
-			recs := s.getRecords(ctx, "getrecord-cachemiss")
-			for _, r := range recs {
-				if r.GetRelease().InstanceId == req.InstanceId {
-					return &pb.GetRecordResponse{Record: r}, nil
-				}
-			}
 		}
 
 		return nil, fmt.Errorf("Could not locate %v -> %v", req.InstanceId, err)

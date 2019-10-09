@@ -300,12 +300,10 @@ message GetRecordResponse {
 }
 
 service RecordCollectionService {
-  rpc GetRecords(GetRecordsRequest) returns (GetRecordsResponse) {};
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
   rpc UpdateWant(UpdateWantRequest) returns (UpdateWantResponse) {};
   rpc AddRecord(AddRecordRequest) returns (AddRecordResponse) {};
-  rpc GetRecordCollection(GetRecordCollectionRequest) returns (GetRecordCollectionResponse) {};
   rpc DeleteRecord(DeleteRecordRequest) returns (DeleteRecordResponse) {};
   rpc QueryRecords(QueryRecordsRequest) returns (QueryRecordsResponse) {};
   rpc GetRecord(GetRecordRequest) returns (GetRecordResponse) {};

@@ -193,24 +193,13 @@ func TestGoodSyncWithBadLoad(t *testing.T) {
 	}
 }
 
-func TestSaleSync(t *testing.T) {
-	s := InitTestServer(".testGoodSync")
-	rec := &pb.Record{Release: &pbd.Release{Id: 123}, Metadata: &pb.ReleaseMetadata{SaleId: 123}}
-	s.allrecords = append(s.allrecords, rec)
-	s.runSync(context.Background())
-
-	if rec.GetMetadata().SalePrice == 0 {
-		t.Errorf("Price has not synced: %v", rec)
-	}
-}
-
 func TestCleanSync(t *testing.T) {
 	s := InitTestServer(".testGoodSync")
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
 	if len(s.collection.InstanceToFolder) != 3 {
-		t.Errorf("Wrong number of records: %v", s.allrecords)
+		t.Errorf("Wrong number of records: %v", s.collection.InstanceToFolder)
 	}
 
 	for i := 0; i < 10; i++ {
@@ -301,7 +290,7 @@ func TestGoodMergeSync(t *testing.T) {
 
 	// Check that we have one record and one want
 	if len(s.collection.InstanceToFolder) != 3 {
-		t.Errorf("Wrong number of records(%v): %v", len(s.allrecords), s.allrecords)
+		t.Errorf("Wrong number of records(%v): %v", len(s.collection.InstanceToFolder), s.collection.InstanceToFolder)
 	}
 }
 
@@ -312,7 +301,7 @@ func TestGoodMergeSyncWithDirty(t *testing.T) {
 
 	// Check that we have one record and one want
 	if len(s.collection.InstanceToFolder) != 3 {
-		t.Errorf("Wrong number of records: %v", s.allrecords)
+		t.Errorf("Wrong number of records: %v", s.collection.InstanceToFolder)
 	}
 }
 
