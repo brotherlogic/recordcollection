@@ -326,10 +326,12 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 
 	if s.collection.InstanceToMaster[r.GetRelease().InstanceId] != r.GetRelease().MasterId {
 		s.collection.InstanceToMaster[r.GetRelease().InstanceId] = r.GetRelease().MasterId
+		save = true
 	}
 
 	if s.collection.InstanceToId[r.GetRelease().InstanceId] != r.GetRelease().Id {
 		s.collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
+		save = true
 	}
 
 	if save {

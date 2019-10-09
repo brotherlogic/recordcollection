@@ -59,6 +59,7 @@ type testSyncer struct {
 	failOnRate      bool
 	updateWantCount int
 	failSalePrice   bool
+	badLoad         bool
 }
 
 func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error {
@@ -74,9 +75,9 @@ func (t *testSyncer) RemoveFromSale(saleID int, releaseID int) error {
 
 func (t *testSyncer) GetCollection() []*pbd.Release {
 	return []*pbd.Release{
-		&pbd.Release{InstanceId: 1, Id: 234, MasterId: 12, Title: "Magic", Formats: []*pbd.Format{&pbd.Format{Name: "blah"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}},
-		&pbd.Release{InstanceId: 2, Id: 123, Title: "Johnson", MasterId: 12},
-		&pbd.Release{InstanceId: 3, Id: 1255, Title: "Johnson", MasterId: 123},
+		&pbd.Release{FolderId: 12, InstanceId: 1, Id: 234, MasterId: 12, Title: "Magic", Formats: []*pbd.Format{&pbd.Format{Name: "blah"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}},
+		&pbd.Release{FolderId: 12, InstanceId: 2, Id: 123, Title: "Johnson", MasterId: 12},
+		&pbd.Release{FolderId: 12, InstanceId: 3, Id: 1255, Title: "Johnson", MasterId: 123},
 	}
 }
 
@@ -163,8 +164,26 @@ func TestGoodSync(t *testing.T) {
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
-	if len(s.allrecords) != 3 {
-		t.Errorf("Wrong number of records: %v", s.allrecords)
+	if len(s.collection.InstanceToFolder) != 3 {
+		t.Errorf("Wrong number of records: %v", s.collection.InstanceToFolder)
+	}
+
+	s.runSyncWants(context.Background())
+	s.runSyncWants(context.Background())
+
+	if len(s.collection.GetNewWants()) != 1 {
+		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
+	}
+}
+
+func TestGoodSyncWithBadLoad(t *testing.T) {
+	s := InitTestServer(".testGoodSync")
+	s.collection.InstanceToFolder[int32(1)] = int32(12)
+	s.runSync(context.Background())
+
+	// Check that we have one record and one want
+	if len(s.collection.InstanceToFolder) != 1 {
+		t.Errorf("Wrong number of records: %v", s.collection.InstanceToFolder)
 	}
 
 	s.runSyncWants(context.Background())
@@ -190,11 +209,8 @@ func TestCleanSync(t *testing.T) {
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
-	if len(s.allrecords) != 3 {
+	if len(s.collection.InstanceToFolder) != 3 {
 		t.Errorf("Wrong number of records: %v", s.allrecords)
-	}
-	if len(s.allrecords[0].GetRelease().GetImages()) != 1 {
-		t.Errorf("Wrong number of images in synced record: %v", s.collection.GetRecords()[0].GetRelease())
 	}
 
 	for i := 0; i < 10; i++ {
@@ -202,14 +218,8 @@ func TestCleanSync(t *testing.T) {
 	}
 
 	// Check that we have one record and one want
-	if len(s.allrecords) != 3 {
+	if len(s.collection.InstanceToFolder) != 3 {
 		t.Errorf("Wrong number of records: %v", s.collection.GetRecords())
-	}
-	if len(s.allrecords[0].GetRelease().GetImages()) != 1 {
-		t.Errorf("Wrong number of images in synced record: %v", s.collection.GetRecords()[0].GetRelease())
-	}
-	if !s.allrecords[0].GetMetadata().Others {
-		t.Errorf("Sync has not set other correctly: %v", s.collection.GetRecords()[0])
 	}
 }
 
@@ -285,36 +295,24 @@ func TestDirtyMerge(t *testing.T) {
 
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
+	//s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
 	s.runSync(context.Background())
 	s.runSyncWants(context.Background())
 
 	// Check that we have one record and one want
-	if len(s.allrecords) != 3 {
+	if len(s.collection.InstanceToFolder) != 3 {
 		t.Errorf("Wrong number of records(%v): %v", len(s.allrecords), s.allrecords)
-	}
-	if s.allrecords[0].GetRelease().Title != "Magic" {
-		t.Errorf("Incoming has not been merged: %v", s.allrecords[0])
-	}
-	if len(s.collection.GetNewWants()) != 1 {
-		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
 	}
 }
 
 func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSyncWithDirty")
-	s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
+	//s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
-	if len(s.allrecords) != 3 {
+	if len(s.collection.InstanceToFolder) != 3 {
 		t.Errorf("Wrong number of records: %v", s.allrecords)
-	}
-	if s.allrecords[0].GetRelease().Title != "Magic" {
-		t.Errorf("Incoming has not been merged: %v", s.allrecords)
-	}
-	if len(s.collection.GetNewWants()) != 1 {
-		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
 	}
 }
 
