@@ -271,6 +271,12 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	recordToReturn := data.(*pb.Record)
 	s.recordCache[recordToReturn.GetRelease().InstanceId] = recordToReturn
 
+	if recordToReturn.GetMetadata().LastCache == 0 {
+		s.collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Now().Unix()
+	} else {
+		s.collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Unix(recordToReturn.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
+	}
+
 	return recordToReturn, nil
 }
 
@@ -373,6 +379,23 @@ func Init() *Server {
 	return s
 }
 
+func (s *Server) runRecache(ctx context.Context) error {
+	for id, key := range s.collection.InstanceToRecache {
+		if time.Unix(key, 0).Before(time.Now()) {
+			r, err := s.loadRecord(ctx, id)
+			if err != nil {
+				return err
+			}
+			err = s.recache(ctx, r)
+			if err != nil {
+				return err
+			}
+			return s.saveRecord(ctx, r)
+		}
+	}
+	return nil
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
@@ -408,6 +431,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
 	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
+	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
 	//server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 
 	server.disableSales = true
