@@ -261,7 +261,6 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 	startTime := time.Now()
 	records := s.retr.GetCollection()
-	s.getRecords(ctx, "sync-collection")
 	for _, record := range records {
 		foundInList := false
 		for iid := range s.collection.InstanceToFolder {
@@ -278,17 +277,6 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) {
 		if !foundInList {
 			nrec := &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix(), GoalFolder: record.FolderId}}
 			s.saveRecord(ctx, nrec)
-		}
-	}
-
-	// Update sale info
-	for _, r := range s.getRecords(ctx, "sync-saleinfo") {
-		if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
-			r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
-		}
-		if r.GetMetadata().SaleId > 0 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
-			r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
-
 		}
 	}
 

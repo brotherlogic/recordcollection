@@ -35,25 +35,6 @@ func InitTestServer(folder string) *Server {
 	return s
 }
 
-func TestGetCollection(t *testing.T) {
-	s := InitTestServer(".testaddrecord")
-	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})
-
-	if err != nil {
-		t.Fatalf("Error in adding record: %v", err)
-	}
-
-	collection, err := s.GetRecordCollection(context.Background(), &pb.GetRecordCollectionRequest{})
-
-	if err != nil {
-		t.Fatalf("Error in getting record collection: %v", err)
-	}
-
-	if len(collection.GetInstanceIds()) != 1 {
-		t.Errorf("Error getting collection: %v", collection)
-	}
-}
-
 func TestAddRecord(t *testing.T) {
 	s := InitTestServer(".testaddrecord")
 	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})
@@ -112,16 +93,6 @@ func TestAddRecordNoCost(t *testing.T) {
 	if err == nil {
 		t.Fatalf("No cost add has not failed: %v", r)
 	}
-}
-
-func TestGetRecords(t *testing.T) {
-	s := InitTestServer(".testGetRecords")
-	r, err := s.GetRecords(context.Background(), &pb.GetRecordsRequest{Filter: &pb.Record{}, Caller: "test"})
-
-	if err == nil {
-		t.Errorf("Error in getting records: %v", r)
-	}
-
 }
 
 func TestUpdateRecords(t *testing.T) {
@@ -461,15 +432,10 @@ func TestGetRecordFail(t *testing.T) {
 
 func TestGetRecordCacheMiss(t *testing.T) {
 	s := InitTestServer(".testcachemiss")
-	s.allrecords = []*pb.Record{&pb.Record{Release: &pbd.Release{InstanceId: 12}, Metadata: &pb.ReleaseMetadata{}}}
 
 	q, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 12})
 
-	if err != nil {
-		t.Errorf("Error in getting record: %v", err)
-	}
-
-	if q.GetRecord().GetRelease().GetInstanceId() != 12 {
-		t.Errorf("bad record returned: %v", q)
+	if err == nil {
+		t.Errorf("Error in getting record: %v", q)
 	}
 }
