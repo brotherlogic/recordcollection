@@ -26,6 +26,7 @@ func InitTestServer(folder string) *Server {
 	s.collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
 	s.collection.InstanceToMaster = make(map[int32]int32)
 	s.collection.InstanceToId = make(map[int32]int32)
+	s.collection.InstanceToRecache = make(map[int32]int64)
 	s.quota = &testQuota{pass: true}
 
 	os.RemoveAll(folder)
