@@ -182,6 +182,24 @@ func TestGoodSyncWithBadLoad(t *testing.T) {
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
+	if len(s.collection.InstanceToFolder) != 3 {
+		t.Errorf("Wrong number of records: %v", s.collection.InstanceToFolder)
+	}
+
+	s.runSyncWants(context.Background())
+
+	if len(s.collection.GetNewWants()) != 1 {
+		t.Errorf("Wrong number of wants: %v", s.collection.GetNewWants())
+	}
+}
+
+func TestGoodSyncWithBadLoadTimeout(t *testing.T) {
+	s := InitTestServer(".testGoodSync")
+	s.TimeoutLoad = true
+	s.collection.InstanceToFolder[int32(1)] = int32(12)
+	s.runSync(context.Background())
+
+	// Check that we have one record and one want
 	if len(s.collection.InstanceToFolder) != 1 {
 		t.Errorf("Wrong number of records: %v", s.collection.InstanceToFolder)
 	}

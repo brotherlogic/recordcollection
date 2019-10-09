@@ -14,6 +14,8 @@ import (
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
@@ -156,6 +158,7 @@ type Server struct {
 	mismatches            int
 	recordCache           map[int32]*pb.Record
 	recordCacheMutex      *sync.Mutex
+	TimeoutLoad           bool
 }
 
 const (
@@ -239,6 +242,9 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 }
 
 func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
+	if s.TimeoutLoad {
+		return nil, status.Error(codes.DeadlineExceeded, "Force DE")
+	}
 	s.recordCacheMutex.Lock()
 	defer s.recordCacheMutex.Unlock()
 	if val, ok := s.recordCache[id]; ok {
