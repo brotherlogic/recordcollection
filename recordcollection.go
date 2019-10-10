@@ -185,6 +185,11 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 
 	s.collection = data.(*pb.RecordCollection)
 
+	// Create the instance to recahe map
+	if s.collection.InstanceToRecache == nil {
+		s.collection.InstanceToRecache = make(map[int32]int64)
+	}
+
 	return nil
 }
 
