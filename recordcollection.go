@@ -342,6 +342,7 @@ func (s *Server) GetState() []*pbg.State {
 	s.recordCacheMutex.Lock()
 	defer s.recordCacheMutex.Unlock()
 	return []*pbg.State{
+		&pbg.State{Key: "needs_push", Value: int64(len(s.collection.NeedsPush))},
 		&pbg.State{Key: "recache_size", Value: int64(len(s.collection.InstanceToRecache))},
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
 		&pbg.State{Key: "to_sell", Value: int64(len(s.collection.SaleUpdates))},

@@ -43,6 +43,13 @@ func main() {
 		for i, want := range rec.GetWants() {
 			fmt.Printf("%v. %v\n", i, want)
 		}
+	case "unlistened":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_UNLISTENED}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+
+		fmt.Printf("Ids: %v\n", ids)
 	case "get":
 		i, _ := strconv.Atoi(os.Args[2])
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{int32(i)}})
