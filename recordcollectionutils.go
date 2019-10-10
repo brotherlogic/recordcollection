@@ -98,7 +98,7 @@ func (s *Server) runPush(ctx context.Context) error {
 	s.lastPushSize = len(s.collection.NeedsPush)
 	s.lastPushDone = 0
 	save := len(s.collection.NeedsPush) > 0
-	for _, id := range s.collection.NeedsPush {
+	for i, id := range s.collection.NeedsPush {
 		val, err := s.getRecord(ctx, id)
 		if err != nil {
 			return err
@@ -110,6 +110,8 @@ func (s *Server) runPush(ctx context.Context) error {
 		s.lastPushDone++
 
 		if pushed {
+			// Remove previous record from push
+			s.collection.NeedsPush = append(s.collection.NeedsPush[:i], s.collection.NeedsPush[i+1:]...)
 			break
 		}
 	}
