@@ -194,13 +194,14 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 }
 
 func (s *Server) saveRecordCollection(ctx context.Context) error {
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
 	s.saves++
 	return s.KSclient.Save(ctx, KEY, s.collection)
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
+
 	if r.GetMetadata().GoalFolder == 0 {
 		s.RaiseIssue(ctx, "Save Error", fmt.Sprintf("Trying to save a record without a goal folder: %v", r), false)
 		return fmt.Errorf("No goal folder")
