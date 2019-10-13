@@ -100,6 +100,7 @@ func (s *Server) runPush(ctx context.Context) error {
 	save := len(s.collection.NeedsPush) > 0
 	for i, id := range s.collection.NeedsPush {
 		val, err := s.getRecord(ctx, id)
+		s.Log(fmt.Sprintf("GOT RECORD %v -> %v", val, err))
 		if err != nil {
 			return err
 		}
