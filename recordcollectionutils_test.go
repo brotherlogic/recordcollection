@@ -29,7 +29,7 @@ type testMover struct {
 	pass bool
 }
 
-func (t *testMover) moveRecord(record *pb.Record, oldFolder, newFolder int32) error {
+func (t *testMover) moveRecord(ctx context.Context, record *pb.Record, oldFolder, newFolder int32) error {
 	if t.pass {
 		return nil
 	}

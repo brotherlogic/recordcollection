@@ -32,14 +32,14 @@ type quotaChecker interface {
 }
 
 type moveRecorder interface {
-	moveRecord(record *pb.Record, oldFolder, newFolder int32) error
+	moveRecord(ctx context.Context, record *pb.Record, oldFolder, newFolder int32) error
 }
 
 type prodMoveRecorder struct {
 	dial func(server string) (*grpc.ClientConn, error)
 }
 
-func (p *prodMoveRecorder) moveRecord(record *pb.Record, oldFolder, newFolder int32) error {
+func (p *prodMoveRecorder) moveRecord(ctx context.Context, record *pb.Record, oldFolder, newFolder int32) error {
 	conn, err := p.dial("recordmover")
 	if err != nil {
 		return err
@@ -47,9 +47,6 @@ func (p *prodMoveRecorder) moveRecord(record *pb.Record, oldFolder, newFolder in
 	defer conn.Close()
 
 	rmclient := pbrm.NewMoveServiceClient(conn)
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
-	defer cancel()
-
 	_, err = rmclient.RecordMove(ctx, &pbrm.MoveRequest{Move: &pbrm.RecordMove{
 		InstanceId: record.GetRelease().InstanceId,
 		FromFolder: oldFolder,
