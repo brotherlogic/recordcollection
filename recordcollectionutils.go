@@ -100,7 +100,6 @@ func (s *Server) runPush(ctx context.Context) error {
 	save := len(s.collection.NeedsPush) > 0
 	for i, id := range s.collection.NeedsPush {
 		val, err := s.getRecord(ctx, id)
-		s.Log(fmt.Sprintf("GOT RECORD %v -> %v", val, err))
 		if err != nil {
 			return err
 		}
@@ -148,7 +147,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 
 	if r.GetMetadata().GetMoveFolder() > 0 {
 		if r.GetMetadata().MoveFolder != r.GetRelease().FolderId {
-			err := s.mover.moveRecord(r, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
+			err := s.mover.moveRecord(ctx, r, r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder())
 			if r.GetRelease().FolderId != 1 && err != nil {
 				return false, fmt.Errorf("Move fail %v -> %v: %v (%v)", r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder(), err, ctx)
 			}
