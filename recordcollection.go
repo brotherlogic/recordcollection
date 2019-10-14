@@ -156,6 +156,7 @@ type Server struct {
 	recordCache           map[int32]*pb.Record
 	recordCacheMutex      *sync.Mutex
 	TimeoutLoad           bool
+	collectionMutex       *sync.Mutex
 }
 
 const (
@@ -192,6 +193,8 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 
 func (s *Server) saveRecordCollection(ctx context.Context) error {
 	s.saves++
+	s.collectionMutex.Lock()
+	defer s.collectionMutex.Unlock()
 	return s.KSclient.Save(ctx, KEY, s.collection)
 }
 
@@ -376,6 +379,7 @@ func Init() *Server {
 		instanceToFolderMutex: &sync.Mutex{},
 		recordCache:           make(map[int32]*pb.Record),
 		recordCacheMutex:      &sync.Mutex{},
+		collectionMutex:       &sync.Mutex{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
