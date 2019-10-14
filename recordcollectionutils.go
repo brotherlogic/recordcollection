@@ -62,9 +62,9 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
-	for _, id := range s.collection.SaleUpdates {
+	for _, id := range []int32{177077893} {
 		val, err := s.loadRecord(ctx, id)
-		if err != nil || id != 177077893 {
+		if err != nil {
 			return err
 		}
 		success, err := s.pushSale(ctx, val)
