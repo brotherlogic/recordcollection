@@ -236,7 +236,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		save = true
 	}
 
-	if r.GetMetadata().LastCache == 0 {
+	if r.GetMetadata().LastCache == 0 || r.GetMetadata().LastCache == 1 {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
 	} else {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Unix(r.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
