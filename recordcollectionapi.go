@@ -20,6 +20,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	delete(s.collection.InstanceToFolder, request.InstanceId)
 	delete(s.collection.InstanceToMaster, request.InstanceId)
 	delete(s.collection.InstanceToCategory, request.InstanceId)
+	delete(s.collection.InstanceToId, request.InstanceId)
 
 	s.saveRecordCollection(ctx)
 	return &pb.DeleteRecordResponse{}, nil
