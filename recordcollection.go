@@ -347,7 +347,15 @@ func (s *Server) GetState() []*pbg.State {
 	defer s.recordCacheMutex.Unlock()
 	s.recacheMutex.Lock()
 	defer s.recacheMutex.Unlock()
+
+	count := 0
+	for _, push := range s.collection.NeedsPush {
+		if push == 404128726 {
+			count++
+		}
+	}
 	return []*pbg.State{
+		&pbg.State{Key: "counts", Value: int64(count)},
 		&pbg.State{Key: "needs_push", Value: int64(len(s.collection.NeedsPush))},
 		&pbg.State{Key: "recache_size", Value: int64(len(s.collection.InstanceToRecache))},
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
