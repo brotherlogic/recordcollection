@@ -157,6 +157,7 @@ type Server struct {
 	recordCacheMutex      *sync.Mutex
 	TimeoutLoad           bool
 	collectionMutex       *sync.Mutex
+	recacheMutex          *sync.Mutex
 }
 
 const (
@@ -236,11 +237,13 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		save = true
 	}
 
+	s.recacheMutex.Lock()
 	if r.GetMetadata().LastCache == 0 || r.GetMetadata().LastCache == 1 {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
 	} else {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Unix(r.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
 	}
+	s.recacheMutex.Unlock()
 
 	if save {
 		s.saveRecordCollection(ctx)
@@ -342,6 +345,8 @@ func (s *Server) GetState() []*pbg.State {
 	defer s.instanceToFolderMutex.Unlock()
 	s.recordCacheMutex.Lock()
 	defer s.recordCacheMutex.Unlock()
+	s.recacheMutex.Lock()
+	defer s.recacheMutex.Unlock()
 	return []*pbg.State{
 		&pbg.State{Key: "needs_push", Value: int64(len(s.collection.NeedsPush))},
 		&pbg.State{Key: "recache_size", Value: int64(len(s.collection.InstanceToRecache))},
@@ -380,6 +385,7 @@ func Init() *Server {
 		recordCache:           make(map[int32]*pb.Record),
 		recordCacheMutex:      &sync.Mutex{},
 		collectionMutex:       &sync.Mutex{},
+		recacheMutex:          &sync.Mutex{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
@@ -388,19 +394,24 @@ func Init() *Server {
 }
 
 func (s *Server) runRecache(ctx context.Context) error {
+	s.recacheMutex.Lock()
 	for id, key := range s.collection.InstanceToRecache {
 		if time.Unix(key, 0).Before(time.Now()) {
 			r, err := s.loadRecord(ctx, id)
 			if err != nil {
+				s.recacheMutex.Unlock()
 				return err
 			}
 			err = s.recache(ctx, r)
 			if err != nil {
+				s.recacheMutex.Unlock()
 				return err
 			}
+			s.recacheMutex.Unlock()
 			return s.saveRecord(ctx, r)
 		}
 	}
+	s.recacheMutex.Unlock()
 	return nil
 }
 
