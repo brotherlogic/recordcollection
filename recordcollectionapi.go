@@ -23,7 +23,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	delete(s.collection.InstanceToId, request.InstanceId)
 
 	for i, val := range s.collection.NeedsPush {
-		if val.GetRelease().InstanceId == request.InstanceId {
+		if val == request.InstanceId {
 			s.collection.NeedsPush = append(s.collection.NeedsPush[:i], s.collection.NeedsPush[:i+1]...)
 			break
 		}
