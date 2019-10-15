@@ -321,8 +321,9 @@ func (s *Server) runSync(ctx context.Context) error {
 
 func (s *Server) recache(ctx context.Context, r *pb.Record) error {
 	// Don't recache a record that has a pending score
-	if r.GetMetadata().GetSetRating() > 0 {
-		return fmt.Errorf("Has pending score")
+	if r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().Dirty {
+		s.collection.NeedsPush = append(s.collection.NeedsPush, r.GetRelease().InstanceId)
+		return fmt.Errorf("Has pending score or is dirty")
 	}
 
 	// Update the score of the record
