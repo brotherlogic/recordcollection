@@ -109,7 +109,15 @@ func (s *Server) runPush(ctx context.Context) error {
 			return err
 		}
 		s.lastPushDone++
-		s.collection.NeedsPush = s.collection.NeedsPush[1:]
+
+		newPush := []int32{}
+		for _, v := range s.collection.NeedsPush {
+			if v != val.GetRelease().InstanceId {
+				newPush = append(newPush, v)
+			}
+		}
+
+		s.collection.NeedsPush = newPush
 		s.saveRecordCollection(ctx)
 	}
 
