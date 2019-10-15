@@ -397,17 +397,15 @@ func (s *Server) runRecache(ctx context.Context) error {
 	s.recacheMutex.Lock()
 	for id, key := range s.collection.InstanceToRecache {
 		if time.Unix(key, 0).Before(time.Now()) {
+			s.recacheMutex.Unlock()
 			r, err := s.loadRecord(ctx, id)
 			if err != nil {
-				s.recacheMutex.Unlock()
 				return err
 			}
 			err = s.recache(ctx, r)
 			if err != nil {
-				s.recacheMutex.Unlock()
 				return err
 			}
-			s.recacheMutex.Unlock()
 			return s.saveRecord(ctx, r)
 		}
 	}
