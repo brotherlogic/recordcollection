@@ -104,7 +104,7 @@ func (s *Server) runPush(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		pushed, err := s.pushRecord(ctx, val)
+		_, err = s.pushRecord(ctx, val)
 		if err != nil {
 			return err
 		}
