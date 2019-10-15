@@ -22,13 +22,14 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	delete(s.collection.InstanceToCategory, request.InstanceId)
 	delete(s.collection.InstanceToId, request.InstanceId)
 
-	for i, val := range s.collection.NeedsPush {
-		if val == request.InstanceId {
-			s.collection.NeedsPush = append(s.collection.NeedsPush[:i], s.collection.NeedsPush[:i+1]...)
-			break
+	betterDelete := []int32{}
+	for _, val := range s.collection.NeedsPush {
+		if val != request.InstanceId {
+			betterDelete = append(betterDelete, val)
 		}
 	}
 
+	s.collection.NeedsPush = betterDelete
 	s.saveRecordCollection(ctx)
 	return &pb.DeleteRecordResponse{}, nil
 }
