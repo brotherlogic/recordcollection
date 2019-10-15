@@ -97,8 +97,9 @@ func (s *Server) runPush(ctx context.Context) error {
 	s.lastPushTime = time.Now()
 	s.lastPushSize = len(s.collection.NeedsPush)
 	s.lastPushDone = 0
-	save := len(s.collection.NeedsPush) > 0
-	for i, id := range s.collection.NeedsPush {
+	if len(s.collection.NeedsPush) > 0 {
+		id := s.collection.NeedsPush[0]
+		s.Log(fmt.Sprintf("Pushing %v", id))
 		val, err := s.getRecord(ctx, id)
 		if err != nil {
 			return err
@@ -108,14 +109,7 @@ func (s *Server) runPush(ctx context.Context) error {
 			return err
 		}
 		s.lastPushDone++
-
-		if pushed {
-			// Remove previous record from push
-			s.collection.NeedsPush = append(s.collection.NeedsPush[:i], s.collection.NeedsPush[i+1:]...)
-			break
-		}
-	}
-	if save {
+		s.collection.NeedsPush = s.collection.NeedsPush[1:]
 		s.saveRecordCollection(ctx)
 	}
 
