@@ -99,6 +99,7 @@ func (s *Server) runPush(ctx context.Context) error {
 	s.lastPushDone = 0
 	save := len(s.collection.NeedsPush) > 0
 	for i, id := range s.collection.NeedsPush {
+		s.Log(fmt.Sprintf("Getting %v for push", id))
 		val, err := s.getRecord(ctx, id)
 		if err != nil {
 			return err
