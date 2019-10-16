@@ -52,7 +52,8 @@ func TestAddRecord(t *testing.T) {
 
 func TestDeleteRecord(t *testing.T) {
 	s := InitTestServer(".testaddrecord")
-	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234}}})
+	s.collection.NeedsPush = []int32{int32(456), int32(123)}
+	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234, InstanceId: 123}}})
 
 	if err != nil {
 		t.Fatalf("Error in adding record: %v", err)
@@ -71,6 +72,10 @@ func TestDeleteRecord(t *testing.T) {
 
 	if len(s.collection.Records) != 0 {
 		t.Errorf("Record has not been delete: %v", s.collection)
+	}
+
+	if len(s.collection.NeedsPush) != 1 {
+		t.Errorf("Has not been removed from push: %v", s.collection.NeedsPush)
 	}
 }
 

@@ -540,7 +540,7 @@ func TestSyncRecordTracklist(t *testing.T) {
 func TestPushSaleBasicWithNone(t *testing.T) {
 	s := InitTestServer(".saleadjustnone")
 	err := s.pushSales(context.Background())
-	if err == nil {
+	if err != nil {
 		t.Errorf("Sale push failed: %v", err)
 	}
 

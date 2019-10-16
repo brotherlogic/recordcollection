@@ -29,7 +29,7 @@ func main() {
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*5)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*5)
 	defer cancel()
 
 	switch os.Args[1] {
@@ -82,6 +82,28 @@ func main() {
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
+	case "reset_sale_price":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
+
+		if err == nil {
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+				}
+				r.GetRecord().GetMetadata().SalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
+				u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r.GetRecord()})
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+				fmt.Println()
+				fmt.Printf("Release: %v\n", u.GetUpdated().GetRelease())
+				fmt.Printf("Metadata: %v\n", u.GetUpdated().GetMetadata())
+			}
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
+
 	case "sget":
 		i, _ := strconv.Atoi(os.Args[2])
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
