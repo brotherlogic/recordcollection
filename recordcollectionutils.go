@@ -226,10 +226,6 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 	s.collectionMutex.Lock()
 	s.collection.InstanceToFolder[record.InstanceId] = record.FolderId
 	s.collectionMutex.Unlock()
-	if record.FolderId != r.GetRelease().FolderId {
-		s.RaiseIssue(ctx, "Mismatch on release pull", fmt.Sprintf("%v vs %v", r.GetRelease(), record), false)
-		s.Log(fmt.Sprintf("Release mismatch: %v, %v", r.GetRelease(), record))
-	}
 
 	hasCondition := len(r.GetRelease().RecordCondition) > 0
 
