@@ -15,6 +15,7 @@ import (
 
 // DeleteRecord deletes a record
 func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordRequest) (*pb.DeleteRecordResponse, error) {
+	s.collectionMutex.Lock()
 	//Remove the record from the maps
 	delete(s.collection.InstanceToUpdate, request.InstanceId)
 	delete(s.collection.InstanceToFolder, request.InstanceId)
@@ -29,6 +30,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 		}
 	}
 
+	s.collectionMutex.Unlock()
 	s.collection.NeedsPush = betterDelete
 	s.saveRecordCollection(ctx)
 	return &pb.DeleteRecordResponse{}, nil
@@ -151,7 +153,9 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
+		s.collectionMutex.Lock()
 		s.collection.InstanceToFolder[int32(instanceID)] = int32(812802)
+		s.collectionMutex.Unlock()
 		s.cacheRecord(ctx, request.GetToAdd())
 		s.saveRecord(ctx, request.GetToAdd())
 		s.saveNeeded = true
@@ -163,8 +167,8 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 // QueryRecords gets a record using the new schema
 func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
 	ids := make([]int32, 0)
-	s.instanceToFolderMutex.Lock()
-	defer s.instanceToFolderMutex.Unlock()
+	s.collectionMutex.Lock()
+	defer s.collectionMutex.Unlock()
 	switch x := req.Query.(type) {
 
 	case *pb.QueryRecordsRequest_FolderId:
@@ -220,7 +224,9 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	if err != nil {
 		st := status.Convert(err)
 		if st.Code() != codes.DeadlineExceeded {
+			s.collectionMutex.Lock()
 			s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v, [%v,%v,%v,%v] (%v)", req.InstanceId, err, s.collection.InstanceToFolder[req.InstanceId], s.collection.InstanceToMaster[req.InstanceId], s.collection.InstanceToCategory[req.InstanceId], s.collection.InstanceToUpdate[req.InstanceId], ctx), false)
+			s.collectionMutex.Unlock()
 		}
 
 		return nil, fmt.Errorf("Could not locate %v -> %v", req.InstanceId, err)
