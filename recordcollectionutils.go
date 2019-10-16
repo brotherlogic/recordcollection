@@ -222,9 +222,10 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 
 func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Release, num int64) {
 	//Update record if releases don't match
-	s.instanceToFolderMutex.Lock()
+
+	s.collectionMutex.Lock()
 	s.collection.InstanceToFolder[record.InstanceId] = record.FolderId
-	s.instanceToFolderMutex.Unlock()
+	s.collectionMutex.Unlock()
 	if record.FolderId != r.GetRelease().FolderId {
 		s.RaiseIssue(ctx, "Mismatch on release pull", fmt.Sprintf("%v vs %v", r.GetRelease(), record), false)
 		s.Log(fmt.Sprintf("Release mismatch: %v, %v", r.GetRelease(), record))
@@ -267,9 +268,11 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 	records := s.retr.GetCollection()
 	for _, record := range records {
 		foundInList := false
+		s.collectionMutex.Lock()
 		for iid := range s.collection.InstanceToFolder {
 			if iid == record.InstanceId {
 				foundInList = true
+				s.collectionMutex.Unlock()
 				r, err := s.loadRecord(ctx, record.InstanceId)
 				if err == nil {
 					s.syncRecords(ctx, r, record, colNumber)
@@ -281,13 +284,18 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 						return err
 					}
 				}
+				s.collectionMutex.Lock()
 			}
 		}
 
 		if !foundInList {
 			nrec := &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix(), GoalFolder: record.FolderId}}
+			s.collectionMutex.Unlock()
 			s.saveRecord(ctx, nrec)
+			s.collectionMutex.Lock()
 		}
+
+		s.collectionMutex.Unlock()
 	}
 
 	s.lastSyncTime = time.Now()

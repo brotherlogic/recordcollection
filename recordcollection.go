@@ -157,7 +157,6 @@ type Server struct {
 	recordCacheMutex      *sync.Mutex
 	TimeoutLoad           bool
 	collectionMutex       *sync.Mutex
-	recacheMutex          *sync.Mutex
 }
 
 const (
@@ -211,6 +210,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	r.GetMetadata().SaveIteration = s.collection.CollectionNumber
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
 
+	s.collectionMutex.Lock()
 	save := false
 	if s.collection.InstanceToFolder[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
 		s.collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
@@ -236,14 +236,12 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		s.collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
 		save = true
 	}
-
-	s.recacheMutex.Lock()
 	if r.GetMetadata().LastCache == 0 || r.GetMetadata().LastCache == 1 {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
 	} else {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Unix(r.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
 	}
-	s.recacheMutex.Unlock()
+	s.collectionMutex.Unlock()
 
 	if save {
 		s.saveRecordCollection(ctx)
@@ -280,11 +278,13 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	recordToReturn := data.(*pb.Record)
 	s.recordCache[recordToReturn.GetRelease().InstanceId] = recordToReturn
 
+	s.collectionMutex.Lock()
 	if recordToReturn.GetMetadata().LastCache == 0 {
 		s.collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Now().Unix()
 	} else {
 		s.collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Unix(recordToReturn.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
 	}
+	s.collectionMutex.Unlock()
 
 	return recordToReturn, nil
 }
@@ -345,8 +345,8 @@ func (s *Server) GetState() []*pbg.State {
 	defer s.instanceToFolderMutex.Unlock()
 	s.recordCacheMutex.Lock()
 	defer s.recordCacheMutex.Unlock()
-	s.recacheMutex.Lock()
-	defer s.recacheMutex.Unlock()
+	s.collectionMutex.Lock()
+	defer s.collectionMutex.Unlock()
 
 	count := 0
 	for _, push := range s.collection.NeedsPush {
@@ -393,7 +393,6 @@ func Init() *Server {
 		recordCache:           make(map[int32]*pb.Record),
 		recordCacheMutex:      &sync.Mutex{},
 		collectionMutex:       &sync.Mutex{},
-		recacheMutex:          &sync.Mutex{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
@@ -402,10 +401,10 @@ func Init() *Server {
 }
 
 func (s *Server) runRecache(ctx context.Context) error {
-	s.recacheMutex.Lock()
+	s.collectionMutex.Lock()
 	for id, key := range s.collection.InstanceToRecache {
 		if time.Unix(key, 0).Before(time.Now()) {
-			s.recacheMutex.Unlock()
+			s.collectionMutex.Unlock()
 			r, err := s.loadRecord(ctx, id)
 			if err != nil {
 				return err
@@ -417,7 +416,7 @@ func (s *Server) runRecache(ctx context.Context) error {
 			return s.saveRecord(ctx, r)
 		}
 	}
-	s.recacheMutex.Unlock()
+	s.collectionMutex.Unlock()
 	return nil
 }
 
