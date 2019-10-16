@@ -284,6 +284,10 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	} else {
 		s.collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Unix(recordToReturn.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
 	}
+
+	if recordToReturn.GetMetadata().GetDirty() {
+		s.collection.NeedsPush = append(s.collection.NeedsPush, recordToReturn.GetRelease().GetInstanceId())
+	}
 	s.collectionMutex.Unlock()
 
 	return recordToReturn, nil
@@ -355,7 +359,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
-		&pbg.State{Key: "counts", Value: int64(count)},
+		&pbg.State{Key: "needs_push_sales", Text: fmt.Sprintf("%v", s.collection.SaleUpdates)},
 		&pbg.State{Key: "needs_push", Text: fmt.Sprintf("%v", s.collection.NeedsPush)},
 		&pbg.State{Key: "recache_size", Value: int64(len(s.collection.InstanceToRecache))},
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
