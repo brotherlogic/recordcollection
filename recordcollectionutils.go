@@ -75,9 +75,10 @@ func (s *Server) pushSales(ctx context.Context) error {
 		}
 		if success {
 			s.saveRecord(ctx, val)
-			doneID = id
-			break
 		}
+
+		doneID = id
+		break
 	}
 
 	sales := []int32{}
