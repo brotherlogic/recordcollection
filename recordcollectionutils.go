@@ -69,6 +69,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 			return err
 		}
 		success, err := s.pushSale(ctx, val)
+		s.Log(fmt.Sprintf("SALE PUSH %v -> %v, %v", id, success, err))
 		if err != nil {
 			return fmt.Errorf("Error pushing %v (%v): %v", val.GetRelease().InstanceId, val.GetMetadata().Category, err)
 		}
