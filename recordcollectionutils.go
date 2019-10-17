@@ -62,6 +62,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
+	doneID := int32(-1)
 	for _, id := range s.collection.SaleUpdates {
 		val, err := s.loadRecord(ctx, id)
 		if err != nil {
@@ -72,9 +73,20 @@ func (s *Server) pushSales(ctx context.Context) error {
 			return fmt.Errorf("Error pushing %v (%v): %v", val.GetRelease().InstanceId, val.GetMetadata().Category, err)
 		}
 		if success {
-			return s.saveRecord(ctx, val)
+			s.saveRecord(ctx, val)
+			doneID = id
+			break
 		}
 	}
+
+	sales := []int32{}
+	for _, v := range s.collection.SaleUpdates {
+		if doneID != v {
+			sales = append(sales, v)
+		}
+	}
+	s.collection.SaleUpdates = sales
+	s.saveRecordCollection(ctx)
 	return nil
 }
 

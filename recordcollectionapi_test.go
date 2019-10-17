@@ -236,6 +236,7 @@ func TestRemoveRecordFromSale(t *testing.T) {
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_SOLD_OFFLINE, SaleDirty: true, Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
 	s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(177077893))
+	s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(10))
 
 	err := s.pushSales(context.Background())
 
