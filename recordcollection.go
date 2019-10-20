@@ -353,9 +353,11 @@ func (s *Server) GetState() []*pbg.State {
 	defer s.collectionMutex.Unlock()
 
 	count := 0
-	for _, push := range s.collection.NeedsPush {
-		if push == 404128726 {
-			count++
+	if s.collection != nil {
+		for _, push := range s.collection.NeedsPush {
+			if push == 404128726 {
+				count++
+			}
 		}
 	}
 	return []*pbg.State{
