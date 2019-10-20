@@ -182,7 +182,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 
 	case *pb.QueryRecordsRequest_UpdateTime:
 		for id, updateTime := range s.collection.InstanceToUpdate {
-			if updateTime <= x.UpdateTime {
+			if updateTime >= x.UpdateTime {
 				ids = append(ids, id)
 			}
 		}
