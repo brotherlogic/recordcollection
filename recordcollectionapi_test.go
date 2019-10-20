@@ -350,7 +350,7 @@ func TestQueryRecordsWithFolderId(t *testing.T) {
 
 func TestQueryRecordsWithUpdateTime(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
-	s.collection.InstanceToUpdate[12] = 0
+	s.collection.InstanceToUpdate[12] = 14
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_UpdateTime{12}})
 
