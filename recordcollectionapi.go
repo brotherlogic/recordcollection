@@ -33,8 +33,9 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	s.collectionMutex.Unlock()
 	s.Log(fmt.Sprintf("Removed from push: %v -> %v given %v and %v", len(s.collection.NeedsPush), len(betterDelete), request.InstanceId, s.collection.NeedsPush[0]))
 	s.collection.NeedsPush = betterDelete
+
 	s.saveRecordCollection(ctx)
-	return &pb.DeleteRecordResponse{}, nil
+	return &pb.DeleteRecordResponse{}, s.deleteRecord(ctx, request.InstanceId)
 }
 
 // GetWants gets a bunch of records

@@ -19,6 +19,7 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
+	pbks "github.com/brotherlogic/keystore/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbrp "github.com/brotherlogic/recordprocess/proto"
@@ -196,6 +197,21 @@ func (s *Server) saveRecordCollection(ctx context.Context) error {
 	s.collectionMutex.Lock()
 	defer s.collectionMutex.Unlock()
 	return s.KSclient.Save(ctx, KEY, s.collection)
+}
+
+func (s *Server) deleteRecord(ctx context.Context, i int32) error {
+	if !s.SkipLog {
+		conn, err := s.DialMaster("keystore")
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+
+		client := pbks.NewKeyStoreServiceClient(conn)
+		_, err = client.Delete(ctx, &pbks.DeleteRequest{Key: fmt.Sprintf("%v%v", SAVEKEY, i)})
+		return err
+	}
+	return nil
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
