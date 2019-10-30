@@ -30,6 +30,11 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 		}
 	}
 
+	//Delete from the cache
+	s.recordCacheMutex.Lock()
+	delete(s.recordCache, request.InstanceId)
+	s.recordCacheMutex.Unlock()
+
 	s.collectionMutex.Unlock()
 	s.Log(fmt.Sprintf("Removed from push: %v -> %v given %v and %v", len(s.collection.NeedsPush), len(betterDelete), request.InstanceId, s.collection.NeedsPush[0]))
 	s.collection.NeedsPush = betterDelete
