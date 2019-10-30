@@ -32,6 +32,7 @@ func InitTestServer(folder string) *Server {
 	os.RemoveAll(folder)
 	s.GoServer.KSclient = *keystoreclient.GetTestClient(folder)
 	s.SkipLog = true
+	s.SkipIssue = true
 
 	return s
 }
