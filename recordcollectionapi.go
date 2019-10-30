@@ -31,6 +31,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	}
 
 	s.collectionMutex.Unlock()
+	s.Log(fmt.Sprintf("Removed from push: %v -> %v", len(s.collection.NeedsPush), len(betterDelete)))
 	s.collection.NeedsPush = betterDelete
 	s.saveRecordCollection(ctx)
 	return &pb.DeleteRecordResponse{}, nil
