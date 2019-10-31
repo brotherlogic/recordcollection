@@ -185,6 +185,9 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 	r.GetMetadata().SetRating = 0
 
 	r.GetMetadata().Dirty = false
+
+	//Ensure records get updated
+	r.GetMetadata().LastUpdateTime = time.Now().Unix()
 	s.saveRecord(ctx, r)
 	return pushed, nil
 }
