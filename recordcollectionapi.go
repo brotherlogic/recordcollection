@@ -230,7 +230,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 
 	if err != nil {
 		st := status.Convert(err)
-		if st.Code() != codes.DeadlineExceeded {
+		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable {
 			s.collectionMutex.Lock()
 			s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v, [%v,%v,%v,%v] (%v)", req.InstanceId, err, s.collection.InstanceToFolder[req.InstanceId], s.collection.InstanceToMaster[req.InstanceId], s.collection.InstanceToCategory[req.InstanceId], s.collection.InstanceToUpdate[req.InstanceId], ctx), false)
 			s.collectionMutex.Unlock()
