@@ -158,6 +158,7 @@ type Server struct {
 	recordCacheMutex      *sync.Mutex
 	TimeoutLoad           bool
 	collectionMutex       *sync.Mutex
+	longest               time.Duration
 }
 
 const (
@@ -377,6 +378,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "longest", TimeDuration: s.longest.Nanoseconds()},
 		&pbg.State{Key: "needs_push_sales", Text: fmt.Sprintf("%v", s.collection.SaleUpdates)},
 		&pbg.State{Key: "needs_push", Text: fmt.Sprintf("%v", s.collection.NeedsPush)},
 		&pbg.State{Key: "recache_size", Value: int64(len(s.collection.InstanceToRecache))},
