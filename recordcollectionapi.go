@@ -174,8 +174,13 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 // QueryRecords gets a record using the new schema
 func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
 	ids := make([]int32, 0)
+	t := time.Now()
 	s.collectionMutex.Lock()
 	defer s.collectionMutex.Unlock()
+	taken := time.Now().Sub(t)
+	if taken > s.longest {
+		s.longest = taken
+	}
 	switch x := req.Query.(type) {
 
 	case *pb.QueryRecordsRequest_FolderId:
