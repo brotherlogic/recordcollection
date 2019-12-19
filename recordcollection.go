@@ -466,10 +466,9 @@ func main() {
 	server.Register = server
 	server.SendTrace = true
 
-	t := time.Now()
-	err := server.RegisterServer("recordcollection", false)
+	err := server.RegisterServerV2("recordcollection", false, false)
 	if err != nil {
-		log.Fatalf("Unable to register (%v) at %v", err, time.Now().Sub(t))
+		return
 	}
 
 	// This enables pprof
@@ -482,7 +481,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 
-	//server.disableSales = true
+	server.disableSales = true
 
 	server.MemCap = 400000000
 	server.Serve()
