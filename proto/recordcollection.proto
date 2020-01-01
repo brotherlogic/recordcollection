@@ -202,6 +202,8 @@ message ReleaseMetadata {
 
   int64 next_update_time = 35;
   int64 last_update_time = 36;
+
+  int32 accounting_year = 37;
 }
 
 // A request to get some records
