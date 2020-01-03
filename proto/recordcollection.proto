@@ -72,6 +72,9 @@ message ReleaseMetadata {
   
   // The cost of the record in cents
   int32 cost = 4;
+  // Reported cost - the cost we report for budget
+  int32 reported_cost = 38;
+  
   
   // If we have other copies of this
   bool others = 5;
