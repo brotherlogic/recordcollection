@@ -253,6 +253,12 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		s.collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
 		save = true
 	}
+
+	if s.collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] != r.GetMetadata().GetSalePriceUpdate() {
+		s.collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] = r.GetMetadata().GetSalePriceUpdate()
+		save = true
+	}
+
 	if r.GetMetadata().LastCache == 0 || r.GetMetadata().LastCache == 1 {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
 	} else {
@@ -378,6 +384,7 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 	return []*pbg.State{
+		&pbg.State{Key: "price__update", Value: int64(len(s.collection.GetInstanceToLastSalePriceUpdate()))},
 		&pbg.State{Key: "longest", TimeDuration: s.longest.Nanoseconds()},
 		&pbg.State{Key: "needs_push_sales", Text: fmt.Sprintf("%v", s.collection.GetSaleUpdates())},
 		&pbg.State{Key: "needs_push", Text: fmt.Sprintf("%v", s.collection.GetNeedsPush())},
@@ -444,6 +451,37 @@ func (s *Server) runRecache(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) updateSalePrice(ctx context.Context) error {
+	for id, val := range s.collection.InstanceToLastSalePriceUpdate {
+		if time.Now().Sub(time.Unix(val, 0)) > time.Hour*24*30 {
+			r, err := s.loadRecord(ctx, id)
+			if err != nil {
+				return err
+			}
+			price, err := s.retr.GetSalePrice(int(r.GetRelease().Id))
+			if err != nil {
+				return err
+			}
+			s.Log(fmt.Sprintf("Retrieved %v, %v", price, err))
+			r.GetMetadata().CurrentSalePrice = int32(price * 100)
+			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
+			s.Log(fmt.Sprintf("Updating %v", r.GetRelease().Id))
+			s.saveRecord(ctx, r)
+			return nil
+		}
+	}
+
+	if len(s.collection.InstanceToLastSalePriceUpdate) != len(s.collection.InstanceToFolder) {
+		for id := range s.collection.InstanceToFolder {
+			if _, ok := s.collection.InstanceToLastSalePriceUpdate[id]; !ok {
+				s.collection.InstanceToLastSalePriceUpdate[id] = 1
+			}
+		}
+	}
+
+	return nil
+}
+
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
@@ -480,6 +518,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
 	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
+	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute*5)
 
 	server.disableSales = false
 
