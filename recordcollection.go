@@ -190,6 +190,10 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		s.collection.InstanceToRecache = make(map[int32]int64)
 	}
 
+	if s.collection.InstanceToLastSalePriceUpdate == nil {
+		s.collection.InstanceToLastSalePriceUpdate = make(map[int32]int64)
+	}
+
 	return nil
 }
 
