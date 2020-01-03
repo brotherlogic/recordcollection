@@ -15,16 +15,18 @@ import (
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
+	"google.golang.org/grpc/resolver"
 )
 
+func init() {
+	resolver.Register(&utils.DiscoveryClientResolverBuilder{})
+}
+
 func main() {
-	host, port, err := utils.Resolve("recordcollection", "recordcollection-cli")
-
+	conn, err := grpc.Dial("discovery:///recordcollection", grpc.WithInsecure())
 	if err != nil {
-		log.Fatalf("Unable to locate recordcollection server")
+		log.Fatalf("Cannot reach rc: %v", err)
 	}
-
-	conn, _ := grpc.Dial(host+":"+strconv.Itoa(int(port)), grpc.WithInsecure())
 	defer conn.Close()
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)

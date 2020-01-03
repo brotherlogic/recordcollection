@@ -10,3 +10,4 @@ test.sh
 recordcollection
 .test*
 recordcollection_cli/recordcollection_cli
+scripts/scripts
