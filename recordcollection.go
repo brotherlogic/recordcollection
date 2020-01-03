@@ -481,7 +481,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 
-	server.disableSales = true
+	server.disableSales = false
 
 	server.MemCap = 400000000
 	server.Serve()
