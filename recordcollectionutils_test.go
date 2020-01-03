@@ -461,22 +461,11 @@ func TestBasic(t *testing.T) {
 	s.updateWant(&pb.Want{Release: &pbd.Release{Id: 766489}, Metadata: &pb.WantMetadata{}})
 }
 
-func TestPushSaleWithAdjust(t *testing.T) {
-	s := InitTestServer(".saleadjust")
-
-	record := &pb.Record{Release: &pbd.Release{}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, CurrentSalePrice: 100, SaleDirty: true}}
-	s.pushSale(context.Background(), record)
-
-	if record.GetMetadata().SalePrice != 100 {
-		t.Errorf("Sale price was not adjusted: %v", record)
-	}
-}
-
 func TestPushSaleWithFail(t *testing.T) {
 	s := InitTestServer(".saleadjust")
 	s.retr = &testSyncer{failSalePrice: true}
 
-	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, CurrentSalePrice: 100, SaleDirty: true}}
+	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, NewSalePrice: 100, SaleDirty: true}}
 	_, err := s.pushSale(context.Background(), record)
 	if err == nil {
 		t.Errorf("Sale push did not fail")

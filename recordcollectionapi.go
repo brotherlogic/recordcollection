@@ -106,8 +106,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	// If this is a sale update - set the dirty flag
-	if rec.GetMetadata().SalePrice != request.GetUpdate().GetMetadata().SalePrice {
-		request.GetUpdate().GetMetadata().SaleDirty = true
+	if request.GetUpdate().GetMetadata().NewSalePrice > 0 || request.GetUpdate().GetMetadata().SaleDirty {
+		rec.GetMetadata().SaleDirty = true
 		s.collection.SaleUpdates = append(s.collection.SaleUpdates, rec.GetRelease().InstanceId)
 	}
 
