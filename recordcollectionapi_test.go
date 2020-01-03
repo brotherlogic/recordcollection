@@ -149,7 +149,7 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
 	s.saleMap[1234] = rec
 
-	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SalePrice: 1235}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}}})
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{NewSalePrice: 1235}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}}})
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
 	if err != nil {
@@ -194,7 +194,10 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
-	s.pushSales(context.Background())
+	err = s.pushSales(context.Background())
+	if err != nil {
+		t.Fatalf("Error in pushing sales: %v", err)
+	}
 
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -214,7 +217,7 @@ func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
 	s.saleMap[1234] = rec
 
-	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SaleDirty: true}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}}})
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{NewSalePrice: 100}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}}})
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
 	if err != nil {

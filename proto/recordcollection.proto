@@ -163,6 +163,7 @@ message ReleaseMetadata {
   bool sale_dirty = 21;
   int32 sale_price = 22;
   godiscogs.SaleState sale_state = 23;
+  int32 new_sale_price = 39;
   
   // Reason for a move failure
   string move_failure = 20;

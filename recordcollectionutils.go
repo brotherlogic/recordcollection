@@ -19,13 +19,10 @@ const (
 
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	if val.GetMetadata().SaleDirty &&
+		val.GetMetadata().NewSalePrice > 0 &&
 		(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
 			val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
 
-		// Adjust sale price if needed
-		if val.GetMetadata().SalePrice == 0 {
-			val.GetMetadata().SalePrice = val.GetMetadata().CurrentSalePrice
-		}
 		if len(val.GetRelease().RecordCondition) == 0 {
 			s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id), false)
 			return false, fmt.Errorf("%v [%v/%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id, val.GetRelease().InstanceId)
@@ -33,9 +30,10 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 
 		s.lastSale = int64(val.GetRelease().InstanceId)
 		s.salesPushes++
-		err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().SalePrice)/100)
+		err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().NewSalePrice)/100)
 		if err == nil {
 			val.GetMetadata().SaleDirty = false
+			val.GetMetadata().NewSalePrice = 0
 		} else {
 			// Unavailable is a valid response from a sales push
 			if st, ok := status.FromError(err); !ok || st.Code() != codes.Unavailable {
@@ -57,6 +55,8 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		return true, err
 	}
 
+	//Nothing to do here
+	val.GetMetadata().SaleDirty = false
 	return false, nil
 }
 
