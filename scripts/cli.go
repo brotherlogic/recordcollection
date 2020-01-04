@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -34,6 +35,30 @@ func main() {
 	defer cancel()
 
 	switch os.Args[1] {
+	case "most_expensive":
+		meFlags := flag.NewFlagSet("ME", flag.ExitOnError)
+		var folder = meFlags.Int("folder", -1, "Id of the record to add")
+
+		if err := meFlags.Parse(os.Args[2:]); err == nil {
+			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(*folder)}})
+			if err != nil {
+				log.Fatalf("Error query: %v", err)
+			}
+			highest := int32(0)
+			var rec *pbrc.Record
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Error getting record: %v", err)
+				}
+				if r.GetRecord().GetMetadata().GetCurrentSalePrice() > highest {
+					highest = r.GetRecord().GetMetadata().GetCurrentSalePrice()
+					rec = r.GetRecord()
+				}
+			}
+
+			fmt.Printf("Highest [%v] = %v\n", *folder, rec.GetRelease().GetTitle())
+		}
 	case "reset_sale_price":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
 

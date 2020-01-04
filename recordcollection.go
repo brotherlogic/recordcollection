@@ -535,7 +535,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
 	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
-	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Second*5)
+	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute)
 
 	server.disableSales = false
 
