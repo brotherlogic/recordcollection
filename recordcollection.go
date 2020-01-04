@@ -394,7 +394,7 @@ func (s *Server) GetState() []*pbg.State {
 		if val < dcount {
 			dcount = val
 		}
-		if val == 1 {
+		if val > 1 {
 			ecount++
 		}
 	}
@@ -479,10 +479,9 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			s.Log(fmt.Sprintf("Retrieved %v, %v", price, err))
+			s.Log(fmt.Sprintf("Retrieved %v, %v -> %v", price, err, r.GetRelease().Id))
 			r.GetMetadata().CurrentSalePrice = int32(price * 100)
 			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
-			s.Log(fmt.Sprintf("Updating %v", r.GetRelease().Id))
 			s.saveRecord(ctx, r)
 			return nil
 		}
