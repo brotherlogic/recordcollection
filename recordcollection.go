@@ -388,13 +388,14 @@ func (s *Server) GetState() []*pbg.State {
 		}
 	}
 
+	base := time.Now().Add(time.Hour * -24 * 30).Unix()
 	dcount := time.Now().Unix()
 	ecount := 0
 	for _, val := range s.collection.GetInstanceToLastSalePriceUpdate() {
 		if val < dcount {
 			dcount = val
 		}
-		if val > 1 {
+		if val > base {
 			ecount++
 		}
 	}
