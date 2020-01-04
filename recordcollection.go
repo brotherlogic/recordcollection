@@ -401,7 +401,7 @@ func (s *Server) GetState() []*pbg.State {
 
 	return []*pbg.State{
 		&pbg.State{Key: "price_min", TimeValue: int64(dcount)},
-		&pbg.State{Key: "price_update", Value: int64(ecount)},
+		&pbg.State{Key: "price_update", Value: int64(len(s.collection.GetInstanceToLastSalePriceUpdate()) - ecount)},
 		&pbg.State{Key: "longest", TimeDuration: s.longest.Nanoseconds()},
 		&pbg.State{Key: "needs_push_sales", Text: fmt.Sprintf("%v", s.collection.GetSaleUpdates())},
 		&pbg.State{Key: "needs_push", Text: fmt.Sprintf("%v", s.collection.GetNeedsPush())},
