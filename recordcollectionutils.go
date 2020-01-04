@@ -311,6 +311,22 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 		s.collectionMutex.Unlock()
 	}
 
+	// Update sale info
+	for iid, category := range s.collection.InstanceToCategory {
+		if category == pb.ReleaseMetadata_LISTED_TO_SELL {
+			r, err := s.loadRecord(ctx, iid)
+			if err == nil {
+				if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
+					r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
+				}
+				if r.GetMetadata().SaleId > 0 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
+					r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
+				}
+				s.saveRecord(ctx, r)
+			}
+		}
+	}
+
 	s.lastSyncTime = time.Now()
 	s.lastSyncLength = time.Now().Sub(startTime)
 	return s.saveRecordCollection(ctx)
