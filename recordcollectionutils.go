@@ -313,23 +313,27 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 
 	// Update sale info
 	for iid, category := range s.collection.InstanceToCategory {
-		if category == pb.ReleaseMetadata_LISTED_TO_SELL {
-			r, err := s.loadRecord(ctx, iid)
-			if err == nil {
-				if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
-					r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
-				}
-				if r.GetMetadata().SaleId > 0 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
-					r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
-				}
-				s.saveRecord(ctx, r)
-			}
-		}
+		s.updateSale(ctx, iid, category)
 	}
 
 	s.lastSyncTime = time.Now()
 	s.lastSyncLength = time.Now().Sub(startTime)
 	return s.saveRecordCollection(ctx)
+}
+
+func (s *Server) updateSale(ctx context.Context, iid int32, category pb.ReleaseMetadata_Category) {
+	if category == pb.ReleaseMetadata_LISTED_TO_SELL {
+		r, err := s.loadRecord(ctx, iid)
+		if err == nil {
+			if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
+				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
+			}
+			if r.GetMetadata().SaleId > 0 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
+				r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
+			}
+			s.saveRecord(ctx, r)
+		}
+	}
 }
 
 func (s *Server) syncWantlist() {

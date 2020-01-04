@@ -122,6 +122,20 @@ func TestUpdateRecords(t *testing.T) {
 	}
 }
 
+func TestUpdateRecordsWithBigPriceJump(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix(), SalePrice: 1000}}})
+	if err != nil {
+		t.Errorf("Error adding record: %v", err)
+	}
+
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{NewSalePrice: 499}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
+
+	if err == nil {
+		t.Errorf("Should have failed")
+	}
+}
+
 func TestBadUpdateRecords(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 
@@ -217,7 +231,7 @@ func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
 	s.saleMap[1234] = rec
 
-	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{NewSalePrice: 100}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}}})
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{NewSalePrice: 1230}, Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}}})
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
 	if err != nil {

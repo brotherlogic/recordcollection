@@ -161,6 +161,7 @@ func TestUpdateWantWithPush(t *testing.T) {
 
 func TestGoodSync(t *testing.T) {
 	s := InitTestServer(".testGoodSync")
+	s.collection.InstanceToCategory[int32(12)] = pb.ReleaseMetadata_LISTED_TO_SELL
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
@@ -553,4 +554,11 @@ func TestRecacheWithPendingScore(t *testing.T) {
 	if err == nil {
 		t.Errorf("recache failed")
 	}
+}
+
+func TestUpdateSale(t *testing.T) {
+	s := InitTestServer(".testupdatesale")
+	s.recordCache[int32(1234)] = &pb.Record{Metadata: &pb.ReleaseMetadata{SaleId: 12}}
+	s.updateSale(context.Background(), int32(1234), pb.ReleaseMetadata_LISTED_TO_SELL)
+
 }
