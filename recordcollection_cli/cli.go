@@ -61,12 +61,17 @@ func main() {
 			fmt.Printf("%v. %v\n", i, want)
 		}
 	case "unlistened":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_UNLISTENED}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_FRESHMAN}})
 		if err != nil {
 			fmt.Printf("Error %v\n", err)
 		}
-
-		fmt.Printf("Ids: %v\n", ids)
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			fmt.Printf("%v. %v\n", i, r.GetRecord().GetRelease().GetTitle())
+		}
 	case "get":
 		i, _ := strconv.Atoi(os.Args[2])
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{int32(i)}})

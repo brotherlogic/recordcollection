@@ -379,6 +379,13 @@ func (s *Server) GetState() []*pbg.State {
 	s.collectionMutex.Lock()
 	defer s.collectionMutex.Unlock()
 
+	pfcount := int64(0)
+	for _, valr := range s.collection.GetInstanceToCategory() {
+		if valr == pb.ReleaseMetadata_PRE_FRESHMAN {
+			pfcount++
+		}
+	}
+
 	count := 0
 	if s.collection != nil {
 		for _, push := range s.collection.NeedsPush {
@@ -391,6 +398,7 @@ func (s *Server) GetState() []*pbg.State {
 	base := time.Now().Add(time.Hour * -24 * 30).Unix()
 	dcount := time.Now().Unix()
 	ecount := 0
+
 	for _, val := range s.collection.GetInstanceToLastSalePriceUpdate() {
 		if val < dcount {
 			dcount = val
@@ -401,6 +409,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
+		&pbg.State{Key: "pre_fresh", Value: pfcount},
 		&pbg.State{Key: "price_min", TimeValue: int64(dcount)},
 		&pbg.State{Key: "price_update", Value: int64(len(s.collection.GetInstanceToLastSalePriceUpdate()) - ecount)},
 		&pbg.State{Key: "longest", TimeDuration: s.longest.Nanoseconds()},
