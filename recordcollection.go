@@ -380,9 +380,11 @@ func (s *Server) GetState() []*pbg.State {
 	defer s.collectionMutex.Unlock()
 
 	pfcount := int64(0)
-	for _, valr := range s.collection.GetInstanceToCategory() {
+	pfexp := int64(0)
+	for ke, valr := range s.collection.GetInstanceToCategory() {
 		if valr == pb.ReleaseMetadata_PRE_FRESHMAN {
 			pfcount++
+			pfexp = int64(ke)
 		}
 	}
 
@@ -409,6 +411,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
+		&pbg.State{Key: "pre_fresh_example", Value: pfexp},
 		&pbg.State{Key: "pre_fresh", Value: pfcount},
 		&pbg.State{Key: "price_min", TimeValue: int64(dcount)},
 		&pbg.State{Key: "price_update", Value: int64(len(s.collection.GetInstanceToLastSalePriceUpdate()) - ecount)},
