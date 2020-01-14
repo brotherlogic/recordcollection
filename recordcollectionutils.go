@@ -34,6 +34,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		if err == nil {
 			val.GetMetadata().SaleDirty = false
 			val.GetMetadata().NewSalePrice = 0
+			val.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 		} else {
 			// Unavailable is a valid response from a sales push
 			if st, ok := status.FromError(err); !ok || st.Code() != codes.Unavailable {

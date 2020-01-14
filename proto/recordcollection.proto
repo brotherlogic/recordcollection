@@ -73,6 +73,7 @@ message ReleaseMetadata {
   
   // The cost of the record in cents
   int32 cost = 4;
+  
   // Reported cost - the cost we report for budget
   int32 reported_cost = 38;
   
@@ -201,6 +202,7 @@ message ReleaseMetadata {
 
   int32 current_sale_price = 31;
   int64 sale_price_update = 32;
+  int64 last_sale_price_update = 40;
 
   int64 last_save_time = 33;
   int64 save_iteration = 34;
