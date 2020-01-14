@@ -90,26 +90,22 @@ func main() {
 			fmt.Printf("Error: %v", err)
 		}
 	case "reset_sale_price":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
-
-		if err == nil {
-			for _, id := range ids.GetInstanceIds() {
-				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
-				if err != nil {
-					fmt.Printf("Error: %v\n", err)
-				}
-				r.GetRecord().GetMetadata().SalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
-				u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r.GetRecord()})
-				if err != nil {
-					log.Fatalf("Error: %v", err)
-				}
-				fmt.Println()
-				fmt.Printf("Release: %v\n", u.GetUpdated().GetRelease())
-				fmt.Printf("Metadata: %v\n", u.GetUpdated().GetMetadata())
-			}
-		} else {
-			fmt.Printf("Error: %v", err)
+		i, f := strconv.Atoi(os.Args[2])
+		if f != nil {
+			log.Fatalf("Hmm %v", f)
 		}
+		r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		if err != nil {
+			log.Fatalf("Error: %v -> %v,%v,%v\n", err, int32(i), i, os.Args[2])
+		}
+		r.GetRecord().GetMetadata().SalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
+		u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r.GetRecord()})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Println()
+		fmt.Printf("Release: %v\n", u.GetUpdated().GetRelease())
+		fmt.Printf("Metadata: %v\n", u.GetUpdated().GetMetadata())
 
 	case "sget":
 		i, _ := strconv.Atoi(os.Args[2])
@@ -180,7 +176,7 @@ func main() {
 	case "price":
 		i, _ := strconv.Atoi(os.Args[2])
 		p, _ := strconv.Atoi(os.Args[3])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SalePrice: int32(p)}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{NewSalePrice: int32(p)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -231,7 +227,7 @@ func main() {
 	case "saleprice":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.Atoi(os.Args[3])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SalePrice: int32(i2)}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{NewSalePrice: int32(i2)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
