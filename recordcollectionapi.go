@@ -223,7 +223,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_ReleaseId:
-		for id, releaseID := range s.collection.InstanceToId {
+		for id, releaseID := range s.collection.GetInstanceToId() {
 			if releaseID == x.ReleaseId {
 				ids = append(ids, id)
 			}
