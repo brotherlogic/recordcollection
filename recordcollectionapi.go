@@ -141,7 +141,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.GetMetadata().MoveFolder = 0
 	}
 
-	if len(rec.GetRelease().GetLabels()) == 0 {
+	if len(rec.GetRelease().GetLabels()) == 0 && rec.GetMetadata().GetCategory() != pb.ReleaseMetadata_NO_LABELS {
 		s.RaiseIssue(ctx, "Label reduction", fmt.Sprintf("Update %v has reduced label count", request), false)
 	}
 
