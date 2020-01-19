@@ -141,6 +141,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.GetMetadata().MoveFolder = 0
 	}
 
+	if len(rec.GetRelease().GetLabels()) == 0 {
+		s.RaiseIssue(ctx, "Label reduction", fmt.Sprintf("Update %v has reduced label count", request), false)
+	}
+
 	rec.GetMetadata().LastUpdateTime = time.Now().Unix()
 	rec.GetMetadata().Dirty = true
 	record = rec
