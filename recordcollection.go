@@ -483,7 +483,7 @@ func (s *Server) runRecache(ctx context.Context) error {
 
 func (s *Server) updateSalePrice(ctx context.Context) error {
 	for id, val := range s.collection.GetInstanceToLastSalePriceUpdate() {
-		if time.Now().Sub(time.Unix(val, 0)) > time.Hour*24*30 {
+		if time.Now().Sub(time.Unix(val, 0)) > time.Hour*24*10 {
 			r, err := s.loadRecord(ctx, id)
 			if err != nil {
 				return err
