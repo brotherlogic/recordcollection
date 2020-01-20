@@ -90,6 +90,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		return nil, err
 	}
 
+	hasLabels := len(rec.GetRelease().GetLabels()) > 0
+
 	// If this is being sold - mark it for sale
 	if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
 		if !request.NoSell {
@@ -141,7 +143,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.GetMetadata().MoveFolder = 0
 	}
 
-	if len(rec.GetRelease().GetLabels()) == 0 && rec.GetMetadata().GetCategory() != pb.ReleaseMetadata_NO_LABELS {
+	if len(rec.GetRelease().GetLabels()) == 0 && rec.GetMetadata().GetCategory() != pb.ReleaseMetadata_NO_LABELS && hasLabels {
 		s.RaiseIssue(ctx, "Label reduction", fmt.Sprintf("Update %v has reduced label count", request), false)
 	}
 
