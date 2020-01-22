@@ -321,7 +321,14 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 }
 
 func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
-	return s.loadRecord(ctx, id)
+	r, err := s.loadRecord(ctx, id)
+	if err == nil {
+		if len(r.GetRelease().GetLabels()) == 0 {
+			r.GetMetadata().LastCache = 1
+		}
+	}
+	return r, err
+
 }
 
 // DoRegister does RPC registration
