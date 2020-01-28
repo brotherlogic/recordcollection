@@ -464,3 +464,8 @@ func TestGetRecordCacheMiss(t *testing.T) {
 		t.Errorf("Error in getting record: %v", q)
 	}
 }
+
+func TestLabelAlert(t *testing.T) {
+	s := InitTestServer(".testing")
+	s.testForLabels(context.Background(), &pb.Record{Metadata: &pb.ReleaseMetadata{}}, &pb.UpdateRecordRequest{}, true)
+}

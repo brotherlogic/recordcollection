@@ -103,6 +103,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 			price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
 			saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition)
+			s.RaiseIssue(ctx, "Added Sale", fmt.Sprintf("Added sale for %v at %v", rec.GetRelease().Id, price), false)
 			rec.GetMetadata().SaleId = int32(saleid)
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 		}
@@ -143,9 +144,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.GetMetadata().MoveFolder = 0
 	}
 
-	if len(rec.GetRelease().GetLabels()) == 0 && rec.GetMetadata().GetCategory() != pb.ReleaseMetadata_NO_LABELS && hasLabels {
-		s.RaiseIssue(ctx, "Label reduction", fmt.Sprintf("Update %v has reduced label count", request), false)
-	}
+	s.testForLabels(ctx, rec, request, hasLabels)
 
 	rec.GetMetadata().LastUpdateTime = time.Now().Unix()
 	rec.GetMetadata().Dirty = true
@@ -155,6 +154,12 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	s.saveNeeded = true
 	return &pb.UpdateRecordsResponse{Updated: record}, err
+}
+
+func (s *Server) testForLabels(ctx context.Context, rec *pb.Record, request *pb.UpdateRecordRequest, hasLabels bool) {
+	if len(rec.GetRelease().GetLabels()) == 0 && rec.GetMetadata().GetCategory() != pb.ReleaseMetadata_NO_LABELS && hasLabels {
+		s.RaiseIssue(ctx, "Label reduction", fmt.Sprintf("Update %v has reduced label count", request), false)
+	}
 }
 
 // AddRecord adds a record directly to the listening pile
