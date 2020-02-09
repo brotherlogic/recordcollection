@@ -322,6 +322,9 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 
 func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	r, err := s.loadRecord(ctx, id)
+	s.collectionMutex.Lock()
+	defer s.collectionMutex.Unlock()
+
 	if err == nil {
 		if len(r.GetRelease().GetLabels()) == 0 {
 			r.GetMetadata().LastCache = 1
