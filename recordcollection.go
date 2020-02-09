@@ -332,6 +332,7 @@ func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
 			r.GetMetadata().LastStockCheck = time.Now().Unix()
 			if r.GetRelease().FolderId == 1362206 {
 				r.GetMetadata().LastUpdateTime = time.Now().Unix()
+				s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
 			}
 		}
 	}
