@@ -326,6 +326,11 @@ func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
 		if len(r.GetRelease().GetLabels()) == 0 {
 			r.GetMetadata().LastCache = 1
 		}
+
+		// We don't stock check 45s
+		if r.GetMetadata().GetGoalFolder() == 267116 {
+			r.GetMetadata().LastStockCheck = time.Now().Unix()
+		}
 	}
 	return r, err
 

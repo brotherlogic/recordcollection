@@ -35,6 +35,29 @@ func main() {
 	defer cancel()
 
 	switch os.Args[1] {
+	case "retrospective":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
+			t := time.Unix(r.GetRecord().GetMetadata().GetDateAdded(), 0)
+			if t.Year() == time.Now().Year()-1 {
+				cat := r.GetRecord().GetMetadata().GetCategory()
+				if cat != pbrc.ReleaseMetadata_PARENTS &&
+					cat != pbrc.ReleaseMetadata_GOOGLE_PLAY &&
+					cat != pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+					fmt.Printf("%v - %v (%v)\n", t, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetCategory())
+				}
+			}
+		}
 	case "most_expensive":
 		meFlags := flag.NewFlagSet("ME", flag.ExitOnError)
 		var folder = meFlags.Int("folder", -1, "Id of the record to add")
@@ -72,11 +95,9 @@ func main() {
 				r.GetRecord().GetMetadata().NewSalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
 				u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r.GetRecord()})
 				if err != nil {
-					log.Fatalf("Error: %v", err)
+					fmt.Printf("Error[%v]: %v\n", err)
 				}
-				fmt.Println()
-				fmt.Printf("Release: %v\n", u.GetUpdated().GetRelease())
-				fmt.Printf("Metadata: %v\n", u.GetUpdated().GetMetadata())
+				fmt.Printf("Updated %v\n", u.GetUpdated().GetRelease().GetId())
 			}
 		} else {
 			fmt.Printf("Error: %v", err)
