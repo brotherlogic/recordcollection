@@ -103,7 +103,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 			price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
 			saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition)
-			s.RaiseIssue(ctx, "Added Sale", fmt.Sprintf("Added sale for %v at %v", rec.GetRelease().Id, price), false)
+
 			rec.GetMetadata().SaleId = int32(saleid)
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 		}
