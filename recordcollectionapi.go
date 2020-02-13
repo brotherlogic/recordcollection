@@ -201,7 +201,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 	switch x := req.Query.(type) {
 
 	case *pb.QueryRecordsRequest_FolderId:
-		for id, folder := range s.collection.InstanceToFolder {
+		for id, folder := range s.collection.GetInstanceToFolder() {
 			if folder == x.FolderId {
 				ids = append(ids, id)
 			}
