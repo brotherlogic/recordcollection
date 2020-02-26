@@ -52,6 +52,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		if err == nil || fmt.Sprintf("%v", err) == "POST ERROR (STATUS CODE): 404, {\"message\": \"Item not found. It may have been deleted.\"}" {
 			val.GetMetadata().SaleState = pbd.SaleState_SOLD
 			val.GetMetadata().SaleDirty = false
+			val.GetMetadata().LastUpdateTime = time.Now().Unix()
 		}
 		return true, err
 	}
