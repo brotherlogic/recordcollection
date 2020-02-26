@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"strconv"
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
+	"github.com/golang/protobuf/proto"
 	"google.golang.org/grpc"
 
 	pbgd "github.com/brotherlogic/godiscogs"
@@ -165,6 +167,20 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "gsell":
+		i, _ := strconv.Atoi(os.Args[2])
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{int32(i)}})
+
+		if err == nil && len(ids.GetInstanceIds()) == 1 {
+
+			up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(ids.GetInstanceIds()[0])}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, GoalFolder: 267116, MoveFolder: 673768, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}}}
+			rec, err := registry.UpdateRecord(ctx, up)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+			fmt.Printf("Updated: %v", rec)
+		}
+
 	case "sell":
 		i, _ := strconv.Atoi(os.Args[2])
 		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, MoveFolder: 673768, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}}}
@@ -282,5 +298,13 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "save":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		data, _ := proto.Marshal(rec.GetRecord())
+		ioutil.WriteFile(fmt.Sprintf("%v.data", rec.GetRecord().GetRelease().Id), data, 0644)
 	}
 }
