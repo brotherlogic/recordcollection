@@ -262,6 +262,9 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		s.collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] = r.GetMetadata().GetSalePriceUpdate()
 		save = true
 	}
+	if r.GetMetadata().SaleDirty {
+		s.collection.SaleUpdates = append(s.collection.SaleUpdates, r.GetRelease().GetInstanceId())
+	}
 
 	if r.GetMetadata().LastCache == 0 || r.GetMetadata().LastCache == 1 {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
