@@ -113,7 +113,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if request.GetUpdate().GetMetadata().NewSalePrice > 0 || request.GetUpdate().GetMetadata().SaleDirty {
 
 		if rec.GetMetadata().SalePrice-request.GetUpdate().GetMetadata().NewSalePrice > 500 && request.GetUpdate().GetMetadata().NewSalePrice > 0 {
-			return nil, fmt.Errorf("Price change from %v to %v is too large", rec.GetMetadata().SalePrice, request.GetUpdate().GetMetadata().NewSalePrice)
+			return nil, fmt.Errorf("Price change from %v to %v (for %v) is too large", rec.GetMetadata().SalePrice, request.GetUpdate().GetMetadata().NewSalePrice, rec.GetRelease().InstanceId)
 		}
 
 		rec.GetMetadata().SaleDirty = true
