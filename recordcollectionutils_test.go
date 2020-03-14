@@ -60,6 +60,14 @@ type testSyncer struct {
 	updateWantCount int
 	failSalePrice   bool
 	badLoad         bool
+	badInventory    bool
+}
+
+func (t *testSyncer) GetInventory() ([]*pbd.ForSale, error) {
+	if t.badInventory {
+		return []*pbd.ForSale{}, fmt.Errorf("Built to fail")
+	}
+	return []*pbd.ForSale{&pbd.ForSale{Id: 123, SaleId: 123}}, nil
 }
 
 func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error {
@@ -561,4 +569,39 @@ func TestUpdateSale(t *testing.T) {
 	s.recordCache[int32(1234)] = &pb.Record{Metadata: &pb.ReleaseMetadata{SaleId: 12}}
 	s.updateSale(context.Background(), int32(1234), pb.ReleaseMetadata_LISTED_TO_SELL)
 
+}
+
+func TestValidateSales(t *testing.T) {
+	s := InitTestServer(".testValidateSales")
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 123}, Metadata: &pb.ReleaseMetadata{Cost: 100, SaleId: 123, GoalFolder: 100, LastCache: time.Now().Unix(), Category: pb.ReleaseMetadata_LISTED_TO_SELL}}})
+	err := s.validateSales(context.Background())
+	if err != nil {
+		t.Errorf("Bad validation: %v", err)
+	}
+}
+
+func TestValidateSalesNotFound(t *testing.T) {
+	s := InitTestServer(".testValidateSales")
+
+	err := s.validateSales(context.Background())
+	if err != nil {
+		t.Errorf("Bad validation: %v", err)
+	}
+}
+
+func TestValidateSalesBadget(t *testing.T) {
+	s := InitTestServer(".testValidateSales")
+	s.retr = &testSyncer{badInventory: true}
+	err := s.validateSales(context.Background())
+	if err == nil {
+		t.Errorf("Validation did not fail")
+	}
+}
+func TestValidateSalesBadLoad(t *testing.T) {
+	s := InitTestServer(".testValidateSales")
+	s.collection.InstanceToId[1234] = 123
+	err := s.validateSales(context.Background())
+	if err == nil {
+		t.Errorf("Validation did not fail")
+	}
 }

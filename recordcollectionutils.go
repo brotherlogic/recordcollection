@@ -17,6 +17,37 @@ const (
 	RecacheDelay = 60 * 60 * 24 * 30
 )
 
+func (s *Server) validateSales(ctx context.Context) error {
+	sales, err := s.retr.GetInventory()
+	if err != nil {
+		return err
+	}
+
+	for _, sale := range sales {
+		found := false
+
+		// This call will not fail
+		recs, _ := s.QueryRecords(ctx, &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{sale.GetId()}})
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := s.getRecord(ctx, id)
+			if err != nil {
+				return err
+			}
+
+			if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && rec.GetMetadata().GetSaleId() == sale.GetSaleId() {
+				found = true
+			}
+		}
+
+		if !found {
+			s.RaiseIssue(ctx, "Sale Error Found", fmt.Sprintf("%v is not found in collection", sale), false)
+		}
+	}
+
+	return nil
+}
+
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	if val.GetMetadata().SaleDirty &&
 		val.GetMetadata().NewSalePrice > 0 &&
