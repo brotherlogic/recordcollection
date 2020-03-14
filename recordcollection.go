@@ -89,6 +89,7 @@ type saver interface {
 	GetCurrentSalePrice(saleID int) float32
 	GetCurrentSaleState(saleID int) godiscogs.SaleState
 	RemoveFromSale(saleID int, releaseID int) error
+	GetInventory() ([]*godiscogs.ForSale, error)
 }
 
 type scorer interface {
@@ -570,6 +571,7 @@ func main() {
 	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
 	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
 	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute)
+	server.RegisterRepeatingTask(server.validateSales, "validate_sales", time.Hour*2)
 
 	server.disableSales = false
 
