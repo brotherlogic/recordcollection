@@ -24,6 +24,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 	}
 
 	s.Log(fmt.Sprintf("Found %v sales", len(sales)))
+	matchCount := 0
 	for _, sale := range sales {
 		found := false
 
@@ -33,11 +34,12 @@ func (s *Server) validateSales(ctx context.Context) error {
 		for _, id := range recs.GetInstanceIds() {
 			rec, err := s.getRecord(ctx, id)
 			if err != nil {
+				s.Log(fmt.Sprintf("Err: %v", err))
 				return err
 			}
 
 			if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && rec.GetMetadata().GetSaleId() == sale.GetSaleId() {
-				s.Log(fmt.Sprintf("Matched %v", rec.GetRelease().GetInstanceId()))
+				matchCount++
 				found = true
 			}
 		}
@@ -46,6 +48,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 			s.RaiseIssue(ctx, "Sale Error Found", fmt.Sprintf("%v is not found in collection", sale), false)
 		}
 	}
+	s.Log(fmt.Sprintf("Matched %v", matchCount))
 
 	return nil
 }
