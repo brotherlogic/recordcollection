@@ -23,6 +23,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 		return err
 	}
 
+	s.Log(fmt.Sprintf("Found %v sales", len(sales)))
 	for _, sale := range sales {
 		found := false
 
@@ -36,6 +37,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 			}
 
 			if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && rec.GetMetadata().GetSaleId() == sale.GetSaleId() {
+				s.Log(fmt.Sprintf("Matched %v", rec.GetRelease().GetInstanceId()))
 				found = true
 			}
 		}
