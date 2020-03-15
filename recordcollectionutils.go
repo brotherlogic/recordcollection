@@ -39,7 +39,6 @@ func (s *Server) validateSales(ctx context.Context) error {
 			}
 
 			if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && rec.GetMetadata().GetSaleId() == sale.GetSaleId() {
-				matchCount++
 				found = true
 			}
 		}
@@ -47,6 +46,9 @@ func (s *Server) validateSales(ctx context.Context) error {
 		if !found {
 			s.Log(fmt.Sprintf("Sending off problem"))
 			s.RaiseIssue(ctx, "Sale Error Found", fmt.Sprintf("%v is not found in collection", sale), false)
+			return fmt.Errorf("Found a sale problem")
+		} else {
+			matchCount++
 		}
 	}
 	s.Log(fmt.Sprintf("Matched %v", matchCount))
