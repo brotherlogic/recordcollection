@@ -45,6 +45,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 		}
 
 		if !found {
+			s.Log(fmt.Sprintf("Sending off problem"))
 			s.RaiseIssue(ctx, "Sale Error Found", fmt.Sprintf("%v is not found in collection", sale), false)
 		}
 	}
