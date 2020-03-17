@@ -476,8 +476,8 @@ func TestPushSaleWithFail(t *testing.T) {
 
 	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, NewSalePrice: 100, SaleDirty: true}}
 	_, err := s.pushSale(context.Background(), record)
-	if err == nil {
-		t.Errorf("Sale push did not fail")
+	if err != nil {
+		t.Errorf("Sale push failed: %v", err)
 	}
 
 }
@@ -584,7 +584,7 @@ func TestValidateSalesNotFound(t *testing.T) {
 	s := InitTestServer(".testValidateSales")
 
 	err := s.validateSales(context.Background())
-	if err != nil {
+	if err == nil {
 		t.Errorf("Bad validation: %v", err)
 	}
 }

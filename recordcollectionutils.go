@@ -47,9 +47,8 @@ func (s *Server) validateSales(ctx context.Context) error {
 			s.Log(fmt.Sprintf("Sending off problem"))
 			s.RaiseIssue(ctx, "Sale Error Found", fmt.Sprintf("%v is not found in collection", sale), false)
 			return fmt.Errorf("Found a sale problem")
-		} else {
-			matchCount++
 		}
+		matchCount++
 	}
 	s.Log(fmt.Sprintf("Matched %v", matchCount))
 
@@ -77,8 +76,10 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		} else {
 			// Unavailable is a valid response from a sales push
 			if st, ok := status.FromError(err); !ok || st.Code() != codes.Unavailable {
+				// Force a record refresh
+				val.GetMetadata().LastUpdateTime = time.Now().Unix()
 				s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
-				return false, fmt.Errorf("PUSH ERROR FOR %v -> %v", val.GetRelease().Id, err)
+				return true, nil
 			}
 		}
 		return true, err
