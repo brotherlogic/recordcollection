@@ -19,6 +19,10 @@ message RecordCollection {
   map<int32, int64> instance_to_last_sale_price_update = 14;
   repeated int32 sale_updates = 11;
   repeated int32 needs_push = 12;
+
+  // The record we haven't listened to
+  int64 oldest_record = 15;
+  int32 oldest_record_id = 16;
 }
 
 message AllRecords {
