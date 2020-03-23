@@ -195,6 +195,10 @@ func (s *Server) readRecordCollection(ctx context.Context) error {
 		s.collection.InstanceToLastSalePriceUpdate = make(map[int32]int64)
 	}
 
+	if s.collection.GetOldestRecord() == 0 {
+		s.collection.OldestRecord = time.Now().Unix()
+	}
+
 	return nil
 }
 
@@ -223,6 +227,11 @@ func (s *Server) deleteRecord(ctx context.Context, i int32) error {
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
+
+	if r.GetMetadata().LastListenTime < s.collection.OldestRecord {
+		s.collection.OldestRecord = r.GetMetadata().LastListenTime
+		s.collection.OldestRecordId = r.GetRelease().InstanceId
+	}
 
 	if r.GetMetadata().GoalFolder == 0 {
 		s.RaiseIssue(ctx, "Save Error", fmt.Sprintf("Trying to save a record without a goal folder: %v", r), false)
@@ -434,6 +443,8 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
+		&pbg.State{Key: "oldest_record", Text: fmt.Sprintf("%v", s.collection.OldestRecord)},
+		&pbg.State{Key: "oldest_record_id", Text: fmt.Sprintf("%v", s.collection.OldestRecordId)},
 		&pbg.State{Key: "pre_fresh_example", Value: pfexp},
 		&pbg.State{Key: "pre_fresh", Value: pfcount},
 		&pbg.State{Key: "price_min", TimeValue: int64(dcount)},
