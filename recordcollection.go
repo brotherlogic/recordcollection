@@ -228,7 +228,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
 
-	if r.GetMetadata().LastListenTime < s.collection.OldestRecord {
+	if r.GetMetadata().LastListenTime < s.collection.OldestRecord && (r.GetMetadata().GetCategory() != pb.ReleaseMetadata_GOOGLE_PLAY) {
 		s.collection.OldestRecord = r.GetMetadata().LastListenTime
 		s.collection.OldestRecordId = r.GetRelease().InstanceId
 	}
