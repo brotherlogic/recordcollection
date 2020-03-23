@@ -3,10 +3,6 @@ language: go
 go:
   - 1.11
 
-branches:
-  only:
-    - master
-
 before_install:
 - ./look_for_logs.sh
 - go get github.com/axw/gocov/gocov
