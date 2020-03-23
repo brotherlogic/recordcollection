@@ -443,7 +443,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
-		&pbg.State{Key: "oldest_record", Text: fmt.Sprintf("%v", s.collection.OldestRecord)},
+		&pbg.State{Key: "oldest_record", Text: fmt.Sprintf("%v", time.Unix(s.collection.OldestRecord, 0))},
 		&pbg.State{Key: "oldest_record_id", Text: fmt.Sprintf("%v", s.collection.OldestRecordId)},
 		&pbg.State{Key: "pre_fresh_example", Value: pfexp},
 		&pbg.State{Key: "pre_fresh", Value: pfcount},
