@@ -228,7 +228,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
 
-	if r.GetMetadata().LastListenTime < s.collection.OldestRecord {
+	if r.GetMetadata().LastListenTime < s.collection.OldestRecord && (r.GetMetadata().GetCategory() != pb.ReleaseMetadata_GOOGLE_PLAY) {
 		s.collection.OldestRecord = r.GetMetadata().LastListenTime
 		s.collection.OldestRecordId = r.GetRelease().InstanceId
 	}
@@ -443,7 +443,7 @@ func (s *Server) GetState() []*pbg.State {
 	}
 
 	return []*pbg.State{
-		&pbg.State{Key: "oldest_record", Text: fmt.Sprintf("%v", s.collection.OldestRecord)},
+		&pbg.State{Key: "oldest_record", Text: fmt.Sprintf("%v", time.Unix(s.collection.OldestRecord, 0))},
 		&pbg.State{Key: "oldest_record_id", Text: fmt.Sprintf("%v", s.collection.OldestRecordId)},
 		&pbg.State{Key: "pre_fresh_example", Value: pfexp},
 		&pbg.State{Key: "pre_fresh", Value: pfcount},
