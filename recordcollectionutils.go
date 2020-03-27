@@ -105,7 +105,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
 	doneID := int32(-1)
-	for _, id := range s.collection.SaleUpdates {
+	for _, id := range s.collection.GetSaleUpdates() {
 		val, err := s.loadRecord(ctx, id)
 		if err != nil {
 			return err
