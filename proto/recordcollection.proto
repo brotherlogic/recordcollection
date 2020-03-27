@@ -215,6 +215,8 @@ message ReleaseMetadata {
   int64 last_update_time = 36;
 
   int32 accounting_year = 37;
+
+  bool expire_sale = 41;
 }
 
 // A request to get some records

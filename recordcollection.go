@@ -89,6 +89,7 @@ type saver interface {
 	GetCurrentSalePrice(saleID int) float32
 	GetCurrentSaleState(saleID int) godiscogs.SaleState
 	RemoveFromSale(saleID int, releaseID int) error
+	ExpireSale(saleID int, releaseID int, price float32) error
 	GetInventory() ([]*godiscogs.ForSale, error)
 }
 
