@@ -70,6 +70,10 @@ func (t *testSyncer) GetInventory() ([]*pbd.ForSale, error) {
 	return []*pbd.ForSale{&pbd.ForSale{Id: 123, SaleId: 123}}, nil
 }
 
+func (t *testSyncer) ExpireSale(saleID int, releaseID int, price float32) error {
+	return nil
+}
+
 func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error {
 	if t.failSalePrice {
 		return fmt.Errorf("built to fail")
@@ -493,6 +497,17 @@ func TestPushSaleBasic(t *testing.T) {
 
 }
 
+func TestPushSaleExpire(t *testing.T) {
+	s := InitTestServer(".saleadjust")
+
+	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true, ExpireSale: true}}
+	_, err := s.pushSale(context.Background(), record)
+	if err != nil {
+		t.Errorf("Sale push failed: %v", err)
+	}
+
+}
+
 func TestPushSaleBasicLoadFail(t *testing.T) {
 	s := InitTestServer(".saleadjust")
 	s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(100))
@@ -568,7 +583,6 @@ func TestUpdateSale(t *testing.T) {
 	s := InitTestServer(".testupdatesale")
 	s.recordCache[int32(1234)] = &pb.Record{Metadata: &pb.ReleaseMetadata{SaleId: 12}}
 	s.updateSale(context.Background(), int32(1234), pb.ReleaseMetadata_LISTED_TO_SELL)
-
 }
 
 func TestValidateSales(t *testing.T) {
