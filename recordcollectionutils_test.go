@@ -500,7 +500,7 @@ func TestPushSaleBasic(t *testing.T) {
 func TestPushSaleExpire(t *testing.T) {
 	s := InitTestServer(".saleadjust")
 
-	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true, ExpireSale: true}}
+	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true, ExpireSale: true, SaleState: pbd.SaleState_FOR_SALE}}
 	_, err := s.pushSale(context.Background(), record)
 	if err != nil {
 		t.Errorf("Sale push failed: %v", err)
