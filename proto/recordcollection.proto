@@ -127,6 +127,7 @@ message ReleaseMetadata {
     LISTED_TO_SELL = 23;
     SOLD_OFFLINE = 27;
     STALE_SALE = 28;
+    SALE_ISSUE = 32;
     
     DIGITAL = 16;
     GOOGLE_PLAY = 18;
