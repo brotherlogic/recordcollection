@@ -131,6 +131,7 @@ message ReleaseMetadata {
     
     DIGITAL = 16;
     GOOGLE_PLAY = 18;
+    BANDCAMP = 33;
     
     ASSESS = 17;
     NO_LABELS = 20;
