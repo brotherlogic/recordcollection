@@ -469,3 +469,8 @@ func TestLabelAlert(t *testing.T) {
 	s := InitTestServer(".testing")
 	s.testForLabels(context.Background(), &pb.Record{Metadata: &pb.ReleaseMetadata{}}, &pb.UpdateRecordRequest{}, true)
 }
+
+func TestRunSync(t *testing.T) {
+	s := InitTestServer(".testing")
+	s.Trigger(context.Background(), &pb.TriggerRequest{})
+}

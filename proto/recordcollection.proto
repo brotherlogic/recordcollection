@@ -317,6 +317,12 @@ message GetRecordResponse {
   Record record = 1;
 }
 
+message TriggerRequest{
+}
+
+message TriggerResponse{
+}
+
 service RecordCollectionService {
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
@@ -325,4 +331,5 @@ service RecordCollectionService {
   rpc DeleteRecord(DeleteRecordRequest) returns (DeleteRecordResponse) {};
   rpc QueryRecords(QueryRecordsRequest) returns (QueryRecordsResponse) {};
   rpc GetRecord(GetRecordRequest) returns (GetRecordResponse) {};
+  rpc Trigger(TriggerRequest) returns (TriggerResponse) {};
 }

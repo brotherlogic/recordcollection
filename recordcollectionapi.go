@@ -266,3 +266,9 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 
 	return &pb.GetRecordResponse{Record: rec}, err
 }
+
+//Trigger runs a local sync
+func (s *Server) Trigger(ctx context.Context, req *pb.TriggerRequest) (*pb.TriggerResponse, error) {
+	err := s.runSync(ctx)
+	return nil, err
+}
