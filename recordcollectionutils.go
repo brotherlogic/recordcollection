@@ -56,8 +56,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 }
 
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
-	if val.GetMetadata().SaleDirty &&
-		val.GetMetadata().NewSalePrice > 0 &&
+	if val.GetMetadata().SaleDirty && !val.GetMetadata().GetExpireSale() && val.GetMetadata().NewSalePrice > 0 &&
 		(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
 			val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
 
