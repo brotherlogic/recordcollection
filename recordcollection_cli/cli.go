@@ -84,8 +84,8 @@ func main() {
 				if err != nil {
 					fmt.Printf("Error: %v\n", err)
 				}
-				fmt.Println()
 				fmt.Printf("Release: %v\n", r.GetRecord().GetRelease())
+				fmt.Println()
 				fmt.Printf("Metadata: %v\n", r.GetRecord().GetMetadata())
 			}
 		} else {
