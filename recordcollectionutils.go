@@ -56,6 +56,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 }
 
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
+
 	if val.GetMetadata().SaleDirty && !val.GetMetadata().GetExpireSale() && val.GetMetadata().NewSalePrice > 0 &&
 		(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
 			val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
@@ -119,6 +120,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		dirty := val.GetMetadata().GetSaleDirty()
 		success, err := s.pushSale(ctx, val)
 		s.Log(fmt.Sprintf("SALE PUSH %v -> %v, %v", id, success, err))
 		if err != nil {
@@ -126,6 +128,10 @@ func (s *Server) pushSales(ctx context.Context) error {
 		}
 		if success {
 			s.saveRecord(ctx, val)
+		}
+
+		if val.GetMetadata().GetSaleDirty() && dirty {
+			s.RaiseIssue(ctx, "StillDirty", fmt.Sprintf("%v is still dirty", val), false)
 		}
 
 		doneID = id
@@ -316,6 +322,7 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 
 	// Set sale dirty if the condition is new
 	if !hasCondition && len(r.Release.RecordCondition) > 0 {
+		s.RaiseIssue(ctx, "SaleDirtyUpdate", fmt.Sprintf("%v led to sale dirty", record), false)
 		r.Metadata.SaleDirty = true
 	}
 

@@ -119,6 +119,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			return nil, fmt.Errorf("Price change from %v to %v (for %v) is too large", rec.GetMetadata().SalePrice, request.GetUpdate().GetMetadata().NewSalePrice, rec.GetRelease().InstanceId)
 		}
 
+		s.RaiseIssue(ctx, "SaleDirtyAPI", fmt.Sprintf("%v led to sale dirty", request), false)
 		rec.GetMetadata().SaleDirty = true
 		s.collection.SaleUpdates = append(s.collection.SaleUpdates, rec.GetRelease().InstanceId)
 	}
