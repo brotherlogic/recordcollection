@@ -322,7 +322,6 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 
 	// Set sale dirty if the condition is new
 	if !hasCondition && len(r.Release.RecordCondition) > 0 {
-		s.RaiseIssue(ctx, "SaleDirtyUpdate", fmt.Sprintf("%v led to sale dirty", record), false)
 		r.Metadata.SaleDirty = true
 	}
 
