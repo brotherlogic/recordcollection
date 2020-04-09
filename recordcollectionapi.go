@@ -85,10 +85,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	var record *pb.Record
 	var err error
 
-	if request.GetUpdate().GetMetadata().GetSaleDirty() {
-		s.RaiseIssue(ctx, "SaleDirtyFromAnUpdate", fmt.Sprintf("%v has led to sale dirty", request), false)
-	}
-
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId)
 	if err != nil {
 		return nil, err
