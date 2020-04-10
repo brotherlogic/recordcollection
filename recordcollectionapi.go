@@ -149,6 +149,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	s.testForLabels(ctx, rec, request, hasLabels)
 
+	s.RaiseIssue(ctx, "Making me dirty", fmt.Sprintf("%v is turning me dirty", request.GetUpdate()), false)
 	rec.GetMetadata().LastUpdateTime = time.Now().Unix()
 	rec.GetMetadata().Dirty = true
 	record = rec
