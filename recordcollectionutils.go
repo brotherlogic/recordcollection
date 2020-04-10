@@ -117,6 +117,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 	doneID := int32(-1)
 	for _, id := range s.collection.GetSaleUpdates() {
 		val, err := s.loadRecord(ctx, id)
+		copy := proto.Clone(val)
 		if err != nil {
 			return err
 		}
@@ -131,7 +132,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 		}
 
 		if val.GetMetadata().GetSaleDirty() && dirty {
-			s.RaiseIssue(ctx, "StillDirty", fmt.Sprintf("%v is still dirty", val), false)
+			s.RaiseIssue(ctx, "StillDirty", fmt.Sprintf("%v is still dirty -> %v", val, copy), false)
 		}
 
 		doneID = id
