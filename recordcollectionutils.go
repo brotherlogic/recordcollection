@@ -71,6 +71,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().NewSalePrice)/100)
 		if err == nil {
 			val.GetMetadata().SaleDirty = false
+			val.GetMetadata().SalePrice = val.GetMetadata().NewSalePrice
 			val.GetMetadata().NewSalePrice = 0
 			val.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 		} else {

@@ -143,7 +143,9 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error: %v\n", err)
 				}
-				fmt.Printf("%v - %v [%v]\n", r.GetRecord().GetMetadata().GetCurrentSalePrice()-r.GetRecord().GetMetadata().SalePrice, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+				if r.GetRecord().GetMetadata().GetSalePrice() < 500 {
+					fmt.Printf("%v - %v [%v]\n", r.GetRecord().GetMetadata().GetCurrentSalePrice()-r.GetRecord().GetMetadata().SalePrice, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+				}
 			}
 		} else {
 			fmt.Printf("Error: %v", err)
