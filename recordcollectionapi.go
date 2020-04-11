@@ -92,20 +92,28 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	// If this is being sold - mark it for sale
 	if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
 		if !request.NoSell {
+			s.Log(fmt.Sprintf("Running sale path"))
+			time.Sleep(time.Second * 2)
 			if len(rec.GetRelease().SleeveCondition) == 0 {
 				return nil, fmt.Errorf("No Condition info")
 			}
 			if s.disableSales {
 				return nil, fmt.Errorf("Sales are disabled")
 			}
-			price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
+			price, err := s.retr.GetSalePrice(int(rec.GetRelease().Id))
+			s.Log(fmt.Sprintf("Got price %v (%v)", price, err))
+			time.Sleep(time.Second * 2)
 			saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition)
 
+			s.Log(fmt.Sprintf("Got id %v", saleid))
+			time.Sleep(time.Second * 2)
 			s.RaiseIssue(ctx, "PRE SALE", fmt.Sprintf("%v, %v", price, saleid), false)
 
 			rec.GetMetadata().SaleId = int32(saleid)
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 
+			s.Log(fmt.Sprintf("Updating record"))
+			time.Sleep(time.Second * 2)
 			s.RaiseIssue(ctx, "SOLD REcord", fmt.Sprintf("%v", rec), false)
 
 			// Preemptive save to ensure we get the saleid
