@@ -108,6 +108,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			request.GetUpdate().GetMetadata().SaleState = 0
 			rec.GetMetadata().SaleId = int32(saleid)
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
+			rec.GetMetadata().SalePrice = int32(price * 100)
 
 			// Preemptive save to ensure we get the saleid
 			s.saveRecord(ctx, rec)
