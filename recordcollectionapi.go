@@ -107,6 +107,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			rec.GetMetadata().SaleId = int32(saleid)
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 
+			s.RaiseIssue(ctx, "SOLD REcord", fmt.Sprintf("%v", rec), false)
+
 			// Preemptive save to ensure we get the saleid
 			s.saveRecord(ctx, rec)
 		}
@@ -149,6 +151,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	s.testForLabels(ctx, rec, request, hasLabels)
 
+	s.RaiseIssue(ctx, "Making me dirty", fmt.Sprintf("%v is turning me dirty", request.GetUpdate()), false)
 	rec.GetMetadata().LastUpdateTime = time.Now().Unix()
 	rec.GetMetadata().Dirty = true
 	record = rec
