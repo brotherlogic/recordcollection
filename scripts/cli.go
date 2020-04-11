@@ -117,6 +117,23 @@ func main() {
 			fmt.Printf("Error: %v", err)
 		}
 
+	case "stuck_sold":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_SOLD}})
+
+		if err == nil {
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Error: %v\n", err)
+				}
+				if r.GetRecord().GetMetadata().GetSaleId() != 0 {
+					fmt.Printf("%v - %v [%v]\n", r.GetRecord().GetMetadata().GetSaleId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+				}
+			}
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
+
 	case "wayward_sale":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
 
