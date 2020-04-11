@@ -100,21 +100,14 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if s.disableSales {
 				return nil, fmt.Errorf("Sales are disabled")
 			}
-			price, err := s.retr.GetSalePrice(int(rec.GetRelease().Id))
-			s.Log(fmt.Sprintf("Got price %v (%v)", price, err))
-			time.Sleep(time.Second * 2)
+			price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
 			saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition)
 
-			s.Log(fmt.Sprintf("Got id %v", saleid))
-			time.Sleep(time.Second * 2)
-			s.RaiseIssue(ctx, "PRE SALE", fmt.Sprintf("%v, %v", price, saleid), false)
-
+			// Cancel changes in the update
+			request.GetUpdate().GetMetadata().SaleId = 0
+			request.GetUpdate().GetMetadata().SaleState = 0
 			rec.GetMetadata().SaleId = int32(saleid)
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
-
-			s.Log(fmt.Sprintf("Updating record"))
-			time.Sleep(time.Second * 2)
-			s.RaiseIssue(ctx, "SOLD REcord", fmt.Sprintf("%v", rec), false)
 
 			// Preemptive save to ensure we get the saleid
 			s.saveRecord(ctx, rec)
