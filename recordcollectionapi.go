@@ -82,9 +82,6 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
-	var record *pb.Record
-	var err error
-
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId)
 	if err != nil {
 		return nil, err
@@ -150,16 +147,16 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	s.testForLabels(ctx, rec, request, hasLabels)
-
-	s.RaiseIssue(ctx, "Making me dirty", fmt.Sprintf("%v is turning me dirty", request.GetUpdate()), false)
 	rec.GetMetadata().LastUpdateTime = time.Now().Unix()
-	rec.GetMetadata().Dirty = true
-	record = rec
-	s.collection.NeedsPush = append(s.collection.NeedsPush, rec.GetRelease().InstanceId)
+
+	if !rec.GetMetadata().Dirty && (rec.GetMetadata().GetMoveFolder() > 0 || rec.GetMetadata().GetSetRating() > 0) {
+		rec.GetMetadata().Dirty = true
+		s.collection.NeedsPush = append(s.collection.NeedsPush, rec.GetRelease().InstanceId)
+	}
 	err = s.saveRecord(ctx, rec)
 
 	s.saveNeeded = true
-	return &pb.UpdateRecordsResponse{Updated: record}, err
+	return &pb.UpdateRecordsResponse{Updated: rec}, err
 }
 
 func (s *Server) testForLabels(ctx context.Context, rec *pb.Record, request *pb.UpdateRecordRequest, hasLabels bool) {
