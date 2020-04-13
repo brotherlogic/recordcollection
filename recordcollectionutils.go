@@ -385,7 +385,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 }
 
 func (s *Server) updateSale(ctx context.Context, iid int32, category pb.ReleaseMetadata_Category) {
-	if category == pb.ReleaseMetadata_LISTED_TO_SELL {
+	if category == pb.ReleaseMetadata_LISTED_TO_SELL || category == pb.ReleaseMetadata_STALE_SALE {
 		r, err := s.loadRecord(ctx, iid)
 		if err == nil {
 			if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
