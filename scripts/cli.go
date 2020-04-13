@@ -102,6 +102,29 @@ func main() {
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
+	case "hard_reset_sale_price":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
+
+		if err == nil {
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Error: %v\n", err)
+				}
+				if r.GetRecord().GetMetadata().SalePrice <= 500 && r.GetRecord().GetRelease().GetInstanceId() == 267970963 {
+					r.GetRecord().GetMetadata().SalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
+					r.GetRecord().GetMetadata().NewSalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
+					u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r.GetRecord()})
+					if err != nil {
+						fmt.Printf("Error[%v]: %v\n", err)
+					}
+					fmt.Printf("Updated %v\n", u.GetUpdated().GetRelease().GetArtists()[0].GetName()+" - "+u.GetUpdated().GetRelease().GetTitle())
+
+				}
+			}
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
 	case "high_school":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_HIGH_SCHOOL}})
 
@@ -144,7 +167,7 @@ func main() {
 					log.Fatalf("Error: %v\n", err)
 				}
 				if r.GetRecord().GetMetadata().GetSalePrice() < 500 {
-					fmt.Printf("%v - %v [%v]\n", r.GetRecord().GetMetadata().GetCurrentSalePrice()-r.GetRecord().GetMetadata().SalePrice, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+					fmt.Printf("%v - %v (%v) [%v]\n", r.GetRecord().GetMetadata().GetCurrentSalePrice()-r.GetRecord().GetMetadata().SalePrice, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetSalePrice(), r.GetRecord().GetRelease().GetInstanceId())
 				}
 			}
 		} else {
