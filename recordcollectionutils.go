@@ -108,6 +108,11 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		return true, err
 	}
 
+	//Handle hanging clause
+	if val.GetMetadata().GetExpireSale() && val.GetMetadata().GetSaleState() == pbd.SaleState_EXPIRED {
+		val.GetMetadata().ExpireSale = false
+	}
+
 	//Nothing to do here
 	val.GetMetadata().SaleDirty = false
 	return false, nil
@@ -124,7 +129,6 @@ func (s *Server) pushSales(ctx context.Context) error {
 		}
 		dirty := val.GetMetadata().GetSaleDirty()
 		success, err := s.pushSale(ctx, val)
-		s.Log(fmt.Sprintf("SALE PUSH %v -> %v, %v", id, success, err))
 		if err != nil {
 			return fmt.Errorf("Error pushing %v (%v): %v", val.GetRelease().InstanceId, val.GetMetadata().Category, err)
 		}
