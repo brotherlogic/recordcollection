@@ -91,6 +91,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		val.GetMetadata().ExpireSale = err != nil
 		if err == nil {
 			val.GetMetadata().SaleState = pbd.SaleState_EXPIRED
+			val.GetMetadata().SaleDirty = false
 		}
 		s.Log(fmt.Sprintf("EXPIRE(%v): %v", val.GetRelease().GetInstanceId(), err))
 		return true, err

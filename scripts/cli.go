@@ -106,13 +106,13 @@ func main() {
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
 
 		if err == nil {
+			fmt.Printf("Found %v records\n", len(ids.GetInstanceIds()))
 			for _, id := range ids.GetInstanceIds() {
 				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 				if err != nil {
 					log.Fatalf("Error: %v\n", err)
 				}
-				if r.GetRecord().GetMetadata().SalePrice <= 500 && r.GetRecord().GetRelease().GetInstanceId() == 267970963 {
-					r.GetRecord().GetMetadata().SalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
+				if r.GetRecord().GetMetadata().SalePrice <= 1 {
 					r.GetRecord().GetMetadata().NewSalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
 					u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r.GetRecord()})
 					if err != nil {
