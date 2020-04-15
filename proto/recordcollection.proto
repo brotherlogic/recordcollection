@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package recordcollection;
 
+option go_package = ".;godiscogs";
+
 import "github.com/brotherlogic/godiscogs/godiscogs.proto";
 
 message RecordCollection {
