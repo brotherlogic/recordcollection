@@ -82,6 +82,11 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
+	if request.GetReason() == "" {
+		return nil, fmt.Errorf("You must supply a reason")
+	}
+	s.Log(fmt.Sprintf("UpdateRecord %v", request))
+
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId)
 	if err != nil {
 		return nil, err

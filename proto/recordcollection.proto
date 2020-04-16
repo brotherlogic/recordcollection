@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package recordcollection;
 
-option go_package = ".;godiscogs";
+option go_package = "github.com/brotherlogic/recordcollection/proto";
 
 import "github.com/brotherlogic/godiscogs/godiscogs.proto";
 
@@ -260,6 +260,7 @@ message UpdateRecordRequest {
   Record update = 1;
   string requestor = 2;
   bool no_sell = 3;
+  string reason = 4;
 }
 
 message UpdateRecordsResponse {
