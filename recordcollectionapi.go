@@ -85,6 +85,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if request.GetReason() == "" {
 		return nil, fmt.Errorf("You must supply a reason")
 	}
+	if request.GetUpdate().GetRelease().GetId() > 0 {
+		return nil, fmt.Errorf("You cannot do a record update like this")
+	}
 	s.Log(fmt.Sprintf("UpdateRecord %v", request))
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId)
