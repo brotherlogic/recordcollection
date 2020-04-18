@@ -153,6 +153,19 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	proto.Merge(rec, request.GetUpdate())
 
+	//Reset scores if needed
+	if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_HIGH_SCHOOL ||
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_FRESHMAN ||
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_SOPHMORE ||
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_GRADUATE ||
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_DISTINGUISHED ||
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_PROFESSOR ||
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_FRESHMAN ||
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PREPARE_TO_SELL {
+		rec.GetMetadata().SetRating = -1
+		rec.GetMetadata().Dirty = true
+	}
+
 	//Reset the move folder
 	if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().MoveFolder == -1 {
 		rec.GetMetadata().MoveFolder = 0
