@@ -337,6 +337,12 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 		r.GetMetadata().NeedsStockCheck = false
 	}
 
+	//Make a goal folder adjustment
+	if r.GetRelease().GetFolderId() == 1782105 &&
+		(r.GetMetadata().GetGoalFolder() == 0 || r.GetMetadata().GetGoalFolder() == 268147) {
+		r.GetMetadata().GoalFolder = 1782105
+	}
+
 	s.saveRecord(ctx, r)
 }
 

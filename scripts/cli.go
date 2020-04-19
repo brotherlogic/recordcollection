@@ -10,6 +10,7 @@ import (
 	"github.com/brotherlogic/goserver/utils"
 	"google.golang.org/grpc"
 
+	pbgd "github.com/brotherlogic/godiscogs"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 
 	//Needed to pull in gzip encoding init
@@ -114,7 +115,7 @@ func main() {
 				}
 				if r.GetRecord().GetMetadata().SalePrice <= 1 {
 					r.GetRecord().GetMetadata().NewSalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
-					u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r.GetRecord()})
+					u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRecord().GetRelease().GetInstanceId()}, Metadata: &pbrc.ReleaseMetadata{NewSalePrice: r.GetRecord().GetMetadata().GetCurrentSalePrice()}}, Reason: "reset_sale_price"})
 					if err != nil {
 						fmt.Printf("Error[%v]: %v\n", err)
 					}
