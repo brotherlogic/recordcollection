@@ -38,7 +38,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 				return err
 			}
 
-			if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && rec.GetMetadata().GetSaleId() == sale.GetSaleId() {
+			if (rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE) && rec.GetMetadata().GetSaleId() == sale.GetSaleId() {
 				found = true
 			}
 		}
