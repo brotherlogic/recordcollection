@@ -284,7 +284,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	if r.GetMetadata().GetDirty() {
-		s.collection.NeedsPush = append(s.collection.NeedsPush, rec.GetRelease().InstanceId)
+		s.collection.NeedsPush = append(s.collection.NeedsPush, r.GetRelease().InstanceId)
 	}
 
 	s.collectionMutex.Unlock()
