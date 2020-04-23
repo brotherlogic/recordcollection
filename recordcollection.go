@@ -282,6 +282,11 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	} else {
 		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Unix(r.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
 	}
+
+	if r.GetMetadata().GetDirty() {
+		s.collection.NeedsPush = append(s.collection.NeedsPush, rec.GetRelease().InstanceId)
+	}
+
 	s.collectionMutex.Unlock()
 
 	if save {
