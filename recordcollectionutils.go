@@ -177,13 +177,13 @@ func (s *Server) runPush(ctx context.Context) error {
 	s.lastPushDone = 0
 	if len(s.collection.NeedsPush) > 0 {
 		id := s.collection.NeedsPush[0]
-		s.Log(fmt.Sprintf("Pushing %v", id))
 		val, err := s.getRecord(ctx, id)
 		if err != nil {
 			return err
 		}
 		_, err = s.pushRecord(ctx, val)
 		if err != nil {
+			s.Log(fmt.Sprintf("Failed Pushing %v -> %v", id, err))
 			return err
 		}
 		s.lastPushDone++
@@ -242,7 +242,8 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 
 	// Push the score
 	if (r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetSetRating() == -1) && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
-		s.retr.SetRating(int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
+		err := s.retr.SetRating(int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
+		s.Log(fmt.Sprintf("Attempting to set rating on %v: %v", r.GetRelease().InstanceId, err))
 		r.GetRelease().Rating = int32(max(0, int(r.GetMetadata().SetRating)))
 		r.GetMetadata().LastListenTime = time.Now().Unix()
 	}
