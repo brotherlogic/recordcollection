@@ -153,15 +153,17 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	proto.Merge(rec, request.GetUpdate())
 
-	//Reset scores if needed
-	if rec.GetRelease().GetRating() > 0 && (rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_HIGH_SCHOOL ||
+	//Reset scores if needed and an explicit category update is made
+	if rec.GetRelease().GetRating() > 0 &&
+		request.GetUpdate().GetMetadata().GetCategory() != pb.ReleaseMetadata_UNKNOWN &&
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_HIGH_SCHOOL ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_FRESHMAN ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_SOPHMORE ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_GRADUATE ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_DISTINGUISHED ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_PROFESSOR ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_FRESHMAN ||
-		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PREPARE_TO_SELL) {
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PREPARE_TO_SELL {
 		rec.GetMetadata().SetRating = -1
 		rec.GetMetadata().Dirty = true
 	}
