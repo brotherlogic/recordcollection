@@ -88,7 +88,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if request.GetUpdate().GetRelease().GetId() > 0 {
 		return nil, fmt.Errorf("You cannot do a record update like this")
 	}
-	s.Log(fmt.Sprintf("UpdateRecord (%v) %v", request.GetUpdate().GetMetadata().GetCategory() != pb.ReleaseMetadata_UNKNOWN, request))
+	s.Log(fmt.Sprintf("UpdateRecord (%v,%v) %v", request.GetUpdate().GetMetadata().GetCategory() != pb.ReleaseMetadata_UNKNOWN, request.GetUpdate().GetMetadata().GetCategory() != 0, request))
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId)
 	if err != nil {
