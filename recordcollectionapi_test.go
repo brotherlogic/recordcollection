@@ -138,6 +138,19 @@ func TestUpdateRecords(t *testing.T) {
 	}
 }
 
+func TestUpdateRecordsSetRating(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix(), Category: pb.ReleaseMetadata_PRE_FRESHMAN}}})
+	if err != nil {
+		t.Errorf("Error adding record: %v", err)
+	}
+	r, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 1}}})
+
+	if r.GetUpdated().GetMetadata().GetSetRating() == -1 {
+		t.Errorf("Update triggered set rating")
+	}
+}
+
 func TestUpdateRecordsWithBigPriceJump(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix(), SalePrice: 1000}}})

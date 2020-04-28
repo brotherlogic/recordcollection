@@ -88,7 +88,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if request.GetUpdate().GetRelease().GetId() > 0 {
 		return nil, fmt.Errorf("You cannot do a record update like this")
 	}
-	s.Log(fmt.Sprintf("UpdateRecord (%v,%v) %v", request.GetUpdate().GetMetadata().GetCategory() != pb.ReleaseMetadata_UNKNOWN, request.GetUpdate().GetMetadata().GetCategory() != 0, request))
+	s.Log(fmt.Sprintf("UpdateRecord %v", request))
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId)
 	if err != nil {
@@ -124,7 +124,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	// If this is a sale update - set the dirty flag
-	if request.GetUpdate().GetMetadata().NewSalePrice > 0 || request.GetUpdate().GetMetadata().ExpireSale {
+	if request.GetUpdate().GetMetadata().GetNewSalePrice() > 0 || request.GetUpdate().GetMetadata().GetExpireSale() {
 
 		if rec.GetMetadata().SalePrice-request.GetUpdate().GetMetadata().NewSalePrice > 500 && request.GetUpdate().GetMetadata().NewSalePrice > 0 {
 			return nil, fmt.Errorf("Price change from %v to %v (for %v) is too large", rec.GetMetadata().SalePrice, request.GetUpdate().GetMetadata().NewSalePrice, rec.GetRelease().InstanceId)
@@ -154,16 +154,15 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	proto.Merge(rec, request.GetUpdate())
 
 	//Reset scores if needed and an explicit category update is made
-	if rec.GetRelease().GetRating() > 0 &&
-		request.GetUpdate().GetMetadata().GetCategory() != pb.ReleaseMetadata_UNKNOWN &&
-		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_HIGH_SCHOOL ||
+	if (rec.GetRelease().GetRating() > 0 &&
+		request.GetUpdate().GetMetadata().GetCategory() != pb.ReleaseMetadata_UNKNOWN) && (rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_HIGH_SCHOOL ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_FRESHMAN ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_SOPHMORE ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_GRADUATE ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_DISTINGUISHED ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_PROFESSOR ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_FRESHMAN ||
-		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PREPARE_TO_SELL {
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PREPARE_TO_SELL) {
 		rec.GetMetadata().SetRating = -1
 		rec.GetMetadata().Dirty = true
 	}
