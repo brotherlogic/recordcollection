@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
@@ -211,5 +212,36 @@ func main() {
 
 		fmt.Printf("For %v found %v records (%v have missing costs)\n", time.Now().Year(), count, missingCost)
 
+	case "play_time":
+		folder, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			log.Fatalf("Hmm: %v", err)
+		}
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		min := time.Now().Unix()
+		var rec *pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
+			if r.GetRecord().GetRelease().GetFolderId() == int32(folder) {
+				if r.GetRecord().GetMetadata().GetLastListenTime() == 0 {
+					fmt.Printf("%v %v - %v\n", r.GetRecord().GetMetadata().GetLastListenTime(), r.GetRecord().GetRelease().GetArtists()[0].GetName(), r.GetRecord().GetRelease().GetTitle())
+				}
+				if r.GetRecord().GetMetadata().GetLastListenTime() < min {
+					min = r.GetRecord().GetMetadata().GetLastListenTime()
+					rec = r.GetRecord()
+				}
+			}
+		}
+
+		fmt.Printf("%v -> %v - %v\n", time.Unix(min, 0), rec.GetRelease().GetArtists()[0].GetName(), rec.GetRelease().GetTitle())
 	}
 }
