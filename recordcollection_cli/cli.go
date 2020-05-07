@@ -118,7 +118,7 @@ func main() {
 
 		if err == nil {
 			fmt.Printf("Release: %v\n", srec.GetRecord().GetRelease())
-			fmt.Printf("Metadata: %v\n", srec.GetRecord().GetMetadata())
+			fmt.Printf("Metadata: %v, %v\n", srec.GetRecord().GetMetadata(), srec.GetRecord().GetMetadata().GetMatch())
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
@@ -163,7 +163,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "reset_sale":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PREPARE_TO_SELL, SaleId: -1, SaleState: pbgd.SaleState_NOT_FOR_SALE}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PREPARE_TO_SELL, SaleId: -1, SaleState: pbgd.SaleState_EXPIRED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -294,7 +294,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "keep":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_KEEPER}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_KEEPER}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
