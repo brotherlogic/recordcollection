@@ -245,7 +245,9 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 		err := s.retr.SetRating(int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
 		s.Log(fmt.Sprintf("Attempting to set rating on %v: %v", r.GetRelease().InstanceId, err))
 		r.GetRelease().Rating = int32(max(0, int(r.GetMetadata().SetRating)))
-		r.GetMetadata().LastListenTime = time.Now().Unix()
+		if r.GetMetadata().GetSetRating() > 0 {
+			r.GetMetadata().LastListenTime = time.Now().Unix()
+		}
 	}
 	r.GetMetadata().SetRating = 0
 
