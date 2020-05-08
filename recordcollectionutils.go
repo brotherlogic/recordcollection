@@ -232,8 +232,11 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 				return false, fmt.Errorf("Move fail %v -> %v: %v (%v)", r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder(), err, ctx)
 			}
 
-			str, err := s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
-			s.Log(fmt.Sprintf("MOVED: %v -> %v", str, err))
+			_, err = s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
+			if err != nil {
+				s.RaiseIssue(ctx, "Move Failure", fmt.Sprintf("%v -> %v", r.GetRelease().GetInstanceId(), err), false)
+				return false, err
+			}
 			r.GetRelease().FolderId = r.GetMetadata().MoveFolder
 			r.GetMetadata().LastMoveTime = time.Now().Unix()
 		}
