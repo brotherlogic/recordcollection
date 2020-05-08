@@ -79,7 +79,7 @@ type saver interface {
 	GetRelease(id int32) (*godiscogs.Release, error)
 	AddToFolder(folderID int32, releaseID int32) (int, error)
 	SetRating(releaseID int, rating int) error
-	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) string
+	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) (string, error)
 	DeleteInstance(folderID, releaseID, instanceID int) string
 	SellRecord(releaseID int, price float32, state string, condition, sleeve string) int
 	GetSalePrice(releaseID int) (float32, error)

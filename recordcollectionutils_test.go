@@ -116,9 +116,9 @@ func (t *testSyncer) SetRating(id int, rating int) error {
 	return nil
 }
 
-func (t *testSyncer) MoveToFolder(a, b, c, d int) string {
+func (t *testSyncer) MoveToFolder(a, b, c, d int) (string, error) {
 	t.moveRecordCount = 1
-	return "ALL GOOD!"
+	return "ALL GOOD!", nil
 }
 
 func (t *testSyncer) DeleteInstance(a, b, c int) string {
