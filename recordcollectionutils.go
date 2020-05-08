@@ -235,6 +235,12 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 			_, err = s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 			if err != nil {
 				s.RaiseIssue(ctx, "Move Failure", fmt.Sprintf("%v -> %v", r.GetRelease().GetInstanceId(), err), false)
+
+				//We need to clear the move to allow it to change
+				r.GetMetadata().MoveFolder = 0
+				r.GetMetadata().Dirty = false
+				s.saveRecord(ctx, r)
+
 				return false, err
 			}
 			r.GetRelease().FolderId = r.GetMetadata().MoveFolder
