@@ -198,6 +198,8 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder")
 	}
 
+	s.Log(fmt.Sprintf("AddRecord %v", request))
+
 	var err error
 	instanceID := int(request.GetToAdd().GetRelease().InstanceId)
 	if instanceID == 0 {
