@@ -84,6 +84,29 @@ func main() {
 
 			fmt.Printf("Highest [%v] = %v\n", *folder, rec.GetRelease().GetTitle())
 		}
+	case "folder_state":
+		meFlags := flag.NewFlagSet("ME", flag.ExitOnError)
+		var folder = meFlags.Int("folder", -1, "Id of the record to add")
+
+		if err := meFlags.Parse(os.Args[2:]); err == nil {
+			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(*folder)}})
+			if err != nil {
+				log.Fatalf("Error query: %v", err)
+			}
+			counts := make(map[pbrc.ReleaseMetadata_Category]int)
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Error getting record: %v", err)
+				}
+				counts[r.GetRecord().GetMetadata().GetCategory()]++
+			}
+
+			for cat, count := range counts {
+				fmt.Printf("%v - %v\n", cat, count)
+			}
+		}
+
 	case "reset_sale_price":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
 
