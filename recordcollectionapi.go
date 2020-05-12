@@ -207,6 +207,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	}
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
+		request.GetToAdd().GetRelease().FolderId = int32(812802)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
 		s.collectionMutex.Lock()
 		s.collection.InstanceToFolder[int32(instanceID)] = int32(812802)

@@ -240,7 +240,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Hmm: %v", err)
 		}
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(folder)}})
 		if err != nil {
 			log.Fatalf("Bad query: %v", err)
 		}
@@ -255,12 +255,18 @@ func main() {
 			}
 
 			if r.GetRecord().GetRelease().GetFolderId() == int32(folder) {
-				if r.GetRecord().GetMetadata().GetLastListenTime() == 0 {
-					fmt.Printf("%v %v - %v\n", r.GetRecord().GetMetadata().GetLastListenTime(), r.GetRecord().GetRelease().GetArtists()[0].GetName(), r.GetRecord().GetRelease().GetTitle())
-				}
 				if r.GetRecord().GetMetadata().GetLastListenTime() < min {
-					min = r.GetRecord().GetMetadata().GetLastListenTime()
-					rec = r.GetRecord()
+					if r.GetRecord().GetMetadata().GetLastListenTime() == 0 {
+						fmt.Printf("%v - %v\n", r.GetRecord().GetRelease().GetArtists()[0].GetName(), r.GetRecord().GetRelease().GetTitle())
+						up := &pbrc.UpdateRecordRequest{Reason: "script-unlisten", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRecord().GetRelease().GetInstanceId()}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED}}}
+						_, err := registry.UpdateRecord(ctx, up)
+						if err != nil {
+							fmt.Printf("Error: %v\n", err)
+						}
+					} else {
+						min = r.GetRecord().GetMetadata().GetLastListenTime()
+						rec = r.GetRecord()
+					}
 				}
 			}
 		}
