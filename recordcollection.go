@@ -530,9 +530,10 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 			}
 			price, err := s.retr.GetSalePrice(int(r.GetRelease().Id))
 			if err != nil {
+				s.Log(fmt.Sprintf("Sale price error for %v -> %v", r.GetRelease().Id, err))
 				return err
 			}
-			s.Log(fmt.Sprintf("Retrieved %v, %v -> %v", price, err, r.GetRelease().Id))
+			s.Log(fmt.Sprintf("Sale Price Retrieved %v, %v -> %v", price, err, r.GetRelease().Id))
 			r.GetMetadata().CurrentSalePrice = int32(price * 100)
 			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
 			s.saveRecord(ctx, r)
