@@ -151,6 +151,32 @@ func TestUpdateRecordsSetRating(t *testing.T) {
 	}
 }
 
+func TestUpdateRecordsNewCateogry(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix(), Category: pb.ReleaseMetadata_PRE_FRESHMAN}}})
+	if err != nil {
+		t.Errorf("Error adding record: %v", err)
+	}
+	r, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 1}}})
+
+	if r.GetUpdated().GetMetadata().GetSetRating() == -1 {
+		t.Errorf("Update triggered set rating")
+	}
+}
+
+func TestUpdateRecordsNewCateogryWithReset(t *testing.T) {
+	s := InitTestServer(".testUpdateRecords")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", Rating: 5, InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix(), Category: pb.ReleaseMetadata_FRESHMAN}}})
+	if err != nil {
+		t.Errorf("Error adding record: %v", err)
+	}
+	r, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_PRE_FRESHMAN}}})
+
+	if r.GetUpdated().GetMetadata().GetSetRating() != -1 {
+		t.Errorf("Update did not triggered set rating: %v and %v", r, err)
+	}
+}
+
 func TestUpdateRecordsWithBigPriceJump(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix(), SalePrice: 1000}}})
@@ -179,7 +205,7 @@ func TestUpdateRecordsNoCondition(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
 
 	if err == nil {
 		t.Errorf("Should have triggered condition issue")
@@ -334,7 +360,7 @@ func TestUpdateRecordsForSaleSellingIsDisabled(t *testing.T) {
 	s.disableSales = true
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Id: 123, Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "aha", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
 	if err == nil {
 		t.Errorf("Disabling sales did not cause error")
