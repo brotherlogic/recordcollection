@@ -467,7 +467,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.GetInstanceToFolder()))},
 		&pbg.State{Key: "update_map", Value: int64(len(s.collection.GetInstanceToUpdate()))},
 		&pbg.State{Key: "records", Value: int64(len(s.collection.GetInstances()))},
-		&pbg.State{Key: "iteration", Value: s.collection.GetCollectionNumber()},
 		&pbg.State{Key: "mismatches", Value: int64(s.mismatches)},
 	}
 }
