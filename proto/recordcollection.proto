@@ -306,6 +306,8 @@ message QueryRecordsRequest {
     int32 master_id = 4;
     int32 release_id = 5;
   }
+
+  string origin = 6;
 }
 
 message QueryRecordsResponse {
