@@ -12,6 +12,8 @@ import (
 	"github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver"
 	"github.com/golang/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,6 +28,13 @@ import (
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
 
 	_ "net/http/pprof"
+)
+
+var (
+	stateCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "recordcollection_recordstate",
+		Help: "The state of records in the collection",
+	}, []string{"state"})
 )
 
 type quotaChecker interface {
@@ -296,6 +305,15 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	s.recordCacheMutex.Lock()
 	defer s.recordCacheMutex.Unlock()
 	s.recordCache[r.GetRelease().InstanceId] = r
+
+	//Update the monitoring
+	counts := make(map[string]float64)
+	for _, state := range s.collection.GetInstanceToCategory() {
+		counts[fmt.Sprintf("%v", state)] += 1.0
+	}
+	for state, count := range counts {
+		stateCount.With(prometheus.Labels{"state": fmt.Sprintf("%v", state)}).Set(count)
+	}
 
 	return err
 }
