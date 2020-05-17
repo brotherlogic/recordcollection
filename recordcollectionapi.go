@@ -222,6 +222,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 
 // QueryRecords gets a record using the new schema
 func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
+	s.Log(fmt.Sprintf("QueryRecords %v", req))
 	ids := make([]int32, 0)
 	t := time.Now()
 	s.collectionMutex.Lock()
