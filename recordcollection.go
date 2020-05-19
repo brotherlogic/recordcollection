@@ -35,6 +35,10 @@ var (
 		Name: "recordcollection_recordstate",
 		Help: "The state of records in the collection",
 	}, []string{"state"})
+	folderCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "recordcollection_recordfolder",
+		Help: "The size of each folder",
+	}, []string{"folder"})
 )
 
 type quotaChecker interface {
@@ -308,11 +312,18 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 
 	//Update the monitoring
 	counts := make(map[string]float64)
+	folders := make(map[string]float64)
 	for _, state := range s.collection.GetInstanceToCategory() {
 		counts[fmt.Sprintf("%v", state)] += 1.0
 	}
+	for _, folder := range s.collection.GetInstanceToFolder() {
+		folders[fmt.Sprintf("%v", folder)] += 1.0
+	}
 	for state, count := range counts {
 		stateCount.With(prometheus.Labels{"state": fmt.Sprintf("%v", state)}).Set(count)
+	}
+	for folder, count := range folders {
+		folderCount.With(prometheus.Labels{"folder": folder}).Set(count)
 	}
 
 	return err
