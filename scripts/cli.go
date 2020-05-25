@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
@@ -66,6 +67,7 @@ func main() {
 
 		if err := meFlags.Parse(os.Args[2:]); err == nil {
 			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(*folder)}})
+
 			if err != nil {
 				log.Fatalf("Error query: %v", err)
 			}
@@ -127,6 +129,21 @@ func main() {
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
+	case "pre_high_school":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
+
+		if err == nil {
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Error: %v\n", err)
+				}
+				fmt.Printf("%v - %v\n", r.GetRecord().GetRelease().GetArtists()[0].GetName(), r.GetRecord().GetRelease().GetTitle())
+			}
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
+
 	case "hard_reset_sale_price":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
 
@@ -234,6 +251,32 @@ func main() {
 		}
 
 		fmt.Printf("For %v found %v records (%v have missing costs)\n", time.Now().Year(), count, missingCost)
+
+	case "oldest_record":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		lowest := time.Now().Unix()
+		var rec *pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
+			if r.GetRecord().GetMetadata().GetDateAdded() < lowest {
+				if strings.HasPrefix(fmt.Sprintf("%v", r.GetRecord().GetMetadata().GetCategory()), "PRE") {
+					lowest = r.GetRecord().GetMetadata().GetDateAdded()
+					rec = r.GetRecord()
+				}
+			}
+
+		}
+
+		fmt.Printf("%v, %v\n", time.Unix(lowest, 0), rec)
 
 	case "play_time":
 		folder, err := strconv.Atoi(os.Args[2])
