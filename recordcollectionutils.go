@@ -7,6 +7,8 @@ import (
 	pbd "github.com/brotherlogic/godiscogs"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,6 +17,13 @@ import (
 const (
 	// RecacheDelay - recache everything every 30 days
 	RecacheDelay = 60 * 60 * 24 * 30
+)
+
+var (
+	backlogCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "recordcollection_backlog",
+		Help: "Push Size",
+	}, []string{"source"})
 )
 
 func (s *Server) validateSales(ctx context.Context) error {
@@ -144,6 +153,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 func (s *Server) pushSales(ctx context.Context) error {
 	s.lastSalePush = time.Now()
 	doneID := int32(-1)
+	backlogCount.With(prometheus.Labels{"source": "sales"}).Set(float64(len(s.collection.GetSaleUpdates())))
 	for _, id := range s.collection.GetSaleUpdates() {
 		val, err := s.loadRecord(ctx, id)
 		copy := proto.Clone(val)
@@ -197,6 +207,7 @@ func (s *Server) runPush(ctx context.Context) error {
 	s.lastPushTime = time.Now()
 	s.lastPushSize = len(s.collection.NeedsPush)
 	s.lastPushDone = 0
+	backlogCount.With(prometheus.Labels{"source": "regular"}).Set(float64(len(s.collection.GetNeedsPush())))
 	if len(s.collection.NeedsPush) > 0 {
 		id := s.collection.NeedsPush[0]
 		val, err := s.getRecord(ctx, id)

@@ -253,7 +253,7 @@ func main() {
 	case "addsale":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.Atoi(os.Args[3])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleId: int32(i2)}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-addsale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleId: int32(i2)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
