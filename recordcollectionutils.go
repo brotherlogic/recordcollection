@@ -52,6 +52,28 @@ func (s *Server) validateSales(ctx context.Context) error {
 	}
 	s.Log(fmt.Sprintf("Matched %v", matchCount))
 
+	// Searching LISTED and STALE
+	for _, folder := range []int32{488127, 1708299} {
+		recs, _ := s.QueryRecords(ctx, &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_FolderId{folder}})
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := s.getRecord(ctx, id)
+			if err != nil {
+				return err
+			}
+
+			seen := false
+			for _, sale := range sales {
+				if sale.GetSaleId() == rec.GetMetadata().GetSaleId() {
+					seen = true
+				}
+			}
+			if !seen {
+				s.RaiseIssue(ctx, "Sale Missing", fmt.Sprintf("%v is missing the sale", id), false)
+				return fmt.Errorf("Found a sale problem")
+			}
+		}
+	}
+
 	return nil
 }
 
