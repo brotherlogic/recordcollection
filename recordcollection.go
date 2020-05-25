@@ -489,7 +489,6 @@ func (s *Server) GetState() []*pbg.State {
 		&pbg.State{Key: "needs_push", Text: fmt.Sprintf("%v", s.collection.GetNeedsPush())},
 		&pbg.State{Key: "recache_size", Value: int64(len(s.collection.GetInstanceToRecache()))},
 		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
-		&pbg.State{Key: "to_sell", Value: int64(len(s.collection.GetSaleUpdates()))},
 		&pbg.State{Key: "master_size", Value: int64(len(s.collection.GetInstanceToMaster()))},
 		&pbg.State{Key: "collection_size", Value: int64(proto.Size(s.collection))},
 		&pbg.State{Key: "categories", Value: int64(len(s.collection.GetInstanceToCategory()))},
