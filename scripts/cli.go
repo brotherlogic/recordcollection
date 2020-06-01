@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +15,7 @@ import (
 
 	pbgd "github.com/brotherlogic/godiscogs"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
+	ro "github.com/brotherlogic/recordsorganiser/sales"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -86,6 +88,34 @@ func main() {
 
 			fmt.Printf("Highest [%v] = %v\n", *folder, rec.GetRelease().GetTitle())
 		}
+	case "sale_order":
+		meFlags := flag.NewFlagSet("ME", flag.ExitOnError)
+		var folder = meFlags.Int("folder", -1, "Id of the record to add")
+
+		if err := meFlags.Parse(os.Args[2:]); err == nil {
+			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(*folder)}})
+
+			if err != nil {
+				log.Fatalf("Error query: %v", err)
+			}
+			records := []*pbrc.Record{}
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Error getting record: %v", err)
+				}
+				if r.GetRecord().GetRelease().GetTitle() == "Bantam Cock" {
+					log.Printf("%v", r)
+				}
+				records = append(records, r.GetRecord())
+			}
+
+			sort.Sort(ro.BySaleOrder(records))
+			for i := 0; i < 50; i++ {
+				fmt.Printf("%v. [%v]: %v - %v\n", i, records[i].GetRelease().GetInstanceId(), records[i].GetRelease().GetArtists()[0].GetName(), records[i].GetRelease().GetTitle())
+			}
+		}
+
 	case "folder_state":
 		meFlags := flag.NewFlagSet("ME", flag.ExitOnError)
 		var folder = meFlags.Int("folder", -1, "Id of the record to add")
@@ -128,6 +158,18 @@ func main() {
 			}
 		} else {
 			fmt.Printf("Error: %v", err)
+		}
+	case "find_purchased":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PURCHASED}})
+
+		if err == nil {
+			for _, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Error: %v\n", err)
+				}
+				fmt.Printf("[%v] %v - %v\n", id, r.GetRecord().GetRelease().GetArtists()[0].GetName(), r.GetRecord().GetRelease().GetTitle())
+			}
 		}
 	case "pre_high_school":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
@@ -315,5 +357,30 @@ func main() {
 		}
 
 		fmt.Printf("%v -> %v - %v\n", time.Unix(min, 0), rec.GetRelease().GetArtists()[0].GetName(), rec.GetRelease().GetTitle())
+	case "missing":
+		folder, err := strconv.Atoi(os.Args[2])
+		if err != nil {
+			log.Fatalf("Hmm: %v", err)
+		}
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(folder)}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
+			if r.GetRecord().GetMetadata().GetSaleId() == 0 {
+				if len(r.GetRecord().GetRelease().GetArtists()) > 0 {
+					fmt.Printf("[%v] %v - %v\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetArtists()[0].GetName(), r.GetRecord().GetRelease().GetTitle())
+				} else {
+					fmt.Printf("[%v] %v\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+				}
+			}
+		}
 	}
 }
