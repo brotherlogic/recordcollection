@@ -104,9 +104,6 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error getting record: %v", err)
 				}
-				if r.GetRecord().GetRelease().GetTitle() == "Bantam Cock" {
-					log.Printf("%v", r)
-				}
 				records = append(records, r.GetRecord())
 			}
 
