@@ -329,12 +329,20 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	return err
 }
 
+var (
+	cacheSize = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "recordcollection_cachesize",
+		Help: "The size of the record cache",
+	})
+)
+
 func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	if s.TimeoutLoad {
 		return nil, status.Error(codes.DeadlineExceeded, "Force DE")
 	}
 	s.recordCacheMutex.Lock()
 	defer s.recordCacheMutex.Unlock()
+	cacheSize.Set(float64(len(s.recordCache)))
 	if val, ok := s.recordCache[id]; ok {
 		return val, nil
 	}
