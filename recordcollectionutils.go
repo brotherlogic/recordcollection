@@ -106,8 +106,8 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 			val.GetMetadata().NewSalePrice = 0
 			val.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 		} else {
-			// Unavailable is a valid response from a sales push
-			if st, ok := status.FromError(err); !ok || st.Code() != codes.Unavailable {
+			// Unavailable is a valid response from a sales push, as is Failed precondition when we try and update a sold item
+			if st, ok := status.FromError(err); !ok || (st.Code() != codes.Unavailable && st.Code() != codes.FailedPrecondition) {
 				// Force a record refresh
 				val.GetMetadata().LastUpdateTime = time.Now().Unix()
 				s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
