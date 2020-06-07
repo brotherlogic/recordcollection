@@ -455,11 +455,9 @@ func (s *Server) GetState() []*pbg.State {
 	defer s.collectionMutex.Unlock()
 
 	pfcount := int64(0)
-	pfexp := int64(0)
-	for ke, valr := range s.collection.GetInstanceToCategory() {
+	for _, valr := range s.collection.GetInstanceToCategory() {
 		if valr == pb.ReleaseMetadata_PRE_FRESHMAN {
 			pfcount++
-			pfexp = int64(ke)
 		}
 	}
 
