@@ -488,7 +488,6 @@ func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{
 		&pbg.State{Key: "oldest_record_id", Text: fmt.Sprintf("%v", s.collection.GetOldestRecordId())},
 		&pbg.State{Key: "oldest_record", Text: fmt.Sprintf("%v", time.Unix(s.collection.GetOldestRecord(), 0))},
-		&pbg.State{Key: "pre_fresh_example", Value: pfexp},
 		&pbg.State{Key: "pre_fresh", Value: pfcount},
 		&pbg.State{Key: "price_min", TimeValue: int64(dcount)},
 		&pbg.State{Key: "price_update", Value: int64(len(s.collection.GetInstanceToLastSalePriceUpdate()) - ecount)},
