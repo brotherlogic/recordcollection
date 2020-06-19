@@ -248,7 +248,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	if r.GetMetadata().GoalFolder == 0 {
-		s.RaiseIssue(ctx, "Save Error", fmt.Sprintf("Trying to save a record without a goal folder: %v", r), false)
+		s.RaiseIssue("Save Error", fmt.Sprintf("Trying to save a record without a goal folder: %v", r))
 		return fmt.Errorf("No goal folder")
 	}
 

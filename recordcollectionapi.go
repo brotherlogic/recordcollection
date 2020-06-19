@@ -187,7 +187,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 func (s *Server) testForLabels(ctx context.Context, rec *pb.Record, request *pb.UpdateRecordRequest, hasLabels bool) {
 	if len(rec.GetRelease().GetLabels()) == 0 && rec.GetMetadata().GetCategory() != pb.ReleaseMetadata_NO_LABELS && hasLabels {
-		s.RaiseIssue(ctx, "Label reduction", fmt.Sprintf("Update %v has reduced label count", request), false)
+		s.RaiseIssue("Label reduction", fmt.Sprintf("Update %v has reduced label count", request))
 	}
 }
 
@@ -287,7 +287,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 		st := status.Convert(err)
 		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable {
 			s.collectionMutex.Lock()
-			s.RaiseIssue(ctx, "Record receive issue", fmt.Sprintf("%v cannot be found -> %v, [%v,%v,%v,%v] (%v)", req.InstanceId, err, s.collection.InstanceToFolder[req.InstanceId], s.collection.InstanceToMaster[req.InstanceId], s.collection.InstanceToCategory[req.InstanceId], s.collection.InstanceToUpdate[req.InstanceId], ctx), false)
+			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v, [%v,%v,%v,%v] (%v)", req.InstanceId, err, s.collection.InstanceToFolder[req.InstanceId], s.collection.InstanceToMaster[req.InstanceId], s.collection.InstanceToCategory[req.InstanceId], s.collection.InstanceToUpdate[req.InstanceId], ctx))
 			s.collectionMutex.Unlock()
 		}
 
