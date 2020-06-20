@@ -36,7 +36,7 @@ func main() {
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute*5)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute*5, true)
 	defer cancel()
 
 	switch os.Args[1] {
@@ -129,6 +129,9 @@ func main() {
 					log.Fatalf("Error getting record: %v", err)
 				}
 				counts[r.GetRecord().GetMetadata().GetCategory()]++
+				if r.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_PRE_DISTINGUISHED {
+					fmt.Printf("%v - %v\n", r.GetRecord().GetRelease().GetArtists()[0].GetName(), r.GetRecord().GetRelease().GetTitle())
+				}
 			}
 
 			for cat, count := range counts {

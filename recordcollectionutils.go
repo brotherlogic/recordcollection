@@ -54,7 +54,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 
 		if !found {
 			s.Log(fmt.Sprintf("Sending off problem"))
-			s.RaiseIssue(ctx, "Sale Error Found", fmt.Sprintf("%v is not found in collection", sale), false)
+			s.RaiseIssue("Sale Error Found", fmt.Sprintf("%v is not found in collection", sale))
 			return fmt.Errorf("Found a sale problem")
 		}
 		matchCount++
@@ -77,7 +77,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 				}
 			}
 			if !seen {
-				s.RaiseIssue(ctx, "Sale Missing", fmt.Sprintf("%v is missing the sale", id), false)
+				s.RaiseIssue("Sale Missing", fmt.Sprintf("%v is missing the sale", id))
 				return fmt.Errorf("Found a sale problem")
 			}
 		}
@@ -93,7 +93,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 			val.GetMetadata().Category == pb.ReleaseMetadata_STALE_SALE) {
 
 		if len(val.GetRelease().RecordCondition) == 0 {
-			s.RaiseIssue(ctx, "Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id), false)
+			s.RaiseIssue("Condition Issue", fmt.Sprintf("%v [%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id))
 			return false, fmt.Errorf("%v [%v/%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id, val.GetRelease().InstanceId)
 		}
 
@@ -110,7 +110,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 			if st, ok := status.FromError(err); !ok || (st.Code() != codes.Unavailable && st.Code() != codes.FailedPrecondition) {
 				// Force a record refresh
 				val.GetMetadata().LastUpdateTime = time.Now().Unix()
-				s.RaiseIssue(ctx, "Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err), false)
+				s.RaiseIssue("Error pushing sale", fmt.Sprintf("Error on sale push for %v: %v", val.GetRelease().Id, err))
 				return true, nil
 			}
 		}
@@ -170,7 +170,7 @@ func (s *Server) pushSales(ctx context.Context) error {
 		}
 
 		if val.GetMetadata().GetSaleDirty() && dirty {
-			s.RaiseIssue(ctx, "StillDirty", fmt.Sprintf("%v is still dirty -> %v", val, copy), false)
+			s.RaiseIssue("StillDirty", fmt.Sprintf("%v is still dirty -> %v", val, copy))
 		}
 
 		doneID = id
@@ -267,7 +267,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 
 			_, err = s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 			if err != nil {
-				s.RaiseIssue(ctx, "Move Failure", fmt.Sprintf("%v -> %v", r.GetRelease().GetInstanceId(), err), false)
+				s.RaiseIssue("Move Failure", fmt.Sprintf("%v -> %v", r.GetRelease().GetInstanceId(), err))
 
 				//We need to clear the move to allow it to change
 				r.GetMetadata().MoveFolder = 0

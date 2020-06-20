@@ -338,3 +338,13 @@ service RecordCollectionService {
   rpc GetRecord(GetRecordRequest) returns (GetRecordResponse) {};
   rpc Trigger(TriggerRequest) returns (TriggerResponse) {};
 }
+
+message ClientUpdateRequest{
+  int32 instanceId = 1;
+}
+
+message ClientUpdateResponse {}
+
+service ClientUpdateService {
+  rpc ClientUpdate(ClientUpdateRequest) returns (ClientUpdateResponse) {};
+}

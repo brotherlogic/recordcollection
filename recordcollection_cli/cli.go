@@ -33,8 +33,10 @@ func main() {
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*5)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*5, true)
 	defer cancel()
+
+	fmt.Printf("Context = %v\n", ctx)
 
 	switch os.Args[1] {
 	case "trigger":
