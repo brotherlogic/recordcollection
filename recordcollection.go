@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"sync"
 	"time"
 
@@ -606,25 +605,12 @@ func main() {
 	server.Register = server
 	server.SendTrace = true
 
-	err := server.RegisterServerV2("recordcollection", false, false)
+	err := server.RegisterServerV2("recordcollection", false, true)
 	if err != nil {
 		return
 	}
 
-	// This enables pprof
-	go http.ListenAndServe(":8089", nil)
-
-	server.RegisterRepeatingTask(server.runSync, "run_sync", time.Hour)
-	server.RegisterRepeatingTask(server.runSyncWants, "run_sync_wants", time.Hour)
-	server.RegisterRepeatingTask(server.pushWants, "push_wants", time.Minute)
-	server.RegisterRepeatingTask(server.runPush, "run_push", time.Minute)
-	server.RegisterRepeatingTask(server.runRecache, "run_recache", time.Minute)
-	server.RegisterRepeatingTask(server.pushSales, "push_sales", time.Minute)
-	server.RegisterRepeatingTask(server.updateSalePrice, "update_sale_price", time.Minute)
-	server.RegisterRepeatingTask(server.validateSales, "validate_sales", time.Minute*5)
-
 	server.disableSales = false
 
-	server.MemCap = 400000000
 	server.Serve()
 }
