@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/brotherlogic/godiscogs"
@@ -18,7 +17,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
 	pbks "github.com/brotherlogic/keystore/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
@@ -137,42 +135,12 @@ func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, e
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	collection            *pb.RecordCollection
-	retr                  saver
-	lastSyncTime          time.Time
-	lastPushTime          time.Time
-	lastPushLength        time.Duration
-	lastPushDone          int
-	lastPushSize          int
-	cacheWait             time.Duration
-	pushMutex             *sync.Mutex
-	pushWait              time.Duration
-	saveNeeded            bool
-	quota                 quotaChecker
-	mover                 moveRecorder
-	nextPush              *pb.Record
-	lastWantUpdate        int32
-	wantCheck             string
-	lastWantText          string
-	scorer                scorer
-	saleMap               map[int32]*pb.Record
-	lastSalePush          time.Time
-	lastSyncLength        time.Duration
-	salesPushes           int64
-	soldAdjust            int64
-	wantUpdate            string
-	saves                 int64
-	saveMutex             *sync.Mutex
-	biggest               int64
-	lastSale              int64
-	disableSales          bool
-	instanceToFolderMutex *sync.Mutex
-	mismatches            int
-	recordCache           map[int32]*pb.Record
-	recordCacheMutex      *sync.Mutex
-	TimeoutLoad           bool
-	collectionMutex       *sync.Mutex
-	longest               time.Duration
+	retr         saver
+	scorer       scorer
+	quota        quotaChecker
+	mover        moveRecorder
+	TimeoutLoad  bool
+	disableSales bool
 }
 
 const (
@@ -189,37 +157,34 @@ const (
 	RECORDS = "/github.com/brotherlogic/recordcollection/allrecords"
 )
 
-func (s *Server) readRecordCollection(ctx context.Context) error {
+func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection, error) {
 	collection := &pb.RecordCollection{}
 	data, _, err := s.KSclient.Read(ctx, KEY, collection)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	s.collection = data.(*pb.RecordCollection)
+	collection = data.(*pb.RecordCollection)
 
 	// Create the instance to recahe map
-	if s.collection.InstanceToRecache == nil {
-		s.collection.InstanceToRecache = make(map[int32]int64)
+	if collection.InstanceToRecache == nil {
+		collection.InstanceToRecache = make(map[int32]int64)
 	}
 
-	if s.collection.InstanceToLastSalePriceUpdate == nil {
-		s.collection.InstanceToLastSalePriceUpdate = make(map[int32]int64)
+	if collection.InstanceToLastSalePriceUpdate == nil {
+		collection.InstanceToLastSalePriceUpdate = make(map[int32]int64)
 	}
 
-	if s.collection.GetOldestRecord() == 0 {
-		s.collection.OldestRecord = time.Now().Unix()
+	if collection.GetOldestRecord() == 0 {
+		collection.OldestRecord = time.Now().Unix()
 	}
 
-	return nil
+	return collection, nil
 }
 
-func (s *Server) saveRecordCollection(ctx context.Context) error {
-	s.saves++
-	s.collectionMutex.Lock()
-	defer s.collectionMutex.Unlock()
-	return s.KSclient.Save(ctx, KEY, s.collection)
+func (s *Server) saveRecordCollection(ctx context.Context, collection *pb.RecordCollection) error {
+	return s.KSclient.Save(ctx, KEY, collection)
 }
 
 func (s *Server) deleteRecord(ctx context.Context, i int32) error {
@@ -238,91 +203,63 @@ func (s *Server) deleteRecord(ctx context.Context, i int32) error {
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-
-	if r.GetMetadata().LastListenTime < s.collection.OldestRecord && (r.GetMetadata().GetCategory() != pb.ReleaseMetadata_GOOGLE_PLAY) {
-		s.collection.OldestRecord = r.GetMetadata().LastListenTime
-		s.collection.OldestRecordId = r.GetRelease().InstanceId
-	}
-
 	if r.GetMetadata().GoalFolder == 0 {
 		s.RaiseIssue("Save Error", fmt.Sprintf("Trying to save a record without a goal folder: %v", r))
 		return fmt.Errorf("No goal folder")
 	}
 
-	r.GetMetadata().SaveIteration = s.collection.CollectionNumber
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
 
-	s.collectionMutex.Lock()
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return err
+	}
 	save := false
-	if s.collection.InstanceToFolder[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
-		s.collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
+	if collection.InstanceToFolder[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
+		collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
 		save = true
 	}
 
-	if s.collection.InstanceToCategory[r.GetRelease().InstanceId] != r.GetMetadata().Category {
-		s.collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
+	if collection.InstanceToCategory[r.GetRelease().InstanceId] != r.GetMetadata().Category {
+		collection.InstanceToCategory[r.GetRelease().InstanceId] = r.GetMetadata().Category
 		save = true
 	}
 
-	if s.collection.InstanceToUpdate[r.GetRelease().InstanceId] != r.GetMetadata().LastUpdateTime {
-		s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
+	if collection.InstanceToUpdate[r.GetRelease().InstanceId] != r.GetMetadata().LastUpdateTime {
+		collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
 		save = true
 	}
 
-	if s.collection.InstanceToMaster[r.GetRelease().InstanceId] != r.GetRelease().MasterId {
-		s.collection.InstanceToMaster[r.GetRelease().InstanceId] = r.GetRelease().MasterId
+	if collection.InstanceToMaster[r.GetRelease().InstanceId] != r.GetRelease().MasterId {
+		collection.InstanceToMaster[r.GetRelease().InstanceId] = r.GetRelease().MasterId
 		save = true
 	}
 
-	if s.collection.InstanceToId[r.GetRelease().InstanceId] != r.GetRelease().Id {
-		s.collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
+	if collection.InstanceToId[r.GetRelease().InstanceId] != r.GetRelease().Id {
+		collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
 		save = true
 	}
 
-	if s.collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] != r.GetMetadata().GetSalePriceUpdate() {
-		s.collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] = r.GetMetadata().GetSalePriceUpdate()
+	if collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] != r.GetMetadata().GetSalePriceUpdate() {
+		collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] = r.GetMetadata().GetSalePriceUpdate()
 		save = true
 	}
 	if r.GetMetadata().SaleDirty {
-		s.collection.SaleUpdates = append(s.collection.SaleUpdates, r.GetRelease().GetInstanceId())
+		collection.SaleUpdates = append(collection.SaleUpdates, r.GetRelease().GetInstanceId())
 	}
 
 	if r.GetMetadata().LastCache == 0 || r.GetMetadata().LastCache == 1 {
-		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
+		collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
 	} else {
-		s.collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Unix(r.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
+		collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Unix(r.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
 	}
 
 	if r.GetMetadata().GetDirty() {
-		s.collection.NeedsPush = append(s.collection.NeedsPush, r.GetRelease().InstanceId)
+		collection.NeedsPush = append(collection.NeedsPush, r.GetRelease().InstanceId)
 	}
-
-	s.collectionMutex.Unlock()
 
 	if save {
-		s.saveRecordCollection(ctx)
-	}
-
-	s.recordCacheMutex.Lock()
-	defer s.recordCacheMutex.Unlock()
-	s.recordCache[r.GetRelease().InstanceId] = r
-
-	//Update the monitoring
-	counts := make(map[string]float64)
-	folders := make(map[string]float64)
-	for _, state := range s.collection.GetInstanceToCategory() {
-		counts[fmt.Sprintf("%v", state)] += 1.0
-	}
-	for _, folder := range s.collection.GetInstanceToFolder() {
-		folders[fmt.Sprintf("%v", folder)] += 1.0
-	}
-	for state, count := range counts {
-		stateCount.With(prometheus.Labels{"state": fmt.Sprintf("%v", state)}).Set(count)
-	}
-	for folder, count := range folders {
-		folderCount.With(prometheus.Labels{"folder": folder}).Set(count)
+		s.saveRecordCollection(ctx, collection)
 	}
 
 	return err
@@ -339,12 +276,6 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	if s.TimeoutLoad {
 		return nil, status.Error(codes.DeadlineExceeded, "Force DE")
 	}
-	s.recordCacheMutex.Lock()
-	defer s.recordCacheMutex.Unlock()
-	cacheSize.Set(float64(len(s.recordCache)))
-	if val, ok := s.recordCache[id]; ok {
-		return val, nil
-	}
 
 	record := &pb.Record{}
 	data, _, err := s.KSclient.Read(ctx, fmt.Sprintf("%v%v", SAVEKEY, id), record)
@@ -358,43 +289,51 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	}
 
 	recordToReturn := data.(*pb.Record)
-	s.recordCache[recordToReturn.GetRelease().InstanceId] = recordToReturn
 
-	s.collectionMutex.Lock()
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
 	if recordToReturn.GetMetadata().LastCache == 0 {
-		s.collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Now().Unix()
+		collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Now().Unix()
 	} else {
-		s.collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Unix(recordToReturn.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
+		collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Unix(recordToReturn.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
 	}
 
 	if recordToReturn.GetMetadata().GetDirty() {
-		s.collection.NeedsPush = append(s.collection.NeedsPush, recordToReturn.GetRelease().GetInstanceId())
+		collection.NeedsPush = append(collection.NeedsPush, recordToReturn.GetRelease().GetInstanceId())
 	}
-	s.collectionMutex.Unlock()
 
-	return recordToReturn, nil
+	return recordToReturn, s.saveRecordCollection(ctx, collection)
 }
 
 func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	r, err := s.loadRecord(ctx, id)
-	s.collectionMutex.Lock()
-	defer s.collectionMutex.Unlock()
 
-	if err == nil {
-		if len(r.GetRelease().GetLabels()) == 0 {
-			r.GetMetadata().LastCache = 1
-		}
+	if err != nil {
+		return nil, err
+	}
 
-		// We don't stock check 45s
-		if r.GetMetadata().GetGoalFolder() == 267116 {
-			r.GetMetadata().LastStockCheck = time.Now().Unix()
-			if r.GetRelease().FolderId == 1362206 {
-				r.GetMetadata().LastUpdateTime = time.Now().Unix()
-				s.collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
-			}
+	collection, err := s.readRecordCollection(ctx)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(r.GetRelease().GetLabels()) == 0 {
+		r.GetMetadata().LastCache = 1
+	}
+
+	// We don't stock check 45s
+	if r.GetMetadata().GetGoalFolder() == 267116 {
+		r.GetMetadata().LastStockCheck = time.Now().Unix()
+		if r.GetRelease().FolderId == 1362206 {
+			r.GetMetadata().LastUpdateTime = time.Now().Unix()
+			collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
 		}
 	}
-	return r, err
+
+	return r, s.saveRecordCollection(ctx, collection)
 
 }
 
@@ -410,30 +349,11 @@ func (s *Server) ReportHealth() bool {
 
 // Shutdown the server
 func (s *Server) Shutdown(ctx context.Context) error {
-	s.saveRecordCollection(ctx)
 	return nil
 }
 
 // Mote promotes/demotes this server
 func (s *Server) Mote(ctx context.Context, master bool) error {
-	if master {
-		tType := &pb.Token{}
-		tResp, _, err := s.KSclient.Read(context.Background(), TOKEN, tType)
-		if err != nil {
-			return err
-		}
-
-		if len(tResp.(*pb.Token).Token) == 0 {
-			return fmt.Errorf("Empty token: %v", tResp)
-		}
-
-		s.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, s.Log)
-
-		err = s.readRecordCollection(ctx)
-
-		return err
-	}
-
 	return nil
 }
 
@@ -446,85 +366,13 @@ func max(a, b int) int {
 
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
-	s.instanceToFolderMutex.Lock()
-	defer s.instanceToFolderMutex.Unlock()
-	s.recordCacheMutex.Lock()
-	defer s.recordCacheMutex.Unlock()
-	s.collectionMutex.Lock()
-	defer s.collectionMutex.Unlock()
-
-	pfcount := int64(0)
-	for _, valr := range s.collection.GetInstanceToCategory() {
-		if valr == pb.ReleaseMetadata_PRE_FRESHMAN {
-			pfcount++
-		}
-	}
-
-	count := 0
-	if s.collection != nil {
-		for _, push := range s.collection.NeedsPush {
-			if push == 404128726 {
-				count++
-			}
-		}
-	}
-
-	base := time.Now().Add(time.Hour * -24 * 30).Unix()
-	dcount := time.Now().Unix()
-	ecount := 0
-
-	for _, val := range s.collection.GetInstanceToLastSalePriceUpdate() {
-		if val < dcount {
-			dcount = val
-		}
-		if val > base {
-			ecount++
-		}
-	}
-
-	return []*pbg.State{
-		&pbg.State{Key: "oldest_record_id", Text: fmt.Sprintf("%v", s.collection.GetOldestRecordId())},
-		&pbg.State{Key: "oldest_record", Text: fmt.Sprintf("%v", time.Unix(s.collection.GetOldestRecord(), 0))},
-		&pbg.State{Key: "pre_fresh", Value: pfcount},
-		&pbg.State{Key: "price_min", TimeValue: int64(dcount)},
-		&pbg.State{Key: "price_update", Value: int64(len(s.collection.GetInstanceToLastSalePriceUpdate()) - ecount)},
-		&pbg.State{Key: "longest", TimeDuration: s.longest.Nanoseconds()},
-		&pbg.State{Key: "needs_push_sales", Text: fmt.Sprintf("%v", s.collection.GetSaleUpdates())},
-		&pbg.State{Key: "needs_push", Text: fmt.Sprintf("%v", s.collection.GetNeedsPush())},
-		&pbg.State{Key: "recache_size", Value: int64(len(s.collection.GetInstanceToRecache()))},
-		&pbg.State{Key: "cache_size", Value: int64(len(s.recordCache))},
-		&pbg.State{Key: "master_size", Value: int64(len(s.collection.GetInstanceToMaster()))},
-		&pbg.State{Key: "collection_size", Value: int64(proto.Size(s.collection))},
-		&pbg.State{Key: "categories", Value: int64(len(s.collection.GetInstanceToCategory()))},
-		&pbg.State{Key: "folder_map", Value: int64(len(s.collection.GetInstanceToFolder()))},
-		&pbg.State{Key: "update_map", Value: int64(len(s.collection.GetInstanceToUpdate()))},
-		&pbg.State{Key: "records", Value: int64(len(s.collection.GetInstances()))},
-		&pbg.State{Key: "mismatches", Value: int64(s.mismatches)},
-	}
+	return []*pbg.State{}
 }
 
 // Init builds out a server
 func Init() *Server {
 	s := &Server{
-		GoServer:              &goserver.GoServer{},
-		lastSyncTime:          time.Now(),
-		pushWait:              time.Minute,
-		pushMutex:             &sync.Mutex{},
-		lastPushTime:          time.Now(),
-		lastPushSize:          0,
-		lastPushLength:        0,
-		quota:                 &prodQuotaChecker{},
-		mover:                 &prodMoveRecorder{},
-		lastWantText:          "",
-		scorer:                &prodScorer{},
-		saleMap:               make(map[int32]*pb.Record),
-		lastSalePush:          time.Now(),
-		wantUpdate:            "unknown",
-		saveMutex:             &sync.Mutex{},
-		instanceToFolderMutex: &sync.Mutex{},
-		recordCache:           make(map[int32]*pb.Record),
-		recordCacheMutex:      &sync.Mutex{},
-		collectionMutex:       &sync.Mutex{},
+		GoServer: &goserver.GoServer{},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
@@ -532,28 +380,13 @@ func Init() *Server {
 	return s
 }
 
-func (s *Server) runRecache(ctx context.Context) error {
-	s.collectionMutex.Lock()
-	for id, key := range s.collection.InstanceToRecache {
-		if time.Unix(key, 0).Before(time.Now()) {
-			s.collectionMutex.Unlock()
-			r, err := s.loadRecord(ctx, id)
-			if err != nil {
-				return err
-			}
-			err = s.recache(ctx, r)
-			if err != nil {
-				return err
-			}
-			return s.saveRecord(ctx, r)
-		}
-	}
-	s.collectionMutex.Unlock()
-	return nil
-}
-
 func (s *Server) updateSalePrice(ctx context.Context) error {
-	for id, val := range s.collection.GetInstanceToLastSalePriceUpdate() {
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return err
+	}
+
+	for id, val := range collection.GetInstanceToLastSalePriceUpdate() {
 		if time.Now().Sub(time.Unix(val, 0)) > time.Hour*24*2 {
 			r, err := s.loadRecord(ctx, id)
 			if err != nil {
@@ -572,15 +405,15 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 		}
 	}
 
-	if len(s.collection.InstanceToLastSalePriceUpdate) != len(s.collection.InstanceToFolder) {
-		for id := range s.collection.InstanceToFolder {
-			if _, ok := s.collection.InstanceToLastSalePriceUpdate[id]; !ok {
-				s.collection.InstanceToLastSalePriceUpdate[id] = 1
+	if len(collection.InstanceToLastSalePriceUpdate) != len(collection.InstanceToFolder) {
+		for id := range collection.InstanceToFolder {
+			if _, ok := collection.InstanceToLastSalePriceUpdate[id]; !ok {
+				collection.InstanceToLastSalePriceUpdate[id] = 1
 			}
 		}
 	}
 
-	return nil
+	return s.saveRecordCollection(ctx, collection)
 }
 
 func main() {
@@ -603,7 +436,6 @@ func main() {
 	}
 
 	server.Register = server
-	server.SendTrace = true
 
 	err := server.RegisterServerV2("recordcollection", false, true)
 	if err != nil {
