@@ -97,8 +97,6 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 			return false, fmt.Errorf("%v [%v/%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id, val.GetRelease().InstanceId)
 		}
 
-		s.lastSale = int64(val.GetRelease().InstanceId)
-		s.salesPushes++
 		err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().NewSalePrice)/100)
 		if err == nil {
 			val.GetMetadata().SaleDirty = false
@@ -129,7 +127,6 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	}
 
 	if val.GetMetadata().Category == pb.ReleaseMetadata_SOLD_OFFLINE {
-		s.soldAdjust++
 		err := s.retr.RemoveFromSale(int(val.GetMetadata().SaleId), int(val.GetRelease().Id))
 
 		if err == nil || fmt.Sprintf("%v", err) == "POST ERROR (STATUS CODE): 404, {\"message\": \"Item not found. It may have been deleted.\"}" {
@@ -150,96 +147,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	return false, nil
 }
 
-func (s *Server) pushSales(ctx context.Context) error {
-	s.lastSalePush = time.Now()
-	doneID := int32(-1)
-	backlogCount.With(prometheus.Labels{"source": "sales"}).Set(float64(len(s.collection.GetSaleUpdates())))
-	for _, id := range s.collection.GetSaleUpdates() {
-		val, err := s.loadRecord(ctx, id)
-		copy := proto.Clone(val)
-		if err != nil {
-			return err
-		}
-		dirty := val.GetMetadata().GetSaleDirty()
-		success, err := s.pushSale(ctx, val)
-		if err != nil {
-			return fmt.Errorf("Error pushing %v (%v): %v", val.GetRelease().InstanceId, val.GetMetadata().Category, err)
-		}
-		if success {
-			s.saveRecord(ctx, val)
-		}
-
-		if val.GetMetadata().GetSaleDirty() && dirty {
-			s.RaiseIssue("StillDirty", fmt.Sprintf("%v is still dirty -> %v", val, copy))
-		}
-
-		doneID = id
-		break
-	}
-
-	sales := []int32{}
-	for _, v := range s.collection.SaleUpdates {
-		if doneID != v {
-			sales = append(sales, v)
-		}
-	}
-	s.collection.SaleUpdates = sales
-	s.saveRecordCollection(ctx)
-	return nil
-}
-
-func (s *Server) pushWants(ctx context.Context) error {
-	for _, w := range s.collection.NewWants {
-		if w.GetMetadata().Active {
-			s.wantCheck = fmt.Sprintf("%v", w)
-			if s.updateWant(w) {
-				s.lastWantText = fmt.Sprintf("%v", w)
-				s.lastWantUpdate = w.GetRelease().Id
-				break
-			}
-		}
-	}
-
-	return s.saveRecordCollection(ctx)
-}
-
-func (s *Server) runPush(ctx context.Context) error {
-	s.lastPushTime = time.Now()
-	s.lastPushSize = len(s.collection.NeedsPush)
-	s.lastPushDone = 0
-	backlogCount.With(prometheus.Labels{"source": "regular"}).Set(float64(len(s.collection.GetNeedsPush())))
-	if len(s.collection.NeedsPush) > 0 {
-		id := s.collection.NeedsPush[0]
-		val, err := s.getRecord(ctx, id)
-		if err != nil {
-			return err
-		}
-		_, err = s.pushRecord(ctx, val)
-		if err != nil {
-			s.Log(fmt.Sprintf("Failed Pushing %v -> %v", id, err))
-			return err
-		}
-		s.lastPushDone++
-
-		newPush := []int32{}
-		for _, v := range s.collection.NeedsPush {
-			if v != val.GetRelease().InstanceId {
-				newPush = append(newPush, v)
-			}
-		}
-
-		s.collection.NeedsPush = newPush
-		s.saveRecordCollection(ctx)
-	}
-
-	s.lastPushLength = time.Now().Sub(s.lastPushTime)
-	return nil
-}
-
 func (s *Server) updateWant(w *pb.Want) bool {
-	if w.GetRelease().Id == 766489 {
-		s.wantUpdate = fmt.Sprintf("%v and %v", w.ClearWant, w.GetMetadata().Active)
-	}
 	if w.ClearWant {
 		s.Log(fmt.Sprintf("Removing from wantlist %v -> %v and %v", w.GetRelease().Id, w.ClearWant, w.GetMetadata().Active))
 		s.retr.RemoveFromWantlist(int(w.GetRelease().Id))
@@ -297,8 +205,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 
 	//Ensure records get updated
 	r.GetMetadata().LastUpdateTime = time.Now().Unix()
-	s.saveRecord(ctx, r)
-	return pushed, nil
+	return pushed, s.saveRecord(ctx, r)
 }
 
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
@@ -312,7 +219,6 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 		inst, err := s.retr.AddToFolder(r.GetRelease().FolderId, r.GetRelease().Id)
 		if err == nil {
 			r.GetRelease().InstanceId = int32(inst)
-			s.saveRecordCollection(ctx)
 		}
 	}
 
@@ -343,16 +249,10 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	}
 
 	s.saveRecord(ctx, r)
-	s.saveRecordCollection(ctx)
 }
 
 func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Release, num int64) {
 	//Update record if releases don't match
-
-	s.collectionMutex.Lock()
-	s.collection.InstanceToFolder[record.InstanceId] = record.FolderId
-	s.collectionMutex.Unlock()
-
 	hasCondition := len(r.GetRelease().RecordCondition) > 0
 
 	//Clear repeated fields first to prevent growth, but images come from
@@ -392,15 +292,16 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 }
 
 func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
-	startTime := time.Now()
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return err
+	}
 	records := s.retr.GetCollection()
 	for _, record := range records {
 		foundInList := false
-		s.collectionMutex.Lock()
-		for iid := range s.collection.InstanceToFolder {
+		for iid := range collection.InstanceToFolder {
 			if iid == record.InstanceId {
 				foundInList = true
-				s.collectionMutex.Unlock()
 				r, err := s.loadRecord(ctx, record.InstanceId)
 				if err == nil {
 					s.syncRecords(ctx, r, record, colNumber)
@@ -412,28 +313,22 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 						return err
 					}
 				}
-				s.collectionMutex.Lock()
 			}
 		}
 
 		if !foundInList {
 			nrec := &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix(), GoalFolder: record.FolderId}}
-			s.collectionMutex.Unlock()
 			s.saveRecord(ctx, nrec)
-			s.collectionMutex.Lock()
 		}
 
-		s.collectionMutex.Unlock()
 	}
 
 	// Update sale info
-	for iid, category := range s.collection.InstanceToCategory {
+	for iid, category := range collection.InstanceToCategory {
 		s.updateSale(ctx, iid, category)
 	}
 
-	s.lastSyncTime = time.Now()
-	s.lastSyncLength = time.Now().Sub(startTime)
-	return s.saveRecordCollection(ctx)
+	return s.saveRecordCollection(ctx, collection)
 }
 
 func (s *Server) updateSale(ctx context.Context, iid int32, category pb.ReleaseMetadata_Category) {
@@ -451,12 +346,17 @@ func (s *Server) updateSale(ctx context.Context, iid int32, category pb.ReleaseM
 	}
 }
 
-func (s *Server) syncWantlist() {
+func (s *Server) syncWantlist(ctx context.Context) error {
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return err
+	}
+
 	wants, _ := s.retr.GetWantlist()
 
 	for _, want := range wants {
 		found := false
-		for _, w := range s.collection.GetNewWants() {
+		for _, w := range collection.GetNewWants() {
 			if w.GetRelease().Id == want.Id {
 				found = true
 				proto.Merge(w.GetRelease(), want)
@@ -464,29 +364,31 @@ func (s *Server) syncWantlist() {
 			}
 		}
 		if !found {
-
-			s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: want, Metadata: &pb.WantMetadata{Active: true}})
+			collection.NewWants = append(collection.NewWants, &pb.Want{Release: want, Metadata: &pb.WantMetadata{Active: true}})
 		}
 	}
+
+	return s.saveRecordCollection(ctx, collection)
 }
 
 func (s *Server) runSyncWants(ctx context.Context) error {
-	s.syncWantlist()
-	s.saveRecordCollection(ctx)
-	return nil
+	return s.syncWantlist(ctx)
 }
 
 func (s *Server) runSync(ctx context.Context) error {
-	err := s.syncCollection(ctx, s.collection.CollectionNumber+1)
-	s.collection.CollectionNumber++
-	s.saveRecordCollection(ctx)
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return err
+	}
+	err = s.syncCollection(ctx, collection.CollectionNumber+1)
+	collection.CollectionNumber++
+	s.saveRecordCollection(ctx, collection)
 	return err
 }
 
 func (s *Server) recache(ctx context.Context, r *pb.Record) error {
 	// Don't recache a record that has a pending score
 	if r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().Dirty {
-		s.collection.NeedsPush = append(s.collection.NeedsPush, r.GetRelease().InstanceId)
 		return fmt.Errorf("%v has pending score or is dirty", r.GetRelease().InstanceId)
 	}
 

@@ -14,23 +14,14 @@ import (
 func InitTestServer(folder string) *Server {
 	s := Init()
 	s.PrepServer()
-	s.cacheWait = 0
 	s.retr = &testSyncer{}
 	s.mover = &testMover{pass: true}
 	s.scorer = &testScorer{}
-
-	// Create the record collection because we're not init'ing from a file
-	s.collection = &pb.RecordCollection{}
-	s.collection.InstanceToFolder = make(map[int32]int32)
-	s.collection.InstanceToUpdate = make(map[int32]int64)
-	s.collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
-	s.collection.InstanceToMaster = make(map[int32]int32)
-	s.collection.InstanceToId = make(map[int32]int32)
-	s.collection.InstanceToRecache = make(map[int32]int64)
 	s.quota = &testQuota{pass: true}
 
 	os.RemoveAll(folder)
 	s.GoServer.KSclient = *keystoreclient.GetTestClient(folder)
+	s.GoServer.KSclient.Save(context.Background(), KEY, &pb.RecordCollection{})
 	s.SkipLog = true
 	s.SkipIssue = true
 
@@ -53,7 +44,7 @@ func TestAddRecord(t *testing.T) {
 
 func TestDeleteRecord(t *testing.T) {
 	s := InitTestServer(".testaddrecord")
-	s.collection.NeedsPush = []int32{int32(456), int32(123)}
+	//s.collection.NeedsPush = []int32{int32(456), int32(123)}
 	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20}, Release: &pbd.Release{Id: 1234, InstanceId: 123}}})
 
 	if err != nil {
@@ -71,13 +62,13 @@ func TestDeleteRecord(t *testing.T) {
 		t.Fatalf("Error in deleting record: %v", err)
 	}
 
-	if len(s.collection.Records) != 0 {
+	/*if len(s.collection.Records) != 0 {
 		t.Errorf("Record has not been delete: %v", s.collection)
 	}
 
 	if len(s.collection.NeedsPush) != 1 {
 		t.Errorf("Has not been removed from push: %v", s.collection.NeedsPush)
-	}
+	}*/
 }
 
 func TestAddRecordSetsDateAdded(t *testing.T) {
@@ -216,7 +207,7 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893, SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL, LastCache: time.Now().Unix(), Cost: 100, GoalFolder: 100}}
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
-	s.saleMap[1234] = rec
+	//s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{NewSalePrice: 1235}, Release: &pbd.Release{Title: "madeup1", InstanceId: 177077893}}})
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
@@ -229,10 +220,10 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
-	err = s.pushSales(context.Background())
+	/*err = s.pushSales(context.Background())
 	if err != nil {
 		t.Errorf("Error pushing sales: %v", err)
-	}
+	}*/
 
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -250,7 +241,7 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893, SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL, Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
-	s.saleMap[1234] = rec
+	//s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{SaleDirty: true}, Release: &pbd.Release{Title: "madeup1", InstanceId: 177077893}}})
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
@@ -263,10 +254,10 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
-	err = s.pushSales(context.Background())
+	/*err = s.pushSales(context.Background())
 	if err != nil {
 		t.Fatalf("Error in pushing sales: %v", err)
-	}
+	}*/
 
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -284,7 +275,7 @@ func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_LISTED_TO_SELL, GoalFolder: 100, Cost: 100, LastCache: time.Now().Unix()}}
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
-	s.saleMap[1234] = rec
+	//s.saleMap[1234] = rec
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{NewSalePrice: 1230}, Release: &pbd.Release{Title: "madeup1", InstanceId: 177077893}}})
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
@@ -297,21 +288,21 @@ func TestUpdateRecordWithNoPriceChangeSalePriceWithoutCOndition(t *testing.T) {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
-	err = s.pushSales(context.Background())
+	/*err = s.pushSales(context.Background())
 
 	if err == nil {
 		t.Errorf("No error in pushing sales")
-	}
+	}*/
 }
 
 func TestRemoveRecordFromSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_SOLD_OFFLINE, SaleDirty: true, Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
-	s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(177077893))
-	s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(10))
+	//s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(177077893))
+	//s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(10))
 
-	err := s.pushSales(context.Background())
+	//err := s.pushSales(context.Background())
 
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -369,7 +360,7 @@ func TestUpdateRecordsForSaleSellingIsDisabled(t *testing.T) {
 
 func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
-	s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}, Metadata: &pb.WantMetadata{Active: true}})
+	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}, Metadata: &pb.WantMetadata{Active: true}})
 
 	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
 	if err != nil {
@@ -408,7 +399,7 @@ func TestQueryRecordsBad(t *testing.T) {
 
 func TestQueryRecordsWithFolderId(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
-	s.collection.InstanceToFolder[12] = 12
+	//s.collection.InstanceToFolder[12] = 12
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_FolderId{12}})
 
@@ -423,7 +414,7 @@ func TestQueryRecordsWithFolderId(t *testing.T) {
 
 func TestQueryRecordsWithUpdateTime(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
-	s.collection.InstanceToUpdate[12] = 14
+	//s.collection.InstanceToUpdate[12] = 14
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_UpdateTime{12}})
 
@@ -438,7 +429,7 @@ func TestQueryRecordsWithUpdateTime(t *testing.T) {
 
 func TestQueryRecordsWithCategory(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
-	s.collection.InstanceToCategory[12] = pb.ReleaseMetadata_PRE_DISTINGUISHED
+	//s.collection.InstanceToCategory[12] = pb.ReleaseMetadata_PRE_DISTINGUISHED
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_Category{pb.ReleaseMetadata_PRE_DISTINGUISHED}})
 

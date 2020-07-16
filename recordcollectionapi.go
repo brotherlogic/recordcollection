@@ -15,31 +15,32 @@ import (
 
 // DeleteRecord deletes a record
 func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordRequest) (*pb.DeleteRecordResponse, error) {
-	s.collectionMutex.Lock()
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	//Remove the record from the maps
-	delete(s.collection.InstanceToUpdate, request.InstanceId)
-	delete(s.collection.InstanceToFolder, request.InstanceId)
-	delete(s.collection.InstanceToMaster, request.InstanceId)
-	delete(s.collection.InstanceToCategory, request.InstanceId)
-	delete(s.collection.InstanceToId, request.InstanceId)
+	delete(collection.InstanceToUpdate, request.InstanceId)
+	delete(collection.InstanceToFolder, request.InstanceId)
+	delete(collection.InstanceToMaster, request.InstanceId)
+	delete(collection.InstanceToCategory, request.InstanceId)
+	delete(collection.InstanceToId, request.InstanceId)
 
 	betterDelete := []int32{}
-	for _, val := range s.collection.NeedsPush {
+	for _, val := range collection.NeedsPush {
 		if val != request.InstanceId {
 			betterDelete = append(betterDelete, val)
 		}
 	}
 
-	//Delete from the cache
-	s.recordCacheMutex.Lock()
-	delete(s.recordCache, request.InstanceId)
-	s.recordCacheMutex.Unlock()
+	s.Log(fmt.Sprintf("Removed from push: %v -> %v given %v and %v", len(collection.NeedsPush), len(betterDelete), request.InstanceId, collection.NeedsPush))
+	collection.NeedsPush = betterDelete
 
-	s.collectionMutex.Unlock()
-	s.Log(fmt.Sprintf("Removed from push: %v -> %v given %v and %v", len(s.collection.NeedsPush), len(betterDelete), request.InstanceId, s.collection.NeedsPush[0]))
-	s.collection.NeedsPush = betterDelete
-
-	s.saveRecordCollection(ctx)
+	err = s.saveRecordCollection(ctx, collection)
+	if err != nil {
+		return nil, err
+	}
 	return &pb.DeleteRecordResponse{}, s.deleteRecord(ctx, request.InstanceId)
 }
 
@@ -47,7 +48,12 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb.GetWantsResponse, error) {
 	response := &pb.GetWantsResponse{Wants: make([]*pb.Want, 0)}
 
-	for _, rec := range s.collection.GetNewWants() {
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, rec := range collection.GetNewWants() {
 		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) == nil {
 			response.Wants = append(response.Wants, rec)
 		}
@@ -58,9 +64,14 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 
 //UpdateWant updates the record
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	var want *pb.Want
 	found := false
-	for _, rec := range s.collection.GetNewWants() {
+	for _, rec := range collection.GetNewWants() {
 		if rec.GetRelease().Id == request.GetUpdate().GetRelease().Id {
 			found = true
 			proto.Merge(rec, request.GetUpdate())
@@ -76,8 +87,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 		s.retr.AddToWantlist(int(request.GetUpdate().GetRelease().Id))
 	}
 
-	s.saveNeeded = true
-	return &pb.UpdateWantResponse{Updated: want}, nil
+	return &pb.UpdateWantResponse{Updated: want}, s.saveRecordCollection(ctx, collection)
 }
 
 //UpdateRecord updates the record
@@ -131,7 +141,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		}
 
 		rec.GetMetadata().SaleDirty = true
-		s.collection.SaleUpdates = append(s.collection.SaleUpdates, rec.GetRelease().InstanceId)
 	}
 
 	// Avoid increasing repeasted fields
@@ -177,11 +186,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	if !rec.GetMetadata().Dirty && (rec.GetMetadata().GetMoveFolder() != 0 || rec.GetMetadata().GetSetRating() != 0) {
 		rec.GetMetadata().Dirty = true
-		s.collection.NeedsPush = append(s.collection.NeedsPush, rec.GetRelease().InstanceId)
 	}
 	err = s.saveRecord(ctx, rec)
 
-	s.saveNeeded = true
 	return &pb.UpdateRecordsResponse{Updated: rec}, err
 }
 
@@ -209,12 +216,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetRelease().FolderId = int32(812802)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
-		s.collectionMutex.Lock()
-		s.collection.InstanceToFolder[int32(instanceID)] = int32(812802)
-		s.collectionMutex.Unlock()
-		s.cacheRecord(ctx, request.GetToAdd())
 		s.saveRecord(ctx, request.GetToAdd())
-		s.saveNeeded = true
 	}
 
 	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err
@@ -222,19 +224,17 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 
 // QueryRecords gets a record using the new schema
 func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
+	collection, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	s.Log(fmt.Sprintf("QueryRecords %v", req))
 	ids := make([]int32, 0)
-	t := time.Now()
-	s.collectionMutex.Lock()
-	defer s.collectionMutex.Unlock()
-	taken := time.Now().Sub(t)
-	if taken > s.longest {
-		s.longest = taken
-	}
 	switch x := req.Query.(type) {
 
 	case *pb.QueryRecordsRequest_FolderId:
-		for id, folder := range s.collection.GetInstanceToFolder() {
+		for id, folder := range collection.GetInstanceToFolder() {
 			if folder == x.FolderId {
 				ids = append(ids, id)
 			}
@@ -243,7 +243,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_UpdateTime:
-		for id, updateTime := range s.collection.InstanceToUpdate {
+		for id, updateTime := range collection.InstanceToUpdate {
 			if updateTime >= x.UpdateTime {
 				ids = append(ids, id)
 			}
@@ -251,7 +251,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_Category:
-		for id, category := range s.collection.GetInstanceToCategory() {
+		for id, category := range collection.GetInstanceToCategory() {
 			if category == x.Category {
 				ids = append(ids, id)
 			}
@@ -259,7 +259,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_MasterId:
-		for id, masterID := range s.collection.InstanceToMaster {
+		for id, masterID := range collection.InstanceToMaster {
 			if masterID == x.MasterId {
 				ids = append(ids, id)
 			}
@@ -267,7 +267,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_ReleaseId:
-		for id, releaseID := range s.collection.GetInstanceToId() {
+		for id, releaseID := range collection.GetInstanceToId() {
 			if releaseID == x.ReleaseId {
 				ids = append(ids, id)
 			}
@@ -286,9 +286,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	if err != nil {
 		st := status.Convert(err)
 		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable {
-			s.collectionMutex.Lock()
-			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v, [%v,%v,%v,%v] (%v)", req.InstanceId, err, s.collection.InstanceToFolder[req.InstanceId], s.collection.InstanceToMaster[req.InstanceId], s.collection.InstanceToCategory[req.InstanceId], s.collection.InstanceToUpdate[req.InstanceId], ctx))
-			s.collectionMutex.Unlock()
+			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, ctx))
 		}
 
 		return nil, fmt.Errorf("Could not locate %v -> %v", req.InstanceId, err)
