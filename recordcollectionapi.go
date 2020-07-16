@@ -34,7 +34,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 		}
 	}
 
-	s.Log(fmt.Sprintf("Removed from push: %v -> %v given %v and %v", len(collection.NeedsPush), len(betterDelete), request.InstanceId, collection.NeedsPush[0]))
+	s.Log(fmt.Sprintf("Removed from push: %v -> %v given %v and %v", len(collection.NeedsPush), len(betterDelete), request.InstanceId, collection.NeedsPush))
 	collection.NeedsPush = betterDelete
 
 	err = s.saveRecordCollection(ctx, collection)

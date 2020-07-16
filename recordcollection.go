@@ -176,6 +176,26 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 		collection.InstanceToLastSalePriceUpdate = make(map[int32]int64)
 	}
 
+	if collection.InstanceToFolder == nil {
+		collection.InstanceToFolder = make(map[int32]int32)
+	}
+
+	if collection.InstanceToId == nil {
+		collection.InstanceToId = make(map[int32]int32)
+	}
+
+	if collection.InstanceToUpdate == nil {
+		collection.InstanceToUpdate = make(map[int32]int64)
+	}
+
+	if collection.InstanceToCategory == nil {
+		collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
+	}
+
+	if collection.InstanceToMaster == nil {
+		collection.InstanceToMaster = make(map[int32]int32)
+	}
+
 	if collection.GetOldestRecord() == 0 {
 		collection.OldestRecord = time.Now().Unix()
 	}
@@ -215,8 +235,8 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		return err
 	}
 	save := false
-	if collection.InstanceToFolder[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
-		collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
+	if collection.GetInstanceToFolder()[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
+		collection.GetInstanceToFolder()[r.GetRelease().InstanceId] = r.GetRelease().FolderId
 		save = true
 	}
 

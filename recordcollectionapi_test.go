@@ -21,6 +21,7 @@ func InitTestServer(folder string) *Server {
 
 	os.RemoveAll(folder)
 	s.GoServer.KSclient = *keystoreclient.GetTestClient(folder)
+	s.GoServer.KSclient.Save(context.Background(), KEY, &pb.RecordCollection{})
 	s.SkipLog = true
 	s.SkipIssue = true
 
