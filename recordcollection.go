@@ -310,21 +310,7 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 
 	recordToReturn := data.(*pb.Record)
 
-	collection, err := s.readRecordCollection(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if recordToReturn.GetMetadata().LastCache == 0 {
-		collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Now().Unix()
-	} else {
-		collection.InstanceToRecache[recordToReturn.GetRelease().InstanceId] = time.Unix(recordToReturn.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
-	}
-
-	if recordToReturn.GetMetadata().GetDirty() {
-		collection.NeedsPush = append(collection.NeedsPush, recordToReturn.GetRelease().GetInstanceId())
-	}
-
-	return recordToReturn, s.saveRecordCollection(ctx, collection)
+	return recordToReturn, nil
 }
 
 func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
