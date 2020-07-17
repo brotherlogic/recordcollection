@@ -10,33 +10,27 @@ import (
 
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/golang/protobuf/proto"
-	"google.golang.org/grpc"
 
 	pbgd "github.com/brotherlogic/godiscogs"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
-	"google.golang.org/grpc/resolver"
 )
 
-func init() {
-	resolver.Register(&utils.DiscoveryClientResolverBuilder{})
-}
-
 func main() {
-	conn, err := grpc.Dial("discovery:///recordcollection", grpc.WithInsecure())
+	t := time.Now()
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*5, true)
+	defer cancel()
+
+	conn, err := utils.LFDialServer(ctx, "recordcollection")
+	fmt.Printf("Dialled in %v\n", time.Now().Sub(t))
 	if err != nil {
 		log.Fatalf("Cannot reach rc: %v", err)
 	}
 	defer conn.Close()
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
-
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*5, true)
-	defer cancel()
-
-	fmt.Printf("Context = %v\n", ctx)
 
 	switch os.Args[1] {
 	case "trigger":
