@@ -17,6 +17,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
 	pbks "github.com/brotherlogic/keystore/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
@@ -449,6 +450,18 @@ func main() {
 	}
 
 	server.disableSales = false
+
+	tType := &pb.Token{}
+	tResp, _, err := server.KSclient.Read(context.Background(), TOKEN, tType)
+	if err != nil {
+		log.Fatalf("Unable to read discogs token")
+	}
+
+	if len(tResp.(*pb.Token).Token) == 0 {
+		log.Fatalf("Read an empty token: %v", tResp)
+
+	}
+	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
 
 	server.Serve()
 }
