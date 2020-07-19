@@ -41,6 +41,9 @@ func (s *Server) runUpdateFanout() {
 	for id := range s.updateFanout {
 		cancel, err := s.ElectKey(fmt.Sprintf("%v", id))
 
+		s.Log(fmt.Sprintf("Elected: %v, %v -> %v", err, id, s.fanoutServers))
+		time.Sleep(time.Second * 2)
+
 		if err != nil {
 			s.Log(fmt.Sprintf("Unable to elect: %v", err))
 			updateFanoutFailure.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
