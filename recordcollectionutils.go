@@ -34,7 +34,7 @@ var (
 	updateFanoutFailure = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "recordcollection_updatefanoutfailure",
 		Help: "Push Size",
-	}, []string{"reason"})
+	}, []string{"error", "server"})
 )
 
 func (s *Server) runUpdateFanout() {
@@ -47,7 +47,7 @@ func (s *Server) runUpdateFanout() {
 
 		if err != nil {
 			s.Log(fmt.Sprintf("Unable to elect: %v", err))
-			updateFanoutFailure.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+			updateFanoutFailure.With(prometheus.Labels{"server": "elect", "error": fmt.Sprintf("%v", err)}).Inc()
 			s.updateFanout <- id
 			cancel()
 			time.Sleep(time.Minute)
@@ -60,7 +60,7 @@ func (s *Server) runUpdateFanout() {
 
 			if err != nil {
 				s.Log(fmt.Sprintf("Bad dial of %v -> %v", server, err))
-				updateFanoutFailure.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				continue
 			}
@@ -69,10 +69,12 @@ func (s *Server) runUpdateFanout() {
 			_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
 			if err != nil {
 				s.Log(fmt.Sprintf("Bad update of %v -> %v", server, err))
-				updateFanoutFailure.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				continue
 			}
+
+			updateFanoutFailure.With(prometheus.Labels{"server": server, "error": "nil"}).Inc()
 
 			conn.Close()
 			cancel()
