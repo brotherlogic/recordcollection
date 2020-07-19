@@ -189,6 +189,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 	err = s.saveRecord(ctx, rec)
 
+	s.updateFanout <- rec.GetRelease().GetInstanceId()
 	return &pb.UpdateRecordsResponse{Updated: rec}, err
 }
 

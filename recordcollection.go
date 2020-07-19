@@ -381,7 +381,7 @@ func (s *Server) GetState() []*pbg.State {
 func Init() *Server {
 	s := &Server{
 		GoServer:      &goserver.GoServer{},
-		updateFanout:  make(chan int32),
+		updateFanout:  make(chan int32, 100),
 		fanoutServers: []string{"recordalerting"},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
@@ -466,5 +466,6 @@ func main() {
 	}
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
 
+	go server.runUpdateFanout()
 	server.Serve()
 }
