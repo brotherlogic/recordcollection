@@ -39,6 +39,7 @@ var (
 
 func (s *Server) runUpdateFanout() {
 	for id := range s.updateFanout {
+		time.Sleep(time.Second * 2)
 		cancel, err := s.ElectKey(fmt.Sprintf("%v", id))
 
 		s.Log(fmt.Sprintf("Elected: %v, %v -> %v", err, id, s.fanoutServers))
