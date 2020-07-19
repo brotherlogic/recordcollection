@@ -25,6 +25,8 @@ message RecordCollection {
   // The record we haven't listened to
   int64 oldest_record = 15;
   int32 oldest_record_id = 16;
+
+  repeated int32 update_queue = 17;
 }
 
 message AllRecords {

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
+	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
@@ -24,7 +25,60 @@ var (
 		Name: "recordcollection_backlog",
 		Help: "Push Size",
 	}, []string{"source"})
+
+	updateFanout = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "recordcollection_updatefanout",
+		Help: "Push Size",
+	})
+
+	updateFanoutFailure = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "recordcollection_updatefanoutfailure",
+		Help: "Push Size",
+	}, []string{"reason"})
 )
+
+func (s *Server) runUpdateFanout() {
+	for id := range s.updateFanout {
+		cancel, err := s.ElectKey(fmt.Sprintf("%v", id))
+
+		if err != nil {
+			s.Log(fmt.Sprintf("Unable to elect: %v", err))
+			updateFanoutFailure.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+			s.updateFanout <- id
+			cancel()
+			time.Sleep(time.Minute)
+			continue
+		}
+
+		for _, server := range s.fanoutServers {
+			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute, true)
+			conn, err := s.FDialServer(ctx, server)
+
+			if err != nil {
+				s.Log(fmt.Sprintf("Bad dial of %v -> %v", server, err))
+				updateFanoutFailure.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+				s.updateFanout <- id
+				continue
+			}
+
+			client := pb.NewClientUpdateServiceClient(conn)
+			_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
+			if err != nil {
+				s.Log(fmt.Sprintf("Bad update of %v -> %v", server, err))
+				updateFanoutFailure.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+				s.updateFanout <- id
+				continue
+			}
+
+			conn.Close()
+			cancel()
+		}
+
+		cancel()
+		updateFanout.Set(float64(len(s.updateFanout)))
+		time.Sleep(time.Minute)
+	}
+}
 
 func (s *Server) validateSales(ctx context.Context) error {
 	sales, err := s.retr.GetInventory()

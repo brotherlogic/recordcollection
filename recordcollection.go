@@ -107,7 +107,6 @@ type saver interface {
 type scorer interface {
 	GetScore(ctx context.Context, instanceID int32) (float32, error)
 }
-
 type prodScorer struct {
 	dial func(server string) (*grpc.ClientConn, error)
 }
@@ -136,12 +135,14 @@ func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, e
 //Server main server type
 type Server struct {
 	*goserver.GoServer
-	retr         saver
-	scorer       scorer
-	quota        quotaChecker
-	mover        moveRecorder
-	TimeoutLoad  bool
-	disableSales bool
+	retr          saver
+	scorer        scorer
+	quota         quotaChecker
+	mover         moveRecorder
+	TimeoutLoad   bool
+	disableSales  bool
+	updateFanout  chan int32
+	fanoutServers []string
 }
 
 const (
@@ -379,7 +380,9 @@ func (s *Server) GetState() []*pbg.State {
 // Init builds out a server
 func Init() *Server {
 	s := &Server{
-		GoServer: &goserver.GoServer{},
+		GoServer:      &goserver.GoServer{},
+		updateFanout:  make(chan int32),
+		fanoutServers: []string{"recordalerting"},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
