@@ -41,7 +41,7 @@ func (s *Server) runUpdateFanout() {
 	for id := range s.updateFanout {
 		s.Log(fmt.Sprintf("Running election for %v", id))
 		time.Sleep(time.Second * 2)
-		cancel, err := s.ElectKey(fmt.Sprintf("%v", id))
+		ecancel, err := s.ElectKey(fmt.Sprintf("%v", id))
 
 		s.Log(fmt.Sprintf("Elected: %v, %v -> %v", err, id, s.fanoutServers))
 		time.Sleep(time.Second * 2)
@@ -50,7 +50,7 @@ func (s *Server) runUpdateFanout() {
 			s.Log(fmt.Sprintf("Unable to elect: %v", err))
 			updateFanoutFailure.With(prometheus.Labels{"server": "elect", "error": fmt.Sprintf("%v", err)}).Inc()
 			s.updateFanout <- id
-			cancel()
+			ecancel()
 			time.Sleep(time.Minute)
 			continue
 		}
@@ -63,6 +63,7 @@ func (s *Server) runUpdateFanout() {
 				s.Log(fmt.Sprintf("Bad dial of %v -> %v", server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
+				conn.Close()
 				continue
 			}
 
@@ -72,6 +73,7 @@ func (s *Server) runUpdateFanout() {
 				s.Log(fmt.Sprintf("Bad update of %v -> %v", server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
+				conn.Close()
 				continue
 			}
 
@@ -81,7 +83,7 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 		}
 
-		cancel()
+		ecancel()
 		updateFanout.Set(float64(len(s.updateFanout)))
 		time.Sleep(time.Minute)
 	}
