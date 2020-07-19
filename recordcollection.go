@@ -382,7 +382,7 @@ func Init() *Server {
 	s := &Server{
 		GoServer:      &goserver.GoServer{},
 		updateFanout:  make(chan int32, 100),
-		fanoutServers: []string{"recordalerting"},
+		fanoutServers: []string{"recordalerting", "recordbudget"},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
