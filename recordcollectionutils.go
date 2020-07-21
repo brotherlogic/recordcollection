@@ -55,6 +55,14 @@ func (s *Server) runUpdateFanout() {
 			continue
 		}
 
+		// Perform a discogs update if needed
+		ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+		record, err := s.loadRecord(ctx, id)
+		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 {
+			s.cacheRecord(ctx, record)
+		}
+		cancel()
+
 		for _, server := range s.fanoutServers {
 			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute, true)
 			conn, err := s.FDialServer(ctx, server)
