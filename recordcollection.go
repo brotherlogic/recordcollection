@@ -380,9 +380,12 @@ func (s *Server) GetState() []*pbg.State {
 // Init builds out a server
 func Init() *Server {
 	s := &Server{
-		GoServer:      &goserver.GoServer{},
-		updateFanout:  make(chan int32, 100),
-		fanoutServers: []string{"recordalerting", "recordbudget"},
+		GoServer:     &goserver.GoServer{},
+		updateFanout: make(chan int32, 100),
+		fanoutServers: []string{
+			"recordalerting",
+			"recordbudget",
+			"recordmatcher"},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
