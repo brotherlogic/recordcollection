@@ -72,7 +72,7 @@ func (s *Server) runUpdateFanout() {
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				conn.Close()
-				continue
+				break
 			}
 
 			client := pb.NewClientUpdateServiceClient(conn)
@@ -82,7 +82,7 @@ func (s *Server) runUpdateFanout() {
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				conn.Close()
-				continue
+				break
 			}
 
 			s.Log(fmt.Sprintf("DONE %v -> %v", server, err))
