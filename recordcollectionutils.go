@@ -85,8 +85,6 @@ func (s *Server) runUpdateFanout() {
 				break
 			}
 
-			s.Log(fmt.Sprintf("DONE %v -> %v", server, err))
-
 			updateFanoutFailure.With(prometheus.Labels{"server": server, "error": "nil"}).Inc()
 
 			conn.Close()
