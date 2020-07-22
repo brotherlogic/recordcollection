@@ -385,7 +385,8 @@ func Init() *Server {
 		fanoutServers: []string{
 			"recordalerting",
 			"recordbudget",
-			"recordmatcher"},
+			"recordmatcher",
+			"recordmover"},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
