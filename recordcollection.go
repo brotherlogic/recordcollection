@@ -387,6 +387,7 @@ func Init() *Server {
 			"recordbudget",
 			"recordmatcher",
 			"recordmover",
+			"recordprocess",
 			"recordprinter"},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
