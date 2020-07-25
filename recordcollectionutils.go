@@ -97,6 +97,18 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 		}
 
+		// Finally push the record if we need to
+		if record.GetMetadata().GetDirty() {
+			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			_, err = s.pushRecord(ctx, record)
+			cancel()
+			if err != nil {
+				s.Log(fmt.Sprintf("Unable to push: %v", err))
+				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
+				s.updateFanout <- id
+			}
+		}
+
 		ecancel()
 		updateFanout.Set(float64(len(s.updateFanout)))
 		updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
