@@ -96,8 +96,6 @@ func (s *Server) runUpdateFanout() {
 				break
 			}
 
-			updateFanoutFailure.With(prometheus.Labels{"server": server, "error": "nil"}).Inc()
-
 			conn.Close()
 			cancel()
 		}
@@ -116,6 +114,7 @@ func (s *Server) runUpdateFanout() {
 
 		ecancel()
 		updateFanout.Set(float64(len(s.updateFanout)))
+		updateFanoutFailure.With(prometheus.Labels{"server": server, "error": "nil"}).Inc()
 		time.Sleep(time.Minute)
 	}
 }
