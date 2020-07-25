@@ -365,13 +365,6 @@ func (s *Server) Mote(ctx context.Context, master bool) error {
 	return nil
 }
 
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}
-
 // GetState gets the state of the server
 func (s *Server) GetState() []*pbg.State {
 	return []*pbg.State{}
@@ -385,7 +378,11 @@ func Init() *Server {
 		fanoutServers: []string{
 			"recordalerting",
 			"recordbudget",
-			"recordmatcher"},
+			"recordmatcher",
+			"recordmover",
+			"recordprocess",
+			"recordprinter",
+			"recordsales"},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}

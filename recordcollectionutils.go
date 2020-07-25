@@ -58,6 +58,15 @@ func (s *Server) runUpdateFanout() {
 		// Perform a discogs update if needed
 		ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 		record, err := s.loadRecord(ctx, id)
+		if err != nil {
+			s.Log(fmt.Sprintf("Unable to load: %v", err))
+			updateFanoutFailure.With(prometheus.Labels{"server": "load", "error": fmt.Sprintf("%v", err)}).Inc()
+			s.updateFanout <- id
+			ecancel()
+			time.Sleep(time.Minute)
+			continue
+		}
+
 		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 {
 			s.cacheRecord(ctx, record)
 		}
@@ -89,6 +98,14 @@ func (s *Server) runUpdateFanout() {
 
 			conn.Close()
 			cancel()
+		}
+
+		// Finally push the record
+		_, err = s.pushRecord(ctx, record)
+		if err != nil {
+			s.Log(fmt.Sprintf("Unable to push: %v", err))
+			updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
+			s.updateFanout <- id
 		}
 
 		ecancel()
@@ -277,6 +294,13 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 	//Ensure records get updated
 	r.GetMetadata().LastUpdateTime = time.Now().Unix()
 	return pushed, s.saveRecord(ctx, r)
+}
+
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
 }
 
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
