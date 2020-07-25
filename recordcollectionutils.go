@@ -72,7 +72,6 @@ func (s *Server) runUpdateFanout() {
 		}
 		cancel()
 
-		fail := false
 		for _, server := range s.fanoutServers {
 			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute, true)
 			conn, err := s.FDialServer(ctx, server)
@@ -81,7 +80,6 @@ func (s *Server) runUpdateFanout() {
 				s.Log(fmt.Sprintf("Bad dial of %v -> %v", server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
-				fail = true
 				break
 			}
 
@@ -92,24 +90,11 @@ func (s *Server) runUpdateFanout() {
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				conn.Close()
-				fail = true
 				break
 			}
 
 			conn.Close()
 			cancel()
-		}
-
-		// Finally push the record
-		if !fail {
-			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
-			_, err = s.pushRecord(ctx, record)
-			cancel()
-			if err != nil {
-				s.Log(fmt.Sprintf("Unable to push: %v", err))
-				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
-				s.updateFanout <- id
-			}
 		}
 
 		ecancel()
