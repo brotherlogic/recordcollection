@@ -191,6 +191,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	s.updateFanout <- rec.GetRelease().GetInstanceId()
 	updateFanout.Set(float64(len(s.updateFanout)))
+	s.Log(fmt.Sprintf("Update %v -> %v", rec.GetRelease().GetInstanceId(), rec.GetMetadata()))
 	return &pb.UpdateRecordsResponse{Updated: rec}, err
 }
 
