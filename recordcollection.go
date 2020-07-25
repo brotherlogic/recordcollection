@@ -388,7 +388,8 @@ func Init() *Server {
 			"recordmatcher",
 			"recordmover",
 			"recordprocess",
-			"recordprinter"},
+			"recordprinter",
+			"recordsales"},
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}
