@@ -217,6 +217,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetRelease().FolderId = int32(812802)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
+		s.updateFanout <- int32(instanceID)
 		s.saveRecord(ctx, request.GetToAdd())
 	}
 
