@@ -296,6 +296,13 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 	return pushed, s.saveRecord(ctx, r)
 }
 
+func max(a, b int) int {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	// Don't recache a record that has a pending score
 	if r.GetMetadata().GetSetRating() > 0 {
