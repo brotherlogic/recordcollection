@@ -55,7 +55,6 @@ func (s *Server) runUpdateFanout() {
 			continue
 		}
 
-		// Perform a discogs update if needed
 		ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 		record, err := s.loadRecord(ctx, id)
 		if err != nil {
@@ -67,10 +66,23 @@ func (s *Server) runUpdateFanout() {
 			continue
 		}
 
+		// Perform a discogs update if needed
 		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 {
 			s.cacheRecord(ctx, record)
 		}
 		cancel()
+
+		// Finally push the record if we need to
+		if record.GetMetadata().GetDirty() {
+			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			_, err = s.pushRecord(ctx, record)
+			cancel()
+			if err != nil {
+				s.Log(fmt.Sprintf("Unable to push: %v", err))
+				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
+				s.updateFanout <- id
+			}
+		}
 
 		for _, server := range s.fanoutServers {
 			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute, true)
@@ -95,18 +107,6 @@ func (s *Server) runUpdateFanout() {
 
 			conn.Close()
 			cancel()
-		}
-
-		// Finally push the record if we need to
-		if record.GetMetadata().GetDirty() {
-			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
-			_, err = s.pushRecord(ctx, record)
-			cancel()
-			if err != nil {
-				s.Log(fmt.Sprintf("Unable to push: %v", err))
-				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
-				s.updateFanout <- id
-			}
 		}
 
 		ecancel()
