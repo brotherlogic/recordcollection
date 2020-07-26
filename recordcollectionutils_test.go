@@ -63,6 +63,10 @@ type testSyncer struct {
 	badInventory    bool
 }
 
+func (t *testSyncer) GetInstanceInfo(ID int32) (map[int32]int64, error) {
+	return make(map[int32]int64), nil
+}
+
 func (t *testSyncer) GetInventory() ([]*pbd.ForSale, error) {
 	if t.badInventory {
 		return []*pbd.ForSale{}, fmt.Errorf("Built to fail")

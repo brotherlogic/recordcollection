@@ -67,7 +67,8 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		// Perform a discogs update if needed
-		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 {
+		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
+			time.Now().Sub(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 {
 			s.cacheRecord(ctx, record)
 		}
 		cancel()
@@ -343,6 +344,13 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 			r.GetMetadata().LastCache = time.Now().Unix()
 			r.GetMetadata().LastUpdateTime = time.Now().Unix()
 		}
+	}
+
+	// Re pull the date_added
+	mp, err := s.retr.GetInstanceInfo(r.GetRelease().GetId())
+	if err == nil {
+		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()]
+		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
 	}
 
 	s.saveRecord(ctx, r)

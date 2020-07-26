@@ -223,6 +223,8 @@ message ReleaseMetadata {
   int32 accounting_year = 37;
 
   bool expire_sale = 41;
+
+  int64 last_info_update = 42;
 }
 
 // A request to get some records
