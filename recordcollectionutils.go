@@ -39,8 +39,8 @@ var (
 
 func (s *Server) runUpdateFanout() {
 	for id := range s.updateFanout {
-		s.updateCount[id]++
-		if s.updateCount[id] > 10 {
+		s.repeatCount[id]++
+		if s.repeatCount[id] > 10 {
 			s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), "Not sure why")
 		}
 
