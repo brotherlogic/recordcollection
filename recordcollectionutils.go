@@ -39,6 +39,11 @@ var (
 
 func (s *Server) runUpdateFanout() {
 	for id := range s.updateFanout {
+		s.updateCount[id]++
+		if s.updateCount[id] > 10 {
+			s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), "Not sure why")
+		}
+
 		s.Log(fmt.Sprintf("Running election for %v", id))
 		time.Sleep(time.Second * 2)
 		ecancel, err := s.ElectKey(fmt.Sprintf("%v", id))
