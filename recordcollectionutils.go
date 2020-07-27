@@ -87,10 +87,33 @@ func (s *Server) runUpdateFanout() {
 				s.Log(fmt.Sprintf("Unable to push: %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
+				ecancel()
+				time.Sleep(time.Minute)
+				continue
 			}
 		}
 
-		// Finally push the record if we need to
+		// Update the sale
+		if record.GetMetadata().GetSaleState() == pbd.SaleState_FOR_SALE {
+			ctx, cancel := utils.ManualContext("rcu", "rcu", time.Minute, true)
+			err := s.updateSale(ctx, record.GetRelease().GetInstanceId())
+			if err == nil {
+				record, err = s.loadRecord(ctx, id)
+			}
+			cancel()
+
+			if err != nil {
+				s.Log(fmt.Sprintf("Unable to update record for sale: %v", err))
+				updateFanoutFailure.With(prometheus.Labels{"server": "pushSale", "error": fmt.Sprintf("%v", err)}).Inc()
+				s.updateFanout <- id
+				ecancel()
+				time.Sleep(time.Minute)
+				continue
+			}
+
+		}
+
+		// Push the sale
 		if record.GetMetadata().GetSaleDirty() {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 			_, err = s.pushSale(ctx, record)
@@ -445,27 +468,25 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 
 	}
 
-	// Update sale info
-	for iid, category := range collection.InstanceToCategory {
-		s.updateSale(ctx, iid, category)
-	}
-
 	return s.saveRecordCollection(ctx, collection)
 }
 
-func (s *Server) updateSale(ctx context.Context, iid int32, category pb.ReleaseMetadata_Category) {
-	if category == pb.ReleaseMetadata_LISTED_TO_SELL || category == pb.ReleaseMetadata_STALE_SALE {
-		r, err := s.loadRecord(ctx, iid)
-		if err == nil {
-			if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
-				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
+func (s *Server) updateSale(ctx context.Context, iid int32) error {
+	r, err := s.loadRecord(ctx, iid)
+	if err == nil {
+		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
+			if err == nil {
+				if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
+					r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
+				}
+				if r.GetMetadata().SaleId > 0 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
+					r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
+				}
+				return s.saveRecord(ctx, r)
 			}
-			if r.GetMetadata().SaleId > 0 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
-				r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
-			}
-			s.saveRecord(ctx, r)
 		}
 	}
+	return err
 }
 
 func (s *Server) syncWantlist(ctx context.Context) error {
