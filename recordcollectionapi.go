@@ -233,7 +233,6 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		return nil, err
 	}
 
-	s.Log(fmt.Sprintf("QueryRecords %v", req))
 	ids := make([]int32, 0)
 	switch x := req.Query.(type) {
 
