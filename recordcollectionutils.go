@@ -230,6 +230,9 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		}
 
 		err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().NewSalePrice)/100)
+		time.Sleep(time.Second * 5)
+		s.Log(fmt.Sprintf("Updated sale price: %v -> %v", val.GetRelease().GetInstanceId(), err))
+
 		if err == nil {
 			val.GetMetadata().SaleDirty = false
 			val.GetMetadata().SalePrice = val.GetMetadata().NewSalePrice
