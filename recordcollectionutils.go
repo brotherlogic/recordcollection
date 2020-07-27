@@ -97,7 +97,7 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		// Update the sale
-		if record.GetMetadata().GetSaleState() == pbd.SaleState_FOR_SALE {
+		if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL {
 			ctx, cancel := utils.ManualContext("rcu", "rcu", time.Minute, true)
 			err := s.updateSale(ctx, record.GetRelease().GetInstanceId())
 			if err == nil {
