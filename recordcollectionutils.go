@@ -114,7 +114,7 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		// Push the sale
-		if record.GetMetadata().GetSaleDirty() && record.GetMetadata().GetSaleState == pbd.SaleState_FOR_SALE {
+		if record.GetMetadata().GetSaleDirty() && record.GetMetadata().GetSaleState() == pbd.SaleState_FOR_SALE {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 			_, err = s.pushSale(ctx, record)
 			cancel()
