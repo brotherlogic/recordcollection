@@ -555,7 +555,7 @@ func TestRecacheWithPendingScore(t *testing.T) {
 func TestUpdateSale(t *testing.T) {
 	s := InitTestServer(".testupdatesale")
 	//s.recordCache[int32(1234)] = &pb.Record{Metadata: &pb.ReleaseMetadata{SaleId: 12}}
-	s.updateSale(context.Background(), int32(1234), pb.ReleaseMetadata_LISTED_TO_SELL)
+	s.updateSale(context.Background(), int32(1234))
 }
 
 func TestValidateSales(t *testing.T) {
