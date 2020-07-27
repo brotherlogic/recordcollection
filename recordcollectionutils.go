@@ -90,6 +90,18 @@ func (s *Server) runUpdateFanout() {
 			}
 		}
 
+		// Finally push the record if we need to
+		if record.GetMetadata().GetSaleDirty() {
+			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			_, err = s.pushSale(ctx, record)
+			cancel()
+			if err != nil {
+				s.Log(fmt.Sprintf("Unable to push sale : %v", err))
+				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
+				s.updateFanout <- id
+			}
+		}
+
 		for _, server := range s.fanoutServers {
 			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute, true)
 			conn, err := s.FDialServer(ctx, server)
