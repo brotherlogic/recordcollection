@@ -145,6 +145,7 @@ type Server struct {
 	updateFanout  chan int32
 	fanoutServers []string
 	repeatCount   map[int32]int
+	repeatError   map[int32]error
 }
 
 const (
@@ -387,6 +388,7 @@ func Init() *Server {
 			"recordsales",
 			"recordstats"},
 		repeatCount: make(map[int32]int),
+		repeatError: make(map[int32]error),
 	}
 	s.scorer = &prodScorer{s.DialMaster}
 	s.quota = &prodQuotaChecker{s.DialMaster}

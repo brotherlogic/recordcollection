@@ -41,7 +41,7 @@ func (s *Server) runUpdateFanout() {
 	for id := range s.updateFanout {
 		s.repeatCount[id]++
 		if s.repeatCount[id] > 10 {
-			s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), "Not sure why")
+			s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), fmt.Sprintf("Last error was %v", s.repeatError[id]))
 		}
 
 		s.Log(fmt.Sprintf("Running election for %v", id))
@@ -52,6 +52,7 @@ func (s *Server) runUpdateFanout() {
 		time.Sleep(time.Second * 2)
 
 		if err != nil {
+			s.repeatError[id] = err
 			s.Log(fmt.Sprintf("Unable to elect: %v", err))
 			updateFanoutFailure.With(prometheus.Labels{"server": "elect", "error": fmt.Sprintf("%v", err)}).Inc()
 			s.updateFanout <- id
@@ -63,6 +64,7 @@ func (s *Server) runUpdateFanout() {
 		ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 		record, err := s.loadRecord(ctx, id)
 		if err != nil {
+			s.repeatError[id] = err
 			s.Log(fmt.Sprintf("Unable to load: %v", err))
 			updateFanoutFailure.With(prometheus.Labels{"server": "load", "error": fmt.Sprintf("%v", err)}).Inc()
 			s.updateFanout <- id
@@ -84,6 +86,7 @@ func (s *Server) runUpdateFanout() {
 			_, err = s.pushRecord(ctx, record)
 			cancel()
 			if err != nil {
+				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Unable to push: %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
@@ -103,6 +106,7 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 
 			if err != nil {
+				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Unable to update record for sale: %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "updateSale", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
@@ -120,6 +124,7 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 			time.Sleep(time.Second * 5)
 			if err != nil {
+				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Unable to push sale : %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "pushSale", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
@@ -131,6 +136,7 @@ func (s *Server) runUpdateFanout() {
 			conn, err := s.FDialServer(ctx, server)
 
 			if err != nil {
+				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Bad dial of %v -> %v", server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
@@ -140,6 +146,7 @@ func (s *Server) runUpdateFanout() {
 			client := pb.NewClientUpdateServiceClient(conn)
 			_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
 			if err != nil {
+				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Bad update of %v -> %v", server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
