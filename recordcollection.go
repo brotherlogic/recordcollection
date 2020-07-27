@@ -384,7 +384,8 @@ func Init() *Server {
 			"recordmover",
 			"recordprocess",
 			"recordprinter",
-			"recordsales"},
+			"recordsales",
+			"recordstats"},
 		repeatCount: make(map[int32]int),
 	}
 	s.scorer = &prodScorer{s.DialMaster}
