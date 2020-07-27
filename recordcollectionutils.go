@@ -104,7 +104,7 @@ func (s *Server) runUpdateFanout() {
 
 			if err != nil {
 				s.Log(fmt.Sprintf("Unable to update record for sale: %v", err))
-				updateFanoutFailure.With(prometheus.Labels{"server": "pushSale", "error": fmt.Sprintf("%v", err)}).Inc()
+				updateFanoutFailure.With(prometheus.Labels{"server": "updateSale", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				ecancel()
 				time.Sleep(time.Minute)
@@ -118,9 +118,10 @@ func (s *Server) runUpdateFanout() {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 			_, err = s.pushSale(ctx, record)
 			cancel()
+			time.Sleep(time.Second * 5)
 			if err != nil {
 				s.Log(fmt.Sprintf("Unable to push sale : %v", err))
-				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
+				updateFanoutFailure.With(prometheus.Labels{"server": "pushSale", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 			}
 		}
