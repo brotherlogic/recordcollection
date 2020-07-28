@@ -118,7 +118,7 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		// Push the sale
-		if record.GetMetadata().GetSaleDirty() && record.GetMetadata().GetSaleState() == pbd.SaleState_FOR_SALE {
+		if record.GetMetadata().GetSaleDirty() && record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 			_, err = s.pushSale(ctx, record)
 			cancel()
@@ -486,7 +486,6 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 func (s *Server) updateSale(ctx context.Context, iid int32) error {
 	r, err := s.loadRecord(ctx, iid)
 	if err == nil {
-		s.sleep(time.Second * 2)
 		s.Log(fmt.Sprintf("HERE %v -> %v", r, s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))))
 		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
 			if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
