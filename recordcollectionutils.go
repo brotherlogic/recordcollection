@@ -69,6 +69,7 @@ func (s *Server) runUpdateFanout() {
 			updateFanoutFailure.With(prometheus.Labels{"server": "load", "error": fmt.Sprintf("%v", err)}).Inc()
 			s.updateFanout <- id
 			ecancel()
+			cancel()
 			time.Sleep(time.Minute)
 			continue
 		}
@@ -78,23 +79,23 @@ func (s *Server) runUpdateFanout() {
 			time.Now().Sub(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 {
 			s.cacheRecord(ctx, record)
 		}
-		cancel()
 
 		// Finally push the record if we need to
 		if record.GetMetadata().GetDirty() {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 			_, err = s.pushRecord(ctx, record)
-			cancel()
 			if err != nil {
 				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Unable to push: %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				ecancel()
+				cancel()
 				time.Sleep(time.Minute)
 				continue
 			}
 		}
+		cancel()
 
 		// Update the sale
 		if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL {
