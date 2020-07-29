@@ -48,11 +48,11 @@ type moveRecorder interface {
 }
 
 type prodMoveRecorder struct {
-	dial func(server string) (*grpc.ClientConn, error)
+	dial func(ctx context.Context, server string) (*grpc.ClientConn, error)
 }
 
 func (p *prodMoveRecorder) moveRecord(ctx context.Context, record *pb.Record, oldFolder, newFolder int32) error {
-	conn, err := p.dial("recordmover")
+	conn, err := p.dial(ctx, "recordmover")
 	if err != nil {
 		return err
 	}
@@ -70,11 +70,11 @@ func (p *prodMoveRecorder) moveRecord(ctx context.Context, record *pb.Record, ol
 }
 
 type prodQuotaChecker struct {
-	dial func(server string) (*grpc.ClientConn, error)
+	dial func(ctx context.Context, server string) (*grpc.ClientConn, error)
 }
 
 func (p *prodQuotaChecker) hasQuota(ctx context.Context, folder int32) (*pbro.QuotaResponse, error) {
-	conn, err := p.dial("recordsorganiser")
+	conn, err := p.dial(ctx, "recordsorganiser")
 	if err != nil {
 		return &pbro.QuotaResponse{}, err
 	}
@@ -109,11 +109,11 @@ type scorer interface {
 	GetScore(ctx context.Context, instanceID int32) (float32, error)
 }
 type prodScorer struct {
-	dial func(server string) (*grpc.ClientConn, error)
+	dial func(ctx context.Context, server string) (*grpc.ClientConn, error)
 }
 
 func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, error) {
-	conn, err := p.dial("recordprocess")
+	conn, err := p.dial(ctx, "recordprocess")
 	if err != nil {
 		return -1, err
 	}
@@ -214,7 +214,7 @@ func (s *Server) saveRecordCollection(ctx context.Context, collection *pb.Record
 
 func (s *Server) deleteRecord(ctx context.Context, i int32) error {
 	if !s.SkipLog {
-		conn, err := s.DialMaster("keystore")
+		conn, err := s.FDialServer(ctx, "keystore")
 		if err != nil {
 			return err
 		}
@@ -390,9 +390,9 @@ func Init() *Server {
 		repeatCount: make(map[int32]int),
 		repeatError: make(map[int32]error),
 	}
-	s.scorer = &prodScorer{s.DialMaster}
-	s.quota = &prodQuotaChecker{s.DialMaster}
-	s.mover = &prodMoveRecorder{s.DialMaster}
+	s.scorer = &prodScorer{s.FDialServer}
+	s.quota = &prodQuotaChecker{s.FDialServer}
+	s.mover = &prodMoveRecorder{s.FDialServer}
 	return s
 }
 
