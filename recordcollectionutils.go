@@ -80,6 +80,10 @@ func (s *Server) runUpdateFanout() {
 			s.cacheRecord(ctx, record)
 		}
 
+		if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
+			s.updateRecordSalePrice(ctx, record)
+		}
+
 		// Finally push the record if we need to
 		if record.GetMetadata().GetDirty() {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
