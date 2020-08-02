@@ -44,12 +44,7 @@ func (s *Server) runUpdateFanout() {
 			s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), fmt.Sprintf("Last error was %v", s.repeatError[id]))
 		}
 
-		s.Log(fmt.Sprintf("Running election for %v", id))
-		time.Sleep(time.Second * 2)
 		ecancel, err := s.ElectKey(fmt.Sprintf("%v", id))
-
-		s.Log(fmt.Sprintf("Elected: %v, %v -> %v", err, id, s.fanoutServers))
-		time.Sleep(time.Second * 2)
 
 		if err != nil {
 			s.repeatError[id] = err
@@ -166,7 +161,7 @@ func (s *Server) runUpdateFanout() {
 		ecancel()
 		updateFanout.Set(float64(len(s.updateFanout)))
 		updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
-		time.Sleep(time.Minute)
+		time.Sleep(time.Second * 5)
 	}
 }
 
@@ -391,7 +386,6 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	//Force a recache if the record has no title
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
-		s.Log(fmt.Sprintf("%v leads to %v", release.Id, len(release.Tracklist)))
 		if err == nil {
 
 			//Clear repeated fields first
