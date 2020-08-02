@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
-	"google.golang.org/grpc"
 
 	pbgd "github.com/brotherlogic/godiscogs"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
@@ -19,25 +18,19 @@ import (
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
-	"google.golang.org/grpc/resolver"
 )
 
-func init() {
-	resolver.Register(&utils.DiscoveryClientResolverBuilder{})
-}
-
 func main() {
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute*5, true)
+	defer cancel()
 
-	conn, err := grpc.Dial("discovery:///recordcollection", grpc.WithInsecure())
+	conn, err := utils.LFDialServer(ctx, "recordcollection")
 	if err != nil {
 		log.Fatalf("Cannot reach rc: %v", err)
 	}
 	defer conn.Close()
 
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
-
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute*5, true)
-	defer cancel()
 
 	switch os.Args[1] {
 	case "retrospective":
@@ -319,7 +312,28 @@ func main() {
 		}
 
 		fmt.Printf("%v, %v\n", time.Unix(lowest, 0), rec)
+	case "needs_stock":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
 
+		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+			if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastStockCheck(), 0)) > time.Hour*24*30 {
+				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "stock push", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}})
+				if err != nil {
+					log.Fatalf("Cannot update: %v\n", err)
+				} else {
+					fmt.Printf("[%v] is too old (%v)\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+				}
+				time.Sleep(time.Second * 5)
+			}
+		}
 	case "play_time":
 		folder, err := strconv.Atoi(os.Args[2])
 		if err != nil {
