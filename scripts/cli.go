@@ -21,7 +21,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute*5, true)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute, true)
 	defer cancel()
 
 	conn, err := utils.LFDialServer(ctx, "recordcollection")
@@ -331,7 +331,7 @@ func main() {
 				} else {
 					fmt.Printf("[%v] is too old (%v)\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
 				}
-				time.Sleep(time.Second * 5)
+				time.Sleep(time.Second)
 			}
 		}
 	case "play_time":
