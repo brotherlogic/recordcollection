@@ -147,7 +147,7 @@ func (s *Server) runUpdateFanout() {
 			_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
 			if err != nil {
 				s.repeatError[id] = err
-				s.Log(fmt.Sprintf("Bad update of (%) %v -> %v", id, server, err))
+				s.Log(fmt.Sprintf("Bad update of (%v) %v -> %v", id, server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				conn.Close()
