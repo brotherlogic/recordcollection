@@ -386,7 +386,8 @@ func Init() *Server {
 			"recordprocess",
 			"recordprinter",
 			"recordsales",
-			"recordstats"},
+			"recordstats",
+			"recordsorganiser"},
 		repeatCount: make(map[int32]int),
 		repeatError: make(map[int32]error),
 	}
