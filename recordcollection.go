@@ -380,6 +380,7 @@ func Init() *Server {
 		updateFanout: make(chan int32, 100),
 		fanoutServers: []string{
 			"recordalerting",
+			"cdprocessor",
 			"recordbudget",
 			"recordmatcher",
 			"recordmover",
