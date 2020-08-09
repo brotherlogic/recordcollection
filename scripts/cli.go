@@ -50,7 +50,8 @@ func main() {
 			}
 
 			if r.GetRecord().GetRelease().GetFolderId() == 242017 || r.GetRecord().GetMetadata().GetGoalFolder() == 242017 {
-				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*3 {
+				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*3 || r.GetRecord().GetRelease().GetId() == 3083698 {
+					fmt.Printf("Found %v\n", time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0))
 					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "reup", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
 					if err != nil {
 						log.Fatalf("Bad Update: %v", err)
