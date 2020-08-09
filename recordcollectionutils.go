@@ -41,7 +41,7 @@ func (s *Server) runUpdateFanout() {
 	for id := range s.updateFanout {
 		s.repeatCount[id]++
 		if s.repeatCount[id] > 10 {
-			s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), fmt.Sprintf("Last error was %v", s.repeatError[id]))
+			//s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), fmt.Sprintf("Last error was %v", s.repeatError[id]))
 		}
 
 		ecancel, err := s.ElectKey(fmt.Sprintf("%v", id))
