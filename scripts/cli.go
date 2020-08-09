@@ -34,12 +34,33 @@ func main() {
 
 	switch os.Args[1] {
 	case "fix":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour, true)
+		defer cancel()
+
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
 		if err != nil {
 			log.Fatalf("Bad query: %v", err)
 		}
 
 		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad pull: %v", err)
+			}
+
+			if r.GetRecord().GetRelease().GetFolderId() == 242017 {
+				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*24 {
+					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "reup", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
+					if err != nil {
+						log.Fatalf("Bad Update: %v", err)
+					}
+
+					fmt.Printf("Updated %v\n", r.GetRecord().GetRelease().GetTitle())
+					time.Sleep(time.Second * 5)
+				}
+			}
+		}
 
 	case "retrospective":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})

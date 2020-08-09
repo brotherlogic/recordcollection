@@ -297,6 +297,12 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	rec, err := s.loadRecord(ctx, req.InstanceId)
 
 	if err != nil {
+		if req.GetForce() {
+			rec := &pb.Record{Release: &pbgd.Release{InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{}}
+			s.cacheRecord(ctx, rec)
+			return &pb.GetRecordResponse{Record: rec}, nil
+		}
+
 		st := status.Convert(err)
 		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable && st.Code() != codes.Canceled {
 			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, ctx))
