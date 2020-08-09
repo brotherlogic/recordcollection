@@ -399,6 +399,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 			r.GetRelease().Labels = []*pbd.Label{}
 			r.GetRelease().Tracklist = []*pbd.Track{}
 
+			s.Log(fmt.Sprintf("Merged %v", release))
 			proto.Merge(r.GetRelease(), release)
 
 			r.GetMetadata().LastCache = time.Now().Unix()
