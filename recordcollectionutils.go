@@ -132,7 +132,7 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		for _, server := range s.fanoutServers {
-			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute, true)
+			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute*30, true)
 			conn, err := s.FDialServer(ctx, server)
 
 			if err != nil {
