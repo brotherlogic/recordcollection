@@ -110,7 +110,12 @@ func main() {
 
 	case "sget":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		force := false
+		if len(os.Args) > 3 {
+			force = true
+		}
+
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i), Force: force})
 
 		if err == nil {
 			fmt.Printf("Release: %v\n", srec.GetRecord().GetRelease())
