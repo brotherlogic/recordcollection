@@ -20,7 +20,7 @@ import (
 
 func main() {
 	t := time.Now()
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*5, true)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*10, true)
 	defer cancel()
 
 	conn, err := utils.LFDialServer(ctx, "recordcollection")
@@ -110,9 +110,10 @@ func main() {
 
 	case "sget":
 		i, _ := strconv.Atoi(os.Args[2])
-		force := false
+		force := int32(0)
 		if len(os.Args) > 3 {
-			force = true
+			i2, _ := strconv.Atoi(os.Args[3])
+			force = int32(i2)
 		}
 
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i), Force: force})

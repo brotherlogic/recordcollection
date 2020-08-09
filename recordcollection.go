@@ -162,6 +162,13 @@ const (
 	RECORDS = "/github.com/brotherlogic/recordcollection/allrecords"
 )
 
+var (
+	sizes = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "recordcollection_sizes",
+		Help: "The state of records in the collection",
+	}, []string{"map"})
+)
+
 func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection, error) {
 	collection := &pb.RecordCollection{}
 	data, _, err := s.KSclient.Read(ctx, KEY, collection)
@@ -204,6 +211,11 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	if collection.GetOldestRecord() == 0 {
 		collection.OldestRecord = time.Now().Unix()
 	}
+
+	sizes.With(prometheus.Labels{"map": "master"}).Set(float64(len(collection.GetInstanceToMaster())))
+	sizes.With(prometheus.Labels{"map": "update"}).Set(float64(len(collection.GetInstanceToUpdate())))
+	sizes.With(prometheus.Labels{"map": "category"}).Set(float64(len(collection.GetInstanceToCategory())))
+	sizes.With(prometheus.Labels{"map": "folder"}).Set(float64(len(collection.GetInstanceToFolder())))
 
 	return collection, nil
 }
