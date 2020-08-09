@@ -299,8 +299,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	if err != nil {
 		if req.GetForce() {
 			rec := &pb.Record{Release: &pbgd.Release{InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{}}
-			s.cacheRecord(ctx, rec)
-			return &pb.GetRecordResponse{Record: rec}, nil
+			return &pb.GetRecordResponse{Record: rec}, s.cacheRecord(ctx, rec)
 		}
 
 		st := status.Convert(err)

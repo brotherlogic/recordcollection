@@ -363,10 +363,10 @@ func max(a, b int) int {
 	return b
 }
 
-func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
+func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 	// Don't recache a record that has a pending score
 	if r.GetMetadata().GetSetRating() > 0 {
-		return
+		return nil
 	}
 
 	//Add the record if it has not instance ID
@@ -374,6 +374,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 		inst, err := s.retr.AddToFolder(r.GetRelease().FolderId, r.GetRelease().Id)
 		if err == nil {
 			r.GetRelease().InstanceId = int32(inst)
+		} else {
+			return err
 		}
 	}
 
@@ -381,6 +383,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	sc, err := s.scorer.GetScore(ctx, r.GetRelease().InstanceId)
 	if err == nil {
 		r.GetMetadata().OverallScore = sc
+	} else {
+		return err
 	}
 
 	//Force a recache if the record has no title
@@ -399,6 +403,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 
 			r.GetMetadata().LastCache = time.Now().Unix()
 			r.GetMetadata().LastUpdateTime = time.Now().Unix()
+		} else {
+			return err
 		}
 	}
 
@@ -407,9 +413,11 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) {
 	if err == nil {
 		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()]
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
+	} else {
+		return err
 	}
 
-	s.saveRecord(ctx, r)
+	return s.saveRecord(ctx, r)
 }
 
 func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Release, num int64) {
