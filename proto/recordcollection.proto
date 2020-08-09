@@ -321,7 +321,7 @@ message QueryRecordsResponse {
 
 message GetRecordRequest {
   int32 instance_id = 1;
-  bool force = 2;
+  int32 force = 2;
 }
 
 message GetRecordResponse {

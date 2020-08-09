@@ -297,8 +297,8 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	rec, err := s.loadRecord(ctx, req.InstanceId)
 
 	if err != nil {
-		if req.GetForce() {
-			rec := &pb.Record{Release: &pbgd.Release{InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{GoalFolder: 242017, Cost: 1}}
+		if req.GetForce() > 0 {
+			rec := &pb.Record{Release: &pbgd.Release{Id: req.GetForce(), InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{GoalFolder: 242017, Cost: 1}}
 			return &pb.GetRecordResponse{Record: rec}, s.cacheRecord(ctx, rec)
 		}
 
