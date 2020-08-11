@@ -168,10 +168,10 @@ var (
 		Help: "The state of records in the collection",
 	}, []string{"map"})
 
-	wants = promauto.NewGauge(prometheus.GaugeOpts{
+	wants = promauto.NewGaugeVec(prometheus.GaugeOpts{
 		Name: "recordcollection_wants",
 		Help: "The state of records in the collection",
-	})
+	}, []string{"active"})
 )
 
 func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection, error) {
@@ -221,7 +221,15 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	sizes.With(prometheus.Labels{"map": "update"}).Set(float64(len(collection.GetInstanceToUpdate())))
 	sizes.With(prometheus.Labels{"map": "category"}).Set(float64(len(collection.GetInstanceToCategory())))
 	sizes.With(prometheus.Labels{"map": "folder"}).Set(float64(len(collection.GetInstanceToFolder())))
-	wants.Set(float64(len(collection.GetNewWants())))
+
+	count := 0
+	for _, w := range collection.GetNewWants() {
+		if w.GetMetadata().GetActive() {
+			count++
+		}
+	}
+	wants.With(prometheus.Labels{"active": "true"}).Set(float64(count))
+	wants.With(prometheus.Labels{"active": "false"}).Set(float64(len(collection.GetNewWants()) - count))
 
 	return collection, nil
 }

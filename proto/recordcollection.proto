@@ -45,7 +45,6 @@ message Want {
   
   // Delete this want
   bool clear_want = 3;
-
 }
 
 message WantMetadata {
