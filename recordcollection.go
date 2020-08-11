@@ -167,6 +167,11 @@ var (
 		Name: "recordcollection_sizes",
 		Help: "The state of records in the collection",
 	}, []string{"map"})
+
+	wants = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "recordcollection_wants",
+		Help: "The state of records in the collection",
+	})
 )
 
 func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection, error) {
@@ -216,6 +221,7 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	sizes.With(prometheus.Labels{"map": "update"}).Set(float64(len(collection.GetInstanceToUpdate())))
 	sizes.With(prometheus.Labels{"map": "category"}).Set(float64(len(collection.GetInstanceToCategory())))
 	sizes.With(prometheus.Labels{"map": "folder"}).Set(float64(len(collection.GetInstanceToFolder())))
+	wants.Set(float64(len(collection.GetNewWants())))
 
 	return collection, nil
 }
