@@ -494,6 +494,11 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 
 	}
 
+	err = s.pushWants(ctx, collection)
+	if err != nil {
+		return err
+	}
+
 	return s.saveRecordCollection(ctx, collection)
 }
 
@@ -551,6 +556,16 @@ func (s *Server) runSync(ctx context.Context) error {
 	collection.CollectionNumber++
 	s.saveRecordCollection(ctx, collection)
 	return err
+}
+
+func (s *Server) pushWants(ctx context.Context, collection *pb.RecordCollection) error {
+	for _, w := range collection.NewWants {
+		if w.GetMetadata().Active {
+			s.updateWant(w)
+		}
+	}
+
+	return s.saveRecordCollection(ctx, collection)
 }
 
 func (s *Server) recache(ctx context.Context, r *pb.Record) error {
