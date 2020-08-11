@@ -69,6 +69,9 @@ func (s *Server) runUpdateFanout() {
 			continue
 		}
 
+		err = s.syncWantlist(ctx)
+		s.Log(fmt.Sprintf("Updated wantlist: %v", err))
+
 		// Perform a discogs update if needed
 		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 			time.Now().Sub(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
