@@ -117,7 +117,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			s.Log(fmt.Sprintf("Running sale path"))
 			time.Sleep(time.Second * 2)
 			if len(rec.GetRelease().SleeveCondition) == 0 {
-				return nil, fmt.Errorf("No Condition info")
+				s.cacheRecord(ctx, rec.GetRelease().GetInstanceId())
+				if len(rec.GetRelease().SleeveCondition) == 0 {
+					return nil, fmt.Errorf("No Condition info")
+				}
 			}
 			if s.disableSales {
 				return nil, fmt.Errorf("Sales are disabled")
