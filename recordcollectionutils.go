@@ -76,6 +76,7 @@ func (s *Server) runUpdateFanout() {
 		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 			time.Now().Sub(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
 			record.GetRelease().GetRecordCondition() == "" {
+			time.Sleep(time.Second * 2)
 			s.cacheRecord(ctx, record)
 		}
 
@@ -368,6 +369,7 @@ func max(a, b int) int {
 }
 
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
+	s.Log(fmt.Sprintf("Updating cache for : %v", r.GetRelease().GetTitle()))
 	// Don't recache a record that has a pending score
 	if r.GetMetadata().GetSetRating() > 0 {
 		return nil
@@ -391,7 +393,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 		return err
 	}
 
-	//Force a recache if the record has no title
+	//Force a recache if the record has no title or condition
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
 		if err == nil {
@@ -416,6 +418,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 	// Re pull the date_added
 	mp, err := s.retr.GetInstanceInfo(r.GetRelease().GetId())
 	if err == nil {
+		s.Log(fmt.Sprintf("Updating info: %+v", mp[r.GetRelease().GetInstanceId()]))
 		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()].DateAdded
 		r.GetRelease().RecordCondition = mp[r.GetRelease().GetInstanceId()].RecordCondition
 		r.GetRelease().SleeveCondition = mp[r.GetRelease().GetInstanceId()].SleeveCondition
