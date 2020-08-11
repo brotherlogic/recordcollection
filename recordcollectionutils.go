@@ -416,7 +416,9 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 	// Re pull the date_added
 	mp, err := s.retr.GetInstanceInfo(r.GetRelease().GetId())
 	if err == nil {
-		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()]
+		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()].DateAdded
+		r.GetRelease().RecordCondition = mp[r.GetRelease().GetInstanceId()].RecordCondition
+		r.GetRelease().SleeveCondition = mp[r.GetRelease().GetInstanceId()].SleeveCondition
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
 	} else {
 		return err

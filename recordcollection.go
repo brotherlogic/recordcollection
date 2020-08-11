@@ -102,7 +102,7 @@ type saver interface {
 	RemoveFromSale(saleID int, releaseID int) error
 	ExpireSale(saleID int, releaseID int, price float32) error
 	GetInventory() ([]*godiscogs.ForSale, error)
-	GetInstanceInfo(ID int32) (map[int32]int64, error)
+	GetInstanceInfo(ID int32) (map[int32]*godiscogs.InstanceInfo, error)
 }
 
 type scorer interface {

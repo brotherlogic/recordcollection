@@ -6,12 +6,14 @@ import (
 	"testing"
 	"time"
 
-	pbd "github.com/brotherlogic/godiscogs"
-	pb "github.com/brotherlogic/recordcollection/proto"
-	pbro "github.com/brotherlogic/recordsorganiser/proto"
+	"github.com/brotherlogic/godiscogs"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	pbd "github.com/brotherlogic/godiscogs"
+	pb "github.com/brotherlogic/recordcollection/proto"
+	pbro "github.com/brotherlogic/recordsorganiser/proto"
 )
 
 type testScorer struct {
@@ -63,8 +65,8 @@ type testSyncer struct {
 	badInventory    bool
 }
 
-func (t *testSyncer) GetInstanceInfo(ID int32) (map[int32]int64, error) {
-	return make(map[int32]int64), nil
+func (t *testSyncer) GetInstanceInfo(ID int32) (map[int32]*godiscogs.InstanceInfo, error) {
+	return make(map[int32]*godiscogs.InstanceInfo), nil
 }
 
 func (t *testSyncer) GetInventory() ([]*pbd.ForSale, error) {
