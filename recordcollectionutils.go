@@ -163,6 +163,14 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 		}
 
+		collection, err := s.readRecordCollection(ctx)
+		if err == nil {
+			err = s.pushWants(ctx, collection)
+			if err != nil {
+				s.Log(fmt.Sprintf("Unable to push wants: %v", err))
+			}
+		}
+
 		ecancel()
 		updateFanout.Set(float64(len(s.updateFanout)))
 		updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
@@ -501,11 +509,6 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 			s.saveRecord(ctx, nrec)
 		}
 
-	}
-
-	err = s.pushWants(ctx, collection)
-	if err != nil {
-		return err
 	}
 
 	return s.saveRecordCollection(ctx, collection)
