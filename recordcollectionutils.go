@@ -163,10 +163,8 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 		}
 
-		ctx, cancel = utils.ManualContext("rc-pw", "rc-pw", time.Minute, true)
+		ctx, cancel = utils.ManualContext("rc-pw", "rc-pw", time.Minute*10, true)
 		collection, err := s.readRecordCollection(ctx)
-		time.Sleep(time.Second * 2)
-		s.Log(fmt.Sprintf("Loaded wants: %v", err))
 		if err == nil {
 			err = s.pushWants(ctx, collection)
 			if err != nil {
@@ -575,10 +573,7 @@ func (s *Server) runSync(ctx context.Context) error {
 }
 
 func (s *Server) pushWants(ctx context.Context, collection *pb.RecordCollection) error {
-	time.Sleep(time.Second * 2)
-	s.Log(fmt.Sprintf("Pushing %v wants", len(collection.NewWants)))
 	for _, w := range collection.NewWants {
-		s.Log(fmt.Sprintf("Proc: %v", w))
 		if w.GetMetadata().Active {
 			s.updateWant(w)
 		}
