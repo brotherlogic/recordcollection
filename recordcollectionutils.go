@@ -163,9 +163,12 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 		}
 
-		err = s.pushWants(ctx, collection)
-		if err != nil {
-			s.Log(fmt.Sprintf("Unable to push wants: %v", err))
+		collection, err := s.readRecordCollection(ctx)
+		if err == nil {
+			err = s.pushWants(ctx, collection)
+			if err != nil {
+				s.Log(fmt.Sprintf("Unable to push wants: %v", err))
+			}
 		}
 
 		ecancel()
