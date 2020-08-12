@@ -164,6 +164,8 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		collection, err := s.readRecordCollection(ctx)
+		time.Sleep(time.Second * 2)
+		s.Log(fmt.Sprintf("Loaded wants: %v", err))
 		if err == nil {
 			err = s.pushWants(ctx, collection)
 			if err != nil {
