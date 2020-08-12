@@ -163,6 +163,7 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 		}
 
+		ctx, cancel = utils.ManualContext("rc-pw", "rc-pw", time.Minute, true)
 		collection, err := s.readRecordCollection(ctx)
 		time.Sleep(time.Second * 2)
 		s.Log(fmt.Sprintf("Loaded wants: %v", err))
@@ -172,6 +173,7 @@ func (s *Server) runUpdateFanout() {
 				s.Log(fmt.Sprintf("Unable to push wants: %v", err))
 			}
 		}
+		cancel()
 
 		ecancel()
 		updateFanout.Set(float64(len(s.updateFanout)))
