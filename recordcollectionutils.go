@@ -571,6 +571,7 @@ func (s *Server) runSync(ctx context.Context) error {
 }
 
 func (s *Server) pushWants(ctx context.Context, collection *pb.RecordCollection) error {
+	s.Log(fmt.Sprintf("Pushing %v wants", len(collection.NewWants)))
 	for _, w := range collection.NewWants {
 		s.Log(fmt.Sprintf("Proc: %v", w))
 		if w.GetMetadata().Active {
