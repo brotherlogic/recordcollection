@@ -319,9 +319,9 @@ func (s *Server) updateWant(w *pb.Want) bool {
 		return true
 	}
 
-	if w.GetMetadata().Active {
+	/*if w.GetMetadata().Active {
 		s.retr.AddToWantlist(int(w.GetRelease().Id))
-	}
+	}*/
 
 	return false
 }
