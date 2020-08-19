@@ -35,6 +35,12 @@ var (
 		Name: "recordcollection_updatefanoutfailure",
 		Help: "Push Size",
 	}, []string{"error", "server"})
+
+	loopLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
+		Name:    "recordcollection_loop_latency",
+		Help:    "The latency of server requests",
+		Buckets: []float64{.005 * 1000, .01 * 1000, .025 * 1000, .05 * 1000, .1 * 1000, .25 * 1000, .5 * 1000, 1 * 1000, 2.5 * 1000, 5 * 1000, 10 * 1000},
+	}, []string{"method"})
 )
 
 func (s *Server) runUpdateFanout() {
@@ -44,7 +50,9 @@ func (s *Server) runUpdateFanout() {
 			//s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), fmt.Sprintf("Last error was %v", s.repeatError[id]))
 		}
 
+		t := time.Now()
 		ecancel, err := s.ElectKey(fmt.Sprintf("%v", id))
+		loopLatency.With(prometheus.Labels{"method": "elect"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 
 		if err != nil {
 			s.repeatError[id] = err
@@ -57,7 +65,11 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+
+		t = time.Now()
 		record, err := s.loadRecord(ctx, id, false)
+		loopLatency.With(prometheus.Labels{"method": "load"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
+
 		if err != nil {
 			s.repeatError[id] = err
 			s.Log(fmt.Sprintf("Unable to load: %v", err))
@@ -76,18 +88,23 @@ func (s *Server) runUpdateFanout() {
 		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 			time.Now().Sub(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
 			record.GetRelease().GetRecordCondition() == "" {
-			time.Sleep(time.Second * 2)
+			t = time.Now()
 			s.cacheRecord(ctx, record)
+			loopLatency.With(prometheus.Labels{"method": "cache"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 		}
 
 		if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
+			t = time.Now()
 			s.updateRecordSalePrice(ctx, record)
+			loopLatency.With(prometheus.Labels{"method": "saleprice"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 		}
 
 		// Finally push the record if we need to
 		if record.GetMetadata().GetDirty() {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			t = time.Now()
 			_, err = s.pushRecord(ctx, record)
+			loopLatency.With(prometheus.Labels{"method": "push"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			if err != nil {
 				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Unable to push: %v", err))
@@ -104,7 +121,9 @@ func (s *Server) runUpdateFanout() {
 		// Update the sale
 		if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL {
 			ctx, cancel := utils.ManualContext("rcu", "rcu", time.Minute, true)
+			t = time.Now()
 			err := s.updateSale(ctx, record.GetRelease().GetInstanceId())
+			loopLatency.With(prometheus.Labels{"method": "updatesale"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			if err == nil {
 				record, err = s.loadRecord(ctx, id, false)
 			}
@@ -125,18 +144,23 @@ func (s *Server) runUpdateFanout() {
 		// Push the sale (only if we're listed to sell and the record is for sale)
 		if record.GetMetadata().GetSaleDirty() && record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && record.GetMetadata().GetSaleState() != pbd.SaleState_SOLD {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			t = time.Now()
 			_, err = s.pushSale(ctx, record)
+			loopLatency.With(prometheus.Labels{"method": "cache"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			cancel()
-			time.Sleep(time.Second * 5)
 			if err != nil {
 				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Unable to push sale : %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "pushSale", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
+				ecancel()
+				time.Sleep(time.Minute)
+				continue
 			}
 		}
 
 		for _, server := range s.fanoutServers {
+			t = time.Now()
 			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute*30, true)
 			conn, err := s.FDialServer(ctx, server)
 
@@ -150,6 +174,7 @@ func (s *Server) runUpdateFanout() {
 
 			client := pb.NewClientUpdateServiceClient(conn)
 			_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
+			loopLatency.With(prometheus.Labels{"method": "update-" + server}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			if err != nil {
 				s.repeatError[id] = err
 				s.Log(fmt.Sprintf("Bad update of (%v) %v -> %v", id, server, err))
@@ -163,10 +188,12 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 		}
 
+		t = time.Now()
 		ctx, cancel = utils.ManualContext("rc-pw", "rc-pw", time.Minute*10, true)
 		collection, err := s.readRecordCollection(ctx)
 		if err == nil {
 			err = s.pushWants(ctx, collection)
+			loopLatency.With(prometheus.Labels{"method": "pushwants"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			if err != nil {
 				s.Log(fmt.Sprintf("Unable to push wants: %v", err))
 			}
