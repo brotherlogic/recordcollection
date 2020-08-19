@@ -57,7 +57,7 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
-		record, err := s.loadRecord(ctx, id)
+		record, err := s.loadRecord(ctx, id, false)
 		if err != nil {
 			s.repeatError[id] = err
 			s.Log(fmt.Sprintf("Unable to load: %v", err))
@@ -106,7 +106,7 @@ func (s *Server) runUpdateFanout() {
 			ctx, cancel := utils.ManualContext("rcu", "rcu", time.Minute, true)
 			err := s.updateSale(ctx, record.GetRelease().GetInstanceId())
 			if err == nil {
-				record, err = s.loadRecord(ctx, id)
+				record, err = s.loadRecord(ctx, id, false)
 			}
 			cancel()
 
@@ -491,7 +491,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 		for iid := range collection.InstanceToFolder {
 			if iid == record.InstanceId {
 				foundInList = true
-				r, err := s.loadRecord(ctx, record.InstanceId)
+				r, err := s.loadRecord(ctx, record.InstanceId, false)
 				if err == nil {
 					s.syncRecords(ctx, r, record, colNumber)
 				} else {
@@ -516,7 +516,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 }
 
 func (s *Server) updateSale(ctx context.Context, iid int32) error {
-	r, err := s.loadRecord(ctx, iid)
+	r, err := s.loadRecord(ctx, iid, false)
 	if err == nil {
 		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
 			if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {

@@ -104,7 +104,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 	s.Log(fmt.Sprintf("UpdateRecord %v", request))
 
-	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId)
+	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
 	if err != nil {
 		return nil, err
 	}
@@ -297,7 +297,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 
 // GetRecord gets a sigle record
 func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.GetRecordResponse, error) {
-	rec, err := s.loadRecord(ctx, req.InstanceId)
+	rec, err := s.loadRecord(ctx, req.InstanceId, req.GetValidate())
 
 	if err != nil {
 		if req.GetForce() > 0 {
