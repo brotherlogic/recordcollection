@@ -194,7 +194,7 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	}
 
 	if collection.InstanceToFolder == nil {
-		collection.InstanceToFolder = make(map[int32]int32)
+		log.Fatalf("Unable to get the folder: %v", collection)
 	}
 
 	if collection.InstanceToId == nil {
