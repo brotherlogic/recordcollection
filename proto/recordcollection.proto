@@ -241,6 +241,7 @@ message GetRecordsRequest {
 
   // Reference the caller
   string caller = 5;
+
 }
 
 // A list of records in response
@@ -321,6 +322,7 @@ message QueryRecordsResponse {
 message GetRecordRequest {
   int32 instance_id = 1;
   int32 force = 2;
+    bool validate = 3;
 }
 
 message GetRecordResponse {

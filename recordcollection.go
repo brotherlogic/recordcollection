@@ -331,7 +331,7 @@ var (
 	})
 )
 
-func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
+func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.Record, error) {
 	if s.TimeoutLoad {
 		return nil, status.Error(codes.DeadlineExceeded, "Force DE")
 	}
@@ -349,11 +349,23 @@ func (s *Server) loadRecord(ctx context.Context, id int32) (*pb.Record, error) {
 
 	recordToReturn := data.(*pb.Record)
 
+	// Let's make sure this is in the folder map
+	if validate {
+		collection, err := s.readRecordCollection(ctx)
+
+		if err == nil {
+			if collection.GetInstanceToFolder()[recordToReturn.GetRelease().GetInstanceId()] != recordToReturn.GetRelease().GetFolderId() {
+				s.saveRecord(ctx, recordToReturn)
+			}
+		}
+
+	}
+
 	return recordToReturn, nil
 }
 
 func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
-	r, err := s.loadRecord(ctx, id)
+	r, err := s.loadRecord(ctx, id, false)
 
 	if err != nil {
 		return nil, err
@@ -441,7 +453,7 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 
 	for id, val := range collection.GetInstanceToLastSalePriceUpdate() {
 		if time.Now().Sub(time.Unix(val, 0)) > time.Hour*24*2 {
-			r, err := s.loadRecord(ctx, id)
+			r, err := s.loadRecord(ctx, id, false)
 			if err != nil {
 				return err
 			}
