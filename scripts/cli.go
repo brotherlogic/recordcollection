@@ -34,7 +34,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "fix":
-		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour, true)
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*3, true)
 		defer cancel()
 
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
@@ -43,11 +43,13 @@ func main() {
 		}
 
 		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
-		for _, id := range ids.GetInstanceIds() {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: true})
 			if err != nil {
 				log.Fatalf("Bad pull: %v", err)
 			}
+
+			fmt.Printf("%v/%v\n", i, len(ids.GetInstanceIds()))
 
 			if r.GetRecord().GetRelease().GetFolderId() == 812802 {
 				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*3 || r.GetRecord().GetRelease().GetId() == 3083698 {
