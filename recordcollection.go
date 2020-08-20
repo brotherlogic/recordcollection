@@ -210,7 +210,7 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	}
 
 	if collection.InstanceToMaster == nil {
-		collection.InstanceToMaster = make(map[int32]int32)
+		log.Fatalf("Unable to get the master: %v", collection)
 	}
 
 	if collection.GetOldestRecord() == 0 {
