@@ -311,7 +311,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, ctx))
 		}
 
-		return nil, fmt.Errorf("Could not locate %v -> %v", req.InstanceId, err)
+		return nil, status.Errorf(st.Code(), fmt.Sprintf("Could not locate %v -> %v", req.InstanceId, err))
 	}
 
 	return &pb.GetRecordResponse{Record: rec}, err
