@@ -44,7 +44,7 @@ func main() {
 
 		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
 		for i, id := range ids.GetInstanceIds() {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: true})
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: false})
 			if err != nil {
 				log.Fatalf("Bad pull: %v", err)
 			}
