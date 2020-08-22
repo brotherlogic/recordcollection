@@ -120,7 +120,7 @@ func main() {
 
 		if err == nil {
 			fmt.Printf("Release: %v\n", srec.GetRecord().GetRelease())
-			fmt.Printf("Metadata: %v, %v\n", srec.GetRecord().GetMetadata(), srec.GetRecord().GetMetadata().GetMatch())
+			fmt.Printf("Metadata: %v, %v\n", srec.GetRecord().GetMetadata(), srec.GetRecord().GetRelease().GetDigitalVersions())
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
