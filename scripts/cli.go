@@ -43,15 +43,22 @@ func main() {
 		}
 
 		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
-		for i, id := range ids.GetInstanceIds() {
+		for _, id := range ids.GetInstanceIds() {
 			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: false})
 			if err != nil {
-				log.Fatalf("Bad pull: %v", err)
+				time.Sleep(time.Minute)
+				r, err = registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: false})
+				if err != nil {
+					log.Fatalf("Bad pull: %v", err)
+				}
 			}
 
-			fmt.Printf("%v/%v\n", i, len(ids.GetInstanceIds()))
+			if r.GetRecord().GetMetadata().GetKeep() == pbrc.ReleaseMetadata_KEEPER && r.GetRecord().GetMetadata().GetGoalFolder() == 242017 {
+				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Keepers", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: 2259637}}})
+				fmt.Printf("%v - %v -> %v\n", r.GetRecord().GetRelease().GetArtists(), r.GetRecord().GetRelease().GetTitle(), err)
+			}
 
-			if r.GetRecord().GetRelease().GetFolderId() == 812802 {
+			if r.GetRecord().GetRelease().GetFolderId() == 81280233 {
 				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*3 || r.GetRecord().GetRelease().GetId() == 3083698 {
 					fmt.Printf("Found %v\n", time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0))
 					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "reup", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
