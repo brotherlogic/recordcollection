@@ -78,7 +78,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 			if request.Remove {
 				rec.ClearWant = true
 			}
-			if request.EnableWant {
+			if request.GetUpdate().EnableWant {
 				rec.EnableWant = true
 			}
 			want = rec
