@@ -84,7 +84,8 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	}
 
 	if !found {
-		s.retr.AddToWantlist(int(request.GetUpdate().GetRelease().Id))
+		//s.retr.AddToWantlist(int(request.GetUpdate().GetRelease().Id))
+		collection.NewWants = append(collection.NewWants, request.GetUpdate())
 	}
 
 	return &pb.UpdateWantResponse{Updated: want}, s.saveRecordCollection(ctx, collection)
