@@ -586,6 +586,20 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 		}
 	}
 
+	for _, w := range collection.GetNewWants() {
+		found := false
+		for _, want := range wants {
+			if w.GetRelease().Id == want.Id {
+				found = true
+
+			}
+		}
+
+		if !found {
+			w.GetMetadata().Active = false
+		}
+	}
+
 	return s.saveRecordCollection(ctx, collection)
 }
 
