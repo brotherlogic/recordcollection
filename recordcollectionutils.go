@@ -580,7 +580,7 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 			if w.GetRelease().Id == want.Id {
 				found = true
 				proto.Merge(w.GetRelease(), want)
-				w.GetMetadata().Active = true
+				w.Metadata = &pb.WantMetadata{Active: true}
 			}
 		}
 		if !found {
