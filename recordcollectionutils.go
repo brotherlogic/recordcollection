@@ -39,7 +39,7 @@ var (
 	loopLatency = promauto.NewHistogramVec(prometheus.HistogramOpts{
 		Name:    "recordcollection_loop_latency",
 		Help:    "The latency of server requests",
-		Buckets: []float64{.005 * 1000, .01 * 1000, .025 * 1000, .05 * 1000, .1 * 1000, .25 * 1000, .5 * 1000, 1 * 1000, 2.5 * 1000, 5 * 1000, 10 * 1000},
+		Buckets: []float64{.005 * 1000, .01 * 1000, .025 * 1000, .05 * 1000, .1 * 1000, .25 * 1000, .5 * 1000, 1 * 1000, 2.5 * 1000, 5 * 1000, 10 * 1000, 30 * 1000, 60 * 1000, 120 * 1000, 240 * 1000},
 	}, []string{"method"})
 )
 
