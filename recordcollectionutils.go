@@ -349,6 +349,7 @@ func (s *Server) updateWant(w *pb.Want) bool {
 
 	if w.EnableWant {
 		err := s.retr.AddToWantlist(int(w.GetRelease().Id))
+		time.Sleep(time.Second * 2)
 		s.Log(fmt.Sprintf("ADDED TO WANTLIST: %v", err))
 		w.EnableWant = false
 		w.GetMetadata().Active = true
@@ -579,6 +580,10 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 			if w.GetRelease().Id == want.Id {
 				found = true
 				proto.Merge(w.GetRelease(), want)
+				time.Sleep(time.Second * 2)
+				if w.GetMetadata().GetActive() {
+					s.Log(fmt.Sprintf("ACTIVATING from pull"))
+				}
 				w.GetMetadata().Active = true
 			}
 		}
