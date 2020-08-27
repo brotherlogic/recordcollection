@@ -347,9 +347,12 @@ func (s *Server) updateWant(w *pb.Want) bool {
 		return true
 	}
 
-	/*if w.GetMetadata().Active {
+	if w.EnableWant {
 		s.retr.AddToWantlist(int(w.GetRelease().Id))
-	}*/
+		w.EnableWant = false
+		w.GetMetadata().Active = true
+		return true
+	}
 
 	return false
 }
@@ -603,7 +606,7 @@ func (s *Server) runSync(ctx context.Context) error {
 
 func (s *Server) pushWants(ctx context.Context, collection *pb.RecordCollection) error {
 	for _, w := range collection.NewWants {
-		if w.GetMetadata().Active {
+		if (w.GetMetadata().GetActive() && w.GetClearWant()) || (!w.GetMetadata().GetActive() && w.GetEnableWant()) {
 			s.updateWant(w)
 		}
 	}
