@@ -593,7 +593,6 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 		for _, want := range wants {
 			if w.GetRelease().Id == want.Id {
 				found = true
-
 			}
 		}
 
