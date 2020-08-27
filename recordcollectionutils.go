@@ -81,7 +81,9 @@ func (s *Server) runUpdateFanout() {
 			continue
 		}
 
+		t = time.Now()
 		s.syncWantlist(ctx)
+		loopLatency.With(prometheus.Labels{"method": "syncwant"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 
 		// Perform a discogs update if needed
 		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
