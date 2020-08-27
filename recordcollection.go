@@ -95,7 +95,7 @@ type saver interface {
 	SellRecord(releaseID int, price float32, state string, condition, sleeve string) int
 	GetSalePrice(releaseID int) (float32, error)
 	RemoveFromWantlist(releaseID int)
-	AddToWantlist(releaseID int)
+	AddToWantlist(releaseID int) error
 	UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error
 	GetCurrentSalePrice(saleID int) float32
 	GetCurrentSaleState(saleID int) godiscogs.SaleState
