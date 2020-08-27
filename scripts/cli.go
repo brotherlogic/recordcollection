@@ -53,7 +53,7 @@ func main() {
 				}
 			}
 
-			if r.GetRecord().GetMetadata().GetKeep() == pbrc.ReleaseMetadata_KEEPER && r.GetRecord().GetMetadata().GetGoalFolder() == 242017 {
+			if r.GetRecord().GetMetadata().GetKeep() == pbrc.ReleaseMetadata_KEEPER && (r.GetRecord().GetMetadata().GetGoalFolder() == 242017 || (r.GetRecord().GetMetadata().GetGoalFolder() == 2259637 && r.GetRecord().GetRelease().GetFolderId() != 2259637)) {
 				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Keepers", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: 2259637}}})
 				fmt.Printf("%v - %v -> %v\n", r.GetRecord().GetRelease().GetArtists(), r.GetRecord().GetRelease().GetTitle(), err)
 			}
