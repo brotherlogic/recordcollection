@@ -580,10 +580,6 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 			if w.GetRelease().Id == want.Id {
 				found = true
 				proto.Merge(w.GetRelease(), want)
-				time.Sleep(time.Second * 2)
-				if w.GetMetadata().GetActive() {
-					s.Log(fmt.Sprintf("ACTIVATING from pull %v", want.Id))
-				}
 				w.GetMetadata().Active = true
 			}
 		}
