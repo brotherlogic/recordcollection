@@ -433,6 +433,7 @@ func Init() *Server {
 			"recordmatcher",
 			"recordsorganiser",
 			"recordmover",
+			"recordscores",
 			"recordprocess",
 			"recordprinter",
 			"recordsales",
