@@ -168,8 +168,9 @@ message ReleaseMetadata {
   // This is an overall score
   float overall_score = 16;
 
-  // Width of spine in mm
+  // Width of spine in mm (DEPRECATED)
   int32 spine_width = 17;
+  float record_width = 43;
 
   // Sale cost and ID if applicable
   int32 sale_cost = 18;
