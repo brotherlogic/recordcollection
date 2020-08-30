@@ -34,6 +34,14 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 		}
 	}
 
+	rec, err := s.loadRecord(ctx, request.GetInstanceId(), false)
+	if err != nil {
+		return nil, err
+	}
+
+	res := s.retr.DeleteInstance(int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), int(request.GetInstanceId()))
+	s.Log(fmt.Sprintf("Deleted from collection: %v", res))
+
 	s.Log(fmt.Sprintf("Removed from push: %v -> %v given %v and %v", len(collection.NeedsPush), len(betterDelete), request.InstanceId, collection.NeedsPush))
 	collection.NeedsPush = betterDelete
 
@@ -41,6 +49,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	if err != nil {
 		return nil, err
 	}
+
 	return &pb.DeleteRecordResponse{}, s.deleteRecord(ctx, request.InstanceId)
 }
 
