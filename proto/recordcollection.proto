@@ -228,6 +228,8 @@ message ReleaseMetadata {
   bool expire_sale = 41;
 
   int64 last_info_update = 42;
+
+  int32 sale_attempts = 44;
 }
 
 // A request to get some records
