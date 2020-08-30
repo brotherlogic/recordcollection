@@ -428,14 +428,6 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 		}
 	}
 
-	// Update the score of the record
-	sc, err := s.scorer.GetScore(ctx, r.GetRelease().InstanceId)
-	if err == nil {
-		r.GetMetadata().OverallScore = sc
-	} else {
-		return err
-	}
-
 	//Force a recache if the record has no title or condition
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
