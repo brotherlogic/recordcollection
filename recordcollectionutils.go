@@ -170,6 +170,7 @@ func (s *Server) runUpdateFanout() {
 				s.Log(fmt.Sprintf("Bad dial of %v -> %v", server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
+				conn.Close()
 				break
 			}
 
