@@ -53,8 +53,12 @@ func main() {
 				}
 			}
 
-			if r.GetRecord().GetMetadata().GetGoalFolder() == 466902 {
-				fmt.Printf("%v. %v -> %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetSpineWidth())
+			if r.GetRecord().GetRelease().GetFolderId() == 812802 || r.GetRecord().GetRelease().GetFolderId() == 267116 {
+				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastStockCheck(), 0)) > time.Hour*2 {
+					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "trigger", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}})
+					fmt.Printf("%v. %v -> %v\n", i, r.GetRecord().GetRelease().GetTitle(), err)
+					time.Sleep(time.Second * 5)
+				}
 			}
 		}
 

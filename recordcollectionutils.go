@@ -102,7 +102,7 @@ func (s *Server) runUpdateFanout() {
 
 		// Finally push the record if we need to
 		if record.GetMetadata().GetDirty() {
-			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			ctx, cancel2 := utils.ManualContext("rciu", "rciu", time.Minute, true)
 			t = time.Now()
 			_, err = s.pushRecord(ctx, record)
 			loopLatency.With(prometheus.Labels{"method": "push"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
@@ -112,6 +112,7 @@ func (s *Server) runUpdateFanout() {
 				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				ecancel()
+				cancel2()
 				cancel()
 				time.Sleep(time.Minute)
 				continue
