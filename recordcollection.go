@@ -381,15 +381,6 @@ func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
 		r.GetMetadata().LastCache = 1
 	}
 
-	// We don't stock check 45s
-	if r.GetMetadata().GetGoalFolder() == 267116 {
-		r.GetMetadata().LastStockCheck = time.Now().Unix()
-		if r.GetRelease().FolderId == 1362206 {
-			r.GetMetadata().LastUpdateTime = time.Now().Unix()
-			collection.InstanceToUpdate[r.GetRelease().InstanceId] = r.GetMetadata().LastUpdateTime
-		}
-	}
-
 	return r, s.saveRecordCollection(ctx, collection)
 
 }

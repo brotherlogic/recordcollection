@@ -102,7 +102,7 @@ func (s *Server) runUpdateFanout() {
 
 		// Finally push the record if we need to
 		if record.GetMetadata().GetDirty() {
-			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			ctx, cancel2 := utils.ManualContext("rciu", "rciu", time.Minute, true)
 			t = time.Now()
 			_, err = s.pushRecord(ctx, record)
 			loopLatency.With(prometheus.Labels{"method": "push"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
@@ -112,6 +112,7 @@ func (s *Server) runUpdateFanout() {
 				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				ecancel()
+				cancel2()
 				cancel()
 				time.Sleep(time.Minute)
 				continue
@@ -492,11 +493,6 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 	// Set sale dirty if the condition is new
 	if !hasCondition && len(r.Release.RecordCondition) > 0 {
 		r.Metadata.SaleDirty = true
-	}
-
-	// Records with others don't need to be stock checked
-	if time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) < time.Hour*24*30*6 || r.GetMetadata().Others {
-		r.GetMetadata().NeedsStockCheck = false
 	}
 
 	//Make a goal folder adjustment

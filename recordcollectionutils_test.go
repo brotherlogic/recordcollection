@@ -145,8 +145,9 @@ func (t *testSyncer) RemoveFromWantlist(releaseID int) {
 	t.updateWantCount++
 }
 
-func (t *testSyncer) AddToWantlist(releaseID int) {
+func (t *testSyncer) AddToWantlist(releaseID int) error {
 	// Do nothing
+	return nil
 }
 
 func (t *testSyncer) GetCurrentSalePrice(saleID int) float32 {
