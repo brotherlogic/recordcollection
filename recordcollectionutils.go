@@ -495,11 +495,6 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Rele
 		r.Metadata.SaleDirty = true
 	}
 
-	// Records with others don't need to be stock checked
-	if time.Now().Sub(time.Unix(r.GetMetadata().LastStockCheck, 0)) < time.Hour*24*30*6 || r.GetMetadata().Others {
-		r.GetMetadata().NeedsStockCheck = false
-	}
-
 	//Make a goal folder adjustment
 	if r.GetRelease().GetFolderId() == 1782105 &&
 		(r.GetMetadata().GetGoalFolder() == 0 || r.GetMetadata().GetGoalFolder() == 268147) {
