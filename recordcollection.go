@@ -438,7 +438,6 @@ func Init() *Server {
 		GoServer:     &goserver.GoServer{},
 		updateFanout: make(chan int32, 100),
 		fanoutServers: []string{
-			"recordalerting",
 			"cdprocessor",
 			"recordbudget",
 			"recordmatcher",
@@ -450,7 +449,8 @@ func Init() *Server {
 			"recordsales",
 			"recordwants",
 			"digitalwantlist",
-			"recordstats"},
+			"recordstats",
+			"recordalerting"},
 		repeatCount: make(map[int32]int),
 		repeatError: make(map[int32]error),
 	}
