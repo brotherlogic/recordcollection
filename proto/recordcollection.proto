@@ -6,6 +6,16 @@ option go_package = "github.com/brotherlogic/recordcollection/proto";
 
 import "github.com/brotherlogic/godiscogs/godiscogs.proto";
 
+message Updates {
+  int32 instance_id = 1;
+  repeated RecordUpdate updates = 2;
+}
+
+message RecordUpdate {
+  Record update = 2;
+  string reason = 3;
+}
+
 message RecordCollection {
   repeated Record records = 1; // Deprecated
   repeated godiscogs.Release wants = 2; // DEPRECATED
