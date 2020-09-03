@@ -124,7 +124,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	// If we've loaded the record correctly we're probably fine
 	updates, err := s.loadUpdates(ctx, request.GetUpdate().GetRelease().InstanceId)
 	code := status.Convert(err).Code()
-	if code != codes.OK && code != codes.OutOfRange {
+	if code != codes.OK && code != codes.InvalidArgument {
 		return nil, err
 	}
 	updates.Updates = append(updates.Updates, &pb.RecordUpdate{Update: request.GetUpdate(), Reason: request.GetReason()})
