@@ -364,6 +364,26 @@ func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.R
 	return recordToReturn, nil
 }
 
+func (s *Server) loadUpdates(ctx context.Context, id int32) (*pb.Updates, error) {
+	data, _, err := s.KSclient.Read(ctx, fmt.Sprintf("%v%v.updates", SAVEKEY, id), &pb.Updates{})
+
+	if err != nil {
+		return nil, err
+	}
+
+	if proto.Size(data) == 0 {
+		return nil, fmt.Errorf("Error on read for %v", id)
+	}
+
+	updates := data.(*pb.Updates)
+
+	return updates, nil
+}
+
+func (s *Server) saveUpdates(ctx context.Context, id int32, updates *pb.Updates) error {
+	return s.KSclient.Save(ctx, fmt.Sprintf("%v%v.updates", SAVEKEY, id), updates)
+}
+
 func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
 	r, err := s.loadRecord(ctx, id, false)
 

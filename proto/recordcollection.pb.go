@@ -227,7 +227,7 @@ func (x ReleaseMetadata_Category) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ReleaseMetadata_Category.Descriptor instead.
 func (ReleaseMetadata_Category) EnumDescriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{6, 0}
+	return file_recordcollection_proto_rawDescGZIP(), []int{8, 0}
 }
 
 type ReleaseMetadata_KeepState int32
@@ -276,7 +276,7 @@ func (x ReleaseMetadata_KeepState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ReleaseMetadata_KeepState.Descriptor instead.
 func (ReleaseMetadata_KeepState) EnumDescriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{6, 1}
+	return file_recordcollection_proto_rawDescGZIP(), []int{8, 1}
 }
 
 type ReleaseMetadata_MatchState int32
@@ -328,7 +328,117 @@ func (x ReleaseMetadata_MatchState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ReleaseMetadata_MatchState.Descriptor instead.
 func (ReleaseMetadata_MatchState) EnumDescriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{6, 2}
+	return file_recordcollection_proto_rawDescGZIP(), []int{8, 2}
+}
+
+type Updates struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	InstanceId int32           `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	Updates    []*RecordUpdate `protobuf:"bytes,2,rep,name=updates,proto3" json:"updates,omitempty"`
+}
+
+func (x *Updates) Reset() {
+	*x = Updates{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_recordcollection_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Updates) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Updates) ProtoMessage() {}
+
+func (x *Updates) ProtoReflect() protoreflect.Message {
+	mi := &file_recordcollection_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Updates.ProtoReflect.Descriptor instead.
+func (*Updates) Descriptor() ([]byte, []int) {
+	return file_recordcollection_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *Updates) GetInstanceId() int32 {
+	if x != nil {
+		return x.InstanceId
+	}
+	return 0
+}
+
+func (x *Updates) GetUpdates() []*RecordUpdate {
+	if x != nil {
+		return x.Updates
+	}
+	return nil
+}
+
+type RecordUpdate struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Update *Record `protobuf:"bytes,2,opt,name=update,proto3" json:"update,omitempty"`
+	Reason string  `protobuf:"bytes,3,opt,name=reason,proto3" json:"reason,omitempty"`
+}
+
+func (x *RecordUpdate) Reset() {
+	*x = RecordUpdate{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_recordcollection_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RecordUpdate) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RecordUpdate) ProtoMessage() {}
+
+func (x *RecordUpdate) ProtoReflect() protoreflect.Message {
+	mi := &file_recordcollection_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RecordUpdate.ProtoReflect.Descriptor instead.
+func (*RecordUpdate) Descriptor() ([]byte, []int) {
+	return file_recordcollection_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *RecordUpdate) GetUpdate() *Record {
+	if x != nil {
+		return x.Update
+	}
+	return nil
+}
+
+func (x *RecordUpdate) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
 }
 
 type RecordCollection struct {
@@ -359,7 +469,7 @@ type RecordCollection struct {
 func (x *RecordCollection) Reset() {
 	*x = RecordCollection{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[0]
+		mi := &file_recordcollection_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -372,7 +482,7 @@ func (x *RecordCollection) String() string {
 func (*RecordCollection) ProtoMessage() {}
 
 func (x *RecordCollection) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[0]
+	mi := &file_recordcollection_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -385,7 +495,7 @@ func (x *RecordCollection) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordCollection.ProtoReflect.Descriptor instead.
 func (*RecordCollection) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{0}
+	return file_recordcollection_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *RecordCollection) GetRecords() []*Record {
@@ -518,7 +628,7 @@ type AllRecords struct {
 func (x *AllRecords) Reset() {
 	*x = AllRecords{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[1]
+		mi := &file_recordcollection_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -531,7 +641,7 @@ func (x *AllRecords) String() string {
 func (*AllRecords) ProtoMessage() {}
 
 func (x *AllRecords) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[1]
+	mi := &file_recordcollection_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -544,7 +654,7 @@ func (x *AllRecords) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AllRecords.ProtoReflect.Descriptor instead.
 func (*AllRecords) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{1}
+	return file_recordcollection_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *AllRecords) GetRecords() []*Record {
@@ -567,7 +677,7 @@ type Record struct {
 func (x *Record) Reset() {
 	*x = Record{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[2]
+		mi := &file_recordcollection_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -580,7 +690,7 @@ func (x *Record) String() string {
 func (*Record) ProtoMessage() {}
 
 func (x *Record) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[2]
+	mi := &file_recordcollection_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -593,7 +703,7 @@ func (x *Record) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Record.ProtoReflect.Descriptor instead.
 func (*Record) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{2}
+	return file_recordcollection_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Record) GetRelease() *godiscogs.Release {
@@ -626,7 +736,7 @@ type Want struct {
 func (x *Want) Reset() {
 	*x = Want{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[3]
+		mi := &file_recordcollection_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -639,7 +749,7 @@ func (x *Want) String() string {
 func (*Want) ProtoMessage() {}
 
 func (x *Want) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[3]
+	mi := &file_recordcollection_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -652,7 +762,7 @@ func (x *Want) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Want.ProtoReflect.Descriptor instead.
 func (*Want) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{3}
+	return file_recordcollection_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Want) GetRelease() *godiscogs.Release {
@@ -694,7 +804,7 @@ type WantMetadata struct {
 func (x *WantMetadata) Reset() {
 	*x = WantMetadata{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[4]
+		mi := &file_recordcollection_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -707,7 +817,7 @@ func (x *WantMetadata) String() string {
 func (*WantMetadata) ProtoMessage() {}
 
 func (x *WantMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[4]
+	mi := &file_recordcollection_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -720,7 +830,7 @@ func (x *WantMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WantMetadata.ProtoReflect.Descriptor instead.
 func (*WantMetadata) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{4}
+	return file_recordcollection_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *WantMetadata) GetActive() bool {
@@ -742,7 +852,7 @@ type Token struct {
 func (x *Token) Reset() {
 	*x = Token{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[5]
+		mi := &file_recordcollection_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -755,7 +865,7 @@ func (x *Token) String() string {
 func (*Token) ProtoMessage() {}
 
 func (x *Token) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[5]
+	mi := &file_recordcollection_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -768,7 +878,7 @@ func (x *Token) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Token.ProtoReflect.Descriptor instead.
 func (*Token) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{5}
+	return file_recordcollection_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Token) GetToken() string {
@@ -854,7 +964,7 @@ type ReleaseMetadata struct {
 func (x *ReleaseMetadata) Reset() {
 	*x = ReleaseMetadata{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[6]
+		mi := &file_recordcollection_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -867,7 +977,7 @@ func (x *ReleaseMetadata) String() string {
 func (*ReleaseMetadata) ProtoMessage() {}
 
 func (x *ReleaseMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[6]
+	mi := &file_recordcollection_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -880,7 +990,7 @@ func (x *ReleaseMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReleaseMetadata.ProtoReflect.Descriptor instead.
 func (*ReleaseMetadata) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{6}
+	return file_recordcollection_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *ReleaseMetadata) GetDateAdded() int64 {
@@ -1211,7 +1321,7 @@ type GetRecordsRequest struct {
 func (x *GetRecordsRequest) Reset() {
 	*x = GetRecordsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[7]
+		mi := &file_recordcollection_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1224,7 +1334,7 @@ func (x *GetRecordsRequest) String() string {
 func (*GetRecordsRequest) ProtoMessage() {}
 
 func (x *GetRecordsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[7]
+	mi := &file_recordcollection_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1237,7 +1347,7 @@ func (x *GetRecordsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecordsRequest.ProtoReflect.Descriptor instead.
 func (*GetRecordsRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{7}
+	return file_recordcollection_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *GetRecordsRequest) GetFilter() *Record {
@@ -1288,7 +1398,7 @@ type GetRecordsResponse struct {
 func (x *GetRecordsResponse) Reset() {
 	*x = GetRecordsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[8]
+		mi := &file_recordcollection_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1301,7 +1411,7 @@ func (x *GetRecordsResponse) String() string {
 func (*GetRecordsResponse) ProtoMessage() {}
 
 func (x *GetRecordsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[8]
+	mi := &file_recordcollection_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1314,7 +1424,7 @@ func (x *GetRecordsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecordsResponse.ProtoReflect.Descriptor instead.
 func (*GetRecordsResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{8}
+	return file_recordcollection_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetRecordsResponse) GetRecords() []*Record {
@@ -1343,7 +1453,7 @@ type GetWantsRequest struct {
 func (x *GetWantsRequest) Reset() {
 	*x = GetWantsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[9]
+		mi := &file_recordcollection_proto_msgTypes[11]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1356,7 +1466,7 @@ func (x *GetWantsRequest) String() string {
 func (*GetWantsRequest) ProtoMessage() {}
 
 func (x *GetWantsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[9]
+	mi := &file_recordcollection_proto_msgTypes[11]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1369,7 +1479,7 @@ func (x *GetWantsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWantsRequest.ProtoReflect.Descriptor instead.
 func (*GetWantsRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{9}
+	return file_recordcollection_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetWantsRequest) GetFilter() *Want {
@@ -1391,7 +1501,7 @@ type GetWantsResponse struct {
 func (x *GetWantsResponse) Reset() {
 	*x = GetWantsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[10]
+		mi := &file_recordcollection_proto_msgTypes[12]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1404,7 +1514,7 @@ func (x *GetWantsResponse) String() string {
 func (*GetWantsResponse) ProtoMessage() {}
 
 func (x *GetWantsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[10]
+	mi := &file_recordcollection_proto_msgTypes[12]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1417,7 +1527,7 @@ func (x *GetWantsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWantsResponse.ProtoReflect.Descriptor instead.
 func (*GetWantsResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{10}
+	return file_recordcollection_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetWantsResponse) GetWants() []*Want {
@@ -1441,7 +1551,7 @@ type UpdateRecordRequest struct {
 func (x *UpdateRecordRequest) Reset() {
 	*x = UpdateRecordRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[11]
+		mi := &file_recordcollection_proto_msgTypes[13]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1454,7 +1564,7 @@ func (x *UpdateRecordRequest) String() string {
 func (*UpdateRecordRequest) ProtoMessage() {}
 
 func (x *UpdateRecordRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[11]
+	mi := &file_recordcollection_proto_msgTypes[13]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1467,7 +1577,7 @@ func (x *UpdateRecordRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRecordRequest.ProtoReflect.Descriptor instead.
 func (*UpdateRecordRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{11}
+	return file_recordcollection_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *UpdateRecordRequest) GetUpdate() *Record {
@@ -1509,7 +1619,7 @@ type UpdateRecordsResponse struct {
 func (x *UpdateRecordsResponse) Reset() {
 	*x = UpdateRecordsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[12]
+		mi := &file_recordcollection_proto_msgTypes[14]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1522,7 +1632,7 @@ func (x *UpdateRecordsResponse) String() string {
 func (*UpdateRecordsResponse) ProtoMessage() {}
 
 func (x *UpdateRecordsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[12]
+	mi := &file_recordcollection_proto_msgTypes[14]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1535,7 +1645,7 @@ func (x *UpdateRecordsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateRecordsResponse.ProtoReflect.Descriptor instead.
 func (*UpdateRecordsResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{12}
+	return file_recordcollection_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *UpdateRecordsResponse) GetUpdated() *Record {
@@ -1557,7 +1667,7 @@ type UpdateWantRequest struct {
 func (x *UpdateWantRequest) Reset() {
 	*x = UpdateWantRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[13]
+		mi := &file_recordcollection_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1570,7 +1680,7 @@ func (x *UpdateWantRequest) String() string {
 func (*UpdateWantRequest) ProtoMessage() {}
 
 func (x *UpdateWantRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[13]
+	mi := &file_recordcollection_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1583,7 +1693,7 @@ func (x *UpdateWantRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateWantRequest.ProtoReflect.Descriptor instead.
 func (*UpdateWantRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{13}
+	return file_recordcollection_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *UpdateWantRequest) GetUpdate() *Want {
@@ -1611,7 +1721,7 @@ type UpdateWantResponse struct {
 func (x *UpdateWantResponse) Reset() {
 	*x = UpdateWantResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[14]
+		mi := &file_recordcollection_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1624,7 +1734,7 @@ func (x *UpdateWantResponse) String() string {
 func (*UpdateWantResponse) ProtoMessage() {}
 
 func (x *UpdateWantResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[14]
+	mi := &file_recordcollection_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1637,7 +1747,7 @@ func (x *UpdateWantResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateWantResponse.ProtoReflect.Descriptor instead.
 func (*UpdateWantResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{14}
+	return file_recordcollection_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *UpdateWantResponse) GetUpdated() *Want {
@@ -1658,7 +1768,7 @@ type AddRecordRequest struct {
 func (x *AddRecordRequest) Reset() {
 	*x = AddRecordRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[15]
+		mi := &file_recordcollection_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1671,7 +1781,7 @@ func (x *AddRecordRequest) String() string {
 func (*AddRecordRequest) ProtoMessage() {}
 
 func (x *AddRecordRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[15]
+	mi := &file_recordcollection_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1684,7 +1794,7 @@ func (x *AddRecordRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddRecordRequest.ProtoReflect.Descriptor instead.
 func (*AddRecordRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{15}
+	return file_recordcollection_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *AddRecordRequest) GetToAdd() *Record {
@@ -1705,7 +1815,7 @@ type AddRecordResponse struct {
 func (x *AddRecordResponse) Reset() {
 	*x = AddRecordResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[16]
+		mi := &file_recordcollection_proto_msgTypes[18]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1718,7 +1828,7 @@ func (x *AddRecordResponse) String() string {
 func (*AddRecordResponse) ProtoMessage() {}
 
 func (x *AddRecordResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[16]
+	mi := &file_recordcollection_proto_msgTypes[18]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1731,7 +1841,7 @@ func (x *AddRecordResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddRecordResponse.ProtoReflect.Descriptor instead.
 func (*AddRecordResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{16}
+	return file_recordcollection_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *AddRecordResponse) GetAdded() *Record {
@@ -1750,7 +1860,7 @@ type GetRecordCollectionRequest struct {
 func (x *GetRecordCollectionRequest) Reset() {
 	*x = GetRecordCollectionRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[17]
+		mi := &file_recordcollection_proto_msgTypes[19]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1763,7 +1873,7 @@ func (x *GetRecordCollectionRequest) String() string {
 func (*GetRecordCollectionRequest) ProtoMessage() {}
 
 func (x *GetRecordCollectionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[17]
+	mi := &file_recordcollection_proto_msgTypes[19]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1776,7 +1886,7 @@ func (x *GetRecordCollectionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecordCollectionRequest.ProtoReflect.Descriptor instead.
 func (*GetRecordCollectionRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{17}
+	return file_recordcollection_proto_rawDescGZIP(), []int{19}
 }
 
 type GetRecordCollectionResponse struct {
@@ -1790,7 +1900,7 @@ type GetRecordCollectionResponse struct {
 func (x *GetRecordCollectionResponse) Reset() {
 	*x = GetRecordCollectionResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[18]
+		mi := &file_recordcollection_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1803,7 +1913,7 @@ func (x *GetRecordCollectionResponse) String() string {
 func (*GetRecordCollectionResponse) ProtoMessage() {}
 
 func (x *GetRecordCollectionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[18]
+	mi := &file_recordcollection_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1816,7 +1926,7 @@ func (x *GetRecordCollectionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecordCollectionResponse.ProtoReflect.Descriptor instead.
 func (*GetRecordCollectionResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{18}
+	return file_recordcollection_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetRecordCollectionResponse) GetInstanceIds() []int32 {
@@ -1837,7 +1947,7 @@ type DeleteRecordRequest struct {
 func (x *DeleteRecordRequest) Reset() {
 	*x = DeleteRecordRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[19]
+		mi := &file_recordcollection_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1850,7 +1960,7 @@ func (x *DeleteRecordRequest) String() string {
 func (*DeleteRecordRequest) ProtoMessage() {}
 
 func (x *DeleteRecordRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[19]
+	mi := &file_recordcollection_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1863,7 +1973,7 @@ func (x *DeleteRecordRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRecordRequest.ProtoReflect.Descriptor instead.
 func (*DeleteRecordRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{19}
+	return file_recordcollection_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *DeleteRecordRequest) GetInstanceId() int32 {
@@ -1882,7 +1992,7 @@ type DeleteRecordResponse struct {
 func (x *DeleteRecordResponse) Reset() {
 	*x = DeleteRecordResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[20]
+		mi := &file_recordcollection_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1895,7 +2005,7 @@ func (x *DeleteRecordResponse) String() string {
 func (*DeleteRecordResponse) ProtoMessage() {}
 
 func (x *DeleteRecordResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[20]
+	mi := &file_recordcollection_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1908,7 +2018,7 @@ func (x *DeleteRecordResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRecordResponse.ProtoReflect.Descriptor instead.
 func (*DeleteRecordResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{20}
+	return file_recordcollection_proto_rawDescGZIP(), []int{22}
 }
 
 type QueryRecordsRequest struct {
@@ -1930,7 +2040,7 @@ type QueryRecordsRequest struct {
 func (x *QueryRecordsRequest) Reset() {
 	*x = QueryRecordsRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[21]
+		mi := &file_recordcollection_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1943,7 +2053,7 @@ func (x *QueryRecordsRequest) String() string {
 func (*QueryRecordsRequest) ProtoMessage() {}
 
 func (x *QueryRecordsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[21]
+	mi := &file_recordcollection_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1956,7 +2066,7 @@ func (x *QueryRecordsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryRecordsRequest.ProtoReflect.Descriptor instead.
 func (*QueryRecordsRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{21}
+	return file_recordcollection_proto_rawDescGZIP(), []int{23}
 }
 
 func (m *QueryRecordsRequest) GetQuery() isQueryRecordsRequest_Query {
@@ -2066,7 +2176,7 @@ type QueryRecordsResponse struct {
 func (x *QueryRecordsResponse) Reset() {
 	*x = QueryRecordsResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[22]
+		mi := &file_recordcollection_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2079,7 +2189,7 @@ func (x *QueryRecordsResponse) String() string {
 func (*QueryRecordsResponse) ProtoMessage() {}
 
 func (x *QueryRecordsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[22]
+	mi := &file_recordcollection_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2092,7 +2202,7 @@ func (x *QueryRecordsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QueryRecordsResponse.ProtoReflect.Descriptor instead.
 func (*QueryRecordsResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{22}
+	return file_recordcollection_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *QueryRecordsResponse) GetInstanceIds() []int32 {
@@ -2115,7 +2225,7 @@ type GetRecordRequest struct {
 func (x *GetRecordRequest) Reset() {
 	*x = GetRecordRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[23]
+		mi := &file_recordcollection_proto_msgTypes[25]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2128,7 +2238,7 @@ func (x *GetRecordRequest) String() string {
 func (*GetRecordRequest) ProtoMessage() {}
 
 func (x *GetRecordRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[23]
+	mi := &file_recordcollection_proto_msgTypes[25]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2141,7 +2251,7 @@ func (x *GetRecordRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecordRequest.ProtoReflect.Descriptor instead.
 func (*GetRecordRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{23}
+	return file_recordcollection_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *GetRecordRequest) GetInstanceId() int32 {
@@ -2176,7 +2286,7 @@ type GetRecordResponse struct {
 func (x *GetRecordResponse) Reset() {
 	*x = GetRecordResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[24]
+		mi := &file_recordcollection_proto_msgTypes[26]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2189,7 +2299,7 @@ func (x *GetRecordResponse) String() string {
 func (*GetRecordResponse) ProtoMessage() {}
 
 func (x *GetRecordResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[24]
+	mi := &file_recordcollection_proto_msgTypes[26]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2202,7 +2312,7 @@ func (x *GetRecordResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRecordResponse.ProtoReflect.Descriptor instead.
 func (*GetRecordResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{24}
+	return file_recordcollection_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *GetRecordResponse) GetRecord() *Record {
@@ -2221,7 +2331,7 @@ type TriggerRequest struct {
 func (x *TriggerRequest) Reset() {
 	*x = TriggerRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[25]
+		mi := &file_recordcollection_proto_msgTypes[27]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2234,7 +2344,7 @@ func (x *TriggerRequest) String() string {
 func (*TriggerRequest) ProtoMessage() {}
 
 func (x *TriggerRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[25]
+	mi := &file_recordcollection_proto_msgTypes[27]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2247,7 +2357,7 @@ func (x *TriggerRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerRequest.ProtoReflect.Descriptor instead.
 func (*TriggerRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{25}
+	return file_recordcollection_proto_rawDescGZIP(), []int{27}
 }
 
 type TriggerResponse struct {
@@ -2259,7 +2369,7 @@ type TriggerResponse struct {
 func (x *TriggerResponse) Reset() {
 	*x = TriggerResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[26]
+		mi := &file_recordcollection_proto_msgTypes[28]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2272,7 +2382,7 @@ func (x *TriggerResponse) String() string {
 func (*TriggerResponse) ProtoMessage() {}
 
 func (x *TriggerResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[26]
+	mi := &file_recordcollection_proto_msgTypes[28]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2285,7 +2395,7 @@ func (x *TriggerResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TriggerResponse.ProtoReflect.Descriptor instead.
 func (*TriggerResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{26}
+	return file_recordcollection_proto_rawDescGZIP(), []int{28}
 }
 
 type ClientUpdateRequest struct {
@@ -2299,7 +2409,7 @@ type ClientUpdateRequest struct {
 func (x *ClientUpdateRequest) Reset() {
 	*x = ClientUpdateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[27]
+		mi := &file_recordcollection_proto_msgTypes[29]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2312,7 +2422,7 @@ func (x *ClientUpdateRequest) String() string {
 func (*ClientUpdateRequest) ProtoMessage() {}
 
 func (x *ClientUpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[27]
+	mi := &file_recordcollection_proto_msgTypes[29]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2325,7 +2435,7 @@ func (x *ClientUpdateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientUpdateRequest.ProtoReflect.Descriptor instead.
 func (*ClientUpdateRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{27}
+	return file_recordcollection_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *ClientUpdateRequest) GetInstanceId() int32 {
@@ -2344,7 +2454,7 @@ type ClientUpdateResponse struct {
 func (x *ClientUpdateResponse) Reset() {
 	*x = ClientUpdateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[28]
+		mi := &file_recordcollection_proto_msgTypes[30]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2357,7 +2467,7 @@ func (x *ClientUpdateResponse) String() string {
 func (*ClientUpdateResponse) ProtoMessage() {}
 
 func (x *ClientUpdateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[28]
+	mi := &file_recordcollection_proto_msgTypes[30]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2370,7 +2480,7 @@ func (x *ClientUpdateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientUpdateResponse.ProtoReflect.Descriptor instead.
 func (*ClientUpdateResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{28}
+	return file_recordcollection_proto_rawDescGZIP(), []int{30}
 }
 
 var File_recordcollection_proto protoreflect.FileDescriptor
@@ -2381,7 +2491,19 @@ var file_recordcollection_proto_rawDesc = []byte{
 	0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x1a, 0x31, 0x67, 0x69, 0x74, 0x68,
 	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x72, 0x6f, 0x74, 0x68, 0x65, 0x72, 0x6c, 0x6f,
 	0x67, 0x69, 0x63, 0x2f, 0x67, 0x6f, 0x64, 0x69, 0x73, 0x63, 0x6f, 0x67, 0x73, 0x2f, 0x67, 0x6f,
-	0x64, 0x69, 0x73, 0x63, 0x6f, 0x67, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0xbf, 0x0d,
+	0x64, 0x69, 0x73, 0x63, 0x6f, 0x67, 0x73, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x22, 0x64, 0x0a,
+	0x07, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x73, 0x12, 0x1f, 0x0a, 0x0b, 0x69, 0x6e, 0x73, 0x74,
+	0x61, 0x6e, 0x63, 0x65, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x69,
+	0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x49, 0x64, 0x12, 0x38, 0x0a, 0x07, 0x75, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x1e, 0x2e, 0x72, 0x65, 0x63,
+	0x6f, 0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x52, 0x65,
+	0x63, 0x6f, 0x72, 0x64, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x07, 0x75, 0x70, 0x64, 0x61,
+	0x74, 0x65, 0x73, 0x22, 0x58, 0x0a, 0x0c, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x12, 0x30, 0x0a, 0x06, 0x75, 0x70, 0x64, 0x61, 0x74, 0x65, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c,
+	0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x06, 0x75,
+	0x70, 0x64, 0x61, 0x74, 0x65, 0x12, 0x16, 0x0a, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x18,
+	0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x72, 0x65, 0x61, 0x73, 0x6f, 0x6e, 0x22, 0xbf, 0x0d,
 	0x0a, 0x10, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69,
 	0x6f, 0x6e, 0x12, 0x32, 0x0a, 0x07, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x73, 0x18, 0x01, 0x20,
 	0x03, 0x28, 0x0b, 0x32, 0x18, 0x2e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c,
@@ -2859,108 +2981,112 @@ func file_recordcollection_proto_rawDescGZIP() []byte {
 }
 
 var file_recordcollection_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_recordcollection_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
+var file_recordcollection_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
 var file_recordcollection_proto_goTypes = []interface{}{
 	(Purgatory)(0),                      // 0: recordcollection.Purgatory
 	(ReleaseMetadata_Category)(0),       // 1: recordcollection.ReleaseMetadata.Category
 	(ReleaseMetadata_KeepState)(0),      // 2: recordcollection.ReleaseMetadata.KeepState
 	(ReleaseMetadata_MatchState)(0),     // 3: recordcollection.ReleaseMetadata.MatchState
-	(*RecordCollection)(nil),            // 4: recordcollection.RecordCollection
-	(*AllRecords)(nil),                  // 5: recordcollection.AllRecords
-	(*Record)(nil),                      // 6: recordcollection.Record
-	(*Want)(nil),                        // 7: recordcollection.Want
-	(*WantMetadata)(nil),                // 8: recordcollection.WantMetadata
-	(*Token)(nil),                       // 9: recordcollection.Token
-	(*ReleaseMetadata)(nil),             // 10: recordcollection.ReleaseMetadata
-	(*GetRecordsRequest)(nil),           // 11: recordcollection.GetRecordsRequest
-	(*GetRecordsResponse)(nil),          // 12: recordcollection.GetRecordsResponse
-	(*GetWantsRequest)(nil),             // 13: recordcollection.GetWantsRequest
-	(*GetWantsResponse)(nil),            // 14: recordcollection.GetWantsResponse
-	(*UpdateRecordRequest)(nil),         // 15: recordcollection.UpdateRecordRequest
-	(*UpdateRecordsResponse)(nil),       // 16: recordcollection.UpdateRecordsResponse
-	(*UpdateWantRequest)(nil),           // 17: recordcollection.UpdateWantRequest
-	(*UpdateWantResponse)(nil),          // 18: recordcollection.UpdateWantResponse
-	(*AddRecordRequest)(nil),            // 19: recordcollection.AddRecordRequest
-	(*AddRecordResponse)(nil),           // 20: recordcollection.AddRecordResponse
-	(*GetRecordCollectionRequest)(nil),  // 21: recordcollection.GetRecordCollectionRequest
-	(*GetRecordCollectionResponse)(nil), // 22: recordcollection.GetRecordCollectionResponse
-	(*DeleteRecordRequest)(nil),         // 23: recordcollection.DeleteRecordRequest
-	(*DeleteRecordResponse)(nil),        // 24: recordcollection.DeleteRecordResponse
-	(*QueryRecordsRequest)(nil),         // 25: recordcollection.QueryRecordsRequest
-	(*QueryRecordsResponse)(nil),        // 26: recordcollection.QueryRecordsResponse
-	(*GetRecordRequest)(nil),            // 27: recordcollection.GetRecordRequest
-	(*GetRecordResponse)(nil),           // 28: recordcollection.GetRecordResponse
-	(*TriggerRequest)(nil),              // 29: recordcollection.TriggerRequest
-	(*TriggerResponse)(nil),             // 30: recordcollection.TriggerResponse
-	(*ClientUpdateRequest)(nil),         // 31: recordcollection.ClientUpdateRequest
-	(*ClientUpdateResponse)(nil),        // 32: recordcollection.ClientUpdateResponse
-	nil, // 33: recordcollection.RecordCollection.InstanceToFolderEntry
-	nil, // 34: recordcollection.RecordCollection.InstanceToUpdateEntry
-	nil, // 35: recordcollection.RecordCollection.InstanceToCategoryEntry
-	nil, // 36: recordcollection.RecordCollection.InstanceToMasterEntry
-	nil, // 37: recordcollection.RecordCollection.InstanceToIdEntry
-	nil, // 38: recordcollection.RecordCollection.InstanceToRecacheEntry
-	nil, // 39: recordcollection.RecordCollection.InstanceToLastSalePriceUpdateEntry
-	(*godiscogs.Release)(nil), // 40: godiscogs.Release
-	(godiscogs.SaleState)(0),  // 41: godiscogs.SaleState
+	(*Updates)(nil),                     // 4: recordcollection.Updates
+	(*RecordUpdate)(nil),                // 5: recordcollection.RecordUpdate
+	(*RecordCollection)(nil),            // 6: recordcollection.RecordCollection
+	(*AllRecords)(nil),                  // 7: recordcollection.AllRecords
+	(*Record)(nil),                      // 8: recordcollection.Record
+	(*Want)(nil),                        // 9: recordcollection.Want
+	(*WantMetadata)(nil),                // 10: recordcollection.WantMetadata
+	(*Token)(nil),                       // 11: recordcollection.Token
+	(*ReleaseMetadata)(nil),             // 12: recordcollection.ReleaseMetadata
+	(*GetRecordsRequest)(nil),           // 13: recordcollection.GetRecordsRequest
+	(*GetRecordsResponse)(nil),          // 14: recordcollection.GetRecordsResponse
+	(*GetWantsRequest)(nil),             // 15: recordcollection.GetWantsRequest
+	(*GetWantsResponse)(nil),            // 16: recordcollection.GetWantsResponse
+	(*UpdateRecordRequest)(nil),         // 17: recordcollection.UpdateRecordRequest
+	(*UpdateRecordsResponse)(nil),       // 18: recordcollection.UpdateRecordsResponse
+	(*UpdateWantRequest)(nil),           // 19: recordcollection.UpdateWantRequest
+	(*UpdateWantResponse)(nil),          // 20: recordcollection.UpdateWantResponse
+	(*AddRecordRequest)(nil),            // 21: recordcollection.AddRecordRequest
+	(*AddRecordResponse)(nil),           // 22: recordcollection.AddRecordResponse
+	(*GetRecordCollectionRequest)(nil),  // 23: recordcollection.GetRecordCollectionRequest
+	(*GetRecordCollectionResponse)(nil), // 24: recordcollection.GetRecordCollectionResponse
+	(*DeleteRecordRequest)(nil),         // 25: recordcollection.DeleteRecordRequest
+	(*DeleteRecordResponse)(nil),        // 26: recordcollection.DeleteRecordResponse
+	(*QueryRecordsRequest)(nil),         // 27: recordcollection.QueryRecordsRequest
+	(*QueryRecordsResponse)(nil),        // 28: recordcollection.QueryRecordsResponse
+	(*GetRecordRequest)(nil),            // 29: recordcollection.GetRecordRequest
+	(*GetRecordResponse)(nil),           // 30: recordcollection.GetRecordResponse
+	(*TriggerRequest)(nil),              // 31: recordcollection.TriggerRequest
+	(*TriggerResponse)(nil),             // 32: recordcollection.TriggerResponse
+	(*ClientUpdateRequest)(nil),         // 33: recordcollection.ClientUpdateRequest
+	(*ClientUpdateResponse)(nil),        // 34: recordcollection.ClientUpdateResponse
+	nil, // 35: recordcollection.RecordCollection.InstanceToFolderEntry
+	nil, // 36: recordcollection.RecordCollection.InstanceToUpdateEntry
+	nil, // 37: recordcollection.RecordCollection.InstanceToCategoryEntry
+	nil, // 38: recordcollection.RecordCollection.InstanceToMasterEntry
+	nil, // 39: recordcollection.RecordCollection.InstanceToIdEntry
+	nil, // 40: recordcollection.RecordCollection.InstanceToRecacheEntry
+	nil, // 41: recordcollection.RecordCollection.InstanceToLastSalePriceUpdateEntry
+	(*godiscogs.Release)(nil), // 42: godiscogs.Release
+	(godiscogs.SaleState)(0),  // 43: godiscogs.SaleState
 }
 var file_recordcollection_proto_depIdxs = []int32{
-	6,  // 0: recordcollection.RecordCollection.records:type_name -> recordcollection.Record
-	40, // 1: recordcollection.RecordCollection.wants:type_name -> godiscogs.Release
-	7,  // 2: recordcollection.RecordCollection.new_wants:type_name -> recordcollection.Want
-	33, // 3: recordcollection.RecordCollection.instance_to_folder:type_name -> recordcollection.RecordCollection.InstanceToFolderEntry
-	34, // 4: recordcollection.RecordCollection.instance_to_update:type_name -> recordcollection.RecordCollection.InstanceToUpdateEntry
-	35, // 5: recordcollection.RecordCollection.instance_to_category:type_name -> recordcollection.RecordCollection.InstanceToCategoryEntry
-	36, // 6: recordcollection.RecordCollection.instance_to_master:type_name -> recordcollection.RecordCollection.InstanceToMasterEntry
-	37, // 7: recordcollection.RecordCollection.instance_to_id:type_name -> recordcollection.RecordCollection.InstanceToIdEntry
-	38, // 8: recordcollection.RecordCollection.instance_to_recache:type_name -> recordcollection.RecordCollection.InstanceToRecacheEntry
-	39, // 9: recordcollection.RecordCollection.instance_to_last_sale_price_update:type_name -> recordcollection.RecordCollection.InstanceToLastSalePriceUpdateEntry
-	6,  // 10: recordcollection.AllRecords.records:type_name -> recordcollection.Record
-	40, // 11: recordcollection.Record.release:type_name -> godiscogs.Release
-	10, // 12: recordcollection.Record.metadata:type_name -> recordcollection.ReleaseMetadata
-	40, // 13: recordcollection.Want.release:type_name -> godiscogs.Release
-	8,  // 14: recordcollection.Want.metadata:type_name -> recordcollection.WantMetadata
-	1,  // 15: recordcollection.ReleaseMetadata.category:type_name -> recordcollection.ReleaseMetadata.Category
-	0,  // 16: recordcollection.ReleaseMetadata.purgatory:type_name -> recordcollection.Purgatory
-	41, // 17: recordcollection.ReleaseMetadata.sale_state:type_name -> godiscogs.SaleState
-	2,  // 18: recordcollection.ReleaseMetadata.keep:type_name -> recordcollection.ReleaseMetadata.KeepState
-	3,  // 19: recordcollection.ReleaseMetadata.match:type_name -> recordcollection.ReleaseMetadata.MatchState
-	6,  // 20: recordcollection.GetRecordsRequest.filter:type_name -> recordcollection.Record
-	6,  // 21: recordcollection.GetRecordsResponse.records:type_name -> recordcollection.Record
-	7,  // 22: recordcollection.GetWantsRequest.filter:type_name -> recordcollection.Want
-	7,  // 23: recordcollection.GetWantsResponse.wants:type_name -> recordcollection.Want
-	6,  // 24: recordcollection.UpdateRecordRequest.update:type_name -> recordcollection.Record
-	6,  // 25: recordcollection.UpdateRecordsResponse.updated:type_name -> recordcollection.Record
-	7,  // 26: recordcollection.UpdateWantRequest.update:type_name -> recordcollection.Want
-	7,  // 27: recordcollection.UpdateWantResponse.updated:type_name -> recordcollection.Want
-	6,  // 28: recordcollection.AddRecordRequest.to_add:type_name -> recordcollection.Record
-	6,  // 29: recordcollection.AddRecordResponse.added:type_name -> recordcollection.Record
-	1,  // 30: recordcollection.QueryRecordsRequest.category:type_name -> recordcollection.ReleaseMetadata.Category
-	6,  // 31: recordcollection.GetRecordResponse.record:type_name -> recordcollection.Record
-	1,  // 32: recordcollection.RecordCollection.InstanceToCategoryEntry.value:type_name -> recordcollection.ReleaseMetadata.Category
-	13, // 33: recordcollection.RecordCollectionService.GetWants:input_type -> recordcollection.GetWantsRequest
-	15, // 34: recordcollection.RecordCollectionService.UpdateRecord:input_type -> recordcollection.UpdateRecordRequest
-	17, // 35: recordcollection.RecordCollectionService.UpdateWant:input_type -> recordcollection.UpdateWantRequest
-	19, // 36: recordcollection.RecordCollectionService.AddRecord:input_type -> recordcollection.AddRecordRequest
-	23, // 37: recordcollection.RecordCollectionService.DeleteRecord:input_type -> recordcollection.DeleteRecordRequest
-	25, // 38: recordcollection.RecordCollectionService.QueryRecords:input_type -> recordcollection.QueryRecordsRequest
-	27, // 39: recordcollection.RecordCollectionService.GetRecord:input_type -> recordcollection.GetRecordRequest
-	29, // 40: recordcollection.RecordCollectionService.Trigger:input_type -> recordcollection.TriggerRequest
-	31, // 41: recordcollection.ClientUpdateService.ClientUpdate:input_type -> recordcollection.ClientUpdateRequest
-	14, // 42: recordcollection.RecordCollectionService.GetWants:output_type -> recordcollection.GetWantsResponse
-	16, // 43: recordcollection.RecordCollectionService.UpdateRecord:output_type -> recordcollection.UpdateRecordsResponse
-	18, // 44: recordcollection.RecordCollectionService.UpdateWant:output_type -> recordcollection.UpdateWantResponse
-	20, // 45: recordcollection.RecordCollectionService.AddRecord:output_type -> recordcollection.AddRecordResponse
-	24, // 46: recordcollection.RecordCollectionService.DeleteRecord:output_type -> recordcollection.DeleteRecordResponse
-	26, // 47: recordcollection.RecordCollectionService.QueryRecords:output_type -> recordcollection.QueryRecordsResponse
-	28, // 48: recordcollection.RecordCollectionService.GetRecord:output_type -> recordcollection.GetRecordResponse
-	30, // 49: recordcollection.RecordCollectionService.Trigger:output_type -> recordcollection.TriggerResponse
-	32, // 50: recordcollection.ClientUpdateService.ClientUpdate:output_type -> recordcollection.ClientUpdateResponse
-	42, // [42:51] is the sub-list for method output_type
-	33, // [33:42] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	5,  // 0: recordcollection.Updates.updates:type_name -> recordcollection.RecordUpdate
+	8,  // 1: recordcollection.RecordUpdate.update:type_name -> recordcollection.Record
+	8,  // 2: recordcollection.RecordCollection.records:type_name -> recordcollection.Record
+	42, // 3: recordcollection.RecordCollection.wants:type_name -> godiscogs.Release
+	9,  // 4: recordcollection.RecordCollection.new_wants:type_name -> recordcollection.Want
+	35, // 5: recordcollection.RecordCollection.instance_to_folder:type_name -> recordcollection.RecordCollection.InstanceToFolderEntry
+	36, // 6: recordcollection.RecordCollection.instance_to_update:type_name -> recordcollection.RecordCollection.InstanceToUpdateEntry
+	37, // 7: recordcollection.RecordCollection.instance_to_category:type_name -> recordcollection.RecordCollection.InstanceToCategoryEntry
+	38, // 8: recordcollection.RecordCollection.instance_to_master:type_name -> recordcollection.RecordCollection.InstanceToMasterEntry
+	39, // 9: recordcollection.RecordCollection.instance_to_id:type_name -> recordcollection.RecordCollection.InstanceToIdEntry
+	40, // 10: recordcollection.RecordCollection.instance_to_recache:type_name -> recordcollection.RecordCollection.InstanceToRecacheEntry
+	41, // 11: recordcollection.RecordCollection.instance_to_last_sale_price_update:type_name -> recordcollection.RecordCollection.InstanceToLastSalePriceUpdateEntry
+	8,  // 12: recordcollection.AllRecords.records:type_name -> recordcollection.Record
+	42, // 13: recordcollection.Record.release:type_name -> godiscogs.Release
+	12, // 14: recordcollection.Record.metadata:type_name -> recordcollection.ReleaseMetadata
+	42, // 15: recordcollection.Want.release:type_name -> godiscogs.Release
+	10, // 16: recordcollection.Want.metadata:type_name -> recordcollection.WantMetadata
+	1,  // 17: recordcollection.ReleaseMetadata.category:type_name -> recordcollection.ReleaseMetadata.Category
+	0,  // 18: recordcollection.ReleaseMetadata.purgatory:type_name -> recordcollection.Purgatory
+	43, // 19: recordcollection.ReleaseMetadata.sale_state:type_name -> godiscogs.SaleState
+	2,  // 20: recordcollection.ReleaseMetadata.keep:type_name -> recordcollection.ReleaseMetadata.KeepState
+	3,  // 21: recordcollection.ReleaseMetadata.match:type_name -> recordcollection.ReleaseMetadata.MatchState
+	8,  // 22: recordcollection.GetRecordsRequest.filter:type_name -> recordcollection.Record
+	8,  // 23: recordcollection.GetRecordsResponse.records:type_name -> recordcollection.Record
+	9,  // 24: recordcollection.GetWantsRequest.filter:type_name -> recordcollection.Want
+	9,  // 25: recordcollection.GetWantsResponse.wants:type_name -> recordcollection.Want
+	8,  // 26: recordcollection.UpdateRecordRequest.update:type_name -> recordcollection.Record
+	8,  // 27: recordcollection.UpdateRecordsResponse.updated:type_name -> recordcollection.Record
+	9,  // 28: recordcollection.UpdateWantRequest.update:type_name -> recordcollection.Want
+	9,  // 29: recordcollection.UpdateWantResponse.updated:type_name -> recordcollection.Want
+	8,  // 30: recordcollection.AddRecordRequest.to_add:type_name -> recordcollection.Record
+	8,  // 31: recordcollection.AddRecordResponse.added:type_name -> recordcollection.Record
+	1,  // 32: recordcollection.QueryRecordsRequest.category:type_name -> recordcollection.ReleaseMetadata.Category
+	8,  // 33: recordcollection.GetRecordResponse.record:type_name -> recordcollection.Record
+	1,  // 34: recordcollection.RecordCollection.InstanceToCategoryEntry.value:type_name -> recordcollection.ReleaseMetadata.Category
+	15, // 35: recordcollection.RecordCollectionService.GetWants:input_type -> recordcollection.GetWantsRequest
+	17, // 36: recordcollection.RecordCollectionService.UpdateRecord:input_type -> recordcollection.UpdateRecordRequest
+	19, // 37: recordcollection.RecordCollectionService.UpdateWant:input_type -> recordcollection.UpdateWantRequest
+	21, // 38: recordcollection.RecordCollectionService.AddRecord:input_type -> recordcollection.AddRecordRequest
+	25, // 39: recordcollection.RecordCollectionService.DeleteRecord:input_type -> recordcollection.DeleteRecordRequest
+	27, // 40: recordcollection.RecordCollectionService.QueryRecords:input_type -> recordcollection.QueryRecordsRequest
+	29, // 41: recordcollection.RecordCollectionService.GetRecord:input_type -> recordcollection.GetRecordRequest
+	31, // 42: recordcollection.RecordCollectionService.Trigger:input_type -> recordcollection.TriggerRequest
+	33, // 43: recordcollection.ClientUpdateService.ClientUpdate:input_type -> recordcollection.ClientUpdateRequest
+	16, // 44: recordcollection.RecordCollectionService.GetWants:output_type -> recordcollection.GetWantsResponse
+	18, // 45: recordcollection.RecordCollectionService.UpdateRecord:output_type -> recordcollection.UpdateRecordsResponse
+	20, // 46: recordcollection.RecordCollectionService.UpdateWant:output_type -> recordcollection.UpdateWantResponse
+	22, // 47: recordcollection.RecordCollectionService.AddRecord:output_type -> recordcollection.AddRecordResponse
+	26, // 48: recordcollection.RecordCollectionService.DeleteRecord:output_type -> recordcollection.DeleteRecordResponse
+	28, // 49: recordcollection.RecordCollectionService.QueryRecords:output_type -> recordcollection.QueryRecordsResponse
+	30, // 50: recordcollection.RecordCollectionService.GetRecord:output_type -> recordcollection.GetRecordResponse
+	32, // 51: recordcollection.RecordCollectionService.Trigger:output_type -> recordcollection.TriggerResponse
+	34, // 52: recordcollection.ClientUpdateService.ClientUpdate:output_type -> recordcollection.ClientUpdateResponse
+	44, // [44:53] is the sub-list for method output_type
+	35, // [35:44] is the sub-list for method input_type
+	35, // [35:35] is the sub-list for extension type_name
+	35, // [35:35] is the sub-list for extension extendee
+	0,  // [0:35] is the sub-list for field type_name
 }
 
 func init() { file_recordcollection_proto_init() }
@@ -2970,7 +3096,7 @@ func file_recordcollection_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_recordcollection_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*RecordCollection); i {
+			switch v := v.(*Updates); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2982,7 +3108,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AllRecords); i {
+			switch v := v.(*RecordUpdate); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -2994,7 +3120,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Record); i {
+			switch v := v.(*RecordCollection); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3006,7 +3132,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Want); i {
+			switch v := v.(*AllRecords); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3018,7 +3144,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*WantMetadata); i {
+			switch v := v.(*Record); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3030,7 +3156,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Token); i {
+			switch v := v.(*Want); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3042,7 +3168,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ReleaseMetadata); i {
+			switch v := v.(*WantMetadata); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3054,7 +3180,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRecordsRequest); i {
+			switch v := v.(*Token); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3066,7 +3192,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRecordsResponse); i {
+			switch v := v.(*ReleaseMetadata); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3078,7 +3204,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetWantsRequest); i {
+			switch v := v.(*GetRecordsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3090,7 +3216,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetWantsResponse); i {
+			switch v := v.(*GetRecordsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3102,7 +3228,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateRecordRequest); i {
+			switch v := v.(*GetWantsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3114,7 +3240,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateRecordsResponse); i {
+			switch v := v.(*GetWantsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3126,7 +3252,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateWantRequest); i {
+			switch v := v.(*UpdateRecordRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3138,7 +3264,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*UpdateWantResponse); i {
+			switch v := v.(*UpdateRecordsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3150,7 +3276,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddRecordRequest); i {
+			switch v := v.(*UpdateWantRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3162,7 +3288,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*AddRecordResponse); i {
+			switch v := v.(*UpdateWantResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3174,7 +3300,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRecordCollectionRequest); i {
+			switch v := v.(*AddRecordRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3186,7 +3312,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRecordCollectionResponse); i {
+			switch v := v.(*AddRecordResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3198,7 +3324,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteRecordRequest); i {
+			switch v := v.(*GetRecordCollectionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3210,7 +3336,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteRecordResponse); i {
+			switch v := v.(*GetRecordCollectionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3222,7 +3348,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryRecordsRequest); i {
+			switch v := v.(*DeleteRecordRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3234,7 +3360,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryRecordsResponse); i {
+			switch v := v.(*DeleteRecordResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3246,7 +3372,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRecordRequest); i {
+			switch v := v.(*QueryRecordsRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3258,7 +3384,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRecordResponse); i {
+			switch v := v.(*QueryRecordsResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3270,7 +3396,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TriggerRequest); i {
+			switch v := v.(*GetRecordRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3282,7 +3408,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*TriggerResponse); i {
+			switch v := v.(*GetRecordResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3294,7 +3420,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[27].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientUpdateRequest); i {
+			switch v := v.(*TriggerRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -3306,6 +3432,30 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[28].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*TriggerResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_recordcollection_proto_msgTypes[29].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ClientUpdateRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_recordcollection_proto_msgTypes[30].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ClientUpdateResponse); i {
 			case 0:
 				return &v.state
@@ -3318,7 +3468,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 	}
-	file_recordcollection_proto_msgTypes[21].OneofWrappers = []interface{}{
+	file_recordcollection_proto_msgTypes[23].OneofWrappers = []interface{}{
 		(*QueryRecordsRequest_FolderId)(nil),
 		(*QueryRecordsRequest_UpdateTime)(nil),
 		(*QueryRecordsRequest_Category)(nil),
@@ -3332,7 +3482,7 @@ func file_recordcollection_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_recordcollection_proto_rawDesc,
 			NumEnums:      4,
-			NumMessages:   36,
+			NumMessages:   38,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
