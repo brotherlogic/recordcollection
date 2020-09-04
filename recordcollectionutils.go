@@ -586,7 +586,7 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 		}
 
 		if !found {
-			w.GetMetadata().Active = false
+			w.Metadata = &pb.WantMetadata{Active: false}
 		}
 	}
 
