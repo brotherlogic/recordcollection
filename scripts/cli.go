@@ -44,21 +44,13 @@ func main() {
 
 		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
 		for i, id := range ids.GetInstanceIds() {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: false})
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: true})
 			if err != nil {
-				time.Sleep(time.Minute)
-				r, err = registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: false})
-				if err != nil {
-					log.Fatalf("Bad pull: %v", err)
-				}
+				log.Fatalf("Bad pull: %v", err)
 			}
 
-			if r.GetRecord().GetRelease().GetFolderId() == 812802 || r.GetRecord().GetRelease().GetFolderId() == 267116 {
-				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastStockCheck(), 0)) > time.Hour*2 {
-					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "trigger", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}})
-					fmt.Printf("%v. %v -> %v\n", i, r.GetRecord().GetRelease().GetTitle(), err)
-					time.Sleep(time.Second * 5)
-				}
+			if r.GetRecord().GetRelease().GetFolderId() == int32(242017) && r.GetRecord().GetMetadata().GetMatch() == pbrc.ReleaseMetadata_FULL_MATCH {
+				fmt.Printf("%v. %v - %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
 			}
 		}
 
