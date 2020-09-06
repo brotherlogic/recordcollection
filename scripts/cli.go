@@ -34,7 +34,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "fix":
-		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*3, true)
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
 		defer cancel()
 
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
@@ -42,16 +42,27 @@ func main() {
 			log.Fatalf("Bad query: %v", err)
 		}
 
-		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
 		for i, id := range ids.GetInstanceIds() {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id, Validate: true})
+			ctx2, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
+			conn2, err := utils.LFDialServer(ctx2, "recordcollection")
+			if err != nil {
+				log.Fatalf("Cannot reach rc: %v", err)
+			}
+
+			registry2 := pbrc.NewRecordCollectionServiceClient(conn2)
+
+			r, err := registry2.GetRecord(ctx2, &pbrc.GetRecordRequest{InstanceId: id, Validate: true})
 			if err != nil {
 				log.Fatalf("Bad pull: %v", err)
 			}
 
-			if r.GetRecord().GetRelease().GetFolderId() == int32(242017) && r.GetRecord().GetMetadata().GetMatch() == pbrc.ReleaseMetadata_FULL_MATCH {
-				fmt.Printf("%v. %v - %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+			if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*24 {
+				_, err := registry2.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "cold", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
+				log.Printf("%v. Update %v -> %v", i, id, err)
+				time.Sleep(time.Second * 26)
 			}
+			conn2.Close()
+			cancel2()
 		}
 
 	case "retrospective":
