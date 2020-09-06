@@ -202,6 +202,13 @@ func (s *Server) runUpdateFanout() {
 		}
 		cancel()
 
+		//Attemp to update the record
+		record, err := s.loadRecord(ctx, id, false)
+		if err == nil {
+			rec.GetMetadata().LastUpdateTime = time.Now().Unix()
+			s.saveRecord(ctx, record)
+		}
+
 		ecancel()
 		updateFanout.Set(float64(len(s.updateFanout)))
 		updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
