@@ -221,7 +221,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	s.testForLabels(ctx, rec, request, hasLabels)
-	rec.GetMetadata().LastUpdateTime = time.Now().Unix()
 
 	if !rec.GetMetadata().Dirty && (rec.GetMetadata().GetMoveFolder() != 0 || rec.GetMetadata().GetSetRating() != 0) {
 		rec.GetMetadata().Dirty = true
