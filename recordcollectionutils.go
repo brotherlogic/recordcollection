@@ -203,9 +203,9 @@ func (s *Server) runUpdateFanout() {
 		cancel()
 
 		//Attemp to update the record
-		record, err := s.loadRecord(ctx, id, false)
+		record, err = s.loadRecord(ctx, id, false)
 		if err == nil {
-			rec.GetMetadata().LastUpdateTime = time.Now().Unix()
+			record.GetMetadata().LastUpdateTime = time.Now().Unix()
 			s.saveRecord(ctx, record)
 		}
 
