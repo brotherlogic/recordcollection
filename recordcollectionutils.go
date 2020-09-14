@@ -45,6 +45,8 @@ var (
 
 func (s *Server) runUpdateFanout() {
 	for id := range s.updateFanout {
+		s.Log(fmt.Sprintf("Running fanout for %v", id))
+
 		s.repeatCount[id]++
 		if s.repeatCount[id] > 10 {
 			//s.RaiseIssue(fmt.Sprintf("%v cannot be updated", id), fmt.Sprintf("Last error was %v", s.repeatError[id]))
