@@ -73,6 +73,7 @@ func main() {
 				}
 				log.Printf("%v. %v -> %v [%v]", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), err)
 			}
+
 			conn2.Close()
 			conn3.Close()
 			cancel2()
