@@ -337,7 +337,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 		}
 
 		st := status.Convert(err)
-		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable && st.Code() != codes.Canceled && st.Code() != codes.OutOfRange {
+		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable && st.Code() != codes.Canceled && st.Code() != codes.OutOfRange && st.Code() != codes.NotFound {
 			s.Log(fmt.Sprintf("Bad receive: %v", req))
 			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, ctx))
 		}
