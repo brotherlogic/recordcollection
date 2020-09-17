@@ -37,6 +37,10 @@ var (
 		Name: "recordcollection_recordfolder",
 		Help: "The size of each folder",
 	}, []string{"folder"})
+	updateIn = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "recordcollection_update_in",
+		Help: "Last update time",
+	}, []string{"status"})
 )
 
 type quotaChecker interface {
@@ -221,6 +225,20 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	sizes.With(prometheus.Labels{"map": "update"}).Set(float64(len(collection.GetInstanceToUpdate())))
 	sizes.With(prometheus.Labels{"map": "category"}).Set(float64(len(collection.GetInstanceToCategory())))
 	sizes.With(prometheus.Labels{"map": "folder"}).Set(float64(len(collection.GetInstanceToFolder())))
+	sizes.With(prometheus.Labels{"map": "updatein"}).Set(float64(len(collection.GetInstanceToUpdateIn())))
+
+	minT := time.Now().Unix()
+	maxT := int64(0)
+	for _, up := range collection.GetInstanceToUpdateIn() {
+		if up < minT {
+			minT = up
+		}
+		if up > maxT {
+			maxT = up
+		}
+	}
+	updateIn.With(prometheus.Labels{"status": "max"}).Set(float64(maxT))
+	updateIn.With(prometheus.Labels{"status": "min"}).Set(float64(minT))
 
 	count := 0
 	for _, w := range collection.GetNewWants() {
@@ -295,6 +313,12 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] = r.GetMetadata().GetSalePriceUpdate()
 		save = true
 	}
+
+	if collection.GetInstanceToUpdateIn()[r.GetRelease().InstanceId] != r.GetMetadata().GetLastUpdateIn() {
+		collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] = r.GetMetadata().GetLastUpdateIn()
+		save = true
+	}
+
 	if r.GetMetadata().SaleDirty {
 		collection.SaleUpdates = append(collection.SaleUpdates, r.GetRelease().GetInstanceId())
 	}

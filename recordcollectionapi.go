@@ -225,6 +225,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if !rec.GetMetadata().Dirty && (rec.GetMetadata().GetMoveFolder() != 0 || rec.GetMetadata().GetSetRating() != 0) {
 		rec.GetMetadata().Dirty = true
 	}
+
+	//Reset the update in value
+	rec.GetMetadata().LastUpdateIn = time.Now().Unix()
 	err = s.saveRecord(ctx, rec)
 
 	s.updateFanout <- rec.GetRelease().GetInstanceId()
