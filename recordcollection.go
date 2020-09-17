@@ -209,6 +209,10 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 		collection.InstanceToUpdate = make(map[int32]int64)
 	}
 
+	if collection.InstanceToUpdateIn == nil {
+		collection.InstanceToUpdateIn = make(map[int32]int64)
+	}
+
 	if collection.InstanceToCategory == nil {
 		collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
 	}
