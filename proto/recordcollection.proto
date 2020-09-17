@@ -24,6 +24,7 @@ message RecordCollection {
   int64 collection_number = 5;
   map<int32, int32> instance_to_folder = 6;
   map<int32, int64> instance_to_update = 7;
+  map<int32, int64> instance_to_update_in = 18;
   map<int32, ReleaseMetadata.Category> instance_to_category = 8;
   map<int32, int32> instance_to_master = 9;
   map<int32, int32> instance_to_id = 10;
@@ -240,6 +241,8 @@ message ReleaseMetadata {
   int64 last_info_update = 42;
 
   int32 sale_attempts = 44;
+
+  int64 last_update_in = 45;
 }
 
 // A request to get some records
