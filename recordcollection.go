@@ -248,12 +248,13 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 
 	minT := time.Now().Unix()
 	maxT := int64(0)
-	for _, up := range collection.GetInstanceToUpdateIn() {
-		if up < minT {
-			minT = up
+	for iid, up := range collection.GetInstanceToUpdateIn() {
+		value := collection.GetInstanceToUpdate()[iid] - up
+		if value < minT {
+			minT = value
 		}
-		if up > maxT {
-			maxT = up
+		if value > maxT {
+			maxT = value
 		}
 	}
 	updateIn.With(prometheus.Labels{"status": "max"}).Set(float64(maxT))
