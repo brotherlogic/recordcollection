@@ -246,7 +246,7 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 	sizes.With(prometheus.Labels{"map": "folder"}).Set(float64(len(collection.GetInstanceToFolder())))
 	sizes.With(prometheus.Labels{"map": "updatein"}).Set(float64(len(collection.GetInstanceToUpdateIn())))
 
-	minT := int64(0)
+	minT := time.Now().Unix()
 	maxT := int64(0)
 	for iid, up := range collection.GetInstanceToUpdateIn() {
 		value := collection.GetInstanceToUpdate()[iid] - up
