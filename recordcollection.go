@@ -225,6 +225,21 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 		collection.OldestRecord = time.Now().Unix()
 	}
 
+	s.updateMetrics(collection)
+
+	count := 0
+	for _, w := range collection.GetNewWants() {
+		if w.GetMetadata().GetActive() {
+			count++
+		}
+	}
+	wants.With(prometheus.Labels{"active": "true"}).Set(float64(count))
+	wants.With(prometheus.Labels{"active": "false"}).Set(float64(len(collection.GetNewWants()) - count))
+
+	return collection, nil
+}
+
+func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 	sizes.With(prometheus.Labels{"map": "master"}).Set(float64(len(collection.GetInstanceToMaster())))
 	sizes.With(prometheus.Labels{"map": "update"}).Set(float64(len(collection.GetInstanceToUpdate())))
 	sizes.With(prometheus.Labels{"map": "category"}).Set(float64(len(collection.GetInstanceToCategory())))
@@ -243,20 +258,10 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	}
 	updateIn.With(prometheus.Labels{"status": "max"}).Set(float64(maxT))
 	updateIn.With(prometheus.Labels{"status": "min"}).Set(float64(minT))
-
-	count := 0
-	for _, w := range collection.GetNewWants() {
-		if w.GetMetadata().GetActive() {
-			count++
-		}
-	}
-	wants.With(prometheus.Labels{"active": "true"}).Set(float64(count))
-	wants.With(prometheus.Labels{"active": "false"}).Set(float64(len(collection.GetNewWants()) - count))
-
-	return collection, nil
 }
 
 func (s *Server) saveRecordCollection(ctx context.Context, collection *pb.RecordCollection) error {
+	s.updateMetrics(collection)
 	return s.KSclient.Save(ctx, KEY, collection)
 }
 
