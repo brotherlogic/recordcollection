@@ -26,6 +26,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	delete(collection.InstanceToMaster, request.InstanceId)
 	delete(collection.InstanceToCategory, request.InstanceId)
 	delete(collection.InstanceToId, request.InstanceId)
+	delete(collection.InstanceToUpdateIn, request.InstanceId)
 
 	betterDelete := []int32{}
 	for _, val := range collection.NeedsPush {
@@ -35,6 +36,9 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	}
 
 	rec, err := s.loadRecord(ctx, request.GetInstanceId(), false)
+	if status.Convert(err).Code() == codes.OutOfRange {
+		return &pb.DeleteRecordResponse{}, s.saveRecordCollection(ctx, collection)
+	}
 	if err != nil {
 		return nil, err
 	}
