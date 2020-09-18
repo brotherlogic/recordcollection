@@ -19,6 +19,7 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
+	"github.com/brotherlogic/goserver/utils"
 	pbks "github.com/brotherlogic/keystore/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
@@ -571,7 +572,8 @@ func main() {
 	server.disableSales = false
 
 	tType := &pb.Token{}
-	tResp, _, err := server.KSclient.Read(context.Background(), TOKEN, tType)
+	ctx, cancel := utils.ManualContext("rci", "rci", time.Minute, false)
+	tResp, _, err := server.KSclient.Read(ctx, TOKEN, tType)
 	if err != nil {
 		log.Fatalf("Unable to read discogs token")
 	}
@@ -583,5 +585,21 @@ func main() {
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
 
 	go server.runUpdateFanout()
+
+	// Seed the fanout queue with some records that need an update
+	stop, err := server.Elect()
+	if err != nil {
+		log.Fatalf("Bad election: %v", err)
+	}
+
+	collection, err := server.readRecordCollection(ctx)
+	for id, val := range collection.GetInstanceToUpdateIn() {
+		if collection.GetInstanceToUpdate()[id]-val < 0 && len(server.updateFanout) < 50 {
+			server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
+		}
+	}
+	cancel()
+	stop()
+
 	server.Serve()
 }
