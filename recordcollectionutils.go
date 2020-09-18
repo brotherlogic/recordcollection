@@ -576,6 +576,7 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 	wants, _ := s.retr.GetWantlist()
 
 	for _, want := range wants {
+
 		found := false
 		for _, w := range collection.GetNewWants() {
 			if w.GetRelease().Id == want.Id {
@@ -584,6 +585,10 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 				w.Metadata = &pb.WantMetadata{Active: true}
 			}
 		}
+		if want.Id == 2732144 {
+			s.Log(fmt.Sprintf("FOUND ORIG WANT: %v, %v", want, found))
+		}
+
 		if !found {
 			collection.NewWants = append(collection.NewWants, &pb.Want{Release: want, Metadata: &pb.WantMetadata{Active: true}})
 		}
@@ -599,10 +604,6 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 
 		if !found {
 			w.Metadata = &pb.WantMetadata{Active: false}
-		}
-
-		if w.GetRelease().Id == 2732144 {
-			s.Log(fmt.Sprintf("FOUND WANT: %v, %v", w, found))
 		}
 
 	}
