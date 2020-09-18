@@ -606,7 +606,7 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 
 		if w.GetRelease().Id == 2732144 {
 			time.Sleep(time.Second * 2)
-			s.Log(fmt.Sprintf("FOUND EXIST WANT: %v, %v", w, found))
+			s.Log(fmt.Sprintf("FOUND EXIST WANT: %v, %v (FROM %v)", w, found, len(wants)))
 			time.Sleep(time.Second * 2)
 		}
 
