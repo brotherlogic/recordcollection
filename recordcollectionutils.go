@@ -598,7 +598,7 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 	}
 
 	time.Sleep(time.Second * 2)
-	s.Log(fmt.Sprintf("WANT WHAT 2732144: %v, %v (%v)", wants[0], wants[1], len(wants)))
+	s.Log(fmt.Sprintf("WANT WHAT 2732144: %v, %v (%v)", wants[0], wants, len(wants)))
 	time.Sleep(time.Second * 2)
 
 	for _, w := range collection.GetNewWants() {
