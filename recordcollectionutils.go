@@ -600,6 +600,11 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 		if !found {
 			w.Metadata = &pb.WantMetadata{Active: false}
 		}
+
+		if w.GetRelease().Id == 2732144 {
+			s.Log(fmt.Sprintf("FOUND WANT: %v, %v", w, found))
+		}
+
 	}
 
 	return s.saveRecordCollection(ctx, collection)
