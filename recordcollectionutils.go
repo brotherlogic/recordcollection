@@ -86,7 +86,8 @@ func (s *Server) runUpdateFanout() {
 		t = time.Now()
 		err = s.syncWantlist(ctx)
 		s.Log(fmt.Sprintf("Error pulling wantlist: %v", err))
-		loopLatency.With(prometheus.Labels{"method": "syncwant", "error": fmt.Sprintf("%v", err)}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
+		updateFanoutFailure.With(prometheus.Labels{"server": "syncwants", "error": fmt.Sprintf("%v", err)}).Inc()
+		loopLatency.With(prometheus.Labels{"method": "syncwant"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 
 		// Perform a discogs update if needed
 		if time.Now().Sub(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
