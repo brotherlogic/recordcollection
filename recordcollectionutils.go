@@ -207,12 +207,12 @@ func (s *Server) runUpdateFanout() {
 		cancel()
 
 		//Attemp to update the record
+		ctx, cancel = utils.ManualContext("rc-fw", "rc-fw", time.Minute, true)
 		record, err = s.loadRecord(ctx, id, false)
 		if err == nil {
 			record.GetMetadata().LastUpdateTime = time.Now().Unix()
 			s.saveRecord(ctx, record)
 		}
-
 		s.Log(fmt.Sprintf("Ran fanout for %v at %v with %v", id, time.Now(), err))
 
 		ecancel()
