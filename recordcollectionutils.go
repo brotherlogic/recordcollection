@@ -211,6 +211,8 @@ func (s *Server) runUpdateFanout() {
 			s.saveRecord(ctx, record)
 		}
 
+		s.Log(fmt.Sprintf("Ran fanout for %v at %v with %v", id, time.Now(), err))
+
 		ecancel()
 		updateFanout.Set(float64(len(s.updateFanout)))
 		updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
