@@ -84,7 +84,7 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		t = time.Now()
-		err := s.syncWantlist(ctx)
+		err = s.syncWantlist(ctx)
 		s.Log(fmt.Sprintf("Error pulling wantlist: %v", err))
 		loopLatency.With(prometheus.Labels{"method": "syncwant", "error": fmt.Sprintf("%v", err)}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 
