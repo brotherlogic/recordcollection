@@ -363,7 +363,6 @@ func (s *Server) updateWant(w *pb.Want) bool {
 
 	if w.EnableWant {
 		err := s.retr.AddToWantlist(int(w.GetRelease().Id))
-		time.Sleep(time.Second * 2)
 		s.Log(fmt.Sprintf("ADDED TO WANTLIST (%v) -> %v: %v", w.GetRelease().Id, err, w))
 		w.EnableWant = false
 		w.GetMetadata().Active = true
@@ -586,20 +585,10 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 			}
 		}
 
-		if want.Id == 2732144 {
-			time.Sleep(time.Second * 2)
-			s.Log(fmt.Sprintf("FOUND ORIG WANT: %v, %v", want, found))
-			time.Sleep(time.Second * 2)
-		}
-
 		if !found {
 			collection.NewWants = append(collection.NewWants, &pb.Want{Release: want, Metadata: &pb.WantMetadata{Active: true}})
 		}
 	}
-
-	time.Sleep(time.Second * 2)
-	s.Log(fmt.Sprintf("WANT WHAT 2732144: %v, %v (%v)", wants[0], wants, len(wants)))
-	time.Sleep(time.Second * 2)
 
 	for _, w := range collection.GetNewWants() {
 		found := false
@@ -607,12 +596,6 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 			if w.GetRelease().Id == want.Id {
 				found = true
 			}
-		}
-
-		if w.GetRelease().Id == 2732144 {
-			time.Sleep(time.Second * 2)
-			s.Log(fmt.Sprintf("FOUND EXIST WANT: %v, %v (FROM %v -> %v)", w, found, len(wants), len(collection.GetNewWants())))
-			time.Sleep(time.Second * 2)
 		}
 
 		if !found {
