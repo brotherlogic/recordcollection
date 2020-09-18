@@ -585,6 +585,7 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 				w.Metadata = &pb.WantMetadata{Active: true}
 			}
 		}
+
 		if want.Id == 2732144 {
 			time.Sleep(time.Second * 2)
 			s.Log(fmt.Sprintf("FOUND ORIG WANT: %v, %v", want, found))
@@ -597,7 +598,7 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 	}
 
 	time.Sleep(time.Second * 2)
-	s.Log(fmt.Sprintf("WANT WHAT 2732144: %v, %v", wants[0], wants[1]))
+	s.Log(fmt.Sprintf("WANT WHAT 2732144: %v, %v (%v)", wants[0], wants[1], len(wants)))
 	time.Sleep(time.Second * 2)
 
 	for _, w := range collection.GetNewWants() {
