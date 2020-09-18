@@ -586,7 +586,9 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 			}
 		}
 		if want.Id == 2732144 {
+			time.Sleep(time.Second * 2)
 			s.Log(fmt.Sprintf("FOUND ORIG WANT: %v, %v", want, found))
+			time.Sleep(time.Second * 2)
 		}
 
 		if !found {
@@ -600,6 +602,12 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 			if w.GetRelease().Id == want.Id {
 				found = true
 			}
+		}
+
+		if w.GetRelease().Id == 2732144 {
+			time.Sleep(time.Second * 2)
+			s.Log(fmt.Sprintf("FOUND EXIST WANT: %v, %v", w, found))
+			time.Sleep(time.Second * 2)
 		}
 
 		if !found {
