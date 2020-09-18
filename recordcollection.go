@@ -593,8 +593,8 @@ func main() {
 	}
 
 	collection, err := server.readRecordCollection(ctx)
-	for id, val := range collection.GetInstanceToUpdateIn() {
-		if collection.GetInstanceToUpdate()[id]-val < 0 && len(server.updateFanout) < 50 {
+	for id, _ := range collection.GetInstanceToUpdate() {
+		if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
 			server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
 		}
 	}
