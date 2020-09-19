@@ -592,7 +592,7 @@ func main() {
 		log.Fatalf("Bad election: %v", err)
 	}
 
-	ctx, cancel := utils.ManualContext("rci", "rci", time.Minute, false)
+	ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
 	collection, err := server.readRecordCollection(ctx)
 	if err != nil {
 		log.Fatalf("Unable to read collection: %v", err)
