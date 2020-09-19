@@ -167,6 +167,7 @@ func (s *Server) runUpdateFanout() {
 			}
 		}
 
+		failed := false
 		for _, server := range s.fanoutServers {
 			t = time.Now()
 			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute*30, true)
@@ -177,6 +178,7 @@ func (s *Server) runUpdateFanout() {
 				s.Log(fmt.Sprintf("Bad dial of %v -> %v", server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
+				failed = true
 				break
 			}
 
@@ -189,6 +191,7 @@ func (s *Server) runUpdateFanout() {
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- id
 				conn.Close()
+				failed = true
 				break
 			}
 
@@ -196,30 +199,33 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 		}
 
-		t = time.Now()
-		ctx, cancel = utils.ManualContext("rc-pw", "rc-pw", time.Minute*10, true)
-		collection, err := s.readRecordCollection(ctx)
-		if err == nil {
-			err = s.pushWants(ctx, collection)
-			loopLatency.With(prometheus.Labels{"method": "pushwants"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
-			if err != nil {
-				s.Log(fmt.Sprintf("Unable to push wants: %v", err))
+		if !failed {
+			t = time.Now()
+			ctx, cancel = utils.ManualContext("rc-pw", "rc-pw", time.Minute*10, true)
+			collection, err := s.readRecordCollection(ctx)
+			if err == nil {
+				err = s.pushWants(ctx, collection)
+				loopLatency.With(prometheus.Labels{"method": "pushwants"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
+				if err != nil {
+					s.Log(fmt.Sprintf("Unable to push wants: %v", err))
+				}
 			}
-		}
-		cancel()
+			cancel()
 
-		//Attemp to update the record
-		ctx, cancel = utils.ManualContext("rc-fw", "rc-fw", time.Minute, true)
-		record, err = s.loadRecord(ctx, id, false)
-		if err == nil {
-			record.GetMetadata().LastUpdateTime = time.Now().Unix()
-			s.saveRecord(ctx, record)
+			//Attemp to update the record
+			ctx, cancel = utils.ManualContext("rc-fw", "rc-fw", time.Minute, true)
+			record, err = s.loadRecord(ctx, id, false)
+			if err == nil {
+				record.GetMetadata().LastUpdateTime = time.Now().Unix()
+				s.saveRecord(ctx, record)
+			}
+			s.Log(fmt.Sprintf("Ran fanout for %v at %v with %v", id, time.Now(), err))
+
+			updateFanout.Set(float64(len(s.updateFanout)))
+			updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
 		}
-		s.Log(fmt.Sprintf("Ran fanout for %v at %v with %v", id, time.Now(), err))
 
 		ecancel()
-		updateFanout.Set(float64(len(s.updateFanout)))
-		updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
 		time.Sleep(time.Second)
 	}
 }
