@@ -585,11 +585,14 @@ func main() {
 	go server.runUpdateFanout()
 
 	// Seed the fanout queue with some records that need an update
+	cancel()
+
 	stop, err := server.Elect()
 	if err != nil {
 		log.Fatalf("Bad election: %v", err)
 	}
 
+	ctx, cancel := utils.ManualContext("rci", "rci", time.Minute, false)
 	collection, err := server.readRecordCollection(ctx)
 	if err != nil {
 		log.Fatalf("Unable to read collection: %v", err)
