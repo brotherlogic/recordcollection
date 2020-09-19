@@ -592,7 +592,7 @@ func main() {
 
 	collection, err := server.readRecordCollection(ctx)
 	if err != nil {
-		log.Falatf("Unable to read collection: %v", err)
+		log.Fatalf("Unable to read collection: %v", err)
 	}
 	for id, _ := range collection.GetInstanceToUpdate() {
 		if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
