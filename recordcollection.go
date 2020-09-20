@@ -210,9 +210,9 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 		collection.InstanceToUpdate = make(map[int32]int64)
 	}
 
-	//if collection.InstanceToUpdateIn == nil {
-	//	collection.InstanceToUpdateIn = make(map[int32]int64)
-	//}
+	if collection.InstanceToUpdateIn == nil {
+		collection.InstanceToUpdateIn = make(map[int32]int64)
+	}
 
 	if collection.InstanceToCategory == nil {
 		collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
@@ -264,6 +264,9 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 
 func (s *Server) saveRecordCollection(ctx context.Context, collection *pb.RecordCollection) error {
 	s.updateMetrics(collection)
+	if len(collection.GetInstanceToUpdateIn()) == 0 {
+		return fmt.Errorf("Unable to save with empty update in")
+	}
 	return s.KSclient.Save(ctx, KEY, collection)
 }
 
