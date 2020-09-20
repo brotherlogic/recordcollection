@@ -634,6 +634,7 @@ func (s *Server) pushWants(ctx context.Context, collection *pb.RecordCollection)
 	for _, w := range collection.NewWants {
 		if (w.GetMetadata().GetActive() && w.GetClearWant()) || (!w.GetMetadata().GetActive() && w.GetEnableWant()) {
 			s.updateWant(w)
+			time.Sleep(time.Second)
 		}
 	}
 
