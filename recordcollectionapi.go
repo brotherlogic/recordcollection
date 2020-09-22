@@ -360,3 +360,9 @@ func (s *Server) Trigger(ctx context.Context, req *pb.TriggerRequest) (*pb.Trigg
 	err := s.runSync(ctx)
 	return nil, err
 }
+
+//GetUpdates to a record
+func (s *Server) GetUpdates(ctx context.Context, req *pb.GetUpdatesRequest) (*pb.GetUpdatesResponse, error) {
+	updates, err := s.loadUpdates(ctx, req.GetInstanceId())
+	return &pb.GetUpdatesResponse{Updates: updates}, err
+}

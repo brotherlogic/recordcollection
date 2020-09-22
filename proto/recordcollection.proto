@@ -354,6 +354,15 @@ message TriggerRequest{
 message TriggerResponse{
 }
 
+message GetUpdatesRequest{
+  int32 instance_id = 1;
+}
+
+message GetUpdatesResponse{
+  Updates updates = 1;
+}
+
+
 service RecordCollectionService {
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
@@ -363,6 +372,7 @@ service RecordCollectionService {
   rpc QueryRecords(QueryRecordsRequest) returns (QueryRecordsResponse) {};
   rpc GetRecord(GetRecordRequest) returns (GetRecordResponse) {};
   rpc Trigger(TriggerRequest) returns (TriggerResponse) {};
+  rpc GetUpdates(GetUpdatesRequest) returns (GetUpdatesResponse) {};
 }
 
 message ClientUpdateRequest{
