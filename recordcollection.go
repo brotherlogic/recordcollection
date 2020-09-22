@@ -266,6 +266,7 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 func (s *Server) saveRecordCollection(ctx context.Context, collection *pb.RecordCollection) error {
 	s.updateMetrics(collection)
 	if len(collection.GetInstanceToUpdateIn()) == 0 {
+		s.Log(fmt.Sprintf("Saving with empty update"))
 		return fmt.Errorf("Unable to save with empty update in")
 	}
 	return s.KSclient.Save(ctx, KEY, collection)
@@ -330,6 +331,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	if collection.GetInstanceToUpdateIn()[r.GetRelease().InstanceId] != r.GetMetadata().GetLastUpdateIn() {
+		s.Log(fmt.Sprintf("Reading with an empty update"))
 		collection.InstanceToUpdateIn[r.GetRelease().InstanceId] = r.GetMetadata().GetLastUpdateIn()
 		save = true
 	}
