@@ -14,6 +14,7 @@ message Updates {
 message RecordUpdate {
   Record update = 2;
   string reason = 3;
+  int64 time = 4;
 }
 
 message RecordCollection {

@@ -134,7 +134,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if code == codes.InvalidArgument {
 		updates = &pb.Updates{Updates: []*pb.RecordUpdate{}}
 	}
-	updates.Updates = append(updates.Updates, &pb.RecordUpdate{Update: request.GetUpdate(), Reason: request.GetReason()})
+	updates.Updates = append(updates.Updates, &pb.RecordUpdate{Update: request.GetUpdate(), Reason: request.GetReason(), Time: time.Now().Unix()})
 	err = s.saveUpdates(ctx, request.GetUpdate().GetRelease().InstanceId, updates)
 	if err != nil {
 		return nil, err
