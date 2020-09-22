@@ -33,6 +33,18 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "updates":
+		i, _ := strconv.Atoi(os.Args[2])
+		res, err := registry.GetUpdates(ctx, &pbrc.GetUpdatesRequest{InstanceId: int32(i)})
+		if err != nil {
+			log.Fatalf("Bad updates: %v", err)
+		}
+		for i, update := range res.GetUpdates().GetUpdates() {
+			fmt.Printf("%v. %v\n", i, update)
+		}
+		if len(res.GetUpdates().GetUpdates()) == 0 {
+			fmt.Printf("No updates for %v\n", i)
+		}
 	case "trigger":
 		res, err := registry.Trigger(ctx, &pbrc.TriggerRequest{})
 		fmt.Printf("%v,%v\n", res, err)

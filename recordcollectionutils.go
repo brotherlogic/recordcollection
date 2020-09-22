@@ -306,10 +306,13 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		s.Log(fmt.Sprintf("Updated sale price: %v -> %v", val.GetRelease().GetInstanceId(), err))
 
 		if err == nil {
+			// Only trip the time if the price has actually changed
+			if val.GetMetadata().GetSalePrice() != val.GetMetadata().GetNewSalePrice() {
+				val.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
+			}
 			val.GetMetadata().SaleDirty = false
 			val.GetMetadata().SalePrice = val.GetMetadata().NewSalePrice
 			val.GetMetadata().NewSalePrice = 0
-			val.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 			err = s.saveRecord(ctx, val)
 		} else {
 			// Unavailable is a valid response from a sales push, as is Failed precondition when we try and update a sold item
