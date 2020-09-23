@@ -214,7 +214,7 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	if collection.InstanceToUpdateIn == nil {
 		s.RaiseIssue("Build reset", fmt.Sprintf("Reset on build for update in: %v", len(collection.InstanceToUpdate)))
 		debug.PrintStack()
-		log.Fatalf("Quitting out")
+		log.Fatalf("Quitting out: %v", collection)
 		collection.InstanceToUpdateIn = make(map[int32]int64)
 	}
 
