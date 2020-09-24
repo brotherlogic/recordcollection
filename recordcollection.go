@@ -250,6 +250,7 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 	sizes.With(prometheus.Labels{"map": "category"}).Set(float64(len(collection.GetInstanceToCategory())))
 	sizes.With(prometheus.Labels{"map": "folder"}).Set(float64(len(collection.GetInstanceToFolder())))
 	sizes.With(prometheus.Labels{"map": "updatein"}).Set(float64(len(collection.GetInstanceToUpdateIn())))
+	sizes.With(prometheus.Labels{"map": "id"}).Set(float64(len(collection.GetInstanceToId())))
 
 	minT := time.Now().Unix()
 	maxT := int64(0)
