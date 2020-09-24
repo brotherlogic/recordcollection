@@ -401,6 +401,9 @@ func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.R
 			if collection.GetInstanceToFolder()[recordToReturn.GetRelease().GetInstanceId()] != recordToReturn.GetRelease().GetFolderId() {
 				s.saveRecord(ctx, recordToReturn)
 			}
+			if collection.GetInstanceToId()[recordToReturn.GetRelease().GetInstanceId()] != recordToReturn.GetRelease().GetId() {
+				s.saveRecord(ctx, recordToReturn)
+			}
 		}
 
 	}
