@@ -250,6 +250,7 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 	sizes.With(prometheus.Labels{"map": "category"}).Set(float64(len(collection.GetInstanceToCategory())))
 	sizes.With(prometheus.Labels{"map": "folder"}).Set(float64(len(collection.GetInstanceToFolder())))
 	sizes.With(prometheus.Labels{"map": "updatein"}).Set(float64(len(collection.GetInstanceToUpdateIn())))
+	sizes.With(prometheus.Labels{"map": "id"}).Set(float64(len(collection.GetInstanceToId())))
 
 	minT := time.Now().Unix()
 	maxT := int64(0)
@@ -399,6 +400,9 @@ func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.R
 
 		if err == nil {
 			if collection.GetInstanceToFolder()[recordToReturn.GetRelease().GetInstanceId()] != recordToReturn.GetRelease().GetFolderId() {
+				s.saveRecord(ctx, recordToReturn)
+			}
+			if collection.GetInstanceToId()[recordToReturn.GetRelease().GetInstanceId()] != recordToReturn.GetRelease().GetId() {
 				s.saveRecord(ctx, recordToReturn)
 			}
 		}
