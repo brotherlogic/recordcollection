@@ -583,7 +583,10 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 		return err
 	}
 
-	wants, _ := s.retr.GetWantlist()
+	wants, err := s.retr.GetWantlist()
+	if err != nil {
+		return err
+	}
 
 	for _, want := range wants {
 
