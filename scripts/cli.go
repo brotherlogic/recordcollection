@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -57,25 +56,27 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad pull: %v", err)
 			}
-			conn3, err := utils.LFDialServer(ctx2, "recordscores")
-			if err != nil {
-				log.Fatalf("Bad call: %v", err)
-			}
-			registry3 := pbrc.NewClientUpdateServiceClient(conn3)
+			//conn3, err := utils.LFDialServer(ctx2, "recordscores")
+			//if err != nil {
+			//	log.Fatalf("Bad call: %v", err)
+			//}
+			//registry3 := pbrc.NewClientUpdateServiceClient(conn3)
 
-			//if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*24 {
-			if r.GetRecord().GetMetadata().GetOverallScore() > 5 || math.IsNaN(float64(r.GetRecord().GetMetadata().GetOverallScore())) {
-				_, err := registry3.ClientUpdate(ctx, &pbrc.ClientUpdateRequest{InstanceId: id})
+			if r.GetRecord().GetMetadata().GetLastUpdateTime() < r.GetRecord().GetMetadata().GetLastUpdateIn() {
+				//if r.GetRecord().GetMetadata().GetGoalFolder() == 242017 {
+				//_, err := registry3.ClientUpdate(ctx, &pbrc.ClientUpdateRequest{InstanceId: id})
+				_, err := registry2.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "cold", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
 				//log.Printf("%v. Update %v -> %v", i, id, err)
 				//time.Sleep(time.Second * 26)
 				if err != nil {
 					log.Fatalf("Bailing: %v", err)
 				}
-				log.Printf("%v. %v -> %v [%v]", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), err)
+				log.Printf("%v. %v -> %v [%v] = %v", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), err, time.Unix(r.GetRecord().GetMetadata().GetLastUpdateIn(), 0).Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)))
+				//}
 			}
 
 			conn2.Close()
-			conn3.Close()
+			//conn3.Close()
 			cancel2()
 		}
 
