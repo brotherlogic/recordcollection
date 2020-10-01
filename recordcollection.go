@@ -254,15 +254,20 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 
 	minT := time.Now().Unix()
 	maxT := int64(0)
+	bestMin := int32(0)
+	bestMax := int32(0)
 	for iid, up := range collection.GetInstanceToUpdateIn() {
 		value := collection.GetInstanceToUpdate()[iid] - up
 		if value < minT {
 			minT = value
+			bestMin = iid
 		}
 		if value > maxT {
 			maxT = value
+			bestMax = iid
 		}
 	}
+	s.Log(fmt.Sprintf("updatein %v and %v", bestMin, bestMax))
 	updateIn.With(prometheus.Labels{"status": "max"}).Set(float64(maxT))
 	updateIn.With(prometheus.Labels{"status": "min"}).Set(float64(minT))
 }

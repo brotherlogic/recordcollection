@@ -61,18 +61,23 @@ func main() {
 			//	log.Fatalf("Bad call: %v", err)
 			//}
 			//registry3 := pbrc.NewClientUpdateServiceClient(conn3)
+			if r.GetRecord().GetMetadata().GetLastUpdateTime() == r.GetRecord().GetMetadata().GetLastUpdateIn() {
+				log.Printf("WHAT: %v", r)
+			}
 
-			if r.GetRecord().GetMetadata().GetLastUpdateTime() < r.GetRecord().GetMetadata().GetLastUpdateIn() {
-				//if r.GetRecord().GetMetadata().GetGoalFolder() == 242017 {
-				//_, err := registry3.ClientUpdate(ctx, &pbrc.ClientUpdateRequest{InstanceId: id})
-				_, err := registry2.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "cold", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
-				//log.Printf("%v. Update %v -> %v", i, id, err)
-				//time.Sleep(time.Second * 26)
-				if err != nil {
-					log.Fatalf("Bailing: %v", err)
+			if r.GetRecord().GetMetadata().GetLastUpdateTime() == 0 || r.GetRecord().GetMetadata().GetLastUpdateTime() < r.GetRecord().GetMetadata().GetLastUpdateIn() || r.GetRecord().GetRelease().GetFolderId() == 242017 {
+				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*2 {
+					//if r.GetRecord().GetMetadata().GetGoalFolder() == 242017 {
+					//_, err := registry3.ClientUpdate(ctx, &pbrc.ClientUpdateRequest{InstanceId: id})
+					_, err := registry2.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "cold", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
+					//log.Printf("%v. Update %v -> %v", i, id, err)
+					//time.Sleep(time.Second * 26)
+					if err != nil {
+						log.Fatalf("Bailing: %v", err)
+					}
+					log.Printf("%v. %v -> %v [%v] = %v", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), err, time.Unix(r.GetRecord().GetMetadata().GetLastUpdateIn(), 0).Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)))
+					log.Printf("UPDATE %v, IN %v", time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0), time.Unix(r.GetRecord().GetMetadata().GetLastUpdateIn(), 0))
 				}
-				log.Printf("%v. %v -> %v [%v] = %v", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), err, time.Unix(r.GetRecord().GetMetadata().GetLastUpdateIn(), 0).Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)))
-				//}
 			}
 
 			conn2.Close()
