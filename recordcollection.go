@@ -267,7 +267,7 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 			bestMax = iid
 		}
 	}
-	s.Log(fmt.Sprintf("%v and %v", bestMin, bestMax))
+	s.Log(fmt.Sprintf("updatein %v and %v", bestMin, bestMax))
 	updateIn.With(prometheus.Labels{"status": "max"}).Set(float64(maxT))
 	updateIn.With(prometheus.Labels{"status": "min"}).Set(float64(minT))
 }
