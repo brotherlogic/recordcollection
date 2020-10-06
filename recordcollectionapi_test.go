@@ -7,7 +7,7 @@ import (
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
-	"github.com/brotherlogic/keystore/client"
+	keystoreclient "github.com/brotherlogic/keystore/client"
 	pb "github.com/brotherlogic/recordcollection/proto"
 )
 
@@ -489,6 +489,19 @@ func TestGetRecord(t *testing.T) {
 
 	if q.GetRecord().GetRelease().GetId() != 12345 {
 		t.Errorf("Bad pull on get record")
+	}
+}
+
+func TestGetRecordRelease(t *testing.T) {
+	s := InitTestServer(".testgetrecord")
+
+	q, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{ReleaseId: 4707982})
+	if err != nil {
+		t.Errorf("Error on get record: %v", err)
+	}
+
+	if q.GetRecord().GetRelease().GetTitle() != "Future" {
+		t.Errorf("Bad pull on get record: %v", q)
 	}
 }
 
