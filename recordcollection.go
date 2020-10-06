@@ -588,7 +588,11 @@ func main() {
 	ctx, cancel := utils.ManualContext("rci", "rci", time.Minute, false)
 	tResp, _, err := server.KSclient.Read(ctx, TOKEN, tType)
 	if err != nil {
-		log.Fatalf("Unable to read discogs token")
+		// Silent quit if we can't reach keystore
+		if status.Convert(err).Code() == codes.Unavailable {
+			return
+		}
+		log.Fatalf("Unable to read discogs token: %v", err)
 	}
 
 	if len(tResp.(*pb.Token).Token) == 0 {
