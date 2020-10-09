@@ -335,6 +335,15 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 
 // GetRecord gets a sigle record
 func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.GetRecordResponse, error) {
+	// Short cut if we're not asking for a specific release
+	if req.GetReleaseId() > 0 {
+		got, err := s.retr.GetRelease(req.GetReleaseId())
+		if err != nil {
+			return nil, err
+		}
+		return &pb.GetRecordResponse{Record: &pb.Record{Release: got}}, nil
+	}
+
 	rec, err := s.loadRecord(ctx, req.InstanceId, req.GetValidate())
 
 	if err != nil {

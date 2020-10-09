@@ -342,7 +342,10 @@ message QueryRecordsResponse {
 message GetRecordRequest {
   int32 instance_id = 1;
   int32 force = 2;
-    bool validate = 3;
+  bool validate = 3;
+
+  // Shortcut if this is available, returns a release only version
+  int32 release_id = 4;
 }
 
 message GetRecordResponse {
