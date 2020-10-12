@@ -40,7 +40,7 @@ func main() {
 			log.Fatalf("Bad updates: %v", err)
 		}
 		for i, update := range res.GetUpdates().GetUpdates() {
-			fmt.Printf("%v. %v\n", i, update)
+			fmt.Printf("%v. [%v], %v\n", i, time.Unix(update.GetTime(), 0), update)
 		}
 		if len(res.GetUpdates().GetUpdates()) == 0 {
 			fmt.Printf("No updates for %v\n", i)
