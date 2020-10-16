@@ -606,9 +606,10 @@ func main() {
 	// Seed the fanout queue with some records that need an update
 	cancel()
 
+	// Only one server can update a day
 	stop, err := server.Elect()
 	if err != nil {
-		log.Fatalf("Bad election: %v", err)
+		log.Fatalf("Unable to elect: %v", err)
 	}
 
 	ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
@@ -616,13 +617,23 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to read collection: %v", err)
 	}
-	for id, _ := range collection.GetInstanceToUpdate() {
-		if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
-			server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
+	if time.Now().Sub(time.Unix(collection.GetLastFullUpdate(), 0)) > time.Hour*24 {
+		if err != nil {
+			log.Fatalf("Bad election: %v", err)
 		}
+		coll := server.retr.GetCollection()
+		for _, rel := range coll {
+			id := rel.GetInstanceId()
+			if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
+				server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
+			}
+		}
+		collection.LastFullUpdate = time.Now().Unix()
+		server.saveRecordCollection(ctx, collection)
+
 	}
-	cancel()
 	stop()
+	cancel()
 
 	server.Serve()
 }
