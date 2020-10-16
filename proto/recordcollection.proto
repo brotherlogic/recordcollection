@@ -39,6 +39,9 @@ message RecordCollection {
   int32 oldest_record_id = 16;
 
   repeated int32 update_queue = 17;
+
+  // The last time we did a full update
+  int64 last_full_update = 19;
 }
 
 message AllRecords {

@@ -151,8 +151,8 @@ func main() {
 			}
 
 			sort.Sort(ro.BySaleOrder(records))
-			for i := 0; i < 50; i++ {
-				fmt.Printf("%v. [%v]: %v - %v\n", i, records[i].GetRelease().GetInstanceId(), records[i].GetRelease().GetArtists()[0].GetName(), records[i].GetRelease().GetTitle())
+			for i := 0; i < len(records); i++ {
+				fmt.Printf("%v. {%v} [%v]: %v - %v\n", i, ro.GetScore(records[i]), records[i].GetRelease().GetInstanceId(), records[i].GetRelease().GetArtists()[0].GetName(), records[i].GetRelease().GetTitle())
 			}
 		}
 
