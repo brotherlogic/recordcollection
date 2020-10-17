@@ -617,6 +617,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Unable to read collection: %v", err)
 	}
+	cancel()
 	if time.Now().Sub(time.Unix(collection.GetLastFullUpdate(), 0)) > time.Hour*24 {
 		if err != nil {
 			log.Fatalf("Bad election: %v", err)
@@ -625,11 +626,15 @@ func main() {
 		for _, rel := range coll {
 			id := rel.GetInstanceId()
 			if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
+				ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
 				server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
+				cancel()
 			}
 		}
 		collection.LastFullUpdate = time.Now().Unix()
+		ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
 		server.saveRecordCollection(ctx, collection)
+		cancel()
 
 	}
 	stop()
