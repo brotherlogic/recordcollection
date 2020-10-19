@@ -119,7 +119,19 @@ func main() {
 		fmt.Println()
 		fmt.Printf("Release: %v\n", u.GetUpdated().GetRelease())
 		fmt.Printf("Metadata: %v\n", u.GetUpdated().GetMetadata())
-
+	case "new_score":
+		i, f := strconv.Atoi(os.Args[2])
+		ns, _ := strconv.Atoi(os.Args[3])
+		if f != nil {
+			log.Fatalf("Hmm %v", f)
+		}
+		u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
+			Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+				Metadata: &pbrc.ReleaseMetadata{SetRating: int32(ns)}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Update: %v", u)
 	case "sget":
 		i, _ := strconv.Atoi(os.Args[2])
 		force := int32(0)

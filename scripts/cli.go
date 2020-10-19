@@ -13,6 +13,7 @@ import (
 	"github.com/brotherlogic/goserver/utils"
 
 	pbgd "github.com/brotherlogic/godiscogs"
+	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 	ro "github.com/brotherlogic/recordsorganiser/sales"
 
@@ -33,6 +34,75 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "label":
+		lblnm, _ := strconv.Atoi(os.Args[2])
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
+		defer cancel()
+
+		fmt.Printf("Checking Listening Pile\n")
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(812802)}})
+		if err != nil {
+			log.Fatalf("Bad request: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad Request: %v", err)
+			}
+
+			for _, label := range r.GetRecord().GetRelease().GetLabels() {
+				if label.GetId() == int32(lblnm) {
+					fmt.Printf("Found %v\n", r.GetRecord().GetRelease().GetTitle())
+					return
+				}
+			}
+		}
+		fmt.Printf("Checked %v records, no dice\n", len(ids.GetInstanceIds()))
+
+		fmt.Printf("Checking Listening Box\n")
+		ids, err = registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(673768)}})
+		if err != nil {
+			log.Fatalf("Bad request: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad Request: %v", err)
+			}
+
+			for _, label := range r.GetRecord().GetRelease().GetLabels() {
+				if label.GetId() == int32(lblnm) {
+					fmt.Printf("Found %v\n", r.GetRecord().GetRelease().GetTitle())
+					return
+				}
+			}
+		}
+		fmt.Printf("Checked %v records, no dice\n", len(ids.GetInstanceIds()))
+
+		fmt.Printf("Checking Adding Pile\n")
+		conn, err = utils.LFDialServer(ctx, "recordadder")
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		client := rapb.NewAddRecordServiceClient(conn)
+		res, err := client.ListQueue(ctx, &rapb.ListQueueRequest{})
+		if err != nil {
+			log.Fatalf("Bad request: %v", err)
+		}
+		for _, re := range res.GetRequests() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{ReleaseId: re.GetId()})
+			if err != nil {
+				log.Fatalf("Bad Request: %v", err)
+			}
+
+			for _, label := range r.GetRecord().GetRelease().GetLabels() {
+				if label.GetId() == int32(lblnm) {
+					fmt.Printf("Found %v\n", r.GetRecord().GetRelease().GetTitle())
+					return
+				}
+			}
+		}
+		fmt.Printf("Checked %v records, no dice\n", len(res.GetRequests()))
 	case "fix":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
 		defer cancel()
@@ -165,16 +235,11 @@ func main() {
 			if err != nil {
 				log.Fatalf("Error query: %v", err)
 			}
+			fmt.Printf("Queried: %v records\n", len(ids.GetInstanceIds()))
 			counts := make(map[pbrc.ReleaseMetadata_Category]int)
 			for _, id := range ids.GetInstanceIds() {
-				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
-				if err != nil {
-					log.Fatalf("Error getting record: %v", err)
-				}
-				counts[r.GetRecord().GetMetadata().GetCategory()]++
-				if r.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_PRE_DISTINGUISHED {
-					fmt.Printf("%v - %v\n", r.GetRecord().GetRelease().GetArtists()[0].GetName(), r.GetRecord().GetRelease().GetTitle())
-				}
+				fmt.Printf("%v\n", id)
+				registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "cold", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
 			}
 
 			for cat, count := range counts {
