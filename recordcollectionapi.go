@@ -335,7 +335,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 
 // GetRecord gets a sigle record
 func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.GetRecordResponse, error) {
-	if req.GetInstanceId() == 0 {
+	if req.GetInstanceId() == 0 && req.GetReleaseId() == 0 {
 		return nil, fmt.Errorf("No such record exists!")
 	}
 
