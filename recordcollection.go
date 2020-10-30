@@ -499,6 +499,7 @@ func Init() *Server {
 			"digitalwantlist",
 			"recordstats",
 			"wantslist",
+			"recordvalidator",
 			"recordalerting"},
 		repeatCount: make(map[int32]int),
 		repeatError: make(map[int32]error),
