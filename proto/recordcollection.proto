@@ -158,6 +158,9 @@ message ReleaseMetadata {
     NO_LABELS = 20;
 
     PARENTS = 29;
+
+    PRE_VALIDATE = 34;
+    VALIDATE = 35;
   }
   Category category = 8;
   
