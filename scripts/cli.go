@@ -267,6 +267,17 @@ func main() {
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
+	case "finder":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_VALIDATE}})
+
+		if err == nil {
+			for _, id := range ids.GetInstanceIds() {
+				fmt.Printf("Getting record: %v\n", id)
+			}
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
+
 	case "find_purchased":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PURCHASED}})
 

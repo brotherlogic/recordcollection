@@ -214,6 +214,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_DISTINGUISHED ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_PROFESSOR ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_FRESHMAN ||
+		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PRE_VALIDATE ||
 		rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_PREPARE_TO_SELL) {
 		rec.GetMetadata().SetRating = -1
 		rec.GetMetadata().Dirty = true
