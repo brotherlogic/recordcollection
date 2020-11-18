@@ -629,13 +629,19 @@ func main() {
 			id := rel.GetInstanceId()
 			if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
 				ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
-				server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
+				_, err := server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
+				if err != nil {
+					server.RaiseIssue("Unable to update on startup", fmt.Sprintf("%v is the reason", err))
+				}
 				cancel()
 			}
 		}
 		collection.LastFullUpdate = time.Now().Unix()
 		ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
-		server.saveRecordCollection(ctx, collection)
+		err := server.saveRecordCollection(ctx, collection)
+		if err != nil {
+			server.RaiseIssue("Cannot save collection", fmt.Sprintf("%v save error", err))
+		}
 		cancel()
 
 	}
