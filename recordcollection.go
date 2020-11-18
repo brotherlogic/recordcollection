@@ -625,6 +625,7 @@ func main() {
 			log.Fatalf("Bad election: %v", err)
 		}
 		coll := server.retr.GetCollection()
+		server.Log(fmt.Sprintf("Read %v records", len(coll)))
 		for _, rel := range coll {
 			id := rel.GetInstanceId()
 			if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
