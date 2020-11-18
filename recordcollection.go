@@ -644,7 +644,8 @@ func main() {
 			server.RaiseIssue("Cannot save collection", fmt.Sprintf("%v save error", err))
 		}
 		cancel()
-
+	} else {
+		server.Log(fmt.Sprintf("Skipping full update: last one was %v", time.Unix(collection.GetLastFullUpdate(), 0)))
 	}
 	stop()
 	cancel()
