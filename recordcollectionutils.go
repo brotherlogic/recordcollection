@@ -478,7 +478,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 
 	// Re pull the date_added
 	mp, err := s.retr.GetInstanceInfo(r.GetRelease().GetId())
-	if err == nil {
+	if err == nil && mp[r.GetRelease().GetInstanceId()] != nil {
 		s.Log(fmt.Sprintf("Updating info (%v): %+v", r.GetRelease().GetInstanceId(), mp[r.GetRelease().GetInstanceId()]))
 		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()].DateAdded
 		r.GetRelease().RecordCondition = mp[r.GetRelease().GetInstanceId()].RecordCondition
