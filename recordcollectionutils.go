@@ -127,7 +127,7 @@ func (s *Server) runUpdateFanout() {
 		cancel()
 
 		// Update the sale
-		if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL {
+		if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
 			ctx, cancel := utils.ManualContext("rcu", "rcu", time.Minute, true)
 			t = time.Now()
 			err := s.updateSale(ctx, record.GetRelease().GetInstanceId())
@@ -150,7 +150,9 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		// Push the sale (only if we're listed to sell and the record is for sale)
-		if record.GetMetadata().GetSaleDirty() && record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && record.GetMetadata().GetSaleState() != pbd.SaleState_SOLD {
+		if record.GetMetadata().GetSaleDirty() &&
+			(record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE) &&
+			record.GetMetadata().GetSaleState() != pbd.SaleState_SOLD {
 			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
 			t = time.Now()
 			_, err = s.pushSale(ctx, record)
