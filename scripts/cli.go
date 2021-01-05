@@ -22,7 +22,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute, true)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour, true)
 	defer cancel()
 
 	conn, err := utils.LFDialServer(ctx, "recordcollection")
@@ -163,11 +163,11 @@ func main() {
 		for _, id := range ids.GetInstanceIds() {
 			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 			if err != nil {
-				log.Fatalf("Error: %v", err)
+				//Pass
 			}
 
 			t := time.Unix(r.GetRecord().GetMetadata().GetDateAdded(), 0)
-			if t.Year() == time.Now().Year()-1 {
+			if t.Year() == time.Now().Year() {
 				cat := r.GetRecord().GetMetadata().GetCategory()
 				if cat != pbrc.ReleaseMetadata_PARENTS &&
 					cat != pbrc.ReleaseMetadata_GOOGLE_PLAY &&

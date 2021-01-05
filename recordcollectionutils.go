@@ -73,10 +73,13 @@ func (s *Server) runUpdateFanout() {
 		loopLatency.With(prometheus.Labels{"method": "load"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 
 		if err != nil {
-			s.repeatError[id] = err
-			s.Log(fmt.Sprintf("Unable to load: %v", err))
-			updateFanoutFailure.With(prometheus.Labels{"server": "load", "error": fmt.Sprintf("%v", err)}).Inc()
-			s.updateFanout <- id
+			// Ignore out of range errors - these are deleted records
+			if status.Convert(err).Code() != codes.OutOfRange {
+				s.repeatError[id] = err
+				s.Log(fmt.Sprintf("Unable to load: %v", err))
+				updateFanoutFailure.With(prometheus.Labels{"server": "load", "error": fmt.Sprintf("%v", err)}).Inc()
+				s.updateFanout <- id
+			}
 			ecancel()
 			cancel()
 			time.Sleep(time.Minute)
