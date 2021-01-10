@@ -15,6 +15,7 @@ import (
 	pbgd "github.com/brotherlogic/godiscogs"
 	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
+	pbrs "github.com/brotherlogic/recordscores/proto"
 	ro "github.com/brotherlogic/recordsorganiser/sales"
 
 	//Needed to pull in gzip encoding init
@@ -103,7 +104,7 @@ func main() {
 			}
 		}
 		fmt.Printf("Checked %v records, no dice\n", len(res.GetRequests()))
-	case "fix":
+	case "allscores":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
 		defer cancel()
 
@@ -113,45 +114,29 @@ func main() {
 		}
 
 		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+		ctx2, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
+		conn2, err := utils.LFDialServer(ctx2, "recordscores")
+		if err != nil {
+			log.Fatalf("Cannot reach rc: %v", err)
+		}
+
+		registry2 := pbrs.NewRecordScoreServiceClient(conn2)
+
 		for i, id := range ids.GetInstanceIds() {
-			ctx2, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
-			conn2, err := utils.LFDialServer(ctx2, "recordcollection")
-			if err != nil {
-				log.Fatalf("Cannot reach rc: %v", err)
-			}
 
-			registry2 := pbrc.NewRecordCollectionServiceClient(conn2)
-
-			r, err := registry2.GetRecord(ctx2, &pbrc.GetRecordRequest{InstanceId: id, Validate: true})
+			r, err := registry2.GetScore(ctx2, &pbrs.GetScoreRequest{InstanceId: id})
 			if err != nil {
 				log.Fatalf("Bad pull: %v", err)
 			}
-			//conn3, err := utils.LFDialServer(ctx2, "recordscores")
-			//if err != nil {
-			//	log.Fatalf("Bad call: %v", err)
-			//}
-			//registry3 := pbrc.NewClientUpdateServiceClient(conn3)
-			if r.GetRecord().GetMetadata().GetLastUpdateTime() == r.GetRecord().GetMetadata().GetLastUpdateIn() {
-				fmt.Printf("WHAT: %v\n", r)
-			}
 
-			if r.GetRecord().GetMetadata().GetLastUpdateTime() == 0 || r.GetRecord().GetMetadata().GetLastUpdateTime() < r.GetRecord().GetMetadata().GetLastUpdateIn() || r.GetRecord().GetRelease().GetFolderId() == 242017 {
-				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)) > time.Hour*2 {
-					//if r.GetRecord().GetMetadata().GetGoalFolder() == 242017 {
-					//_, err := registry3.ClientUpdate(ctx, &pbrc.ClientUpdateRequest{InstanceId: id})
-					_, err := registry2.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "cold", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
-					if err != nil {
-						log.Fatalf("Bailing: %v", err)
-					}
-					fmt.Printf("%v. %v -> %v [%v] = %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), err, time.Unix(r.GetRecord().GetMetadata().GetLastUpdateIn(), 0).Sub(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)))
-					fmt.Printf("UPDATE %v, IN %v\n", time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0), time.Unix(r.GetRecord().GetMetadata().GetLastUpdateIn(), 0))
+			for _, score := range r.GetScores() {
+				if time.Unix(score.GetScoreTime(), 0).Year() == time.Now().Year()-2 {
+					fmt.Printf("%v. %v\n", i, score)
 				}
 			}
-
-			conn2.Close()
-			//conn3.Close()
-			cancel2()
 		}
+		cancel2()
+		conn2.Close()
 
 	case "retrospective":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
