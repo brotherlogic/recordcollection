@@ -220,6 +220,11 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.GetMetadata().Dirty = true
 	}
 
+	if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_VALIDATE {
+		rec.GetMetadata().LastValidate = time.Now().Unix()
+		rec.GetMetadata().Dirty = true
+	}
+
 	//Reset the move folder
 	if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().MoveFolder == -1 {
 		rec.GetMetadata().MoveFolder = 0

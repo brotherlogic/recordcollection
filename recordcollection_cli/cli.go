@@ -85,6 +85,16 @@ func main() {
 			}
 			fmt.Printf("%v. %v\n", i, r.GetRecord().GetRelease().GetTitle())
 		}
+	case "fget":
+		i, _ := strconv.Atoi(os.Args[2])
+		r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{ReleaseId: int32(i)})
+		if err != nil {
+			fmt.Printf("Error: %v\n", err)
+		}
+		fmt.Printf("Release: %v\n", r.GetRecord().GetRelease())
+		fmt.Println()
+		fmt.Printf("Metadata: %v\n", r.GetRecord().GetMetadata())
+
 	case "get":
 		i, _ := strconv.Atoi(os.Args[2])
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{int32(i)}})

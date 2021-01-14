@@ -250,6 +250,8 @@ message ReleaseMetadata {
   int32 sale_attempts = 44;
 
   int64 last_update_in = 45;
+
+  int64 last_validate = 46;
 }
 
 // A request to get some records
