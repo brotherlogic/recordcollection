@@ -622,7 +622,7 @@ func main() {
 	cancel()
 	if time.Now().Sub(time.Unix(collection.GetLastFullUpdate(), 0)) > time.Hour*24 {
 		if err != nil {
-			log.Fatalf("Bad election: %v", err)
+			log.Fatalf("Bad for rc election: %v", err)
 		}
 		coll := server.retr.GetCollection()
 		server.Log(fmt.Sprintf("Read %v records", len(coll)))
