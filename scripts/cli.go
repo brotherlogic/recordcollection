@@ -152,11 +152,12 @@ func main() {
 			}
 
 			t := time.Unix(r.GetRecord().GetMetadata().GetDateAdded(), 0)
-			if t.Year() == time.Now().Year() {
+			if t.Year() == time.Now().Year()-1 {
 				cat := r.GetRecord().GetMetadata().GetCategory()
+				gf := r.GetRecord().GetMetadata().GetGoalFolder()
 				if cat != pbrc.ReleaseMetadata_PARENTS &&
 					cat != pbrc.ReleaseMetadata_GOOGLE_PLAY &&
-					cat != pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+					cat != pbrc.ReleaseMetadata_SOLD_ARCHIVE && gf != 565206 && gf != 1782105 && gf != 242018 {
 					fmt.Printf("%v - %v (%v)\n", t, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetCategory())
 				}
 			}
