@@ -83,6 +83,7 @@ func (s *Server) runUpdateFanout() {
 			ecancel()
 			cancel()
 			time.Sleep(time.Minute)
+			s.Log(fmt.Sprintf("Skipping %v because it's %v", id, err))
 			continue
 		}
 
