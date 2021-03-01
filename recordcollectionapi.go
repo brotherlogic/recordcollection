@@ -155,7 +155,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if len(rec.GetRelease().SleeveCondition) == 0 {
 				s.cacheRecord(ctx, rec)
 				if len(rec.GetRelease().SleeveCondition) == 0 {
-					return nil, fmt.Errorf("No Condition info")
+					return nil, status.Errorf(codes.FailedPrecondition, "No Condition info")
 				}
 			}
 			if s.disableSales {
