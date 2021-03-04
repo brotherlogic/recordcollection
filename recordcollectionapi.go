@@ -108,9 +108,6 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 
 //UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
-	if len(s.updateFanout) > 90 {
-		return nil, status.Errorf(codes.ResourceExhausted, "Fanout is full")
-	}
 
 	if request.GetReason() == "" {
 		return nil, fmt.Errorf("You must supply a reason")
@@ -241,6 +238,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	rec.GetMetadata().LastUpdateIn = time.Now().Unix()
 	err = s.saveRecord(ctx, rec)
 
+	//Only add the fanout if we can
+	if len(s.updateFanout) > 90 {
+		return nil, status.Errorf(codes.ResourceExhausted, "Fanout is full")
+	}
 	s.updateFanout <- rec.GetRelease().GetInstanceId()
 	updateFanout.Set(float64(len(s.updateFanout)))
 
