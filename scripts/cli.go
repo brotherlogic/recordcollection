@@ -425,7 +425,7 @@ func main() {
 
 		fmt.Printf("%v, %v\n", time.Unix(lowest, 0), rec)
 	case "needs_stock":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(812802)}})
 		if err != nil {
 			log.Fatalf("Bad query: %v", err)
 		}
@@ -434,18 +434,20 @@ func main() {
 		for _, id := range ids.GetInstanceIds() {
 			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 			if err != nil {
-				log.Fatalf("Error: %v", err)
-			}
-			if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastStockCheck(), 0)) > time.Hour*24*30 {
-				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "stock push", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}})
-				if err != nil {
-					log.Fatalf("Cannot update: %v\n", err)
-				} else {
-					fmt.Printf("[%v] is too old (%v)\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+				log.Printf("Error: %v", err)
+			} else {
+				if time.Now().Sub(time.Unix(r.GetRecord().GetMetadata().GetLastStockCheck(), 0)) > time.Hour*6 {
+					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "stock push", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}})
+					if err != nil {
+						log.Printf("Cannot update: %v\n", err)
+					} else {
+						fmt.Printf("[%v] is too old (%v)\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+					}
+					time.Sleep(time.Second)
 				}
-				time.Sleep(time.Second)
 			}
 		}
+		fmt.Printf("Done\n")
 	case "play_time":
 		folder, err := strconv.Atoi(os.Args[2])
 		if err != nil {
