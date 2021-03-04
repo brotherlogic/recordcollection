@@ -10,6 +10,7 @@ import (
 
 	"github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver"
+	"github.com/brotherlogic/goserver/utils"
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -20,7 +21,6 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
-	"github.com/brotherlogic/goserver/utils"
 	pbks "github.com/brotherlogic/keystore/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
@@ -139,6 +139,11 @@ func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, e
 	return score / float32(len(res.Scores)), nil
 }
 
+type fo struct {
+	iid    int32
+	origin string
+}
+
 //Server main server type
 type Server struct {
 	*goserver.GoServer
@@ -148,7 +153,7 @@ type Server struct {
 	mover         moveRecorder
 	TimeoutLoad   bool
 	disableSales  bool
-	updateFanout  chan int32
+	updateFanout  chan *fo
 	fanoutServers []string
 	repeatCount   map[int32]int
 	repeatError   map[int32]error
@@ -484,7 +489,7 @@ func (s *Server) GetState() []*pbg.State {
 func Init() *Server {
 	s := &Server{
 		GoServer:     &goserver.GoServer{},
-		updateFanout: make(chan int32, 100),
+		updateFanout: make(chan *fo, 100),
 		fanoutServers: []string{
 			"cdprocessor",
 			"recordbudget",

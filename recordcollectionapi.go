@@ -242,7 +242,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if len(s.updateFanout) > 90 {
 		return nil, status.Errorf(codes.ResourceExhausted, "Fanout is full, but we've saved: %v", err)
 	}
-	s.updateFanout <- rec.GetRelease().GetInstanceId()
+	s.updateFanout <- &fo{
+		iid:    rec.GetRelease().GetInstanceId(),
+		origin: request.GetReason(),
+	}
 	updateFanout.Set(float64(len(s.updateFanout)))
 
 	return &pb.UpdateRecordsResponse{Updated: rec}, err
@@ -272,7 +275,10 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetRelease().FolderId = int32(812802)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
-		s.updateFanout <- int32(instanceID)
+		s.updateFanout <- &fo{
+			iid:    int32(instanceID),
+			origin: "adding-record",
+		}
 		s.saveRecord(ctx, request.GetToAdd())
 	}
 
