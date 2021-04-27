@@ -121,6 +121,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if err != nil {
 		return nil, err
 	}
+	// Set the metadata if it's not
+	if rec.GetMetadata() == nil {
+		rec.Metadata = &pb.ReleaseMetadata{}
+	}
 
 	// If we've loaded the record correctly we're probably fine
 	updates, err := s.loadUpdates(ctx, request.GetUpdate().GetRelease().InstanceId)
