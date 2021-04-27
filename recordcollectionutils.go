@@ -129,7 +129,6 @@ func (s *Server) runUpdateFanout() {
 				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
 				ecancel()
-				cancel2()
 				cancel()
 				time.Sleep(time.Minute)
 				continue
@@ -684,7 +683,9 @@ func (s *Server) pushMetadata(ctx context.Context, record *pb.Record) error {
 		Width: int32(record.GetMetadata().GetRecordWidth()),
 	}
 	str, _ := proto.Marshal(info)
-	return s.retr.AddNotes(ctx, record.GetRelease().GetInstanceId(), string(str))
+	fmt.Sprintf("%v", str)
+	return nil
+	//return s.retr.AddNotes(ctx, record.GetRelease().GetInstanceId(), string(str))
 }
 
 func (s *Server) recache(ctx context.Context, r *pb.Record) error {
