@@ -1,9 +1,12 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -18,9 +21,16 @@ import (
 	_ "google.golang.org/grpc/encoding/gzip"
 )
 
+type wstr struct {
+	Stoid       string  `json:"stoid"`
+	FolderId    int32   `json:"folder_id"`
+	Instance_id int32   `json:"instance_id"`
+	Width       float64 `json:"width"`
+}
+
 func main() {
 	t := time.Now()
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*10, true)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute*60, true)
 	defer cancel()
 
 	conn, err := utils.LFDialServer(ctx, "recordcollection")
@@ -33,6 +43,60 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "folder":
+		i, _ := strconv.Atoi(os.Args[2])
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(i)}})
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			fmt.Printf("%v\n", id)
+			up := &pbrc.UpdateRecordRequest{Reason: "cli-sellrequest", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, MoveFolder: 673768, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}}}
+			_, err := registry.UpdateRecord(ctx, up)
+			if err != nil {
+				log.Fatalf("Bad Update: %v", err)
+			}
+		}
+
+	case "passwidth":
+		i, _ := strconv.Atoi(os.Args[2])
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(i)}})
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			ctx, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*10, true)
+			defer cancel2()
+			srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(id)})
+			if err != nil {
+				log.Fatalf("Unable to get record: %v", err)
+			}
+			up := wstr{
+				Stoid:       os.Args[3],
+				FolderId:    int32(i),
+				Instance_id: int32(id),
+				Width:       float64(srec.GetRecord().Metadata.GetRecordWidth()),
+			}
+
+			jsonData, err := json.Marshal(up)
+			log.Printf("SEND %v", string(jsonData))
+
+			if err != nil {
+				log.Fatalf("Unable to parse json: %v", err)
+			}
+
+			resp, err := http.Post("https://straightenthemout-qo2wxnmyfq-uw.a.run.app/straightenthemout.STOService/SetWidth", "application/json",
+				bytes.NewBuffer(jsonData))
+
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			defer resp.Body.Close()
+			body, err := ioutil.ReadAll(resp.Body)
+			fmt.Printf("%v\n", string(body))
+		}
+
 	case "updates":
 		i, _ := strconv.Atoi(os.Args[2])
 		res, err := registry.GetUpdates(ctx, &pbrc.GetUpdatesRequest{InstanceId: int32(i)})

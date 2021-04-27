@@ -5,6 +5,7 @@ import (
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
+	pbgd "github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
@@ -81,11 +82,17 @@ func (s *Server) runUpdateFanout() {
 				updateFanoutFailure.With(prometheus.Labels{"server": "load", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
 			}
-			ecancel()
-			cancel()
-			time.Sleep(time.Minute)
-			s.Log(fmt.Sprintf("Skipping %v because it's %v", id, err))
-			continue
+
+			//We get an Invalid argument when we've failed to save out an added record
+			if status.Convert(err).Code() == codes.InvalidArgument {
+				record = &pb.Record{Release: &pbgd.Release{InstanceId: id}}
+			} else {
+				ecancel()
+				cancel()
+				time.Sleep(time.Minute)
+				s.Log(fmt.Sprintf("Skipping %v because it's %v", id, err))
+				continue
+			}
 		}
 
 		t = time.Now()
@@ -109,6 +116,24 @@ func (s *Server) runUpdateFanout() {
 			t = time.Now()
 			s.updateRecordSalePrice(ctx, record)
 			loopLatency.With(prometheus.Labels{"method": "saleprice"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
+		}
+
+		// Push the metadata every week
+		if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24 {
+			t = time.Now()
+			err = s.pushMetadata(ctx, record)
+			loopLatency.With(prometheus.Labels{"method": "pushmeta"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
+			if err != nil {
+				s.repeatError[id] = err
+				s.Log(fmt.Sprintf("Unable to push: %v", err))
+				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
+				s.updateFanout <- fid
+				ecancel()
+				cancel2()
+				cancel()
+				time.Sleep(time.Minute)
+				continue
+			}
 		}
 
 		// Finally push the record if we need to
@@ -652,6 +677,14 @@ func (s *Server) pushWants(ctx context.Context, collection *pb.RecordCollection)
 	}
 
 	return s.saveRecordCollection(ctx, collection)
+}
+
+func (s *Server) pushMetadata(ctx context.Context, record *pb.Record) error {
+	info := &pb.StoredMetadata{
+		Width: int32(record.GetMetadata().GetRecordWidth()),
+	}
+	str, _ := proto.Marshal(info)
+	return s.retr.AddNotes(ctx, record.GetRelease().GetInstanceId(), string(str))
 }
 
 func (s *Server) recache(ctx context.Context, r *pb.Record) error {

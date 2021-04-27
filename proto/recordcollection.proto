@@ -6,6 +6,10 @@ option go_package = "github.com/brotherlogic/recordcollection/proto";
 
 import "github.com/brotherlogic/godiscogs/godiscogs.proto";
 
+message StoredMetadata {
+  int32 width = 1;
+}
+
 message Updates {
   int32 instance_id = 1;
   repeated RecordUpdate updates = 2;

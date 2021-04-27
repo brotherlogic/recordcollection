@@ -230,7 +230,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	s.testForLabels(ctx, rec, request, hasLabels)
 
-	if !rec.GetMetadata().Dirty && (rec.GetMetadata().GetMoveFolder() != 0 || rec.GetMetadata().GetSetRating() != 0) {
+	if !rec.GetMetadata().GetDirty() && (rec.GetMetadata().GetMoveFolder() != 0 || rec.GetMetadata().GetSetRating() != 0) {
 		rec.GetMetadata().Dirty = true
 	}
 
