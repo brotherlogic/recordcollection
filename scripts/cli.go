@@ -19,7 +19,10 @@ import (
 	ro "github.com/brotherlogic/recordsorganiser/sales"
 
 	//Needed to pull in gzip encoding init
+
+	"google.golang.org/grpc/codes"
 	_ "google.golang.org/grpc/encoding/gzip"
+	"google.golang.org/grpc/status"
 )
 
 func main() {
@@ -104,7 +107,7 @@ func main() {
 			}
 		}
 		fmt.Printf("Checked %v records, no dice\n", len(res.GetRequests()))
-	case "allscores":
+	case "sales":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
 		defer cancel()
 
@@ -122,21 +125,56 @@ func main() {
 
 		registry2 := pbrs.NewRecordScoreServiceClient(conn2)
 
+		tSales := int32(0)
 		for i, id := range ids.GetInstanceIds() {
-
-			r, err := registry2.GetScore(ctx2, &pbrs.GetScoreRequest{InstanceId: id})
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 			if err != nil {
-				log.Fatalf("Bad pull: %v", err)
+				log.Fatalf("Err %v", err)
 			}
 
-			for _, score := range r.GetScores() {
-				if time.Unix(score.GetScoreTime(), 0).Year() == time.Now().Year()-2 {
-					fmt.Printf("%v. %v\n", i, score)
+			fmt.Printf("Processing: (%v/%v) %v - %v\n", i, len(ids.GetInstanceIds()), id, rec.GetRecord().GetMetadata().GetCategory())
+
+			if time.Now().Sub(time.Unix(rec.GetRecord().GetMetadata().LastStockCheck, 0)) > 24*time.Hour {
+				if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_LISTED_TO_SELL || rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+					for i := 0; i < 10; i++ {
+						up := &pbrc.UpdateRecordRequest{Reason: "org-stock", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: rec.GetRecord().GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}}
+						rec, err := registry.UpdateRecord(ctx, up)
+						if err == nil {
+							break
+						}
+						if err != nil && status.Convert(err).Code() != codes.ResourceExhausted {
+							log.Fatalf("Error: %v", err)
+						}
+
+						time.Sleep(time.Second * 90)
+						fmt.Printf("Retrying in 90: %v", rec)
+					}
+				}
+			}
+
+			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+				valid := false
+				scores, err := registry2.GetScore(ctx, &pbrs.GetScoreRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Err: %v", err)
+				}
+
+				for _, score := range scores.GetScores() {
+					fmt.Printf(" %v - %v\n", score.GetCategory(), time.Unix(score.GetScoreTime(), 0))
+					if score.GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE && time.Unix(score.GetScoreTime(), 0).Year() == 2021 {
+						fmt.Printf("%v. %v - %v\n", i, rec.GetRecord().GetRelease().GetTitle(), rec.Record.GetMetadata().GetSalePrice())
+						valid = true
+					}
+				}
+
+				if valid {
+					tSales += rec.Record.GetMetadata().GetSalePrice()
 				}
 			}
 		}
 		cancel2()
 		conn2.Close()
+		fmt.Printf("SALES: %v\n", tSales)
 
 	case "retrospective":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})

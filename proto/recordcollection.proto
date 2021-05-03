@@ -256,6 +256,9 @@ message ReleaseMetadata {
   int64 last_update_in = 45;
 
   int64 last_validate = 46;
+
+  int32 num_have = 47;
+  int64 last_have = 48;
 }
 
 // A request to get some records
