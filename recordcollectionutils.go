@@ -668,10 +668,17 @@ func (s *Server) runSync(ctx context.Context) error {
 }
 
 func (s *Server) pushWants(ctx context.Context, collection *pb.RecordCollection) error {
+	count := 0
 	for _, w := range collection.NewWants {
 		if (w.GetMetadata().GetActive() && w.GetClearWant()) || (!w.GetMetadata().GetActive() && w.GetEnableWant()) {
 			s.updateWant(w)
 			time.Sleep(time.Second)
+			count++
+		}
+
+		// Exit the loop when we've done some work
+		if count > 60 {
+			break
 		}
 	}
 

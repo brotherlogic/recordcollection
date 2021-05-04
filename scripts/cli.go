@@ -107,6 +107,23 @@ func main() {
 			}
 		}
 		fmt.Printf("Checked %v records, no dice\n", len(res.GetRequests()))
+	case "stats":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Err %v", err)
+			}
+			fmt.Printf("curl https://www.discogs.com/release/stats/%v > %v.txt\nsleep 1\n", rec.GetRecord().GetRelease().GetId(), rec.GetRecord().GetRelease().GetId())
+		}
 	case "sales":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
 		defer cancel()
