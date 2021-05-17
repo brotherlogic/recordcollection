@@ -381,6 +381,11 @@ message GetUpdatesResponse{
   Updates updates = 1;
 }
 
+message ProcessOrderRequest {
+  int32 order_number = 1;
+}
+
+message ProcessOrderResponse {}
 
 service RecordCollectionService {
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};

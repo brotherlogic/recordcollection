@@ -117,13 +117,45 @@ func main() {
 		}
 
 		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
-		for _, id := range ids.GetInstanceIds() {
+		bestLast := time.Now().Unix()
+		blid := int32(0)
+		countZero := 0
+		countNeed := 0
+		for i, id := range ids.GetInstanceIds() {
 			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
-			if err != nil {
-				log.Fatalf("Err %v", err)
+			if rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_SOLD_ARCHIVE &&
+				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_STAGED_TO_SELL &&
+				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_PARENTS &&
+				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_STALE_SALE {
+				if err != nil {
+					log.Fatalf("Err %v", err)
+				}
+
+				if rec.GetRecord().GetMetadata().GetLastListenTime() > 0 && rec.GetRecord().GetMetadata().GetLastListenTime() < bestLast {
+					bestLast = rec.GetRecord().GetMetadata().GetLastListenTime()
+					blid = rec.GetRecord().GetRelease().GetInstanceId()
+				}
+
+				if rec.GetRecord().GetMetadata().GetLastListenTime() == 0 {
+					countZero++
+					countNeed++
+				} else if time.Now().Sub(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)) > time.Hour*24*365*2 {
+					countNeed++
+				}
+
+				fmt.Printf("%v/%v\n", i, len(ids.GetInstanceIds()))
 			}
-			fmt.Printf("curl https://www.discogs.com/release/stats/%v > %v.txt\nsleep 1\n", rec.GetRecord().GetRelease().GetId(), rec.GetRecord().GetRelease().GetId())
+
+			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_STALE_SALE && time.Now().Sub(time.Unix(rec.GetRecord().GetMetadata().GetLastStockCheck(), 0)) > time.Hour*2 {
+				up := &pbrc.UpdateRecordRequest{Reason: "stale-stock", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: rec.GetRecord().GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}}
+				_, err := registry.UpdateRecord(ctx, up)
+				if err != nil {
+					log.Printf("Bad update: %v", err)
+				}
+			}
 		}
+
+		fmt.Printf("Best %v (%v) -> %v but %v\n", time.Unix(bestLast, 0), blid, countZero, countNeed)
 	case "sales":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
 		defer cancel()
