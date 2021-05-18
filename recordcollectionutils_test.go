@@ -103,6 +103,10 @@ func (t *testSyncer) GetWantlist() ([]*pbd.Release, error) {
 	return []*pbd.Release{&pbd.Release{Id: 255, Title: "Mirror"}}, nil
 }
 
+func (t *testSyncer) GetOrder(ID string) (map[int32]int32, time.Time, error) {
+	return make(map[int32]int32), time.Now(), nil
+}
+
 func (t *testSyncer) GetRelease(id int32) (*pbd.Release, error) {
 	if id == 4707982 {
 		return &pbd.Release{Id: 4707982, Title: "Future", Images: []*pbd.Image{&pbd.Image{Type: "primary", Uri: "http://magic"}}}, nil

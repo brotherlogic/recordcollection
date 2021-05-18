@@ -399,5 +399,18 @@ func (s *Server) GetUpdates(ctx context.Context, req *pb.GetUpdatesRequest) (*pb
 }
 
 func (s *Server) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
-	return &pb.GetOrderResponse{}, status.Errorf(codes.NotFound, "Unable to locate %v", req.GetId())
+	rMap, t, err := s.retr.GetOrder(req.GetId())
+	if err != nil {
+		return nil, err
+	}
+
+	resp := &pb.GetOrderResponse{
+		SaleDate:       t.Unix(),
+		ListingToPrice: make(map[int32]int32),
+	}
+	for ID, price := range rMap {
+		resp.ListingToPrice[ID] = price
+	}
+
+	return resp, status.Errorf(codes.NotFound, "Unable to locate %v", req.GetId())
 }
