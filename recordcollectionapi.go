@@ -412,5 +412,4 @@ func (s *Server) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Get
 		resp.ListingToPrice[ID] = price
 	}
 
-	return resp, status.Errorf(codes.NotFound, "Unable to locate %v", req.GetId())
-}
+	return resp, nil
