@@ -413,3 +413,4 @@ func (s *Server) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Get
 	}
 
 	return resp, nil
+}
