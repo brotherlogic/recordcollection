@@ -112,6 +112,9 @@ func main() {
 	case "trigger":
 		res, err := registry.Trigger(ctx, &pbrc.TriggerRequest{})
 		fmt.Printf("%v,%v\n", res, err)
+	case "order":
+		res, err := registry.GetOrder(ctx, &pbrc.GetOrderRequest{Id: "150295-1"})
+		fmt.Printf("%v,%v\n", res, err)
 	case "stock":
 		i, _ := strconv.Atoi(os.Args[2])
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
