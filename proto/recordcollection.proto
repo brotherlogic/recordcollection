@@ -259,6 +259,9 @@ message ReleaseMetadata {
 
   int32 num_have = 47;
   int64 last_have = 48;
+
+  int64 sold_date = 49;
+  int32 sold_price = 50;
 }
 
 // A request to get some records
@@ -381,11 +384,14 @@ message GetUpdatesResponse{
   Updates updates = 1;
 }
 
-message ProcessOrderRequest {
-  int32 order_number = 1;
+message GetOrderRequest{
+  string id = 1;
 }
 
-message ProcessOrderResponse {}
+message GetOrderResponse{
+  map<int32,int32> listing_to_price = 2;
+  int64 sale_date = 3;
+}
 
 service RecordCollectionService {
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
@@ -397,6 +403,7 @@ service RecordCollectionService {
   rpc GetRecord(GetRecordRequest) returns (GetRecordResponse) {};
   rpc Trigger(TriggerRequest) returns (TriggerResponse) {};
   rpc GetUpdates(GetUpdatesRequest) returns (GetUpdatesResponse) {};
+  rpc GetOrder(GetOrderRequest) returns (GetOrderResponse) {};
 }
 
 message ClientUpdateRequest{

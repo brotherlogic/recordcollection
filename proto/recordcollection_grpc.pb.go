@@ -26,6 +26,7 @@ type RecordCollectionServiceClient interface {
 	GetRecord(ctx context.Context, in *GetRecordRequest, opts ...grpc.CallOption) (*GetRecordResponse, error)
 	Trigger(ctx context.Context, in *TriggerRequest, opts ...grpc.CallOption) (*TriggerResponse, error)
 	GetUpdates(ctx context.Context, in *GetUpdatesRequest, opts ...grpc.CallOption) (*GetUpdatesResponse, error)
+	GetOrder(ctx context.Context, in *GetOrderRequest, opts ...grpc.CallOption) (*GetOrderResponse, error)
 }
 
 type recordCollectionServiceClient struct {
@@ -117,6 +118,15 @@ func (c *recordCollectionServiceClient) GetUpdates(ctx context.Context, in *GetU
 	return out, nil
 }
 
+func (c *recordCollectionServiceClient) GetOrder(ctx context.Context, in *GetOrderRequest, opts ...grpc.CallOption) (*GetOrderResponse, error) {
+	out := new(GetOrderResponse)
+	err := c.cc.Invoke(ctx, "/recordcollection.RecordCollectionService/GetOrder", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RecordCollectionServiceServer is the server API for RecordCollectionService service.
 // All implementations should embed UnimplementedRecordCollectionServiceServer
 // for forward compatibility
@@ -130,6 +140,7 @@ type RecordCollectionServiceServer interface {
 	GetRecord(context.Context, *GetRecordRequest) (*GetRecordResponse, error)
 	Trigger(context.Context, *TriggerRequest) (*TriggerResponse, error)
 	GetUpdates(context.Context, *GetUpdatesRequest) (*GetUpdatesResponse, error)
+	GetOrder(context.Context, *GetOrderRequest) (*GetOrderResponse, error)
 }
 
 // UnimplementedRecordCollectionServiceServer should be embedded to have forward compatible implementations.
@@ -162,6 +173,9 @@ func (UnimplementedRecordCollectionServiceServer) Trigger(context.Context, *Trig
 }
 func (UnimplementedRecordCollectionServiceServer) GetUpdates(context.Context, *GetUpdatesRequest) (*GetUpdatesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUpdates not implemented")
+}
+func (UnimplementedRecordCollectionServiceServer) GetOrder(context.Context, *GetOrderRequest) (*GetOrderResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetOrder not implemented")
 }
 
 // UnsafeRecordCollectionServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -337,6 +351,24 @@ func _RecordCollectionService_GetUpdates_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RecordCollectionService_GetOrder_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetOrderRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecordCollectionServiceServer).GetOrder(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/recordcollection.RecordCollectionService/GetOrder",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecordCollectionServiceServer).GetOrder(ctx, req.(*GetOrderRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RecordCollectionService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "recordcollection.RecordCollectionService",
 	HandlerType: (*RecordCollectionServiceServer)(nil),
@@ -376,6 +408,10 @@ var _RecordCollectionService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUpdates",
 			Handler:    _RecordCollectionService_GetUpdates_Handler,
+		},
+		{
+			MethodName: "GetOrder",
+			Handler:    _RecordCollectionService_GetOrder_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

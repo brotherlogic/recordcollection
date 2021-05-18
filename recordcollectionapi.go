@@ -397,3 +397,7 @@ func (s *Server) GetUpdates(ctx context.Context, req *pb.GetUpdatesRequest) (*pb
 	updates, err := s.loadUpdates(ctx, req.GetInstanceId())
 	return &pb.GetUpdatesResponse{Updates: updates}, err
 }
+
+func (s *Server) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
+	return &pb.GetOrderResponse{}, status.Errorf(codes.NotFound, "Unable to locate %v", req.GetId())
+}
