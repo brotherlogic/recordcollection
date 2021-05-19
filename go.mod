@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/brotherlogic/buildserver v0.0.0-20210519002838-c00ec3ada22f // indirect
 	github.com/brotherlogic/gobuildslave v0.0.0-20210517144112-4098e8e4a598 // indirect
-	github.com/brotherlogic/godiscogs v0.0.0-20210519173927-f17da6e6ad5c
+	github.com/brotherlogic/godiscogs v0.0.0-20210519175350-fcca564fdb68
 	github.com/brotherlogic/goserver v0.0.0-20210517140105-372f30a83363
 	github.com/brotherlogic/keystore v0.0.0-20201029130503-da423c07fd79
 	github.com/brotherlogic/recordadder v0.0.0-20210509025507-57b9b371a148
