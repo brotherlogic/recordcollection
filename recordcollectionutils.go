@@ -395,6 +395,9 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 }
 
 func (s *Server) updateWant(w *pb.Want) bool {
+	if w.GetRelease().Id == 0 {
+		return false
+	}
 	if w.ClearWant {
 		s.Log(fmt.Sprintf("Removing from wantlist %v -> %v and %v", w.GetRelease().Id, w.ClearWant, w.GetMetadata().Active))
 		s.retr.RemoveFromWantlist(int(w.GetRelease().Id))

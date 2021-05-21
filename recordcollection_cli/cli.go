@@ -143,6 +143,21 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "listen":
+		i, _ := strconv.Atoi(os.Args[2])
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+
+		if err != nil {
+			log.Fatalf("Error getting record: %v", err)
+		}
+
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-lastlisten", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: srec.GetRecord().GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{LastListenTime: time.Now().Unix()}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+
 	case "wants":
 		fmt.Printf("WANTS\n")
 		rec, err := registry.GetWants(ctx, &pbrc.GetWantsRequest{})
