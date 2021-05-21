@@ -399,7 +399,7 @@ func (s *Server) updateWant(w *pb.Want) bool {
 		return false
 	}
 	if w.ClearWant {
-		s.Log(fmt.Sprintf("Removing from wantlist %v -> %v and %v", w.GetRelease().Id, w.ClearWant, w.GetMetadata().Active))
+		s.Log(fmt.Sprintf("Removing from the wantlist %v -> %v and %v", w.GetRelease().Id, w.ClearWant, w.GetMetadata().Active))
 		s.retr.RemoveFromWantlist(int(w.GetRelease().Id))
 		w.ClearWant = false
 		w.GetMetadata().Active = false
