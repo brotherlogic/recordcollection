@@ -408,7 +408,7 @@ func (s *Server) updateWant(w *pb.Want) bool {
 
 	if w.EnableWant {
 		err := s.retr.AddToWantlist(int(w.GetRelease().Id))
-		s.Log(fmt.Sprintf("ADDED TO WANTLIST (%v) -> %v: %v", w.GetRelease().Id, err, w))
+		s.Log(fmt.Sprintf("ADDED TO THE WANTLIST (%v) -> %v: %v", w.GetRelease().Id, err, w))
 		w.EnableWant = false
 		w.Metadata = &pb.WantMetadata{Active: true}
 		return true
