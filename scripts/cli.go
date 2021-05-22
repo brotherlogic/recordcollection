@@ -341,12 +341,27 @@ func main() {
 			fmt.Printf("Error: %v", err)
 		}
 	case "finder":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_VALIDATE}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_SOLD_ARCHIVE}})
 
 		if err == nil {
+			count := 0
+			without := 0
 			for _, id := range ids.GetInstanceIds() {
-				fmt.Printf("Getting record: %v\n", id)
+				//fmt.Printf("Getting record: %v\n", id)
+				rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Bad get: %v", err)
+				}
+				if rec.GetRecord().GetMetadata().GetSaleId() == 0 {
+					fmt.Printf("%v - %v\n", id, rec.GetRecord().Release.GetTitle())
+				} else {
+					count++
+					if rec.GetRecord().GetMetadata().GetSoldDate() == 0 {
+						without++
+					}
+				}
 			}
+			fmt.Printf("Found %v/%v legit\n", without, count)
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
