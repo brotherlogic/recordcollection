@@ -341,7 +341,7 @@ func main() {
 			fmt.Printf("Error: %v", err)
 		}
 	case "finder":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_SOLD_ARCHIVE}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
 
 		if err == nil {
 			count := 0
@@ -352,12 +352,26 @@ func main() {
 				if err != nil {
 					log.Fatalf("Bad get: %v", err)
 				}
-				if rec.GetRecord().GetMetadata().GetSaleId() == 0 {
-					fmt.Printf("%v - %v\n", id, rec.GetRecord().Release.GetTitle())
-				} else {
-					count++
-					if rec.GetRecord().GetMetadata().GetSoldDate() == 0 {
-						without++
+				if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+					if rec.GetRecord().GetMetadata().GetSaleId() == 0 {
+						fmt.Printf("%v - %v\n", id, rec.GetRecord().Release.GetTitle())
+					} else {
+						count++
+						if rec.GetRecord().GetMetadata().GetSoldDate() == 0 {
+							conn, err := utils.LFDialServer(ctx, "recordcollection")
+							if err != nil {
+								log.Fatalf("Cannot reach rc: %v", err)
+							}
+							defer conn.Close()
+
+							registry = pbrc.NewRecordCollectionServiceClient(conn)
+							fmt.Printf("%v - %v (%v)\n", id, rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetMetadata().GetSoldPrice())
+							_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "ale-update", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
+							if err != nil {
+								log.Fatalf("Bad update:%v", err)
+							}
+							without++
+						}
 					}
 				}
 			}
