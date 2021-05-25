@@ -60,7 +60,7 @@ func (s *Server) runUpdateFanout() {
 
 		if err != nil {
 			s.repeatError[id] = err
-			s.Log(fmt.Sprintf("Unable to elect: %v", err))
+			s.Log(fmt.Sprintf("Unable to elect because %v", err))
 			updateFanoutFailure.With(prometheus.Labels{"server": "elect", "error": fmt.Sprintf("%v", err)}).Inc()
 			s.updateFanout <- fid
 			ecancel()
