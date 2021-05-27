@@ -131,14 +131,15 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "sold_price":
 		i, _ := strconv.Atoi(os.Args[2])
-		i2, _ := strconv.Atoi(os.Args[3])
+		date, _ := strconv.Atoi(os.Args[3])
+		price, _ := strconv.Atoi(os.Args[4])
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
 		}
 
-		up := &pbrc.UpdateRecordRequest{Reason: "CLI-stock", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: srec.GetRecord().GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(i2)}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-stock", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: srec.GetRecord().GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(price), SoldDate: int64(date)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
