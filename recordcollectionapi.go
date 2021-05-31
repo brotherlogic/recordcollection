@@ -243,7 +243,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	err = s.saveRecord(ctx, rec)
 
 	//Only add the fanout if we can
-	if len(s.updateFanout) > 90 {
+	if len(s.updateFanout) > 190 {
 		return nil, status.Errorf(codes.ResourceExhausted, "Fanout is full, but we've saved: %v", err)
 	}
 	s.updateFanout <- &fo{

@@ -490,7 +490,7 @@ func (s *Server) GetState() []*pbg.State {
 func Init() *Server {
 	s := &Server{
 		GoServer:     &goserver.GoServer{},
-		updateFanout: make(chan *fo, 100),
+		updateFanout: make(chan *fo, 200),
 		fanoutServers: []string{
 			"cdprocessor",
 			"recordbudget",
