@@ -506,7 +506,8 @@ func Init() *Server {
 			"recordstats",
 			"wantslist",
 			"recordvalidator",
-			"recordalerting"},
+			"recordalerting",
+			"stobridge"},
 		repeatCount: make(map[int32]int),
 		repeatError: make(map[int32]error),
 	}

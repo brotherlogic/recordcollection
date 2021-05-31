@@ -352,9 +352,15 @@ func main() {
 				if err != nil {
 					log.Fatalf("Bad get: %v", err)
 				}
-				if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+				if rec.GetRecord().GetRelease().GetFolderId() == 1613206 {
 					if rec.GetRecord().GetMetadata().GetSaleId() == 0 {
-						fmt.Printf("%v - %v\n", id, rec.GetRecord().Release.GetTitle())
+						fmt.Printf("%v - %v [%v]\n", id, rec.GetRecord().Release.GetTitle(), rec.GetRecord().GetMetadata().GetGoalFolder())
+						/*registry = pbrc.NewRecordCollectionServiceClient(conn)
+						fmt.Printf("%v - %v (%v)\n", id, rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetMetadata().GetSoldPrice())
+						_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "ale-update", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}}})
+						if err != nil {
+							log.Fatalf("Bad update:%v", err)
+						}*/
 					} else {
 						count++
 						if rec.GetRecord().GetMetadata().GetSoldDate() == 0 {
