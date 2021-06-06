@@ -372,6 +372,14 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		folderCount.With(prometheus.Labels{"folder": fmt.Sprintf("%v", folder)}).Set(float64(count))
 	}
 
+	counts2 := make(map[string]int)
+	for _, folder := range collection.GetInstanceToCategory() {
+		counts2[folder.String()]++
+	}
+	for state, count := range counts2 {
+		stateCount.With(prometheus.Labels{"state": fmt.Sprintf("%v", state)}).Set(float64(count))
+	}
+
 	return err
 }
 
