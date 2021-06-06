@@ -125,6 +125,9 @@ message ReleaseMetadata {
     PRE_HIGH_SCHOOL = 25;
     HIGH_SCHOOL = 26;
     
+    PRE_IN_COLLECTION = 36;
+    IN_COLLECTION = 37;
+
     PRE_FRESHMAN = 4;
     FRESHMAN = 5;
     
