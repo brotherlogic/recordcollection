@@ -30,7 +30,7 @@ type wstr struct {
 
 func main() {
 	t := time.Now()
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Minute*60, true)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Minute*60)
 	defer cancel()
 
 	conn, err := utils.LFDialServer(ctx, "recordcollection")
@@ -65,7 +65,7 @@ func main() {
 			log.Fatalf("Bad: %v", err)
 		}
 		for _, id := range ids.GetInstanceIds() {
-			ctx, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Second*10, true)
+			ctx, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Second*10)
 			defer cancel2()
 			srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(id)})
 			if err != nil {

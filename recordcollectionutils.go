@@ -68,7 +68,7 @@ func (s *Server) runUpdateFanout() {
 			continue
 		}
 
-		ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+		ctx, cancel := utils.ManualContext("rciu", time.Minute)
 
 		t = time.Now()
 		record, err := s.loadRecord(ctx, id, false)
@@ -137,7 +137,7 @@ func (s *Server) runUpdateFanout() {
 
 		// Finally push the record if we need to
 		if record.GetMetadata().GetDirty() {
-			ctx, cancel2 := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			ctx, cancel2 := utils.ManualContext("rciu", time.Minute)
 			t = time.Now()
 			_, err = s.pushRecord(ctx, record)
 			loopLatency.With(prometheus.Labels{"method": "push"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
@@ -157,7 +157,7 @@ func (s *Server) runUpdateFanout() {
 
 		// Update the sale
 		if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
-			ctx, cancel := utils.ManualContext("rcu", "rcu", time.Minute, true)
+			ctx, cancel := utils.ManualContext("rcu", time.Minute)
 			t = time.Now()
 			err := s.updateSale(ctx, record.GetRelease().GetInstanceId())
 			loopLatency.With(prometheus.Labels{"method": "updatesale"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
@@ -182,7 +182,7 @@ func (s *Server) runUpdateFanout() {
 		if record.GetMetadata().GetSaleDirty() &&
 			(record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE) &&
 			record.GetMetadata().GetSaleState() != pbd.SaleState_SOLD {
-			ctx, cancel := utils.ManualContext("rciu", "rciu", time.Minute, true)
+			ctx, cancel := utils.ManualContext("rciu", time.Minute)
 			t = time.Now()
 			_, err = s.pushSale(ctx, record)
 			loopLatency.With(prometheus.Labels{"method": "cache"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
@@ -201,7 +201,7 @@ func (s *Server) runUpdateFanout() {
 		failed := false
 		for _, server := range s.fanoutServers {
 			t = time.Now()
-			ctx, cancel := utils.ManualContext("rcfo", "rcfo", time.Minute*30, true)
+			ctx, cancel := utils.ManualContext("rcfo", time.Minute*30)
 			conn, err := s.FDialServer(ctx, server)
 
 			if err != nil {
@@ -232,7 +232,7 @@ func (s *Server) runUpdateFanout() {
 
 		if !failed {
 			t = time.Now()
-			ctx, cancel = utils.ManualContext("rc-pw", "rc-pw", time.Minute*10, true)
+			ctx, cancel = utils.ManualContext("rc-pw", time.Minute*10)
 			collection, err := s.readRecordCollection(ctx)
 			if err == nil {
 				err = s.pushWants(ctx, collection)
@@ -244,7 +244,7 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 
 			//Attemp to update the record
-			ctx, cancel = utils.ManualContext("rc-fw", "rc-fw", time.Minute, true)
+			ctx, cancel = utils.ManualContext("rc-fw", time.Minute)
 			record, err = s.loadRecord(ctx, id, false)
 			if err == nil {
 				record.GetMetadata().LastUpdateTime = time.Now().Unix()

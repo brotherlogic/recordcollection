@@ -26,7 +26,7 @@ import (
 )
 
 func main() {
-	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour, true)
+	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour)
 	defer cancel()
 
 	conn, err := utils.LFDialServer(ctx, "recordcollection")
@@ -40,7 +40,7 @@ func main() {
 	switch os.Args[1] {
 	case "label":
 		lblnm, _ := strconv.Atoi(os.Args[2])
-		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
 
 		fmt.Printf("Checking Listening Pile\n")
@@ -108,7 +108,7 @@ func main() {
 		}
 		fmt.Printf("Checked %v records, no dice\n", len(res.GetRequests()))
 	case "stats":
-		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
 
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
@@ -157,7 +157,7 @@ func main() {
 
 		fmt.Printf("Best %v (%v) -> %v but %v\n", time.Unix(bestLast, 0), blid, countZero, countNeed)
 	case "sales":
-		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
 
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
@@ -166,7 +166,7 @@ func main() {
 		}
 
 		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
-		ctx2, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], "recordcollection", time.Hour*24, true)
+		ctx2, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		conn2, err := utils.LFDialServer(ctx2, "recordscores")
 		if err != nil {
 			log.Fatalf("Cannot reach rc: %v", err)

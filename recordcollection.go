@@ -602,7 +602,7 @@ func main() {
 	server.disableSales = false
 
 	tType := &pb.Token{}
-	ctx, cancel := utils.ManualContext("rci", "rci", time.Minute, false)
+	ctx, cancel := utils.ManualContext("rci", time.Minute)
 	tResp, _, err := server.KSclient.Read(ctx, TOKEN, tType)
 	if err != nil {
 		// Silent quit if we can't reach keystore
@@ -629,7 +629,7 @@ func main() {
 		log.Fatalf("Unable to elect: %v", err)
 	}
 
-	ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
+	ctx, cancel = utils.ManualContext("rci", time.Minute)
 	collection, err := server.readRecordCollection(ctx)
 	if err != nil {
 		log.Fatalf("Unable to read collection: %v", err)
@@ -644,7 +644,7 @@ func main() {
 		for _, rel := range coll {
 			id := rel.GetInstanceId()
 			if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
-				ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
+				ctx, cancel = utils.ManualContext("rci", time.Minute)
 				_, err := server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
 				if err != nil {
 					server.RaiseIssue("Unable to update on startup", fmt.Sprintf("%v is the reason", err))
@@ -653,7 +653,7 @@ func main() {
 			}
 		}
 		collection.LastFullUpdate = time.Now().Unix()
-		ctx, cancel = utils.ManualContext("rci", "rci", time.Minute, false)
+		ctx, cancel = utils.ManualContext("rci", time.Minute)
 		err := server.saveRecordCollection(ctx, collection)
 		if err != nil {
 			server.RaiseIssue("Cannot save collection", fmt.Sprintf("%v save error", err))
