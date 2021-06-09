@@ -195,8 +195,8 @@ func main() {
 				fmt.Printf("curl https://www.discogs.com/sell/release/%v > %v.html\nsleep 2\n", want.GetRelease().GetId(), want.GetRelease().GetId())
 			}
 		}
-	case "unlistened":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_FRESHMAN}})
+	case "trans":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOPHMORE}})
 		if err != nil {
 			fmt.Printf("Error %v\n", err)
 		}
@@ -205,7 +205,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			fmt.Printf("%v. %v\n", i, r.GetRecord().GetRelease().GetTitle())
+			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 		}
 	case "fget":
 		i, _ := strconv.Atoi(os.Args[2])

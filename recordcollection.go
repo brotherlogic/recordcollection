@@ -632,6 +632,10 @@ func main() {
 	ctx, cancel = utils.ManualContext("rci", time.Minute)
 	collection, err := server.readRecordCollection(ctx)
 	if err != nil {
+		if status.Convert(err).Code() == codes.NotFound {
+			// This is an expected error if keystore cannot be found
+			return
+		}
 		log.Fatalf("Unable to read collection: %v", err)
 	}
 	cancel()
