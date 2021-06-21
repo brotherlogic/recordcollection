@@ -656,6 +656,21 @@ func main() {
 				cancel()
 			}
 		}
+
+		// Clean the categories
+		for key, _ := range collection.GetInstanceToCategory() {
+			found := false
+			for _, id := range coll {
+				if key == id.GetInstanceId() {
+					found = true
+				}
+			}
+
+			if !found {
+				delete(collection.InstanceToCategory, key)
+			}
+		}
+
 		collection.LastFullUpdate = time.Now().Unix()
 		ctx, cancel = utils.ManualContext("rci", time.Minute)
 		err := server.saveRecordCollection(ctx, collection)

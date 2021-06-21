@@ -124,11 +124,53 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad read: %v", err)
 			}
+			if rec.Record.Metadata.GetCategory() == pbrc.ReleaseMetadata_SOPHMORE || rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_PRE_SOPHMORE {
+				fmt.Printf("FOUND %v\n", rec.GetRecord().GetRelease().GetInstanceId())
+			}
 			categories[fmt.Sprintf("%v", rec.Record.GetMetadata().GetCategory())]++
 		}
 		for cat, count := range categories {
 			fmt.Printf("%v - %v\n", count, cat)
 		}
+	case "validated":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		count := 0
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+
+			if rec.GetRecord().GetMetadata().GetLastValidate() > 0 {
+				found := false
+				for _, format := range rec.GetRecord().GetRelease().GetFormats() {
+					if strings.Contains(format.Name, "10") {
+						found = true
+					}
+					for _, des := range format.GetDescriptions() {
+						if strings.Contains(des, "10") {
+							found = true
+						}
+					}
+				}
+
+				if found {
+					fmt.Printf("Found %v\n", rec.GetRecord().GetRelease().GetInstanceId())
+				}
+				count++
+			}
+		}
+		fmt.Printf("%v / %v are validated - %v%%\n", count, len(ids.GetInstanceIds()), 100*count/len(ids.GetInstanceIds()))
+
 	case "stats":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
