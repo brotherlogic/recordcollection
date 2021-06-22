@@ -124,9 +124,16 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad read: %v", err)
 			}
-			if rec.Record.Metadata.GetCategory() == pbrc.ReleaseMetadata_GRADUATE || rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_PRE_GRADUATE {
-				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "update for cateogry", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}})
+			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD {
+				ctx, cancel := utils.ManualContext("recordcollectioncli-categories-update", time.Minute)
+				conn, err = utils.LFDialServer(ctx, "recordcollection")
+				if err != nil {
+					log.Fatalf("Bad dial: %v", err)
+				}
+				registry2 := pbrc.NewRecordCollectionServiceClient(conn)
+				_, err := registry2.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "update for cateogry", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}})
 				fmt.Printf("FOUND %v -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), err)
+				cancel()
 			}
 			categories[fmt.Sprintf("%v", rec.Record.GetMetadata().GetCategory())]++
 		}

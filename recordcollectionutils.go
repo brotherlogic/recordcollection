@@ -599,10 +599,10 @@ func (s *Server) updateSale(ctx context.Context, iid int32) error {
 	r, err := s.loadRecord(ctx, iid, false)
 	if err == nil {
 		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
-			if r.GetMetadata().SaleId > 0 && !r.GetMetadata().SaleDirty {
+			if r.GetMetadata().SaleId > 1 && !r.GetMetadata().SaleDirty {
 				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
 			}
-			if r.GetMetadata().SaleId > 0 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
+			if r.GetMetadata().SaleId > 1 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
 				r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
 			}
 			return s.saveRecord(ctx, r)
