@@ -124,7 +124,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad read: %v", err)
 			}
-			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD {
+			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_OFFLINE {
 				ctx, cancel := utils.ManualContext("recordcollectioncli-categories-update", time.Minute)
 				conn, err = utils.LFDialServer(ctx, "recordcollection")
 				if err != nil {
