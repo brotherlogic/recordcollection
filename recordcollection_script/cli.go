@@ -140,6 +140,29 @@ func main() {
 		for cat, count := range categories {
 			fmt.Printf("%v - %v\n", count, cat)
 		}
+	case "age":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for i, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+			if time.Since(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)) > time.Hour*24*365*2 {
+				fmt.Printf("%v. %v [%v] (%v - %v)\n", i, rec.GetRecord().GetRelease().GetTitle(),
+					rec.GetRecord().GetRelease().GetInstanceId(),
+					time.Since(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)), rec.GetRecord().GetMetadata().GetCategory())
+			}
+		}
+
 	case "validated":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()

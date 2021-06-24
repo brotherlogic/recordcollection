@@ -205,6 +205,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.GetRelease().Tracklist = []*pbgd.Track{}
 	}
 
+	// Merge in the update
 	proto.Merge(rec, request.GetUpdate())
 
 	//Reset scores if needed and an explicit category update is made
