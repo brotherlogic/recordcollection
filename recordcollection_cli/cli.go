@@ -29,12 +29,10 @@ type wstr struct {
 }
 
 func main() {
-	t := time.Now()
 	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Minute*60)
 	defer cancel()
 
 	conn, err := utils.LFDialServer(ctx, "recordcollection")
-	fmt.Printf("Dialled in %v\n", time.Now().Sub(t))
 	if err != nil {
 		log.Fatalf("Cannot reach rc: %v", err)
 	}
