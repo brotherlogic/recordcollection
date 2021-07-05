@@ -127,7 +127,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if rec.GetMetadata().GetBoxState() == pb.ReleaseMetadata_IN_THE_BOX {
 		if request.GetUpdate().GetMetadata().GetNewBoxState() != pb.ReleaseMetadata_OUT_OF_BOX {
 			s.Log(fmt.Sprintf("Update %v failed because of the box situation", request))
-			return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a boxed record", request)
+			return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
 		}
 	}
 
