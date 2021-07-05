@@ -124,22 +124,23 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad read: %v", err)
 			}
-			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_OFFLINE {
-				ctx, cancel := utils.ManualContext("recordcollectioncli-categories-update", time.Minute)
-				conn, err = utils.LFDialServer(ctx, "recordcollection")
-				if err != nil {
-					log.Fatalf("Bad dial: %v", err)
-				}
-				registry2 := pbrc.NewRecordCollectionServiceClient(conn)
-				_, err := registry2.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "update for cateogry", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{LastStockCheck: time.Now().Unix()}}})
-				fmt.Printf("FOUND %v -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), err)
-				cancel()
+			if rec.Record.GetMetadata().GetGoalFolder() != 242018 &&
+				rec.Record.GetMetadata().GetGoalFolder() != 1782105 &&
+				rec.Record.GetMetadata().GetGoalFolder() != 2274270 &&
+				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_LISTED_TO_SELL &&
+				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_STALE_SALE &&
+				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_SOLD_ARCHIVE &&
+				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_PREPARE_TO_SELL &&
+				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_SOLD_OFFLINE {
+				categories[fmt.Sprintf("%v", rec.Record.GetMetadata().GetCategory())]++
 			}
-			categories[fmt.Sprintf("%v", rec.Record.GetMetadata().GetCategory())]++
 		}
+		sum := 0
 		for cat, count := range categories {
 			fmt.Printf("%v - %v\n", count, cat)
+			sum += count
 		}
+		fmt.Printf("Total %v\n", sum)
 	case "age":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()

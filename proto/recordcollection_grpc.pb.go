@@ -11,6 +11,7 @@ import (
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
+// Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
 // RecordCollectionServiceClient is the client API for RecordCollectionService service.
@@ -186,7 +187,7 @@ type UnsafeRecordCollectionServiceServer interface {
 }
 
 func RegisterRecordCollectionServiceServer(s grpc.ServiceRegistrar, srv RecordCollectionServiceServer) {
-	s.RegisterService(&_RecordCollectionService_serviceDesc, srv)
+	s.RegisterService(&RecordCollectionService_ServiceDesc, srv)
 }
 
 func _RecordCollectionService_GetWants_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -369,7 +370,10 @@ func _RecordCollectionService_GetOrder_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-var _RecordCollectionService_serviceDesc = grpc.ServiceDesc{
+// RecordCollectionService_ServiceDesc is the grpc.ServiceDesc for RecordCollectionService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var RecordCollectionService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "recordcollection.RecordCollectionService",
 	HandlerType: (*RecordCollectionServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
@@ -465,7 +469,7 @@ type UnsafeClientUpdateServiceServer interface {
 }
 
 func RegisterClientUpdateServiceServer(s grpc.ServiceRegistrar, srv ClientUpdateServiceServer) {
-	s.RegisterService(&_ClientUpdateService_serviceDesc, srv)
+	s.RegisterService(&ClientUpdateService_ServiceDesc, srv)
 }
 
 func _ClientUpdateService_ClientUpdate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -486,7 +490,10 @@ func _ClientUpdateService_ClientUpdate_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
-var _ClientUpdateService_serviceDesc = grpc.ServiceDesc{
+// ClientUpdateService_ServiceDesc is the grpc.ServiceDesc for ClientUpdateService service.
+// It's only intended for direct use with grpc.RegisterService,
+// and not to be introspected or modified (even as a copy)
+var ClientUpdateService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "recordcollection.ClientUpdateService",
 	HandlerType: (*ClientUpdateServiceServer)(nil),
 	Methods: []grpc.MethodDesc{

@@ -110,17 +110,24 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 
 	if request.GetReason() == "" {
-		return nil, fmt.Errorf("You must supply a reason")
+		return nil, fmt.Errorf("you must supply a reason")
 	}
 	if request.GetUpdate().GetRelease().GetId() > 0 {
-		return nil, fmt.Errorf("You cannot do a record update like this")
+		return nil, fmt.Errorf("you cannot do a record update like this")
 	}
+
 	s.Log(fmt.Sprintf("UpdateRecord %v", request))
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
 	if err != nil {
 		return nil, err
 	}
+
+	// We are limited in what we can do to records that are in the box
+	if rec.GetMetadata().GetBoxState() == pb.ReleaseMetadata_IN_THE_BOX {
+		return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a boxed record", request)
+	}
+
 	// Set the metadata if it's not
 	if rec.GetMetadata() == nil {
 		rec.Metadata = &pb.ReleaseMetadata{}

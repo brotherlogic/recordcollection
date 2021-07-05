@@ -455,6 +455,13 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 	}
 	r.GetMetadata().SetRating = 0
 
+	// Update the boxness
+	if r.GetMetadata().GetNewBoxState() != pb.ReleaseMetadata_BOX_UNKNOWN &&
+		r.GetMetadata().GetBoxState() != r.GetMetadata().GetNewBoxState() {
+		r.GetMetadata().BoxState = r.GetMetadata().GetNewBoxState()
+		r.GetMetadata().NewBoxState = pb.ReleaseMetadata_BOX_UNKNOWN
+	}
+
 	r.GetMetadata().Dirty = false
 
 	//Ensure records get updated

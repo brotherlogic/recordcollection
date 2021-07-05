@@ -265,6 +265,14 @@ message ReleaseMetadata {
 
   int64 sold_date = 49;
   int32 sold_price = 50;
+
+  enum BoxState {
+    BOX_UNKNOWN = 0;
+    OUT_OF_BOX = 1;
+    IN_THE_BOX = 2;
+  }
+  BoxState box_state = 51;
+  BoxState new_box_state = 52;
 }
 
 // A request to get some records
