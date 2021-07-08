@@ -127,6 +127,8 @@ func main() {
 			if rec.Record.GetMetadata().GetGoalFolder() != 242018 &&
 				rec.Record.GetMetadata().GetGoalFolder() != 1782105 &&
 				rec.Record.GetMetadata().GetGoalFolder() != 2274270 &&
+				rec.Record.GetMetadata().GetGoalFolder() != 1727264 &&
+				rec.Record.GetMetadata().GetGoalFolder() != 1727264 &&
 				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_LISTED_TO_SELL &&
 				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_STALE_SALE &&
 				rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_SOLD_ARCHIVE &&
@@ -141,6 +143,77 @@ func main() {
 			sum += count
 		}
 		fmt.Printf("Total %v\n", sum)
+	case "folder":
+		forFlags := flag.NewFlagSet("ME", flag.ExitOnError)
+		var folder = forFlags.Int("folder", -1, "Id of the record to add")
+		var box = forFlags.Bool("box", false, "To box or not")
+
+		if err := forFlags.Parse(os.Args[2:]); err == nil {
+			ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+			defer cancel()
+
+			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+			if err != nil {
+				log.Fatalf("Bad query: %v", err)
+			}
+
+			fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+			categories := make(map[string]int)
+			for _, id := range ids.GetInstanceIds() {
+				rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Bad read: %v", err)
+				}
+
+				if rec.GetRecord().GetRelease().GetFolderId() == int32(*folder) {
+					isTwelve := false
+					for _, format := range rec.GetRecord().GetRelease().GetFormats() {
+						if format.Name == "LP" || format.Name == "12\"" || format.Name == "10\"" {
+							isTwelve = true
+						}
+						for _, des := range format.GetDescriptions() {
+							if des == "LP" || des == "12\"" || des == "10\"" {
+								isTwelve = true
+							}
+						}
+					}
+
+					if !isTwelve {
+						fmt.Printf("Skipping %v (%v) -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetRelease().GetFormats())
+					} else {
+						if *box {
+
+							ctx2, cancel2 := utils.ManualContext("script_set_box-"+os.Args[1], time.Minute)
+							defer cancel2()
+							conn2, err := utils.LFDialServer(ctx2, "recordcollection")
+							if err != nil {
+								log.Fatalf("Cannot reach rc: %v", err)
+							}
+							defer conn2.Close()
+
+							lclient := pbrc.NewRecordCollectionServiceClient(conn2)
+							_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+								Update: &pbrc.Record{
+									Release: &pbgd.Release{
+										InstanceId: id,
+									},
+									Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_THE_BOX, Dirty: true}}})
+							if err != nil {
+								log.Fatalf("Yep: %v", err)
+							}
+							fmt.Printf("Adding %v to box\n", rec.GetRecord().GetRelease().GetInstanceId())
+						}
+					}
+				}
+			}
+			sum := 0
+			for cat, count := range categories {
+				fmt.Printf("%v - %v\n", count, cat)
+				sum += count
+			}
+			fmt.Printf("Total %v\n", sum)
+		}
 	case "age":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
@@ -157,10 +230,28 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad read: %v", err)
 			}
-			if time.Since(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)) > time.Hour*24*365*2 {
-				fmt.Printf("%v. %v [%v] (%v - %v)\n", i, rec.GetRecord().GetRelease().GetTitle(),
-					rec.GetRecord().GetRelease().GetInstanceId(),
-					time.Since(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)), rec.GetRecord().GetMetadata().GetCategory())
+			fmt.Printf("%v %v. %v [%v] (%v - %v)\n", time.Since(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)).Hours(), i, rec.GetRecord().GetRelease().GetTitle(),
+				rec.GetRecord().GetRelease().GetInstanceId(),
+				time.Since(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)), rec.GetRecord().GetMetadata().GetCategory())
+		}
+	case "no_width":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for i, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+			if rec.Record.GetMetadata().GetRecordWidth() == 0 {
+				fmt.Printf("%v. %v - %v\n", i, rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().Release.GetFolderId())
 			}
 		}
 

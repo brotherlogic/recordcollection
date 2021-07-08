@@ -270,10 +270,14 @@ message ReleaseMetadata {
     BOX_UNKNOWN = 0;
     OUT_OF_BOX = 1;
     IN_THE_BOX = 2;
+    IN_45S_BOX = 3;
+    IN_CDS_BOX = 4;
   }
   BoxState box_state = 51;
   BoxState new_box_state = 52;
+
 }
+
 
 // A request to get some records
 message GetRecordsRequest {
