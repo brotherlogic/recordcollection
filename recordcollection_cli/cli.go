@@ -127,6 +127,24 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "box45":
+		i, _ := strconv.Atoi(os.Args[2])
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+
+		if err != nil {
+			log.Fatalf("Error getting record: %v", err)
+		}
+
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-box", Update: &pbrc.Record{
+			Release: &pbgd.Release{
+				InstanceId: srec.GetRecord().GetRelease().InstanceId},
+			Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_45S_BOX, Dirty: true},
+		}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "box":
 		i, _ := strconv.Atoi(os.Args[2])
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
@@ -145,7 +163,7 @@ func main() {
 			log.Fatalf("error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
-			case "unbox":
+	case "unbox":
 		i, _ := strconv.Atoi(os.Args[2])
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
 
