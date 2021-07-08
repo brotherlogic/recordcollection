@@ -168,18 +168,25 @@ func main() {
 
 				if rec.GetRecord().GetRelease().GetFolderId() == int32(*folder) {
 					isTwelve := false
+					is45 := false
 					for _, format := range rec.GetRecord().GetRelease().GetFormats() {
 						if format.Name == "LP" || format.Name == "12\"" || format.Name == "10\"" {
 							isTwelve = true
+						}
+						if format.Name == "7\"" {
+							is45 = true
 						}
 						for _, des := range format.GetDescriptions() {
 							if des == "LP" || des == "12\"" || des == "10\"" {
 								isTwelve = true
 							}
+							if des == "7\"" {
+								is45 = true
+							}
 						}
 					}
 
-					if !isTwelve {
+					if !isTwelve && !is45 {
 						fmt.Printf("Skipping %v (%v) -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetRelease().GetFormats())
 					} else {
 						if *box {
@@ -193,12 +200,22 @@ func main() {
 							defer conn2.Close()
 
 							lclient := pbrc.NewRecordCollectionServiceClient(conn2)
-							_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
-								Update: &pbrc.Record{
-									Release: &pbgd.Release{
-										InstanceId: id,
-									},
-									Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_THE_BOX, Dirty: true}}})
+							if isTwelve {
+								_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+									Update: &pbrc.Record{
+										Release: &pbgd.Release{
+											InstanceId: id,
+										},
+										Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_THE_BOX, Dirty: true}}})
+							} else if is45 {
+								_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+									Update: &pbrc.Record{
+										Release: &pbgd.Release{
+											InstanceId: id,
+										},
+										Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_45S_BOX, Dirty: true}}})
+
+							}
 							if err != nil {
 								log.Fatalf("Yep: %v", err)
 							}
