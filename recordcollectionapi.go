@@ -124,7 +124,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	// We are limited in what we can do to records that are in the box
-	if rec.GetMetadata().GetBoxState() == pb.ReleaseMetadata_IN_THE_BOX {
+	if rec.GetMetadata().GetBoxState() != pb.ReleaseMetadata_BOX_UNKNOWN && rec.GetMetadata().GetBoxState() != pb.ReleaseMetadata_OUT_OF_BOX {
 		if request.GetUpdate().GetMetadata().GetNewBoxState() != pb.ReleaseMetadata_OUT_OF_BOX &&
 			request.GetUpdate().GetMetadata().GetMoveFolder() != 3282985 {
 			s.Log(fmt.Sprintf("Update %v failed because of the box situation", request))
