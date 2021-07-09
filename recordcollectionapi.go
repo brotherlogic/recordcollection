@@ -126,7 +126,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	// We are limited in what we can do to records that are in the box
 	if rec.GetMetadata().GetBoxState() != pb.ReleaseMetadata_BOX_UNKNOWN && rec.GetMetadata().GetBoxState() != pb.ReleaseMetadata_OUT_OF_BOX {
 		if request.GetUpdate().GetMetadata().GetNewBoxState() != pb.ReleaseMetadata_OUT_OF_BOX &&
-			(request.GetUpdate().GetMetadata().GetMoveFolder() != 3282985 && request.GetUpdate().GetMetadata().GetMoveFolder() != 3291655) {
+			request.GetUpdate().GetMetadata().GetMoveFolder() != 3282985 &&
+			request.GetUpdate().GetMetadata().GetMoveFolder() != 3291655 &&
+			request.GetUpdate().GetMetadata().GetMoveFolder() != 3291970 &&
+			request.GetUpdate().GetMetadata().GetSetRating() == 0 {
 			s.Log(fmt.Sprintf("Update %v failed because of the box situation", request))
 			return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
 		}
