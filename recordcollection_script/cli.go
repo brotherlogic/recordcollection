@@ -248,7 +248,7 @@ func main() {
 								},
 								Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_CDS_BOX, Dirty: true}}})
 
-					} else if isCD {
+					} else if isTape {
 						_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
 							Update: &pbrc.Record{
 								Release: &pbgd.Release{
