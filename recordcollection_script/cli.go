@@ -182,11 +182,15 @@ func main() {
 				isTwelve := false
 				is45 := false
 				isCD := false
+				isTape := false
 				for _, format := range rec.GetRecord().GetRelease().GetFormats() {
 					if format.Name == "LP" || format.Name == "12\"" || format.Name == "10\"" {
 						isTwelve = true
 					}
 					if format.Name == "7\"" {
+						is45 = true
+					}
+					if format.Name == "Cassette" {
 						is45 = true
 					}
 					if format.Name == "CD" || format.Name == "CDr" {
@@ -198,6 +202,9 @@ func main() {
 						}
 						if des == "7\"" {
 							is45 = true
+						}
+						if des == "Cassette" {
+							isTape = true
 						}
 						if des == "CD" || des == "CDr" {
 							isCD = true
@@ -240,6 +247,14 @@ func main() {
 									InstanceId: id,
 								},
 								Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_CDS_BOX, Dirty: true}}})
+
+					} else if isCD {
+						_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+							Update: &pbrc.Record{
+								Release: &pbgd.Release{
+									InstanceId: id,
+								},
+								Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_TAPE_BOX, Dirty: true}}})
 
 					}
 					if err != nil {
