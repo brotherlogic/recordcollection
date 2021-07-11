@@ -107,6 +107,24 @@ func main() {
 			}
 		}
 		fmt.Printf("Checked %v records, no dice\n", len(res.GetRequests()))
+	case "print_all":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+			fmt.Printf("%v. [%v] %v\n", rec.GetRecord().GetMetadata().GetDateAdded(), rec.GetRecord().GetMetadata().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle())
+		}
 	case "categories":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
@@ -191,7 +209,7 @@ func main() {
 						is45 = true
 					}
 					if format.Name == "Cassette" {
-						is45 = true
+						isTape = true
 					}
 					if format.Name == "CD" || format.Name == "CDr" {
 						isCD = true
@@ -212,7 +230,7 @@ func main() {
 					}
 				}
 
-				if !isTwelve && !is45 && !isCD {
+				if !isTwelve && !is45 && !isCD && !isTape {
 					fmt.Printf("Skipping %v (%v) -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetRelease().GetFormats())
 				} else {
 
@@ -258,7 +276,7 @@ func main() {
 
 					}
 					if err != nil {
-						log.Fatalf("Yep: %v", err)
+						log.Printf("Yep: %v", err)
 					}
 					fmt.Printf("%v / %v. Adding %v to box\n", i, len(ids.GetInstanceIds()), id)
 				}
