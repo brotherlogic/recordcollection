@@ -277,6 +277,17 @@ message ReleaseMetadata {
   BoxState box_state = 51;
   BoxState new_box_state = 52;
 
+  int64 last_clean_date = 53;
+  enum FileSize {
+    FILE_UNKNOWN = 0;
+    FILE_12_INCH = 1;
+    FILE_7_INCH = 2;
+    FILE_CD = 3;
+    FILE_TAPE = 4;
+    FILE_OUTSIZE = 5;
+    FILE_DIGITAL = 6;
+  }
+  FileSize filed_under = 54;
 }
 
 
