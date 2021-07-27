@@ -273,6 +273,7 @@ message ReleaseMetadata {
     IN_45S_BOX = 3;
     IN_CDS_BOX = 4;
     IN_TAPE_BOX = 5;
+    IN_DIGITAL_BOX = 6;
   }
   BoxState box_state = 51;
   BoxState new_box_state = 52;

@@ -179,6 +179,11 @@ func main() {
 				log.Fatalf("Bad read: %v", err)
 			}
 
+			isTwelve := false
+			is45 := false
+			isCD := false
+			isTape := false
+			isDigital := false
 			if rec.GetRecord().GetMetadata().GetGoalFolder() != 1782105 &&
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 3282985 &&
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 3291655 &&
@@ -197,10 +202,7 @@ func main() {
 				rec.GetRecord().GetRelease().GetFolderId() != 1708299 &&
 				rec.GetRecord().GetRelease().GetFolderId() != 3291970 &&
 				rec.GetRecord().GetRelease().GetFolderId() != 488127 {
-				isTwelve := false
-				is45 := false
-				isCD := false
-				isTape := false
+
 				for _, format := range rec.GetRecord().GetRelease().GetFormats() {
 					if format.Name == "LP" || format.Name == "12\"" || format.Name == "10\"" {
 						isTwelve = true
@@ -229,57 +231,70 @@ func main() {
 						}
 					}
 				}
-
-				if !isTwelve && !is45 && !isCD && !isTape {
-					fmt.Printf("Skipping %v (%v) -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetRelease().GetFormats())
-				} else {
-
-					ctx2, cancel2 := utils.ManualContext("script_set_box-"+os.Args[1], time.Minute)
-					defer cancel2()
-					conn2, err := utils.LFDialServer(ctx2, "recordcollection")
-					if err != nil {
-						log.Fatalf("Cannot reach rc: %v", err)
-					}
-					defer conn2.Close()
-
-					lclient := pbrc.NewRecordCollectionServiceClient(conn2)
-					if isTwelve {
-						_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
-							Update: &pbrc.Record{
-								Release: &pbgd.Release{
-									InstanceId: id,
-								},
-								Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_THE_BOX, Dirty: true}}})
-					} else if is45 {
-						_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
-							Update: &pbrc.Record{
-								Release: &pbgd.Release{
-									InstanceId: id,
-								},
-								Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_45S_BOX, Dirty: true}}})
-
-					} else if isCD {
-						_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
-							Update: &pbrc.Record{
-								Release: &pbgd.Release{
-									InstanceId: id,
-								},
-								Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_CDS_BOX, Dirty: true}}})
-
-					} else if isTape {
-						_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
-							Update: &pbrc.Record{
-								Release: &pbgd.Release{
-									InstanceId: id,
-								},
-								Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_TAPE_BOX, Dirty: true}}})
-
-					}
-					if err != nil {
-						log.Printf("Yep: %v", err)
-					}
-					fmt.Printf("%v / %v. Adding %v to box\n", i, len(ids.GetInstanceIds()), id)
+			} else {
+				if rec.GetRecord().GetMetadata().GetGoalFolder() == 1782105 ||
+					rec.GetRecord().GetMetadata().GetGoalFolder() == 2274270 {
+					isDigital = true
 				}
+			}
+
+			if !isTwelve && !is45 && !isCD && !isTape && !isDigital {
+				fmt.Printf("Skipping %v (%v) -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetRelease().GetFormats())
+			} else {
+
+				ctx2, cancel2 := utils.ManualContext("script_set_box-"+os.Args[1], time.Minute)
+				defer cancel2()
+				conn2, err := utils.LFDialServer(ctx2, "recordcollection")
+				if err != nil {
+					log.Fatalf("Cannot reach rc: %v", err)
+				}
+				defer conn2.Close()
+
+				lclient := pbrc.NewRecordCollectionServiceClient(conn2)
+				if isTwelve {
+					_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+						Update: &pbrc.Record{
+							Release: &pbgd.Release{
+								InstanceId: id,
+							},
+							Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_THE_BOX, Dirty: true}}})
+				} else if is45 {
+					_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+						Update: &pbrc.Record{
+							Release: &pbgd.Release{
+								InstanceId: id,
+							},
+							Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_45S_BOX, Dirty: true}}})
+
+				} else if isCD {
+					_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+						Update: &pbrc.Record{
+							Release: &pbgd.Release{
+								InstanceId: id,
+							},
+							Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_CDS_BOX, Dirty: true}}})
+
+				} else if isTape {
+					_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+						Update: &pbrc.Record{
+							Release: &pbgd.Release{
+								InstanceId: id,
+							},
+							Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_TAPE_BOX, Dirty: true}}})
+
+				} else if isDigital {
+					_, err = lclient.UpdateRecord(ctx2, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+						Update: &pbrc.Record{
+							Release: &pbgd.Release{
+								InstanceId: id,
+							},
+							Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_DIGITAL_BOX, Dirty: true}}})
+
+				}
+				if err != nil {
+					log.Printf("Yep: %v", err)
+				}
+				fmt.Printf("%v / %v. Adding %v to box\n", i, len(ids.GetInstanceIds()), id)
 			}
 		}
 		sum := 0
@@ -289,11 +304,71 @@ func main() {
 		}
 		fmt.Printf("Total %v\n", sum)
 
-	case "age":
+	case "runscore":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
 
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		count := 0
+		count2 := 0
+		for i, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_PRE_IN_COLLECTION {
+				if rec.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX || rec.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN {
+
+					ctx2, cancel2 := utils.ManualContext("runscore-getscore", time.Minute)
+					defer cancel2()
+					conn2, err2 := utils.LFDialServer(ctx2, "recordscores")
+					if err2 != nil {
+						log.Fatalf("Dial error: %v", err2)
+					}
+					defer conn2.Close()
+					client2 := pbrs.NewRecordScoreServiceClient(conn2)
+					scores, err := client2.GetScore(ctx2, &pbrs.GetScoreRequest{InstanceId: id})
+					if err != nil {
+						log.Fatalf("Bad score get: %v", err)
+					}
+					bestScore := int32(0)
+					bestTime := int64(0)
+					for _, score := range scores.GetScores() {
+						if score.ScoreTime > bestTime {
+							bestTime = score.GetScoreTime()
+							bestScore = score.GetRating()
+						}
+					}
+
+					if bestTime > 0 {
+						_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
+							Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+								Metadata: &pbrc.ReleaseMetadata{SetRating: int32(bestScore)}}})
+						if err != nil {
+							log.Fatalf("Error: %v", err)
+						}
+						fmt.Printf("%v. %v => %v\n", i, rec.GetRecord().GetRelease().GetTitle(), bestScore)
+					} else {
+						count2++
+						fmt.Printf("%v. %v [NO_SCORE]\n", i, rec.GetRecord().GetRelease().GetTitle())
+					}
+
+					count++
+				}
+			}
+		}
+		fmt.Printf("Found %v records needing a score (%v we have no data on)\n", count, count2)
+	case "age":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{All: true}})
 		if err != nil {
 			log.Fatalf("Bad query: %v", err)
 		}
@@ -309,6 +384,26 @@ func main() {
 				rec.GetRecord().GetRelease().GetInstanceId(),
 				time.Since(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)), rec.GetRecord().GetMetadata().GetCategory())
 		}
+	case "age_order":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for i, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+			fmt.Printf("%v %v. %v [%v] (%v)\n", rec.GetRecord().GetMetadata().GetDateAdded(), i, rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(),
+				time.Since(time.Unix(rec.GetRecord().GetMetadata().GetDateAdded(), 0)))
+		}
+
 	case "no_width":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
