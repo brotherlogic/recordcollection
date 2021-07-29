@@ -196,6 +196,7 @@ message ReleaseMetadata {
   // Width of spine in mm (DEPRECATED)
   int32 spine_width = 17;
   float record_width = 43;
+  int32 weight_in_grams = 56;
 
   // Sale cost and ID if applicable
   int32 sale_cost = 18;
@@ -206,7 +207,7 @@ message ReleaseMetadata {
   int32 new_sale_price = 39;
   
   // Reason for a move failure
-  string move_failure = 20;
+  string move_failure = 20; // DEPRECATED
 
   // The last time we were listened to
   int64 last_listen_time = 24;

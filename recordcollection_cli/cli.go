@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -13,6 +14,8 @@ import (
 
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/golang/protobuf/proto"
+
+	"github.com/andanhm/go-prettytime"
 
 	pbgd "github.com/brotherlogic/godiscogs"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
@@ -55,7 +58,38 @@ func main() {
 				log.Fatalf("Bad Update: %v", err)
 			}
 		}
+	case "check":
+		checkFlags := flag.NewFlagSet("Check", flag.ExitOnError)
+		var id = checkFlags.Int("id", -1, "Id of the record to check")
+		if err := checkFlags.Parse(os.Args[2:]); err == nil {
+			record, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(*id)})
+			if err != nil {
+				log.Fatalf("Error getting record: %v", err)
+			}
 
+			fmt.Printf("%v - %v\n\n", record.GetRecord().GetRelease().GetArtists(), record.GetRecord().GetRelease().GetTitle())
+			fmt.Printf("Added %v\n", prettytime.Format(time.Unix(record.GetRecord().Metadata.GetDateAdded(), 0)))
+			fmt.Printf("Filed under %v\n", record.GetRecord().GetMetadata().GetFiledUnder())
+			if record.GetRecord().GetMetadata().GetFilePath() != "" || record.GetRecord().GetMetadata().GetCdPath() != "" {
+				fmt.Printf("Has CD / File paths %v and %v\n", record.GetRecord().GetMetadata().GetFilePath(), record.GetRecord().GetMetadata().GetCdPath())
+			}
+			fmt.Printf("Width is %v, Weight is %v\n", record.GetRecord().GetMetadata().GetRecordWidth(), record.GetRecord().GetMetadata().GetWeightInGrams())
+
+			switch record.GetRecord().GetMetadata().GetGoalFolder() {
+			case 242017:
+				fmt.Print("Goal Folder is 12 Inches\n")
+			case 2259637:
+				fmt.Print("Goal Folder is Keepers\n")
+			default:
+				fmt.Printf("Don't know goal folder %v\n", record.GetRecord().GetMetadata().GetGoalFolder())
+			}
+			if record.GetRecord().GetMetadata().GetSaleId() > 0 || record.GetRecord().GetMetadata().GetSaleState() != pbgd.SaleState_NOT_FOR_SALE {
+				fmt.Printf("This is in the sales loop (%v) -> %v\n", record.GetRecord().GetMetadata().GetSaleId(), record.GetRecord().GetMetadata().GetSaleState())
+			}
+
+			fmt.Printf("\nWas cleaned %v\n", prettytime.Format(time.Unix(record.GetRecord().GetMetadata().GetLastCleanDate(), 0)))
+			fmt.Printf("Was played %v\n", prettytime.Format(time.Unix(record.GetRecord().GetMetadata().GetLastListenTime(), 0)))
+		}
 	case "passwidth":
 		i, _ := strconv.Atoi(os.Args[2])
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(i)}})
