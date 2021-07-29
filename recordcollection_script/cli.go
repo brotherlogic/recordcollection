@@ -189,10 +189,7 @@ func main() {
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 3291655 &&
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 2274270 &&
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 1727264 &&
-				rec.GetRecord().GetMetadata().GetGoalFolder() != 1613206 &&
-				rec.GetRecord().GetMetadata().GetGoalFolder() != 1708299 &&
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 3291970 &&
-				rec.GetRecord().GetMetadata().GetGoalFolder() != 488127 &&
 				rec.GetRecord().GetRelease().GetFolderId() != 1782105 &&
 				rec.GetRecord().GetRelease().GetFolderId() != 3282985 &&
 				rec.GetRecord().GetRelease().GetFolderId() != 3291655 &&
@@ -233,13 +230,14 @@ func main() {
 				}
 			} else {
 				if rec.GetRecord().GetMetadata().GetGoalFolder() == 1782105 ||
-					rec.GetRecord().GetMetadata().GetGoalFolder() == 2274270 {
+					rec.GetRecord().GetMetadata().GetGoalFolder() == 2274270 ||
+					rec.GetRecord().GetMetadata().GetNewBoxState() == pbrc.ReleaseMetadata_IN_DIGITAL_BOX {
 					isDigital = true
 				}
 			}
 
 			if !isTwelve && !is45 && !isCD && !isTape && !isDigital {
-				fmt.Printf("Skipping %v (%v) -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetRelease().GetFormats())
+				//fmt.Printf("Skipping %v (%v) -> %v\n", rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetRelease().GetFormats())
 			} else {
 
 				ctx2, cancel2 := utils.ManualContext("script_set_box-"+os.Args[1], time.Minute)
