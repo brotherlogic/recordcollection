@@ -611,6 +611,7 @@ func main() {
 		}
 		log.Fatalf("Unable to read discogs token: %v", err)
 	}
+	cancel()
 
 	if len(tResp.(*pb.Token).Token) == 0 {
 		log.Fatalf("Read an empty token: %v", tResp)
@@ -619,70 +620,6 @@ func main() {
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
 
 	go server.runUpdateFanout()
-
-	// Seed the fanout queue with some records that need an update
-	cancel()
-
-	// Only one server can update a day
-	stop, err := server.Elect()
-	if err != nil {
-		log.Fatalf("Unable to elect: %v", err)
-	}
-
-	ctx, cancel = utils.ManualContext("rci", time.Minute)
-	collection, err := server.readRecordCollection(ctx)
-	if err != nil {
-		if status.Convert(err).Code() == codes.NotFound {
-			// This is an expected error if keystore cannot be found
-			return
-		}
-		log.Fatalf("Unable to read collection: %v", err)
-	}
-	cancel()
-	if time.Now().Sub(time.Unix(collection.GetLastFullUpdate(), 0)) > time.Hour*24 {
-		if err != nil {
-			log.Fatalf("Bad for rc election: %v", err)
-		}
-		coll := server.retr.GetCollection()
-		server.Log(fmt.Sprintf("Read %v records", len(coll)))
-		for _, rel := range coll {
-			id := rel.GetInstanceId()
-			if (collection.GetInstanceToUpdateIn()[id] == 0 || collection.GetInstanceToUpdate()[id]-collection.GetInstanceToUpdateIn()[id] < 0) && len(server.updateFanout) < 50 {
-				ctx, cancel = utils.ManualContext("rci", time.Minute)
-				_, err := server.UpdateRecord(ctx, &pb.UpdateRecordRequest{Reason: "UpdateSeed", Update: &pb.Record{Release: &pbd.Release{InstanceId: id}}})
-				if err != nil {
-					server.RaiseIssue("Unable to update on startup", fmt.Sprintf("%v is the reason", err))
-				}
-				cancel()
-			}
-		}
-
-		// Clean the categories
-		for key, _ := range collection.GetInstanceToCategory() {
-			found := false
-			for _, id := range coll {
-				if key == id.GetInstanceId() {
-					found = true
-				}
-			}
-
-			if !found {
-				delete(collection.InstanceToCategory, key)
-			}
-		}
-
-		collection.LastFullUpdate = time.Now().Unix()
-		ctx, cancel = utils.ManualContext("rci", time.Minute)
-		err := server.saveRecordCollection(ctx, collection)
-		if err != nil {
-			server.RaiseIssue("Cannot save collection", fmt.Sprintf("%v save error", err))
-		}
-		cancel()
-	} else {
-		server.Log(fmt.Sprintf("Skipping full update: last one was %v", time.Unix(collection.GetLastFullUpdate(), 0)))
-	}
-	stop()
-	cancel()
 
 	server.Serve()
 }
