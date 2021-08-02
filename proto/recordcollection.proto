@@ -168,6 +168,8 @@ message ReleaseMetadata {
 
     PRE_VALIDATE = 34;
     VALIDATE = 35;
+
+    ARRIVED = 38;
   }
   Category category = 8;
   
