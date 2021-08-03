@@ -93,6 +93,9 @@ enum Purgatory {
 message ReleaseMetadata {
   // The date the release was added
   int64 date_added = 1;
+
+  // The date the release actually arrived
+  int64 date_arrived = 57;
   
   // The date the release was last updated
   int64 date_updated = 2;
