@@ -16,11 +16,46 @@ import (
 // CommitRecord runs through the record process stuff
 func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordRequest) (*pb.CommitRecordResponse, error) {
 	record, err := s.loadRecord(ctx, request.GetInstanceId(), false)
+	updated := false
 	if err != nil {
 		return nil, err
 	}
-	s.Log(fmt.Sprintf("Got record: %v", record))
-	return &pb.CommitRecordResponse{}, nil
+
+	// Perform a discogs update if needed
+	if time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
+		time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
+		record.GetRelease().GetRecordCondition() == "" {
+		s.cacheRecord(ctx, record)
+		updated = true
+	}
+
+	// Adjust the sale price
+	if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
+		s.updateRecordSalePrice(ctx, record)
+		updated = true
+	}
+
+	if time.Since(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24 {
+		err = s.pushMetadata(ctx, record)
+		if err != nil {
+			return nil, err
+		}
+		updated = true
+	}
+
+	// Finally push the record if we need to
+	if record.GetMetadata().GetDirty() {
+		_, err = s.pushRecord(ctx, record)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err = nil
+	if updated {
+		err = s.saveRecord(ctx, record)
+	}
+	return &pb.CommitRecordResponse{}, err
 }
 
 // DeleteRecord deletes a record
