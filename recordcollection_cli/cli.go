@@ -586,6 +586,10 @@ func main() {
 		}
 		data, _ := proto.Marshal(rec.GetRecord())
 		ioutil.WriteFile(fmt.Sprintf("%v.data", rec.GetRecord().GetRelease().Id), data, 0644)
+	case "commit":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.CommitRecord(ctx, &pbrc.CommitRecordRequest{InstanceId: int32(i)})
+		fmt.Printf("Got %v and %v", rec, err)
 	case "add":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.Atoi(os.Args[3])
