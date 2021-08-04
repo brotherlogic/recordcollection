@@ -15,6 +15,11 @@ import (
 
 // CommitRecord runs through the record process stuff
 func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordRequest) (*pb.CommitRecordResponse, error) {
+	record, err := s.loadRecord(ctx, request.GetInstanceId(), false)
+	if err != nil {
+		return nil, err
+	}
+	s.Log(fmt.Sprintf("Got record: %v", record))
 	return &pb.CommitRecordResponse{}, nil
 }
 
