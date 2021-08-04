@@ -302,10 +302,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
 		request.GetToAdd().GetRelease().FolderId = int32(3380098)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
-		s.updateFanout <- &fo{
-			iid:    int32(instanceID),
-			origin: "adding-record",
-		}
+
 		s.saveRecord(ctx, request.GetToAdd())
 	}
 
