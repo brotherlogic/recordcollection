@@ -6,7 +6,7 @@ require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/brotherlogic/buildserver v0.0.0-20210728184850-2807794331a0 // indirect
 	github.com/brotherlogic/godiscogs v0.0.0-20210527024337-f82403e3d903
-	github.com/brotherlogic/goserver v0.0.0-20210804181505-bb13b4cf86d6
+	github.com/brotherlogic/goserver v0.0.0-20210804183456-bad9dc5d026a
 	github.com/brotherlogic/keystore v0.0.0-20201029130503-da423c07fd79
 	github.com/brotherlogic/recordadder v0.0.0-20210712212901-855b4e5ea124
 	github.com/brotherlogic/recordmover v0.0.0-20210803000221-fc0ba69f1c93
