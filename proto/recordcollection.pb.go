@@ -2908,6 +2908,91 @@ func (x *GetOrderResponse) GetSaleDate() int64 {
 	return 0
 }
 
+type CommitRecordRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	InstanceId int32 `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+}
+
+func (x *CommitRecordRequest) Reset() {
+	*x = CommitRecordRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_recordcollection_proto_msgTypes[34]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CommitRecordRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitRecordRequest) ProtoMessage() {}
+
+func (x *CommitRecordRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_recordcollection_proto_msgTypes[34]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitRecordRequest.ProtoReflect.Descriptor instead.
+func (*CommitRecordRequest) Descriptor() ([]byte, []int) {
+	return file_recordcollection_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *CommitRecordRequest) GetInstanceId() int32 {
+	if x != nil {
+		return x.InstanceId
+	}
+	return 0
+}
+
+type CommitRecordResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *CommitRecordResponse) Reset() {
+	*x = CommitRecordResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_recordcollection_proto_msgTypes[35]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CommitRecordResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CommitRecordResponse) ProtoMessage() {}
+
+func (x *CommitRecordResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_recordcollection_proto_msgTypes[35]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CommitRecordResponse.ProtoReflect.Descriptor instead.
+func (*CommitRecordResponse) Descriptor() ([]byte, []int) {
+	return file_recordcollection_proto_rawDescGZIP(), []int{35}
+}
+
 type ClientUpdateRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -2919,7 +3004,7 @@ type ClientUpdateRequest struct {
 func (x *ClientUpdateRequest) Reset() {
 	*x = ClientUpdateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[34]
+		mi := &file_recordcollection_proto_msgTypes[36]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2932,7 +3017,7 @@ func (x *ClientUpdateRequest) String() string {
 func (*ClientUpdateRequest) ProtoMessage() {}
 
 func (x *ClientUpdateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[34]
+	mi := &file_recordcollection_proto_msgTypes[36]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2945,7 +3030,7 @@ func (x *ClientUpdateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientUpdateRequest.ProtoReflect.Descriptor instead.
 func (*ClientUpdateRequest) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{34}
+	return file_recordcollection_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ClientUpdateRequest) GetInstanceId() int32 {
@@ -2964,7 +3049,7 @@ type ClientUpdateResponse struct {
 func (x *ClientUpdateResponse) Reset() {
 	*x = ClientUpdateResponse{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_recordcollection_proto_msgTypes[35]
+		mi := &file_recordcollection_proto_msgTypes[37]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -2977,7 +3062,7 @@ func (x *ClientUpdateResponse) String() string {
 func (*ClientUpdateResponse) ProtoMessage() {}
 
 func (x *ClientUpdateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_recordcollection_proto_msgTypes[35]
+	mi := &file_recordcollection_proto_msgTypes[37]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2990,7 +3075,7 @@ func (x *ClientUpdateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientUpdateResponse.ProtoReflect.Descriptor instead.
 func (*ClientUpdateResponse) Descriptor() ([]byte, []int) {
-	return file_recordcollection_proto_rawDescGZIP(), []int{35}
+	return file_recordcollection_proto_rawDescGZIP(), []int{37}
 }
 
 var File_recordcollection_proto protoreflect.FileDescriptor
@@ -3506,7 +3591,12 @@ var file_recordcollection_proto_rawDesc = []byte{
 	0x6e, 0x67, 0x54, 0x6f, 0x50, 0x72, 0x69, 0x63, 0x65, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10,
 	0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x03, 0x6b, 0x65, 0x79,
 	0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x05, 0x52,
-	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x35, 0x0a, 0x13, 0x43, 0x6c,
+	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x36, 0x0a, 0x13, 0x43, 0x6f,
+	0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x1f, 0x0a, 0x0b, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x5f, 0x69, 0x64,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65,
+	0x49, 0x64, 0x22, 0x16, 0x0a, 0x14, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x63, 0x6f,
+	0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x35, 0x0a, 0x13, 0x43, 0x6c,
 	0x69, 0x65, 0x6e, 0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
 	0x74, 0x12, 0x1e, 0x0a, 0x0a, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x49, 0x64, 0x18,
 	0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x0a, 0x69, 0x6e, 0x73, 0x74, 0x61, 0x6e, 0x63, 0x65, 0x49,
@@ -3518,7 +3608,7 @@ var file_recordcollection_proto_rawDesc = []byte{
 	0x5f, 0x53, 0x54, 0x4f, 0x43, 0x4b, 0x5f, 0x43, 0x48, 0x45, 0x43, 0x4b, 0x10, 0x02, 0x12, 0x10,
 	0x0a, 0x0c, 0x4e, 0x45, 0x45, 0x44, 0x53, 0x5f, 0x4c, 0x41, 0x42, 0x45, 0x4c, 0x53, 0x10, 0x04,
 	0x12, 0x0d, 0x0a, 0x09, 0x4e, 0x45, 0x45, 0x44, 0x53, 0x5f, 0x52, 0x49, 0x50, 0x10, 0x05, 0x12,
-	0x0c, 0x0a, 0x08, 0x41, 0x4c, 0x4c, 0x5f, 0x47, 0x4f, 0x4f, 0x44, 0x10, 0x03, 0x32, 0x9f, 0x07,
+	0x0c, 0x0a, 0x08, 0x41, 0x4c, 0x4c, 0x5f, 0x47, 0x4f, 0x4f, 0x44, 0x10, 0x03, 0x32, 0x80, 0x08,
 	0x0a, 0x17, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69,
 	0x6f, 0x6e, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x53, 0x0a, 0x08, 0x47, 0x65, 0x74,
 	0x57, 0x61, 0x6e, 0x74, 0x73, 0x12, 0x21, 0x2e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63, 0x6f,
@@ -3576,19 +3666,25 @@ var file_recordcollection_proto_rawDesc = []byte{
 	0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x47, 0x65, 0x74, 0x4f, 0x72, 0x64,
 	0x65, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x22, 0x2e, 0x72, 0x65, 0x63, 0x6f,
 	0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x47, 0x65, 0x74,
-	0x4f, 0x72, 0x64, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x32,
-	0x76, 0x0a, 0x13, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x53,
-	0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x5f, 0x0a, 0x0c, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x12, 0x25, 0x2e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63,
-	0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74,
-	0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e,
-	0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e,
-	0x2e, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x30, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68, 0x75,
-	0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x72, 0x6f, 0x74, 0x68, 0x65, 0x72, 0x6c, 0x6f, 0x67,
-	0x69, 0x63, 0x2f, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74,
-	0x69, 0x6f, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f,
-	0x33,
+	0x4f, 0x72, 0x64, 0x65, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x12,
+	0x5f, 0x0a, 0x0c, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x12,
+	0x25, 0x2e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69,
+	0x6f, 0x6e, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74, 0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26, 0x2e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63,
+	0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x43, 0x6f, 0x6d, 0x6d, 0x69, 0x74,
+	0x52, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00,
+	0x32, 0x76, 0x0a, 0x13, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x5f, 0x0a, 0x0c, 0x43, 0x6c, 0x69, 0x65, 0x6e,
+	0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x12, 0x25, 0x2e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64,
+	0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x2e, 0x43, 0x6c, 0x69, 0x65, 0x6e,
+	0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x26,
+	0x2e, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63, 0x74, 0x69, 0x6f,
+	0x6e, 0x2e, 0x43, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x00, 0x42, 0x30, 0x5a, 0x2e, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x62, 0x72, 0x6f, 0x74, 0x68, 0x65, 0x72, 0x6c, 0x6f,
+	0x67, 0x69, 0x63, 0x2f, 0x72, 0x65, 0x63, 0x6f, 0x72, 0x64, 0x63, 0x6f, 0x6c, 0x6c, 0x65, 0x63,
+	0x74, 0x69, 0x6f, 0x6e, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -3604,7 +3700,7 @@ func file_recordcollection_proto_rawDescGZIP() []byte {
 }
 
 var file_recordcollection_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
-var file_recordcollection_proto_msgTypes = make([]protoimpl.MessageInfo, 45)
+var file_recordcollection_proto_msgTypes = make([]protoimpl.MessageInfo, 47)
 var file_recordcollection_proto_goTypes = []interface{}{
 	(Purgatory)(0),                      // 0: recordcollection.Purgatory
 	(ReleaseMetadata_Category)(0),       // 1: recordcollection.ReleaseMetadata.Category
@@ -3646,42 +3742,44 @@ var file_recordcollection_proto_goTypes = []interface{}{
 	(*GetUpdatesResponse)(nil),          // 37: recordcollection.GetUpdatesResponse
 	(*GetOrderRequest)(nil),             // 38: recordcollection.GetOrderRequest
 	(*GetOrderResponse)(nil),            // 39: recordcollection.GetOrderResponse
-	(*ClientUpdateRequest)(nil),         // 40: recordcollection.ClientUpdateRequest
-	(*ClientUpdateResponse)(nil),        // 41: recordcollection.ClientUpdateResponse
-	nil,                                 // 42: recordcollection.RecordCollection.InstanceToFolderEntry
-	nil,                                 // 43: recordcollection.RecordCollection.InstanceToUpdateEntry
-	nil,                                 // 44: recordcollection.RecordCollection.InstanceToUpdateInEntry
-	nil,                                 // 45: recordcollection.RecordCollection.InstanceToCategoryEntry
-	nil,                                 // 46: recordcollection.RecordCollection.InstanceToMasterEntry
-	nil,                                 // 47: recordcollection.RecordCollection.InstanceToIdEntry
-	nil,                                 // 48: recordcollection.RecordCollection.InstanceToRecacheEntry
-	nil,                                 // 49: recordcollection.RecordCollection.InstanceToLastSalePriceUpdateEntry
-	nil,                                 // 50: recordcollection.GetOrderResponse.ListingToPriceEntry
-	(*godiscogs.Release)(nil),           // 51: godiscogs.Release
-	(godiscogs.SaleState)(0),            // 52: godiscogs.SaleState
+	(*CommitRecordRequest)(nil),         // 40: recordcollection.CommitRecordRequest
+	(*CommitRecordResponse)(nil),        // 41: recordcollection.CommitRecordResponse
+	(*ClientUpdateRequest)(nil),         // 42: recordcollection.ClientUpdateRequest
+	(*ClientUpdateResponse)(nil),        // 43: recordcollection.ClientUpdateResponse
+	nil,                                 // 44: recordcollection.RecordCollection.InstanceToFolderEntry
+	nil,                                 // 45: recordcollection.RecordCollection.InstanceToUpdateEntry
+	nil,                                 // 46: recordcollection.RecordCollection.InstanceToUpdateInEntry
+	nil,                                 // 47: recordcollection.RecordCollection.InstanceToCategoryEntry
+	nil,                                 // 48: recordcollection.RecordCollection.InstanceToMasterEntry
+	nil,                                 // 49: recordcollection.RecordCollection.InstanceToIdEntry
+	nil,                                 // 50: recordcollection.RecordCollection.InstanceToRecacheEntry
+	nil,                                 // 51: recordcollection.RecordCollection.InstanceToLastSalePriceUpdateEntry
+	nil,                                 // 52: recordcollection.GetOrderResponse.ListingToPriceEntry
+	(*godiscogs.Release)(nil),           // 53: godiscogs.Release
+	(godiscogs.SaleState)(0),            // 54: godiscogs.SaleState
 }
 var file_recordcollection_proto_depIdxs = []int32{
 	8,  // 0: recordcollection.Updates.updates:type_name -> recordcollection.RecordUpdate
 	11, // 1: recordcollection.RecordUpdate.update:type_name -> recordcollection.Record
 	11, // 2: recordcollection.RecordCollection.records:type_name -> recordcollection.Record
-	51, // 3: recordcollection.RecordCollection.wants:type_name -> godiscogs.Release
+	53, // 3: recordcollection.RecordCollection.wants:type_name -> godiscogs.Release
 	12, // 4: recordcollection.RecordCollection.new_wants:type_name -> recordcollection.Want
-	42, // 5: recordcollection.RecordCollection.instance_to_folder:type_name -> recordcollection.RecordCollection.InstanceToFolderEntry
-	43, // 6: recordcollection.RecordCollection.instance_to_update:type_name -> recordcollection.RecordCollection.InstanceToUpdateEntry
-	44, // 7: recordcollection.RecordCollection.instance_to_update_in:type_name -> recordcollection.RecordCollection.InstanceToUpdateInEntry
-	45, // 8: recordcollection.RecordCollection.instance_to_category:type_name -> recordcollection.RecordCollection.InstanceToCategoryEntry
-	46, // 9: recordcollection.RecordCollection.instance_to_master:type_name -> recordcollection.RecordCollection.InstanceToMasterEntry
-	47, // 10: recordcollection.RecordCollection.instance_to_id:type_name -> recordcollection.RecordCollection.InstanceToIdEntry
-	48, // 11: recordcollection.RecordCollection.instance_to_recache:type_name -> recordcollection.RecordCollection.InstanceToRecacheEntry
-	49, // 12: recordcollection.RecordCollection.instance_to_last_sale_price_update:type_name -> recordcollection.RecordCollection.InstanceToLastSalePriceUpdateEntry
+	44, // 5: recordcollection.RecordCollection.instance_to_folder:type_name -> recordcollection.RecordCollection.InstanceToFolderEntry
+	45, // 6: recordcollection.RecordCollection.instance_to_update:type_name -> recordcollection.RecordCollection.InstanceToUpdateEntry
+	46, // 7: recordcollection.RecordCollection.instance_to_update_in:type_name -> recordcollection.RecordCollection.InstanceToUpdateInEntry
+	47, // 8: recordcollection.RecordCollection.instance_to_category:type_name -> recordcollection.RecordCollection.InstanceToCategoryEntry
+	48, // 9: recordcollection.RecordCollection.instance_to_master:type_name -> recordcollection.RecordCollection.InstanceToMasterEntry
+	49, // 10: recordcollection.RecordCollection.instance_to_id:type_name -> recordcollection.RecordCollection.InstanceToIdEntry
+	50, // 11: recordcollection.RecordCollection.instance_to_recache:type_name -> recordcollection.RecordCollection.InstanceToRecacheEntry
+	51, // 12: recordcollection.RecordCollection.instance_to_last_sale_price_update:type_name -> recordcollection.RecordCollection.InstanceToLastSalePriceUpdateEntry
 	11, // 13: recordcollection.AllRecords.records:type_name -> recordcollection.Record
-	51, // 14: recordcollection.Record.release:type_name -> godiscogs.Release
+	53, // 14: recordcollection.Record.release:type_name -> godiscogs.Release
 	15, // 15: recordcollection.Record.metadata:type_name -> recordcollection.ReleaseMetadata
-	51, // 16: recordcollection.Want.release:type_name -> godiscogs.Release
+	53, // 16: recordcollection.Want.release:type_name -> godiscogs.Release
 	13, // 17: recordcollection.Want.metadata:type_name -> recordcollection.WantMetadata
 	1,  // 18: recordcollection.ReleaseMetadata.category:type_name -> recordcollection.ReleaseMetadata.Category
 	0,  // 19: recordcollection.ReleaseMetadata.purgatory:type_name -> recordcollection.Purgatory
-	52, // 20: recordcollection.ReleaseMetadata.sale_state:type_name -> godiscogs.SaleState
+	54, // 20: recordcollection.ReleaseMetadata.sale_state:type_name -> godiscogs.SaleState
 	2,  // 21: recordcollection.ReleaseMetadata.keep:type_name -> recordcollection.ReleaseMetadata.KeepState
 	3,  // 22: recordcollection.ReleaseMetadata.match:type_name -> recordcollection.ReleaseMetadata.MatchState
 	4,  // 23: recordcollection.ReleaseMetadata.box_state:type_name -> recordcollection.ReleaseMetadata.BoxState
@@ -3700,7 +3798,7 @@ var file_recordcollection_proto_depIdxs = []int32{
 	1,  // 36: recordcollection.QueryRecordsRequest.category:type_name -> recordcollection.ReleaseMetadata.Category
 	11, // 37: recordcollection.GetRecordResponse.record:type_name -> recordcollection.Record
 	7,  // 38: recordcollection.GetUpdatesResponse.updates:type_name -> recordcollection.Updates
-	50, // 39: recordcollection.GetOrderResponse.listing_to_price:type_name -> recordcollection.GetOrderResponse.ListingToPriceEntry
+	52, // 39: recordcollection.GetOrderResponse.listing_to_price:type_name -> recordcollection.GetOrderResponse.ListingToPriceEntry
 	1,  // 40: recordcollection.RecordCollection.InstanceToCategoryEntry.value:type_name -> recordcollection.ReleaseMetadata.Category
 	18, // 41: recordcollection.RecordCollectionService.GetWants:input_type -> recordcollection.GetWantsRequest
 	20, // 42: recordcollection.RecordCollectionService.UpdateRecord:input_type -> recordcollection.UpdateRecordRequest
@@ -3712,20 +3810,22 @@ var file_recordcollection_proto_depIdxs = []int32{
 	34, // 48: recordcollection.RecordCollectionService.Trigger:input_type -> recordcollection.TriggerRequest
 	36, // 49: recordcollection.RecordCollectionService.GetUpdates:input_type -> recordcollection.GetUpdatesRequest
 	38, // 50: recordcollection.RecordCollectionService.GetOrder:input_type -> recordcollection.GetOrderRequest
-	40, // 51: recordcollection.ClientUpdateService.ClientUpdate:input_type -> recordcollection.ClientUpdateRequest
-	19, // 52: recordcollection.RecordCollectionService.GetWants:output_type -> recordcollection.GetWantsResponse
-	21, // 53: recordcollection.RecordCollectionService.UpdateRecord:output_type -> recordcollection.UpdateRecordsResponse
-	23, // 54: recordcollection.RecordCollectionService.UpdateWant:output_type -> recordcollection.UpdateWantResponse
-	25, // 55: recordcollection.RecordCollectionService.AddRecord:output_type -> recordcollection.AddRecordResponse
-	29, // 56: recordcollection.RecordCollectionService.DeleteRecord:output_type -> recordcollection.DeleteRecordResponse
-	31, // 57: recordcollection.RecordCollectionService.QueryRecords:output_type -> recordcollection.QueryRecordsResponse
-	33, // 58: recordcollection.RecordCollectionService.GetRecord:output_type -> recordcollection.GetRecordResponse
-	35, // 59: recordcollection.RecordCollectionService.Trigger:output_type -> recordcollection.TriggerResponse
-	37, // 60: recordcollection.RecordCollectionService.GetUpdates:output_type -> recordcollection.GetUpdatesResponse
-	39, // 61: recordcollection.RecordCollectionService.GetOrder:output_type -> recordcollection.GetOrderResponse
-	41, // 62: recordcollection.ClientUpdateService.ClientUpdate:output_type -> recordcollection.ClientUpdateResponse
-	52, // [52:63] is the sub-list for method output_type
-	41, // [41:52] is the sub-list for method input_type
+	40, // 51: recordcollection.RecordCollectionService.CommitRecord:input_type -> recordcollection.CommitRecordRequest
+	42, // 52: recordcollection.ClientUpdateService.ClientUpdate:input_type -> recordcollection.ClientUpdateRequest
+	19, // 53: recordcollection.RecordCollectionService.GetWants:output_type -> recordcollection.GetWantsResponse
+	21, // 54: recordcollection.RecordCollectionService.UpdateRecord:output_type -> recordcollection.UpdateRecordsResponse
+	23, // 55: recordcollection.RecordCollectionService.UpdateWant:output_type -> recordcollection.UpdateWantResponse
+	25, // 56: recordcollection.RecordCollectionService.AddRecord:output_type -> recordcollection.AddRecordResponse
+	29, // 57: recordcollection.RecordCollectionService.DeleteRecord:output_type -> recordcollection.DeleteRecordResponse
+	31, // 58: recordcollection.RecordCollectionService.QueryRecords:output_type -> recordcollection.QueryRecordsResponse
+	33, // 59: recordcollection.RecordCollectionService.GetRecord:output_type -> recordcollection.GetRecordResponse
+	35, // 60: recordcollection.RecordCollectionService.Trigger:output_type -> recordcollection.TriggerResponse
+	37, // 61: recordcollection.RecordCollectionService.GetUpdates:output_type -> recordcollection.GetUpdatesResponse
+	39, // 62: recordcollection.RecordCollectionService.GetOrder:output_type -> recordcollection.GetOrderResponse
+	41, // 63: recordcollection.RecordCollectionService.CommitRecord:output_type -> recordcollection.CommitRecordResponse
+	43, // 64: recordcollection.ClientUpdateService.ClientUpdate:output_type -> recordcollection.ClientUpdateResponse
+	53, // [53:65] is the sub-list for method output_type
+	41, // [41:53] is the sub-list for method input_type
 	41, // [41:41] is the sub-list for extension type_name
 	41, // [41:41] is the sub-list for extension extendee
 	0,  // [0:41] is the sub-list for field type_name
@@ -4146,7 +4246,7 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[34].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ClientUpdateRequest); i {
+			switch v := v.(*CommitRecordRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -4158,6 +4258,30 @@ func file_recordcollection_proto_init() {
 			}
 		}
 		file_recordcollection_proto_msgTypes[35].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CommitRecordResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_recordcollection_proto_msgTypes[36].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ClientUpdateRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_recordcollection_proto_msgTypes[37].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ClientUpdateResponse); i {
 			case 0:
 				return &v.state
@@ -4184,7 +4308,7 @@ func file_recordcollection_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_recordcollection_proto_rawDesc,
 			NumEnums:      6,
-			NumMessages:   45,
+			NumMessages:   47,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

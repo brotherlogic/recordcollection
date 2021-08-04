@@ -28,6 +28,7 @@ type RecordCollectionServiceClient interface {
 	Trigger(ctx context.Context, in *TriggerRequest, opts ...grpc.CallOption) (*TriggerResponse, error)
 	GetUpdates(ctx context.Context, in *GetUpdatesRequest, opts ...grpc.CallOption) (*GetUpdatesResponse, error)
 	GetOrder(ctx context.Context, in *GetOrderRequest, opts ...grpc.CallOption) (*GetOrderResponse, error)
+	CommitRecord(ctx context.Context, in *CommitRecordRequest, opts ...grpc.CallOption) (*CommitRecordResponse, error)
 }
 
 type recordCollectionServiceClient struct {
@@ -128,6 +129,15 @@ func (c *recordCollectionServiceClient) GetOrder(ctx context.Context, in *GetOrd
 	return out, nil
 }
 
+func (c *recordCollectionServiceClient) CommitRecord(ctx context.Context, in *CommitRecordRequest, opts ...grpc.CallOption) (*CommitRecordResponse, error) {
+	out := new(CommitRecordResponse)
+	err := c.cc.Invoke(ctx, "/recordcollection.RecordCollectionService/CommitRecord", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RecordCollectionServiceServer is the server API for RecordCollectionService service.
 // All implementations should embed UnimplementedRecordCollectionServiceServer
 // for forward compatibility
@@ -142,6 +152,7 @@ type RecordCollectionServiceServer interface {
 	Trigger(context.Context, *TriggerRequest) (*TriggerResponse, error)
 	GetUpdates(context.Context, *GetUpdatesRequest) (*GetUpdatesResponse, error)
 	GetOrder(context.Context, *GetOrderRequest) (*GetOrderResponse, error)
+	CommitRecord(context.Context, *CommitRecordRequest) (*CommitRecordResponse, error)
 }
 
 // UnimplementedRecordCollectionServiceServer should be embedded to have forward compatible implementations.
@@ -177,6 +188,9 @@ func (UnimplementedRecordCollectionServiceServer) GetUpdates(context.Context, *G
 }
 func (UnimplementedRecordCollectionServiceServer) GetOrder(context.Context, *GetOrderRequest) (*GetOrderResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetOrder not implemented")
+}
+func (UnimplementedRecordCollectionServiceServer) CommitRecord(context.Context, *CommitRecordRequest) (*CommitRecordResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CommitRecord not implemented")
 }
 
 // UnsafeRecordCollectionServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -370,6 +384,24 @@ func _RecordCollectionService_GetOrder_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RecordCollectionService_CommitRecord_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CommitRecordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecordCollectionServiceServer).CommitRecord(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/recordcollection.RecordCollectionService/CommitRecord",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecordCollectionServiceServer).CommitRecord(ctx, req.(*CommitRecordRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RecordCollectionService_ServiceDesc is the grpc.ServiceDesc for RecordCollectionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -416,6 +448,10 @@ var RecordCollectionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetOrder",
 			Handler:    _RecordCollectionService_GetOrder_Handler,
+		},
+		{
+			MethodName: "CommitRecord",
+			Handler:    _RecordCollectionService_CommitRecord_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

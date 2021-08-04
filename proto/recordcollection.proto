@@ -428,6 +428,12 @@ message GetOrderResponse{
   int64 sale_date = 3;
 }
 
+message CommitRecordRequest {
+  int32 instance_id = 1;
+}
+
+message CommitRecordResponse {}
+
 service RecordCollectionService {
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
@@ -439,6 +445,7 @@ service RecordCollectionService {
   rpc Trigger(TriggerRequest) returns (TriggerResponse) {};
   rpc GetUpdates(GetUpdatesRequest) returns (GetUpdatesResponse) {};
   rpc GetOrder(GetOrderRequest) returns (GetOrderResponse) {};
+  rpc CommitRecord(CommitRecordRequest) returns (CommitRecordResponse) {};
 }
 
 message ClientUpdateRequest{

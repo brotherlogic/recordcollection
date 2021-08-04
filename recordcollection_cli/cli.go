@@ -586,5 +586,20 @@ func main() {
 		}
 		data, _ := proto.Marshal(rec.GetRecord())
 		ioutil.WriteFile(fmt.Sprintf("%v.data", rec.GetRecord().GetRelease().Id), data, 0644)
+	case "add":
+		i, _ := strconv.Atoi(os.Args[2])
+		f, _ := strconv.Atoi(os.Args[3])
+		c, _ := strconv.Atoi(os.Args[4])
+		rec, err := registry.AddRecord(ctx, &pbrc.AddRecordRequest{
+			ToAdd: &pbrc.Record{
+				Release:  &pbgd.Release{Id: int32(i)},
+				Metadata: &pbrc.ReleaseMetadata{Cost: int32(c), GoalFolder: int32(f), AccountingYear: 2021},
+			},
+		})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("%v and %v\n", rec, err)
+
 	}
 }

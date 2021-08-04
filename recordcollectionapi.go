@@ -13,6 +13,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// CommitRecord runs through the record process stuff
+func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordRequest) (*pb.CommitRecordResponse, error) {
+	return &pb.CommitRecordResponse{}, nil
+}
+
 // DeleteRecord deletes a record
 func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordRequest) (*pb.DeleteRecordResponse, error) {
 	collection, err := s.readRecordCollection(ctx)
