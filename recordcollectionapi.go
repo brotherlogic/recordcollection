@@ -296,11 +296,11 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	var err error
 	instanceID := int(request.GetToAdd().GetRelease().InstanceId)
 	if instanceID == 0 {
-		instanceID, err = s.retr.AddToFolder(812802, request.GetToAdd().GetRelease().Id)
+		instanceID, err = s.retr.AddToFolder(3380098, request.GetToAdd().GetRelease().Id)
 	}
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
-		request.GetToAdd().GetRelease().FolderId = int32(812802)
+		request.GetToAdd().GetRelease().FolderId = int32(3380098)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
 		s.updateFanout <- &fo{
 			iid:    int32(instanceID),
