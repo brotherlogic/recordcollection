@@ -619,7 +619,7 @@ func main() {
 	}
 	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
 
-	go server.runUpdateFanout()
+	//go server.runUpdateFanout()
 
 	server.Serve()
 }
