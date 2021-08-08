@@ -578,6 +578,30 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "arrived":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{DateArrived: time.Now().Unix()}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+	case "unarrived":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PURCHASED, DateArrived: -1}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+	case "ready":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-ready", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "save":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
@@ -604,6 +628,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("%v and %v\n", rec, err)
-
+	case "newfolder":
+		i, _ := strconv.Atoi(os.Args[2])
+		i2, _ := strconv.Atoi(os.Args[3])
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-newfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{MoveFolder: int32(i2)}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	}
 }
