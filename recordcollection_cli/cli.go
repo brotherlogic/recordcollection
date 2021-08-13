@@ -73,13 +73,18 @@ func main() {
 			if record.GetRecord().GetMetadata().GetFilePath() != "" || record.GetRecord().GetMetadata().GetCdPath() != "" {
 				fmt.Printf("Has CD / File paths %v and %v\n", record.GetRecord().GetMetadata().GetFilePath(), record.GetRecord().GetMetadata().GetCdPath())
 			}
-			fmt.Printf("Width is %v, Weight is %v\n", record.GetRecord().GetMetadata().GetRecordWidth(), record.GetRecord().GetMetadata().GetWeightInGrams())
+			fmt.Printf("Width is %v, Weight is %v\n\n", record.GetRecord().GetMetadata().GetRecordWidth(), record.GetRecord().GetMetadata().GetWeightInGrams())
 
 			switch record.GetRecord().GetMetadata().GetGoalFolder() {
 			case 242017:
 				fmt.Print("Goal Folder is 12 Inches\n")
 			case 2259637:
 				fmt.Print("Goal Folder is Keepers\n")
+			case 1613206:
+				fmt.Print("This record has been sold, but has the wrong goal folder\n")
+				if record.GetRecord().GetMetadata().GetSaleId() == 0 {
+					fmt.Print("This record needs to have the sale id set\n")
+				}
 			default:
 				fmt.Printf("Don't know goal folder %v\n", record.GetRecord().GetMetadata().GetGoalFolder())
 			}
