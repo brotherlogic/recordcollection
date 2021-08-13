@@ -403,6 +403,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "weight":
+		i, _ := strconv.Atoi(os.Args[2])
+		f, _ := strconv.ParseFloat(os.Args[3], 32)
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{WeightInGrams: int32(f)}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "fixfolder":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.Atoi(os.Args[3])
