@@ -414,7 +414,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 // GetRecord gets a sigle record
 func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.GetRecordResponse, error) {
 	if req.GetInstanceId() == 0 && req.GetReleaseId() == 0 {
-		return nil, fmt.Errorf("No such record exists (from %v)", req)
+		return nil, fmt.Errorf("no such record exists (from %v)", req)
 	}
 
 	// Short cut if we're not asking for a specific release
