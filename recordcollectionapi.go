@@ -11,6 +11,10 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	qpb "github.com/brotherlogic/queue/proto"
+	rfpb "github.com/brotherlogic/recordfanout/proto"
+	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
 
 // CommitRecord runs through the record process stuff
@@ -305,15 +309,22 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	rec.GetMetadata().LastUpdateIn = time.Now().Unix()
 	err = s.saveRecord(ctx, rec)
 
-	//Only add the fanout if we can
-	if len(s.updateFanout) > 190 {
-		return nil, status.Errorf(codes.ResourceExhausted, "Fanout is full, but we've saved: %v", err)
+	conn, err := s.FDialServer(ctx, "queue")
+	if err != nil {
+		return nil, err
 	}
-	s.updateFanout <- &fo{
-		iid:    rec.GetRelease().GetInstanceId(),
-		origin: request.GetReason(),
+	defer conn.Close()
+	qclient := qpb.NewQueueServiceClient(conn)
+	upup := &rfpb.FanoutRequest{
+		InstanceId: rec.GetRelease().GetInstanceId(),
 	}
-	updateFanout.Set(float64(len(s.updateFanout)))
+	data, _ := proto.Marshal(upup)
+	_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+		QueueName: "record_fanout",
+		RunTime:   time.Now().Unix(),
+		Payload:   &google_protobuf.Any{Value: data},
+		Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
+	})
 
 	return &pb.UpdateRecordsResponse{Updated: rec}, err
 }
