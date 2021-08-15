@@ -13,16 +13,20 @@ import (
 	"github.com/brotherlogic/goserver/utils"
 
 	pbgd "github.com/brotherlogic/godiscogs"
+	qpb "github.com/brotherlogic/queue/proto"
 	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
+	fopb "github.com/brotherlogic/recordfanout/proto"
 	pbrs "github.com/brotherlogic/recordscores/proto"
 	ro "github.com/brotherlogic/recordsorganiser/sales"
+	google_protobuf "github.com/golang/protobuf/ptypes/any"
 
 	//Needed to pull in gzip encoding init
 
 	"google.golang.org/grpc/codes"
 	_ "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 )
 
 func main() {
@@ -123,7 +127,27 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad read: %v", err)
 			}
-			fmt.Printf("%v. [%v] %v\n", rec.GetRecord().GetMetadata().GetDateAdded(), rec.GetRecord().GetMetadata().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle())
+			//fmt.Printf("%v. [%v] %v\n", rec.GetRecord().GetMetadata().GetDateAdded(), rec.GetRecord().GetMetadata().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle())
+
+			if rec.GetRecord().GetRelease().GetFolderId() == 3380098 {
+				conn, err := utils.LFDialServer(ctx, "queue")
+				if err != nil {
+					log.Fatalf("Unable to dial: %v", err)
+				}
+				defer conn.Close()
+
+				client := qpb.NewQueueServiceClient(conn)
+				update := &fopb.FanoutRequest{InstanceId: rec.GetRecord().GetRelease().GetInstanceId()}
+				data, _ := proto.Marshal(update)
+				res, err := client.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+					QueueName: "record_fanout",
+					RunTime:   int64(time.Now().Unix()),
+					Payload:   &google_protobuf.Any{Value: data},
+					Key:       fmt.Sprintf("%v", rec.GetRecord().GetRelease().GetInstanceId()),
+				})
+				fmt.Printf("%v and %v from %v\n", res, err, rec.GetRecord().GetRelease().GetInstanceId())
+				//log.Fatalf("Aha")
+			}
 		}
 	case "categories":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
