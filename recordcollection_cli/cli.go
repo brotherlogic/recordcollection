@@ -410,6 +410,13 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "is_seven":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_7_INCH}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "is_cd":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_CD}}})
@@ -678,5 +685,7 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	default:
+		fmt.Printf("Unknown comand: %v\n", os.Args[1])
 	}
 }
