@@ -8,6 +8,7 @@ import (
 	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
+	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -325,6 +326,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		Payload:   &google_protobuf.Any{Value: data},
 		Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
 	})
+	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 
 	return &pb.UpdateRecordsResponse{Updated: rec}, err
 }
@@ -373,6 +375,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		Payload:   &google_protobuf.Any{Value: data},
 		Key:       fmt.Sprintf("%v", instanceID),
 	})
+	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 
 	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err
 }

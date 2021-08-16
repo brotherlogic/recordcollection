@@ -43,6 +43,10 @@ var (
 		Name: "recordcollection_update_in",
 		Help: "Last update time",
 	}, []string{"status"})
+	queueResults = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "recordcollection_queue_result",
+		Help: "Last update time",
+	}, []string{"error"})
 )
 
 type quotaChecker interface {
