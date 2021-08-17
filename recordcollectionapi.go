@@ -29,7 +29,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	// Perform a discogs update if needed
 	if time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 		time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
-		record.GetRelease().GetRecordCondition() == "" {
+		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && record.GetRelease().GetRecordCondition() == "") {
 		s.cacheRecord(ctx, record)
 		updated = true
 	}
