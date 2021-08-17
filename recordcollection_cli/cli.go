@@ -477,6 +477,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "remove_sale":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Dirty: true, SaleId: -1, SaleState: pbgd.SaleState_EXPIRED}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "reset_sale":
 		i, _ := strconv.Atoi(os.Args[2])
 		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PREPARE_TO_SELL, SaleId: -1, SaleState: pbgd.SaleState_EXPIRED}}}
