@@ -39,15 +39,16 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	// Adjust the sale price
 	if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
 		s.updateRecordSalePrice(ctx, record)
+		s.Log(fmt.Sprintf("Updated sale price"))
 		updated = true
 	}
 
 	if time.Since(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24 {
 		err = s.pushMetadata(ctx, record)
+		s.Log(fmt.Sprintf("Pushed Metadata"))
 		if err != nil {
 			return nil, err
 		}
-		updated = true
 	}
 
 	// Finally push the record if we need to
