@@ -30,7 +30,6 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	if time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 		time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
 		record.GetRelease().GetRecordCondition() == "" {
-			time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0), record.GetRelease().GetRecordCondition()))
 		s.cacheRecord(ctx, record)
 		updated = true
 	}
