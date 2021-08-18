@@ -405,7 +405,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "is_twelve":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_12_INCH}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: 242017, FiledUnder: pbrc.ReleaseMetadata_FILE_12_INCH}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
