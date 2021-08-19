@@ -41,13 +41,13 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = true
 	}
 
-	if time.Since(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24 {
+	/*if time.Since(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24 {
 		err = s.pushMetadata(ctx, record)
 		s.Log(fmt.Sprintf("Pushed Metadata for %v", record.GetRelease().GetInstanceId()))
 		if err != nil {
 			return nil, err
 		}
-	}
+	}*/
 
 	// Finally push the record if we need to
 	if record.GetMetadata().GetDirty() {
