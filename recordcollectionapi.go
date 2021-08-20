@@ -51,9 +51,12 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 
 	// Finally push the record if we need to
 	if record.GetMetadata().GetDirty() {
-		_, err = s.pushRecord(ctx, record)
+		pushed, err := s.pushRecord(ctx, record)
 		if err != nil {
 			return nil, err
+		}
+		if pushed {
+			updated = true
 		}
 	}
 
