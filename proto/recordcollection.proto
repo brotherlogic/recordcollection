@@ -293,6 +293,7 @@ message ReleaseMetadata {
     FILE_TAPE = 4;
     FILE_OUTSIZE = 5;
     FILE_DIGITAL = 6;
+    FILE_BOXSET = 7;
   }
   FileSize filed_under = 54;
   int64 last_check_date = 55;
