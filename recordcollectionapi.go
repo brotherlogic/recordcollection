@@ -31,7 +31,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
 		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && record.GetRelease().GetRecordCondition() == "") {
 		s.cacheRecord(ctx, record)
-		updated = true
+		updated = record.GetRelease().GetRecordCondition() != ""
 	}
 
 	// Adjust the sale price
