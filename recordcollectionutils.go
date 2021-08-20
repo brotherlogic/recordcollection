@@ -477,7 +477,7 @@ func max(a, b int) int {
 }
 
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
-	s.Log(fmt.Sprintf("Updating cache for : %v", r.GetRelease().GetTitle()))
+	s.Log(fmt.Sprintf("Updating cache for : %v (%v)", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition()))
 	// Don't recache a record that has a pending score
 	if r.GetMetadata().GetSetRating() > 0 {
 		return nil
