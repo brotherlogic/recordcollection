@@ -493,6 +493,27 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, ctx))
 		}
 
+		if st.Code() == codes.OutOfRange {
+			config, err := s.readRecordCollection(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			delete(config.InstanceToFolder, req.GetInstanceId())
+			delete(config.InstanceToUpdate, req.GetInstanceId())
+			delete(config.InstanceToUpdateIn, req.GetInstanceId())
+			delete(config.InstanceToCategory, req.GetInstanceId())
+			delete(config.InstanceToMaster, req.GetInstanceId())
+			delete(config.InstanceToId, req.GetInstanceId())
+			delete(config.InstanceToRecache, req.GetInstanceId())
+			delete(config.InstanceToLastSalePriceUpdate, req.GetInstanceId())
+
+			err = s.saveRecordCollection(ctx, config)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		return nil, status.Errorf(st.Code(), fmt.Sprintf("Could not locate %v -> %v", req.InstanceId, err))
 	}
 
