@@ -297,6 +297,8 @@ message ReleaseMetadata {
   }
   FileSize filed_under = 54;
   int64 last_check_date = 55;
+
+  int64 last_audition = 58;
 }
 
 
