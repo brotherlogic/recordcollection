@@ -202,6 +202,24 @@ func main() {
 			log.Fatalf("error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "boxbox":
+		i, _ := strconv.Atoi(os.Args[2])
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+
+		if err != nil {
+			log.Fatalf("Error getting record: %v", err)
+		}
+
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-box", Update: &pbrc.Record{
+			Release: &pbgd.Release{
+				InstanceId: srec.GetRecord().GetRelease().InstanceId},
+			Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_BOXSET_BOX, Dirty: true},
+		}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "unbox":
 		i, _ := strconv.Atoi(os.Args[2])
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
@@ -504,6 +522,14 @@ func main() {
 	case "reset_sale_state":
 		i, _ := strconv.Atoi(os.Args[2])
 		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_EXPIRED, Category: pbrc.ReleaseMetadata_LISTED_TO_SELL}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+	case "mark_sold":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_SOLD}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)

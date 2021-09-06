@@ -280,6 +280,7 @@ message ReleaseMetadata {
     IN_CDS_BOX = 4;
     IN_TAPE_BOX = 5;
     IN_DIGITAL_BOX = 6;
+    IN_BOXSET_BOX = 7;
   }
   BoxState box_state = 51;
   BoxState new_box_state = 52;
@@ -300,7 +301,6 @@ message ReleaseMetadata {
 
   int64 last_audition = 58;
 }
-
 
 // A request to get some records
 message GetRecordsRequest {
