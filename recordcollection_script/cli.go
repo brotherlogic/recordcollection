@@ -661,7 +661,7 @@ func main() {
 				}
 			}
 
-			fmt.Printf("Highest [%v] = %v\n", *folder, rec.GetRelease().GetTitle())
+			fmt.Printf("Highest [%v] = %v (%v)\n", *folder, rec.GetRelease().GetTitle(), rec.GetMetadata().GetCurrentSalePrice())
 		}
 	case "sale_order":
 		meFlags := flag.NewFlagSet("ME", flag.ExitOnError)
@@ -930,6 +930,28 @@ func main() {
 					lowest = r.GetRecord().GetMetadata().GetDateAdded()
 					rec = r.GetRecord()
 				}
+			}
+
+		}
+
+		fmt.Printf("%v, %v\n", time.Unix(lowest, 0), rec)
+	case "first_in":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		lowest := time.Now().Unix()
+		var rec *pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+
+			if time.Since(time.Unix(r.GetRecord().GetMetadata().GetDateAdded(), 0)) > time.Hour*24*30*3 {
+				fmt.Printf("%v - %v [%v]\n", r.GetRecord().GetMetadata().GetDateAdded(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
 			}
 
 		}
