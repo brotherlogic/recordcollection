@@ -232,16 +232,6 @@ func (s *Server) runUpdateFanout() {
 
 		if !failed {
 			t = time.Now()
-			ctx, cancel = utils.ManualContext("rc-pw", time.Minute*10)
-			collection, err := s.readRecordCollection(ctx)
-			if err == nil {
-				err = s.pushWants(ctx, collection)
-				loopLatency.With(prometheus.Labels{"method": "pushwants"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
-				if err != nil {
-					s.Log(fmt.Sprintf("Unable to push wants: %v", err))
-				}
-			}
-			cancel()
 
 			//Attemp to update the record
 			ctx, cancel = utils.ManualContext("rc-fw", time.Minute)
@@ -395,22 +385,13 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 }
 
 func (s *Server) updateWant(w *pb.Want) bool {
-	if w.GetRelease().Id == 0 {
+	if w.GetReleaseId() == 0 {
 		return false
 	}
 	if w.ClearWant {
-		s.Log(fmt.Sprintf("Removing from the wantlist %v -> %v and %v", w.GetRelease().Id, w.ClearWant, w.GetMetadata().Active))
-		s.retr.RemoveFromWantlist(int(w.GetRelease().Id))
+		s.Log(fmt.Sprintf("Removing from the wantlist %v -> %v and %v", w.GetReleaseId(), w.ClearWant))
+		s.retr.RemoveFromWantlist(int(w.GetReleaseId()))
 		w.ClearWant = false
-		w.GetMetadata().Active = false
-		return true
-	}
-
-	if w.EnableWant {
-		err := s.retr.AddToWantlist(int(w.GetRelease().Id))
-		s.Log(fmt.Sprintf("ADDED TO THE WANTLIST (%v) -> %v: %v", w.GetRelease().Id, err, w))
-		w.EnableWant = false
-		w.Metadata = &pb.WantMetadata{Active: true}
 		return true
 	}
 
@@ -633,31 +614,30 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 
 		found := false
 		for _, w := range collection.GetNewWants() {
-			if w.GetRelease().Id == want.Id {
+			if w.GetReleaseId() == want.Id {
 				found = true
-				proto.Merge(w.GetRelease(), want)
-				w.Metadata = &pb.WantMetadata{Active: true}
 			}
 		}
 
 		if !found {
-			collection.NewWants = append(collection.NewWants, &pb.Want{Release: want, Metadata: &pb.WantMetadata{Active: true}})
+			collection.NewWants = append(collection.NewWants, &pb.Want{ReleaseId: want.GetId()})
 		}
 	}
 
+	var nw []*pb.Want
 	for _, w := range collection.GetNewWants() {
 		found := false
 		for _, want := range wants {
-			if w.GetRelease().Id == want.Id {
+			if w.GetReleaseId() == want.Id {
 				found = true
 			}
 		}
 
-		if !found {
-			w.Metadata = &pb.WantMetadata{Active: false}
+		if found {
+			nw = append(nw, w)
 		}
-
 	}
+	collection.NewWants = nw
 
 	return s.saveRecordCollection(ctx, collection)
 }
@@ -675,24 +655,6 @@ func (s *Server) runSync(ctx context.Context) error {
 	collection.CollectionNumber++
 	s.saveRecordCollection(ctx, collection)
 	return err
-}
-
-func (s *Server) pushWants(ctx context.Context, collection *pb.RecordCollection) error {
-	count := 0
-	for _, w := range collection.NewWants {
-		if (w.GetMetadata().GetActive() && w.GetClearWant()) || (!w.GetMetadata().GetActive() && w.GetEnableWant()) {
-			s.updateWant(w)
-			time.Sleep(time.Second)
-			count++
-		}
-
-		// Exit the loop when we've done some work
-		if count > 60 {
-			break
-		}
-	}
-
-	return s.saveRecordCollection(ctx, collection)
 }
 
 func (s *Server) pushMetadata(ctx context.Context, record *pb.Record) error {

@@ -59,18 +59,11 @@ message Record {
 }
 
 message Want {
-  godiscogs.Release release = 1;
-  WantMetadata metadata = 2;
+  // The id of the want
+  int32 release_id = 1;
   
   // Delete this want
-  bool clear_want = 3;
-
-  // Enable this want
-  bool enable_want = 4;
-}
-
-message WantMetadata {
-  bool active = 1;
+  bool clear_want = 2;
 }
 
 // This is the discogs token

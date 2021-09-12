@@ -242,14 +242,7 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 
 	s.updateMetrics(collection)
 
-	count := 0
-	for _, w := range collection.GetNewWants() {
-		if w.GetMetadata().GetActive() {
-			count++
-		}
-	}
-	wants.With(prometheus.Labels{"active": "true"}).Set(float64(count))
-	wants.With(prometheus.Labels{"active": "false"}).Set(float64(len(collection.GetNewWants()) - count))
+	wants.With(prometheus.Labels{"active": "true"}).Set(float64(len(collection.GetNewWants())))
 
 	return collection, nil
 }

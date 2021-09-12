@@ -157,21 +157,21 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	var want *pb.Want
 	found := false
 	for _, rec := range collection.GetNewWants() {
-		if rec.GetRelease().Id == request.GetUpdate().GetRelease().Id {
+		if rec.ReleaseId == request.GetUpdate().GetReleaseId() {
 			found = true
 			proto.Merge(rec, request.GetUpdate())
 			if request.Remove {
 				rec.ClearWant = true
-			}
-			if request.GetUpdate().EnableWant {
-				rec.EnableWant = true
 			}
 			want = rec
 		}
 	}
 
 	if !found {
-		//s.retr.AddToWantlist(int(request.GetUpdate().GetRelease().Id))
+		err := s.retr.AddToWantlist(int(request.GetUpdate().GetReleaseId()))
+		if err != nil {
+			return nil, err
+		}
 		collection.NewWants = append(collection.NewWants, request.GetUpdate())
 	}
 
