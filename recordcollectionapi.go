@@ -149,33 +149,8 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 
 //UpdateWant updates the record
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
-	collection, err := s.readRecordCollection(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	var want *pb.Want
-	found := false
-	for _, rec := range collection.GetNewWants() {
-		if rec.ReleaseId == request.GetUpdate().GetReleaseId() {
-			found = true
-			proto.Merge(rec, request.GetUpdate())
-			if request.Remove {
-				rec.ClearWant = true
-			}
-			want = rec
-		}
-	}
-
-	if !found {
-		err := s.retr.AddToWantlist(int(request.GetUpdate().GetReleaseId()))
-		if err != nil {
-			return nil, err
-		}
-		collection.NewWants = append(collection.NewWants, request.GetUpdate())
-	}
-
-	return &pb.UpdateWantResponse{Updated: want}, s.saveRecordCollection(ctx, collection)
+	err := s.retr.AddToWantlist(int(request.GetUpdate().GetReleaseId()))
+	return &pb.UpdateWantResponse{}, err
 }
 
 //UpdateRecord updates the record
