@@ -295,16 +295,7 @@ func main() {
 		for i, want := range rec.GetWants() {
 			fmt.Printf("%v. %v\n", i, want)
 		}
-	case "dwants":
-		rec, err := registry.GetWants(ctx, &pbrc.GetWantsRequest{})
-		if err != nil {
-			log.Fatalf("Error: %v", err)
-		}
-		for _, want := range rec.GetWants() {
-			if want.GetMetadata().GetActive() {
-				fmt.Printf("curl https://www.discogs.com/sell/release/%v > %v.html\nsleep 2\n", want.GetRelease().GetId(), want.GetRelease().GetId())
-			}
-		}
+
 	case "trans":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOPHMORE}})
 		if err != nil {

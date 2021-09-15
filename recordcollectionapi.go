@@ -149,7 +149,12 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 
 //UpdateWant updates the record
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
-	err := s.retr.AddToWantlist(int(request.GetUpdate().GetReleaseId()))
+	var err error
+	if request.GetRemove() {
+		err = s.retr.RemoveFromWantlist(int(request.GetUpdate().GetReleaseId()))
+	} else {
+		err = s.retr.AddToWantlist(int(request.GetUpdate().GetReleaseId()))
+	}
 	return &pb.UpdateWantResponse{}, err
 }
 

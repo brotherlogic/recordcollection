@@ -101,10 +101,10 @@ type saver interface {
 	AddToFolder(folderID int32, releaseID int32) (int, error)
 	SetRating(releaseID int, rating int) error
 	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) (string, error)
-	DeleteInstance(folderID, releaseID, instanceID int) string
+	DeleteInstance(folderID, releaseID, instanceID int) error
 	SellRecord(releaseID int, price float32, state string, condition, sleeve string) int
 	GetSalePrice(releaseID int) (float32, error)
-	RemoveFromWantlist(releaseID int)
+	RemoveFromWantlist(releaseID int) error
 	AddToWantlist(releaseID int) error
 	UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error
 	GetCurrentSalePrice(saleID int) float32
