@@ -5,7 +5,6 @@ import (
 	"time"
 
 	pbgd "github.com/brotherlogic/godiscogs"
-	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
@@ -133,15 +132,14 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb.GetWantsResponse, error) {
 	response := &pb.GetWantsResponse{Wants: make([]*pb.Want, 0)}
 
-	collection, err := s.readRecordCollection(ctx)
+	wants, err := s.retr.GetWantlist()
 	if err != nil {
 		return nil, err
 	}
 
-	for _, rec := range collection.GetNewWants() {
-		if request.Filter == nil || utils.FuzzyMatch(request.Filter, rec) == nil {
-			response.Wants = append(response.Wants, rec)
-		}
+	for _, w := range wants {
+		response.Wants = append(response.Wants,
+			&pb.Want{ReleaseId: w.GetId()})
 	}
 
 	return response, nil
