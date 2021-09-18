@@ -415,14 +415,14 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "is_twelve":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: 242017, FiledUnder: pbrc.ReleaseMetadata_FILE_12_INCH}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, GoalFolder: 242017, FiledUnder: pbrc.ReleaseMetadata_FILE_12_INCH}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "is_seven":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_7_INCH}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, FiledUnder: pbrc.ReleaseMetadata_FILE_7_INCH}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -457,7 +457,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "cleaned":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, LastCleanDate: time.Now().Unix()}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{LastCleanDate: time.Now().Unix()}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
