@@ -528,3 +528,8 @@ func (s *Server) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Get
 
 	return resp, nil
 }
+
+func (s *Server) GetPrice(ctx context.Context, req *pb.GetPriceRequest) (*pb.GetPriceResponse, error) {
+	price, err := s.retr.GetSalePrice(int(req.GetId()))
+	return &pb.GetPriceResponse{Price: price}, err
+}

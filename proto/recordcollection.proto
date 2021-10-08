@@ -430,6 +430,14 @@ message CommitRecordRequest {
 
 message CommitRecordResponse {}
 
+message GetPriceRequest {
+  int32 id = 1;
+}
+
+message GetPriceResponse {
+  float price = 1;
+}
+
 service RecordCollectionService {
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
@@ -442,6 +450,7 @@ service RecordCollectionService {
   rpc GetUpdates(GetUpdatesRequest) returns (GetUpdatesResponse) {};
   rpc GetOrder(GetOrderRequest) returns (GetOrderResponse) {};
   rpc CommitRecord(CommitRecordRequest) returns (CommitRecordResponse) {};
+  rpc GetPrice(GetPriceRequest) returns (GetPriceResponse) {};
 }
 
 message ClientUpdateRequest{
