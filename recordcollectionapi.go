@@ -22,6 +22,9 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	record, err := s.loadRecord(ctx, request.GetInstanceId(), false)
 	updated := false
 	if err != nil {
+		if status.Convert(err).Code() == codes.OutOfRange {
+			return &pb.CommitRecordResponse{}, nil
+		}
 		return nil, err
 	}
 
