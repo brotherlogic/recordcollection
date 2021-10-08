@@ -58,6 +58,10 @@ func main() {
 				log.Fatalf("Bad Update: %v", err)
 			}
 		}
+	case "get_price":
+		i, _ := strconv.Atoi(os.Args[2])
+		ids, err := registry.GetPrice(ctx, &pbrc.GetPriceRequest{Id: int32(i)})
+		fmt.Printf("Result = %v, %v\n", ids, err)
 	case "check":
 		checkFlags := flag.NewFlagSet("Check", flag.ExitOnError)
 		var id = checkFlags.Int("id", -1, "Id of the record to check")

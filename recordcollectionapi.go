@@ -324,7 +324,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	data, _ := proto.Marshal(upup)
 	_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 		QueueName: "record_fanout",
-		RunTime:   time.Now().Add(time.Second * 10).Unix(),
+		RunTime:   time.Now().Unix(),
 		Payload:   &google_protobuf.Any{Value: data},
 		Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
 	})
@@ -373,7 +373,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	data, _ := proto.Marshal(upup)
 	_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 		QueueName: "record_fanout",
-		RunTime:   time.Now().Add(time.Second * 5).Unix(),
+		RunTime:   time.Now().Unix(),
 		Payload:   &google_protobuf.Any{Value: data},
 		Key:       fmt.Sprintf("%v", instanceID),
 	})
