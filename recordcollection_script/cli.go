@@ -249,6 +249,87 @@ func main() {
 				}
 			}
 		}
+	case "all_cds":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Unable to read record: %v", err)
+			}
+
+			iscd := false
+			for _, format := range rec.GetRecord().GetRelease().GetFormats() {
+				if format.GetName() == "CD" || format.GetName() == "CDr" {
+					iscd = true
+				}
+			}
+
+			if iscd {
+				fmt.Printf("%v - %v [%v]\n", rec.GetRecord().GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetMetadata().GetCategory())
+			}
+		}
+	case "align":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		ids2, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for _, id := range ids.GetInstanceIds() {
+			found := false
+			for _, id2 := range ids2.GetInstanceIds() {
+				if id == id2 {
+					found = true
+				}
+			}
+
+			if !found {
+				log.Printf("%v", id)
+			}
+		}
+	case "auditions":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for i, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				if status.Convert(err).Code() == codes.OutOfRange {
+					fmt.Printf("%v has been deleted\n", id)
+				} else {
+					log.Fatalf("Unable to read record: %v", err)
+				}
+			}
+
+			if rec.GetRecord().GetMetadata().GetLastAudition() > 0 {
+				fmt.Printf("%v. %v on %v\n", i, rec.GetRecord().GetRelease().GetTitle(), time.Unix(rec.GetRecord().GetMetadata().GetLastAudition(), 0))
+			}
+		}
 	case "unlistened":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
