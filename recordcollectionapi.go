@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"time"
 
-	pbgd "github.com/brotherlogic/godiscogs"
-	pb "github.com/brotherlogic/recordcollection/proto"
+	"github.com/brotherlogic/goserver/utils"
 	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	pbgd "github.com/brotherlogic/godiscogs"
 	qpb "github.com/brotherlogic/queue/proto"
+	pb "github.com/brotherlogic/recordcollection/proto"
 	rfpb "github.com/brotherlogic/recordfanout/proto"
 	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
@@ -473,7 +474,8 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 		st := status.Convert(err)
 		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable && st.Code() != codes.Canceled && st.Code() != codes.OutOfRange && st.Code() != codes.NotFound {
 			s.Log(fmt.Sprintf("Bad receive: %v", req))
-			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, ctx))
+			key, err := utils.GetContextKey(ctx)
+			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, key))
 		}
 
 		if st.Code() == codes.OutOfRange {
