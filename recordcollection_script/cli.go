@@ -286,23 +286,18 @@ func main() {
 			log.Fatalf("Bad query: %v", err)
 		}
 
-		ids2, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
-		if err != nil {
-			log.Fatalf("Bad query: %v", err)
-		}
-
 		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
 
 		for _, id := range ids.GetInstanceIds() {
-			found := false
-			for _, id2 := range ids2.GetInstanceIds() {
-				if id == id2 {
-					found = true
-				}
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+
+			if err != nil {
+				log.Fatalf("Boing: %v", err)
 			}
 
-			if !found {
-				log.Printf("%v", id)
+			if rec.GetRecord().GetRelease().GetFolderId() == 812802 {
+				_, err := registry.CommitRecord(ctx, &pbrc.CommitRecordRequest{InstanceId: id})
+				fmt.Printf("%v -> %v\n", id, err)
 			}
 		}
 	case "auditions":
