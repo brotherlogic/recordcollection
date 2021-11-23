@@ -42,6 +42,31 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "cleaning":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		fmt.Printf("Checking Listening Pile\n")
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(3282985)}})
+		if err != nil {
+			log.Fatalf("Bad request: %v", err)
+		}
+		fmt.Printf("FOUND %v\n", len(ids.GetInstanceIds()))
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad Request: %v", err)
+			}
+
+			fmt.Printf("%v -> %v\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+			if r.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_THE_BOX {
+				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "movetobox", Update: &pbrc.Record{
+					Release:  &pbgd.Release{InstanceId: id},
+					Metadata: &pbrc.ReleaseMetadata{MoveFolder: 3282985},
+				}})
+				fmt.Printf("%v\n", err)
+			}
+		}
 	case "label":
 		lblnm, _ := strconv.Atoi(os.Args[2])
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
@@ -329,7 +354,7 @@ func main() {
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
 
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
 			log.Fatalf("Bad query: %v", err)
 		}
@@ -347,6 +372,49 @@ func main() {
 					rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_PARENTS {
 					fmt.Printf("%v. %v [%v] -> %v\n", i, id, rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetMetadata().GetCategory())
 				}
+			}
+		}
+	case "fix_stales":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for i, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Unable to read record: %v", err)
+			}
+
+			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_STALE_SALE {
+				fmt.Printf("%v. %v [%v] -> %v\n", i, id, rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetMetadata().GetCategory())
+			}
+		}
+	case "pre_in":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for i, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Unable to read record: %v", err)
+			}
+
+			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_PRE_IN_COLLECTION &&
+				(rec.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN || rec.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX) {
+				fmt.Printf("%v. %v [%v] -> %v\n", i, id, rec.GetRecord().GetRelease().GetTitle(), rec.GetRecord().GetMetadata().GetCategory())
 			}
 		}
 	case "folder":
