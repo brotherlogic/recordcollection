@@ -166,6 +166,9 @@ message ReleaseMetadata {
     VALIDATE = 35;
 
     ARRIVED = 38;
+
+    PRE_SOFT_VALIDATE = 39;
+    SOFT_VALIDATED = 40;
   }
   Category category = 8;
   
@@ -293,6 +296,14 @@ message ReleaseMetadata {
   int64 last_check_date = 55;
 
   int64 last_audition = 58;
+
+  enum SleeveState {
+    SLEEVE_UNKNOWN = 0;
+    VINYL_STORAGE_DOUBLE_FLAP = 1;
+    BAGS_UNLIMITED_PLAIN = 2;
+    CUSTOM = 3;
+  }
+  SleeveState sleeve = 59;
 }
 
 // A request to get some records
