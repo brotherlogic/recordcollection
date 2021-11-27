@@ -412,7 +412,11 @@ func main() {
 	case "width":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.ParseFloat(os.Args[3], 32)
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: float32(f)}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+			Metadata: &pbrc.ReleaseMetadata{
+				RecordWidth: float32(f),
+				Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
+			}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
