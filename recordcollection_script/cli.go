@@ -274,6 +274,25 @@ func main() {
 				}
 			}
 		}
+	case "soft":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for i, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Unable to read record: %v", err)
+			}
+
+			fmt.Printf("%v. %v [%v] -> %v\n", time.Since(time.Unix(rec.GetRecord().GetMetadata().GetLastListenTime(), 0)).Hours(), i, rec.GetRecord().Release.GetTitle(), rec.Record.GetMetadata().GetCategory())
+		}
 	case "all_cds":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()

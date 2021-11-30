@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -312,6 +313,28 @@ func main() {
 			}
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 		}
+	case "sleeve":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		bid := int32(math.MaxInt32)
+		var rec *pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			if id < bid {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+				}
+				rec = r.GetRecord()
+			}
+		}
+		if rec != nil {
+			fmt.Printf("%v [%v]\n", rec.GetRelease().GetTitle(), rec.GetRelease().GetInstanceId())
+		} else {
+			fmt.Printf("Cannot find record for sleeving\n")
+		}
+
 	case "fget":
 		i, _ := strconv.Atoi(os.Args[2])
 		r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{ReleaseId: int32(i)})
