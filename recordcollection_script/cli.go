@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"math"
 	"os"
 	"sort"
 	"strconv"
@@ -274,6 +275,40 @@ func main() {
 				}
 			}
 		}
+	case "locate":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_STAGED}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		bv := int64(math.MaxInt64)
+		bv2 := int64(0)
+		var br *pbrc.Record
+		var br2 *pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Unable to read record: %v", err)
+			}
+
+			if (rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX || rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN) && rec.Record.GetMetadata().GetLastListenTime() < bv {
+				bv = rec.Record.GetMetadata().GetLastListenTime()
+				br = rec.GetRecord()
+			}
+
+			if (rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX || rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN) && rec.Record.GetMetadata().GetLastListenTime() > bv2 {
+				bv2 = rec.Record.GetMetadata().GetLastListenTime()
+				br2 = rec.GetRecord()
+			}
+
+		}
+		fmt.Printf("%v [%v] -> %v\n", time.Unix(bv, 0), br.GetRelease().GetInstanceId(), br.GetRelease().GetTitle())
+		fmt.Printf("%v [%v] -> %v\n", time.Unix(bv2, 0), br2.GetRelease().GetInstanceId(), br2.GetRelease().GetTitle())
 	case "soft":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()

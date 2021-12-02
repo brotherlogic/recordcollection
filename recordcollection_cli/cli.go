@@ -313,6 +313,18 @@ func main() {
 			}
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 		}
+	case "phs":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+		}
 	case "sleeve":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
 		if err != nil {
@@ -330,7 +342,7 @@ func main() {
 			}
 		}
 		if rec != nil {
-			fmt.Printf("%v [%v]\n", rec.GetRelease().GetTitle(), rec.GetRelease().GetInstanceId())
+			fmt.Printf("%v. %v [%v]\n", rec.GetRelease().GetId(), rec.GetRelease().GetTitle(), rec.GetRelease().GetInstanceId())
 		} else {
 			fmt.Printf("Cannot find record for sleeving\n")
 		}
