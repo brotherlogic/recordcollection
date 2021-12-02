@@ -302,7 +302,7 @@ func main() {
 		}
 
 	case "trans":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOPHMORE}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
 		if err != nil {
 			fmt.Printf("Error %v\n", err)
 		}
@@ -339,6 +339,7 @@ func main() {
 					fmt.Printf("Error: %v\n", err)
 				}
 				rec = r.GetRecord()
+				bid = id
 			}
 		}
 		if rec != nil {
