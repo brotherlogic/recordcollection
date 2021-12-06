@@ -325,6 +325,47 @@ func main() {
 			}
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 		}
+	case "hs":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetGoalFolder() == 242017 && r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
+				fmt.Printf("%v %v. %v [%v]\n", time.Since(time.Unix(r.Record.Metadata.GetDateAdded(), 0)).Minutes(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			}
+		}
+	case "pic":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_IN_COLLECTION}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
+				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
+				fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			}
+		}
+	case "in_coll":
+		i, f := strconv.Atoi(os.Args[2])
+		if f != nil {
+			log.Fatalf("Hmm %v", f)
+		}
+		u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
+			Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+				Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_IN_COLLECTION}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Update: %v", u)
 	case "sleeve":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
 		if err != nil {
@@ -343,7 +384,7 @@ func main() {
 			}
 		}
 		if rec != nil {
-			fmt.Printf("%v. %v [%v]\n", rec.GetRelease().GetId(), rec.GetRelease().GetTitle(), rec.GetRelease().GetInstanceId())
+			fmt.Printf("%v %v [%v]\n", rec.GetRelease().GetId(), rec.GetRelease().GetTitle(), rec.GetRelease().GetInstanceId())
 		} else {
 			fmt.Printf("Cannot find record for sleeving\n")
 		}
