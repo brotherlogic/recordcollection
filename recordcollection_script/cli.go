@@ -230,6 +230,93 @@ func main() {
 
 			fmt.Printf("%v (%v) %v\n", id, i, rec.GetRecord().GetRelease().Title)
 		}
+	case "low_score":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		var recs []*pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Unable to read record: %v", err)
+			}
+
+			if rec.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+				recs = append(recs, rec.GetRecord())
+			}
+		}
+
+		sort.SliceStable(recs, func(i, j int) bool {
+			return recs[i].GetMetadata().GetOverallScore() < recs[j].Metadata.GetOverallScore()
+		})
+		for i := 0; i < 10; i++ {
+			fmt.Printf("%v. %v [%v]\n", i, recs[i].Release.GetTitle(), recs[i].GetRelease().GetInstanceId())
+		}
+	case "width":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		mapper := make(map[int32]float32)
+		scoremap := make(map[int32]float32)
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Unable to read record: %v", err)
+			}
+
+			if rec.Record.GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH ||
+				rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_THE_BOX {
+				mapper[id] = rec.Record.Metadata.GetRecordWidth()
+				scoremap[id] = rec.Record.Metadata.GetOverallScore()
+			}
+		}
+
+		log.Printf("Found %v viable records", len(mapper))
+		tcount := float32(0)
+		twidth := float32(0)
+		for _, width := range mapper {
+			if width > 0 {
+				tcount++
+				twidth += width
+			}
+		}
+		meanWidth := twidth / tcount
+		log.Printf("Mean width is %v from %v records", meanWidth, tcount)
+
+		tcount = float32(0)
+		for _, width := range mapper {
+			if width > 0 {
+				tcount += width
+			} else {
+				tcount += meanWidth
+			}
+		}
+
+		log.Printf("Total width of all 12s: %v", tcount)
+
+		bestscore := float32(100)
+		bestid := int32(-1)
+		for id, val := range scoremap {
+			if val < bestscore && id > 0 {
+				bestscore = val
+				bestid = id
+			}
+		}
+		log.Printf("Lowest score: %v (%v)", bestscore, bestid)
 	case "pre_valid":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
@@ -377,6 +464,127 @@ func main() {
 			if rec.GetRecord().GetRelease().GetFolderId() == 812802 {
 				_, err := registry.CommitRecord(ctx, &pbrc.CommitRecordRequest{InstanceId: id})
 				fmt.Printf("%v -> %v\n", id, err)
+			}
+		}
+	case "run_box":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{488127}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+
+			if err != nil {
+				log.Fatalf("Boing: %v", err)
+			}
+
+			isTwelve := false
+			is45 := false
+			isCD := false
+			isTape := false
+			isDigital := false
+			if rec.GetRecord().GetMetadata().GetGoalFolder() != 1782105 &&
+				rec.GetRecord().GetMetadata().GetGoalFolder() != 3282985 &&
+				rec.GetRecord().GetMetadata().GetGoalFolder() != 3291655 &&
+				rec.GetRecord().GetMetadata().GetGoalFolder() != 2274270 &&
+				rec.GetRecord().GetMetadata().GetGoalFolder() != 1727264 &&
+				rec.GetRecord().GetMetadata().GetGoalFolder() != 3291970 &&
+				rec.GetRecord().GetRelease().GetFolderId() != 1782105 &&
+				rec.GetRecord().GetRelease().GetFolderId() != 3282985 &&
+				rec.GetRecord().GetRelease().GetFolderId() != 3291655 &&
+				rec.GetRecord().GetRelease().GetFolderId() != 2274270 &&
+				rec.GetRecord().GetRelease().GetFolderId() != 1727264 &&
+				rec.GetRecord().GetRelease().GetFolderId() != 1613206 &&
+				rec.GetRecord().GetRelease().GetFolderId() != 1708299 &&
+				rec.GetRecord().GetRelease().GetFolderId() != 3291970 {
+				for _, format := range rec.GetRecord().GetRelease().GetFormats() {
+					if format.Name == "LP" || format.Name == "12\"" || format.Name == "10\"" {
+						isTwelve = true
+					}
+					if format.Name == "7\"" {
+						is45 = true
+					}
+					if format.Name == "Cassette" {
+						isTape = true
+					}
+					if format.Name == "CD" || format.Name == "CDr" {
+						isCD = true
+					}
+					for _, des := range format.GetDescriptions() {
+						if des == "LP" || des == "12\"" || des == "10\"" {
+							isTwelve = true
+						}
+						if des == "7\"" {
+							is45 = true
+						}
+						if des == "Cassette" {
+							isTape = true
+						}
+						if des == "CD" || des == "CDr" {
+							isCD = true
+						}
+					}
+				}
+			} else {
+				if rec.GetRecord().GetMetadata().GetGoalFolder() == 1782105 ||
+					rec.GetRecord().GetMetadata().GetGoalFolder() == 2274270 ||
+					rec.GetRecord().GetMetadata().GetNewBoxState() == pbrc.ReleaseMetadata_IN_DIGITAL_BOX {
+					isDigital = true
+				}
+			}
+
+			log.Printf("%v -> %v,%v,%v,%v,%v", rec.Record.GetRelease().InstanceId, isTwelve, is45, isTape, isCD, isDigital)
+			if isTwelve {
+				_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+					Update: &pbrc.Record{
+						Release: &pbgd.Release{
+							InstanceId: id,
+						},
+						Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_THE_BOX, Dirty: true}}})
+				log.Printf("%v -> %v [%v]", rec.Record.GetRelease().InstanceId, rec.GetRecord().GetRelease().GetTitle(), err)
+
+			} else if isCD {
+				_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+					Update: &pbrc.Record{
+						Release: &pbgd.Release{
+							InstanceId: id,
+						},
+						Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_CDS_BOX, Dirty: true}}})
+				log.Printf("%v -> %v [%v]", rec.Record.GetRelease().InstanceId, rec.GetRecord().GetRelease().GetTitle(), err)
+
+			} else if is45 {
+				_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+					Update: &pbrc.Record{
+						Release: &pbgd.Release{
+							InstanceId: id,
+						},
+						Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_45S_BOX, Dirty: true}}})
+				log.Printf("%v -> %v [%v]", rec.Record.GetRelease().InstanceId, rec.GetRecord().GetRelease().GetTitle(), err)
+
+			} else if isTape {
+				_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+					Update: &pbrc.Record{
+						Release: &pbgd.Release{
+							InstanceId: id,
+						},
+						Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_TAPE_BOX, Dirty: true}}})
+				log.Printf("%v -> %v [%v]", rec.Record.GetRelease().InstanceId, rec.GetRecord().GetRelease().GetTitle(), err)
+
+			} else if isDigital {
+				_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Boxing",
+					Update: &pbrc.Record{
+						Release: &pbgd.Release{
+							InstanceId: id,
+						},
+						Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_IN_DIGITAL_BOX, Dirty: true}}})
+				log.Printf("%v -> %v [%v]", rec.Record.GetRelease().InstanceId, rec.GetRecord().GetRelease().GetTitle(), err)
+
 			}
 		}
 	case "auditions":
