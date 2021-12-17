@@ -304,6 +304,14 @@ message ReleaseMetadata {
     CUSTOM = 3;
   }
   SleeveState sleeve = 59;
+
+  enum PurchaseLocation {
+    LOCATION_UNKNOWN = 0;
+    AMOEBA = 1;
+    STRANDED = 2;
+    HERCULES = 3;
+  }
+  PurchaseLocation purchase_location = 60;
 }
 
 // A request to get some records

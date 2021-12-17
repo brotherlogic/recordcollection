@@ -470,7 +470,7 @@ func main() {
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
 
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{488127}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{1708299}})
 		if err != nil {
 			log.Fatalf("Bad query: %v", err)
 		}
@@ -489,8 +489,7 @@ func main() {
 			isCD := false
 			isTape := false
 			isDigital := false
-			if rec.GetRecord().GetMetadata().GetGoalFolder() != 1782105 &&
-				rec.GetRecord().GetMetadata().GetGoalFolder() != 3282985 &&
+			if rec.GetRecord().GetMetadata().GetGoalFolder() != 3282985 &&
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 3291655 &&
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 2274270 &&
 				rec.GetRecord().GetMetadata().GetGoalFolder() != 1727264 &&
@@ -501,7 +500,6 @@ func main() {
 				rec.GetRecord().GetRelease().GetFolderId() != 2274270 &&
 				rec.GetRecord().GetRelease().GetFolderId() != 1727264 &&
 				rec.GetRecord().GetRelease().GetFolderId() != 1613206 &&
-				rec.GetRecord().GetRelease().GetFolderId() != 1708299 &&
 				rec.GetRecord().GetRelease().GetFolderId() != 3291970 {
 				for _, format := range rec.GetRecord().GetRelease().GetFormats() {
 					if format.Name == "LP" || format.Name == "12\"" || format.Name == "10\"" {
