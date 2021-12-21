@@ -388,6 +388,30 @@ func main() {
 		} else {
 			fmt.Printf("Cannot find record for sleeving\n")
 		}
+	case "sevensleeve":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		bid := int32(math.MaxInt32)
+		var rec *pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			if id < bid {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+				}
+				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_7_INCH {
+					rec = r.GetRecord()
+					bid = id
+				}
+			}
+		}
+		if rec != nil {
+			fmt.Printf("%v %v [%v]\n", rec.GetRelease().GetId(), rec.GetRelease().GetTitle(), rec.GetRelease().GetInstanceId())
+		} else {
+			fmt.Printf("Cannot find record for sleeving\n")
+		}
 
 	case "fget":
 		i, _ := strconv.Atoi(os.Args[2])
