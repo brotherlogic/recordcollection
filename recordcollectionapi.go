@@ -379,10 +379,11 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	}
 	data, _ := proto.Marshal(upup)
 	_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-		QueueName: "record_fanout",
-		RunTime:   time.Now().Unix(),
-		Payload:   &google_protobuf.Any{Value: data},
-		Key:       fmt.Sprintf("%v", instanceID),
+		QueueName:     "record_fanout",
+		RunTime:       time.Now().Unix(),
+		Payload:       &google_protobuf.Any{Value: data},
+		Key:           fmt.Sprintf("%v", instanceID),
+		RequireUnique: true,
 	})
 	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 

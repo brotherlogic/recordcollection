@@ -354,6 +354,37 @@ func main() {
 				fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 			}
 		}
+	case "limbo":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{3380098}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		log.Printf("HERE %v", ids)
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
+				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
+				fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			}
+		}
+	case "psv":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
+				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
+				fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			}
+		}
 	case "in_coll":
 		i, f := strconv.Atoi(os.Args[2])
 		if f != nil {
