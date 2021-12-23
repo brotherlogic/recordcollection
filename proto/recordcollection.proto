@@ -310,6 +310,7 @@ message ReleaseMetadata {
     AMOEBA = 1;
     STRANDED = 2;
     HERCULES = 3;
+    DISCOGS = 4;
   }
   PurchaseLocation purchase_location = 60;
 }
