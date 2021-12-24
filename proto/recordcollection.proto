@@ -296,6 +296,7 @@ message ReleaseMetadata {
   int64 last_check_date = 55;
 
   int64 last_audition = 58;
+  int32 audition_score = 61;
 
   enum SleeveState {
     SLEEVE_UNKNOWN = 0;
