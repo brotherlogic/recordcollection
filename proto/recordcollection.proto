@@ -313,6 +313,7 @@ message ReleaseMetadata {
     HERCULES = 3;
     DISCOGS = 4;
     GIFT = 5;
+    PBANDCAMP = 6;
   }
   PurchaseLocation purchase_location = 60;
 }
