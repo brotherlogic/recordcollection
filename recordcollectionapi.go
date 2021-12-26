@@ -218,7 +218,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	// Should be less than 1k
 	if proto.Size(updates) > 100000 {
-		s.RaiseIssue("Update size", fmt.Sprintf("%v has triggered a big update", request))
+		s.RaiseIssue("Update size", fmt.Sprintf("%v has triggered a big update -> %v", request, proto.Size(updates)))
 	}
 
 	hasLabels := len(rec.GetRelease().GetLabels()) > 0
