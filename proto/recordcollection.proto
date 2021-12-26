@@ -312,6 +312,7 @@ message ReleaseMetadata {
     STRANDED = 2;
     HERCULES = 3;
     DISCOGS = 4;
+    GIFT = 5;
   }
   PurchaseLocation purchase_location = 60;
 }

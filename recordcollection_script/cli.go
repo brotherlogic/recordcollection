@@ -466,6 +466,29 @@ func main() {
 				fmt.Printf("%v -> %v\n", id, err)
 			}
 		}
+	case "boxed_score":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+
+			if err != nil {
+				log.Fatalf("Boing: %v", err)
+			}
+
+			if rec.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_THE_BOX {
+				fmt.Printf("%v -> %v/%v\n", rec.GetRecord().GetMetadata().GetOverallScore(),
+					rec.Record.GetRelease().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle())
+			}
+		}
 	case "run_box":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
