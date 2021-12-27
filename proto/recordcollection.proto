@@ -303,6 +303,7 @@ message ReleaseMetadata {
     VINYL_STORAGE_DOUBLE_FLAP = 1;
     BAGS_UNLIMITED_PLAIN = 2;
     CUSTOM = 3;
+    BOX_SET = 4;
   }
   SleeveState sleeve = 59;
 
