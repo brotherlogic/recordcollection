@@ -318,6 +318,8 @@ message ReleaseMetadata {
     DOWNLOAD = 7;
   }
   PurchaseLocation purchase_location = 60;
+
+  string purchase_budget = 62;
 }
 
 // A request to get some records
