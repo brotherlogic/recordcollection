@@ -563,7 +563,7 @@ func main() {
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
 			Metadata: &pbrc.ReleaseMetadata{
 				RecordWidth: float32(f),
-				Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
+				//Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
 			}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
