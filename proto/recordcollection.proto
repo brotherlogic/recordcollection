@@ -316,6 +316,7 @@ message ReleaseMetadata {
     GIFT = 5;
     PBANDCAMP = 6;
     DOWNLOAD = 7;
+    CHERRY_RED =8;
   }
   PurchaseLocation purchase_location = 60;
 
