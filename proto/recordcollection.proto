@@ -317,6 +317,7 @@ message ReleaseMetadata {
     PBANDCAMP = 6;
     DOWNLOAD = 7;
     CHERRY_RED =8;
+    BLEEP = 9;
   }
   PurchaseLocation purchase_location = 60;
 
