@@ -443,6 +443,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 		r.GetMetadata().NewBoxState = pb.ReleaseMetadata_BOX_UNKNOWN
 
 		r.GetMetadata().SaleId = 0
+		r.GetMetadata().SaleState = pbd.SaleState_EXPIRED
 		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL ||
 			r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE ||
 			r.GetMetadata().GetCategory() == pb.ReleaseMetadata_SOLD_ARCHIVE ||
