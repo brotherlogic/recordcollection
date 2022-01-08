@@ -230,6 +230,31 @@ func main() {
 
 			fmt.Printf("%v (%v) %v\n", id, i, rec.GetRecord().GetRelease().Title)
 		}
+	case "fix_sales":
+		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
+		defer cancel()
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{true}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Read %v records\n", len(ids.GetInstanceIds()))
+
+		cat := make(map[string]int)
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Unable to read record: %v", err)
+			}
+
+			if rec.Record.GetMetadata().GetBoxState() != pbrc.ReleaseMetadata_BOX_UNKNOWN && rec.Record.GetMetadata().GetBoxState() != pbrc.ReleaseMetadata_OUT_OF_BOX {
+				cat[rec.Record.Metadata.GetCategory().String()]++
+			}
+		}
+		for key, val := range cat {
+			fmt.Printf("%v - %v\n", key, val)
+		}
 	case "low_score":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()

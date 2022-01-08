@@ -441,6 +441,14 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 		r.GetMetadata().GetBoxState() != r.GetMetadata().GetNewBoxState() {
 		r.GetMetadata().BoxState = r.GetMetadata().GetNewBoxState()
 		r.GetMetadata().NewBoxState = pb.ReleaseMetadata_BOX_UNKNOWN
+
+		r.GetMetadata().SaleId = 0
+		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL ||
+			r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE ||
+			r.GetMetadata().GetCategory() == pb.ReleaseMetadata_SOLD_ARCHIVE ||
+			r.GetMetadata().GetCategory() == pb.ReleaseMetadata_PREPARE_TO_SELL {
+			r.GetMetadata().Category = pb.ReleaseMetadata_PRE_IN_COLLECTION
+		}
 	}
 
 	r.GetMetadata().Dirty = false
