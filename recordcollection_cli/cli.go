@@ -569,6 +569,17 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "budget":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+			Metadata: &pbrc.ReleaseMetadata{
+				PurchaseBudget: os.Args[3],
+				//Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
+			}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "fwidth":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.ParseFloat(os.Args[3], 32)
