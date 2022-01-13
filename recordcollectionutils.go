@@ -495,6 +495,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 			r.GetRelease().Labels = []*pbd.Label{}
 			r.GetRelease().Tracklist = []*pbd.Track{}
 			r.GetRelease().DigitalVersions = []int32{}
+			r.GetRelease().OtherVersions = []int32{}
 
 			time.Sleep(time.Second * 2)
 			s.Log(fmt.Sprintf("Merged %v", release))
