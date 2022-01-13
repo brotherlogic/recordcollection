@@ -411,6 +411,8 @@ github.com/brotherlogic/recordscores v0.0.0-20211023215027-8e1a918bffcc/go.mod h
 github.com/brotherlogic/recordscores v0.0.0-20211123143348-93496327a6e7/go.mod h1:T6zS30zP15JlGMDjgIM9zz8O63oIxBRxjEiB3W1tj1w=
 github.com/brotherlogic/recordscores v0.0.0-20220112225331-f8cb93847011 h1:XB21H/oF8ZRRuJ+hLYmjVdMkVoWYDGOPP1HOf+i8M1k=
 github.com/brotherlogic/recordscores v0.0.0-20220112225331-f8cb93847011/go.mod h1:X6+COp7PNRIlxA6fiIaECzU2Mqs/0t7cwkbfDebO4gI=
+github.com/brotherlogic/recordscores v0.0.0-20220113153225-fd8717737f6f h1:AcdYoei0yE4vZ657G/nl31SaYyEQHN3lYOgTAyF1C4k=
+github.com/brotherlogic/recordscores v0.0.0-20220113153225-fd8717737f6f/go.mod h1:X6+COp7PNRIlxA6fiIaECzU2Mqs/0t7cwkbfDebO4gI=
 github.com/brotherlogic/recordsorganiser v0.0.0-20210509192121-8c945511edb7/go.mod h1:IOxF9YmkFOGkCZAMitNggNqXK+i9ooy1+FMRNdW9JB0=
 github.com/brotherlogic/recordsorganiser v0.0.0-20210706222422-7d8c036fc939/go.mod h1:i4AwwoFG6HRO+VvHW7gP2e00TIdI3YPaU65KC9WEjT4=
 github.com/brotherlogic/recordsorganiser v0.0.0-20210826185725-9b8165799dda/go.mod h1:KoSWo6gTp+UgIDlksM6T/xpDmbnorSxu+CndhH0efg0=

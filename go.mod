@@ -12,7 +12,7 @@ require (
 	github.com/brotherlogic/recordfanout v0.0.0-20211222210841-e0278dc456e9
 	github.com/brotherlogic/recordmover v0.0.0-20211216061917-855d4b4fd46b
 	github.com/brotherlogic/recordprocess v0.0.0-20220106173602-3552eb939395
-	github.com/brotherlogic/recordscores v0.0.0-20220112225331-f8cb93847011
+	github.com/brotherlogic/recordscores v0.0.0-20220113153225-fd8717737f6f
 	github.com/brotherlogic/recordsorganiser v0.0.0-20220105223633-8ec52e8b218c
 	github.com/golang/protobuf v1.5.2
 	github.com/prometheus/client_golang v1.11.0

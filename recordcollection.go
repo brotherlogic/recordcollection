@@ -24,7 +24,7 @@ import (
 	pbks "github.com/brotherlogic/keystore/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
-	pbrp "github.com/brotherlogic/recordprocess/proto"
+	pbrs "github.com/brotherlogic/recordscores/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
 
 	_ "net/http/pprof"
@@ -124,24 +124,19 @@ type prodScorer struct {
 }
 
 func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, error) {
-	conn, err := p.dial(ctx, "recordprocess")
+	conn, err := p.dial(ctx, "recordscores")
 	if err != nil {
 		return -1, err
 	}
 	defer conn.Close()
 
-	client := pbrp.NewScoreServiceClient(conn)
-	res, err := client.GetScore(ctx, &pbrp.GetScoreRequest{InstanceId: instanceID})
+	client := pbrs.NewRecordScoreServiceClient(conn)
+	res, err := client.GetScore(ctx, &pbrs.GetScoreRequest{InstanceId: instanceID})
 	if err != nil {
 		return -1, err
 	}
 
-	score := float32(0)
-	for _, sc := range res.Scores {
-		score += float32(sc.Rating)
-	}
-
-	return score / float32(len(res.Scores)), nil
+	return res.GetComputedScore().GetOverall(), nil
 }
 
 type fo struct {
