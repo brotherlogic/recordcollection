@@ -318,6 +318,7 @@ message ReleaseMetadata {
     DOWNLOAD = 7;
     CHERRY_RED =8;
     BLEEP = 9;
+    DIRECT = 10;
   }
   PurchaseLocation purchase_location = 60;
 
