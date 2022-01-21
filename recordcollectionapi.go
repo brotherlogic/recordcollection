@@ -239,7 +239,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				return nil, fmt.Errorf("Sales are disabled")
 			}
 			price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
-			saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition)
+			//230 is approx weight of packaging
+			saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
 
 			// Cancel changes in the update
 			request.GetUpdate().GetMetadata().SaleId = 0
