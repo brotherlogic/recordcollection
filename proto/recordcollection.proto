@@ -229,6 +229,9 @@ message ReleaseMetadata {
     KEEP_UNKNOWN = 0;
     NOT_KEEPER = 1;
     KEEPER = 2;
+
+    // We want to keep this until we get a digital version
+    DIGITAL_KEEPER = 3;
   }
   KeepState keep = 29;
 

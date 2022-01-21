@@ -858,6 +858,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "digital_keep":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_DIGITAL_KEEPER}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "reset_cd":
 		i, _ := strconv.Atoi(os.Args[2])
 		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{}}}
