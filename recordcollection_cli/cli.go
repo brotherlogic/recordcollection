@@ -325,6 +325,20 @@ func main() {
 			}
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 		}
+	case "run_full_update":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_THE_BOX && r.GetRecord().GetMetadata().GetGoalFolder() != 242017 {
+				fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			}
+		}
 	case "hs":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
 		if err != nil {

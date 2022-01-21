@@ -189,8 +189,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if request.GetUpdate().GetMetadata().GetLastCleanDate() == 0 &&
 				request.GetUpdate().GetMetadata().GetRecordWidth() == 0 {
 				if request.GetUpdate().GetMetadata().GetLastStockCheck() == 0 {
-					s.Log(fmt.Sprintf("Update %v failed because of the box situation", request))
-					return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
+					if request.GetUpdate().GetMetadata().GetGoalFolder() == 0 {
+						s.Log(fmt.Sprintf("Update %v failed because of the box situation", request))
+						return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
+					}
 				}
 			}
 		}
