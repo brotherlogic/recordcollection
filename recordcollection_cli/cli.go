@@ -335,9 +335,9 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			if r.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_THE_BOX && r.GetRecord().GetMetadata().GetGoalFolder() != 242017 {
+			if r.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_45S_BOX && r.GetRecord().GetMetadata().GetGoalFolder() != 267116 {
 				fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
-				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: 242017}}})
+				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: 267116}}})
 				if err != nil {
 					log.Fatalf("Bad update: %v", err)
 				}
