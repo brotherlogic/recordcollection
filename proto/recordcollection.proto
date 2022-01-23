@@ -307,6 +307,7 @@ message ReleaseMetadata {
     BAGS_UNLIMITED_PLAIN = 2;
     CUSTOM = 3;
     BOX_SET = 4;
+    VINYL_STORAGE_NO_INNER = 5;
   }
   SleeveState sleeve = 59;
 
