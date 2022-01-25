@@ -308,6 +308,7 @@ message ReleaseMetadata {
     CUSTOM = 3;
     BOX_SET = 4;
     VINYL_STORAGE_NO_INNER = 5;
+    FIXED = 6;
   }
   SleeveState sleeve = 59;
 
