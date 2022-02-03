@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
@@ -483,8 +484,9 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 		}
 	}
 
-	//Force a recache if the record has no title or condition
-	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" {
+	//Force a recache if the record has no title or condition; or if it has the old image format
+	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" ||
+		(len(r.GetRelease().GetImages()) > 0 && strings.Contains(r.GetRelease().GetImages()[0].GetUri(), "img.discogs")) {
 		release, err := s.retr.GetRelease(r.GetRelease().Id)
 		if err == nil {
 
