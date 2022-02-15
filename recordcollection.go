@@ -47,6 +47,10 @@ var (
 		Name: "recordcollection_queue_result",
 		Help: "Last update time",
 	}, []string{"error"})
+	collectionSize = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "recordcollection_size",
+		Help: "Last update time",
+	})
 )
 
 type quotaChecker interface {
@@ -239,6 +243,7 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 
 	wants.With(prometheus.Labels{"active": "true"}).Set(float64(len(collection.GetNewWants())))
 
+	collectionSize.Set(float64(proto.Size(collection)))
 	return collection, nil
 }
 
