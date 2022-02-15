@@ -19,6 +19,7 @@ import (
 	"github.com/andanhm/go-prettytime"
 
 	pbgd "github.com/brotherlogic/godiscogs"
+	pbks "github.com/brotherlogic/keystore/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 
 	//Needed to pull in gzip encoding init
@@ -45,6 +46,25 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "sanity":
+		collection := &pbrc.RecordCollection{}
+		conn, err := utils.LFDialServer(ctx, "keystore")
+		if err != nil {
+			log.Fatalf("Bad Dial: %v", err)
+		}
+		defer conn.Close()
+		ksc := pbks.NewKeyStoreServiceClient(conn)
+		res, err := ksc.Read(ctx, &pbks.ReadRequest{Key: "/github.com/brotherlogic/recordcollection/collection"})
+
+		if err != nil {
+			log.Fatalf("Bad Read: %v", err)
+		}
+
+		proto.Unmarshal(res.GetPayload().GetValue(), collection)
+
+		fmt.Printf("READ: %vkb\n", proto.Size(collection)/(1024))
+		fmt.Printf("Size: %v\n", len(collection.GetNeedsPush()))
+
 	case "folder":
 		i, _ := strconv.Atoi(os.Args[2])
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(i)}})

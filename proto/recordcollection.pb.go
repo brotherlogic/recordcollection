@@ -798,7 +798,7 @@ type RecordCollection struct {
 	InstanceToRecache             map[int32]int64                    `protobuf:"bytes,13,rep,name=instance_to_recache,json=instanceToRecache,proto3" json:"instance_to_recache,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 	InstanceToLastSalePriceUpdate map[int32]int64                    `protobuf:"bytes,14,rep,name=instance_to_last_sale_price_update,json=instanceToLastSalePriceUpdate,proto3" json:"instance_to_last_sale_price_update,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
 	SaleUpdates                   []int32                            `protobuf:"varint,11,rep,packed,name=sale_updates,json=saleUpdates,proto3" json:"sale_updates,omitempty"`
-	NeedsPush                     []int32                            `protobuf:"varint,12,rep,packed,name=needs_push,json=needsPush,proto3" json:"needs_push,omitempty"`
+	NeedsPush                     []int32                            `protobuf:"varint,12,rep,packed,name=needs_push,json=needsPush,proto3" json:"needs_push,omitempty"` // DEPRECATED
 	// The record we haven't listened to
 	OldestRecord   int64   `protobuf:"varint,15,opt,name=oldest_record,json=oldestRecord,proto3" json:"oldest_record,omitempty"`
 	OldestRecordId int32   `protobuf:"varint,16,opt,name=oldest_record_id,json=oldestRecordId,proto3" json:"oldest_record_id,omitempty"`

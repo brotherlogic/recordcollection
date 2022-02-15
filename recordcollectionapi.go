@@ -105,13 +105,6 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	delete(collection.InstanceToId, request.InstanceId)
 	delete(collection.InstanceToUpdateIn, request.InstanceId)
 
-	betterDelete := []int32{}
-	for _, val := range collection.NeedsPush {
-		if val != request.InstanceId {
-			betterDelete = append(betterDelete, val)
-		}
-	}
-
 	rec, err := s.loadRecord(ctx, request.GetInstanceId(), false)
 	if status.Convert(err).Code() == codes.OutOfRange {
 		return &pb.DeleteRecordResponse{}, s.saveRecordCollection(ctx, collection)
@@ -122,9 +115,6 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 
 	res := s.retr.DeleteInstance(int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), int(request.GetInstanceId()))
 	s.Log(fmt.Sprintf("Deleted from collection: %v", res))
-
-	s.Log(fmt.Sprintf("Removed from push: %v -> %v given %v and %v", len(collection.NeedsPush), len(betterDelete), request.InstanceId, collection.NeedsPush))
-	collection.NeedsPush = betterDelete
 
 	err = s.saveRecordCollection(ctx, collection)
 	if err != nil {

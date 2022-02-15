@@ -239,6 +239,11 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 		collection.OldestRecord = time.Now().Unix()
 	}
 
+	// Zero out the needs push array
+	if len(collection.GetNeedsPush()) > 0 {
+		collection.NeedsPush = make([]int32, 0)
+	}
+
 	s.updateMetrics(collection)
 
 	wants.With(prometheus.Labels{"active": "true"}).Set(float64(len(collection.GetNewWants())))
@@ -351,10 +356,6 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Now().Unix()
 	} else {
 		collection.InstanceToRecache[r.GetRelease().InstanceId] = time.Unix(r.GetMetadata().LastCache, 0).Add(time.Hour * 24 * 7 * 2).Unix()
-	}
-
-	if r.GetMetadata().GetDirty() {
-		collection.NeedsPush = append(collection.NeedsPush, r.GetRelease().InstanceId)
 	}
 
 	if save {
