@@ -39,6 +39,12 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = record.GetRelease().GetRecordCondition() != ""
 	}
 
+	// Reset filed under
+	if record.GetMetadata().GetFiledUnder() == -1 {
+		record.GetMetadata().FiledUnder = pb.ReleaseMetadata_FILE_UNKNOWN
+		updated = true
+	}
+
 	// Adjust the sale price
 	if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
 		s.updateRecordSalePrice(ctx, record)
@@ -182,8 +188,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				request.GetUpdate().GetMetadata().GetRecordWidth() == 0 {
 				if request.GetUpdate().GetMetadata().GetLastStockCheck() == 0 {
 					if request.GetUpdate().GetMetadata().GetGoalFolder() == 0 {
-						s.Log(fmt.Sprintf("Update %v failed because of the box situation", request))
-						return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
+						if request.GetUpdate().GetMetadata().GetFiledUnder() >= 0 {
+							s.Log(fmt.Sprintf("Update %v failed because of the box situation", request))
+							return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
+						}
 					}
 				}
 			}

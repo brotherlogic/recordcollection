@@ -10,6 +10,7 @@ import (
 	"math"
 	"net/http"
 	"os"
+	"sort"
 	"strconv"
 	"time"
 
@@ -344,6 +345,45 @@ func main() {
 				fmt.Printf("Error: %v\n", err)
 			}
 			fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+		}
+	case "next":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+
+		sort.SliceStable(ids.InstanceIds, func(a, b int) bool {
+			return ids.InstanceIds[a] < ids.InstanceIds[b]
+		})
+
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+
+			if r.GetRecord().GetMetadata().GetBoxState() != pbrc.ReleaseMetadata_OUT_OF_BOX &&
+				r.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+				fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+			}
+		}
+	case "bad":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+
+			if r.GetRecord().GetMetadata().GetBoxState() != pbrc.ReleaseMetadata_OUT_OF_BOX &&
+				r.GetRecord().GetMetadata().GetBoxState() != pbrc.ReleaseMetadata_BOX_UNKNOWN &&
+				r.GetRecord().GetMetadata().GetFiledUnder() != pbrc.ReleaseMetadata_FILE_UNKNOWN {
+				fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+			}
 		}
 	case "ul":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_UNLISTENED}})
@@ -706,6 +746,13 @@ func main() {
 	case "is_digital":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_DIGITAL}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+	case "is_unknown":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: -1}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
