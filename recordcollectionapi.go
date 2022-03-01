@@ -164,7 +164,17 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if request.GetReason() == "" {
 		return nil, fmt.Errorf("you must supply a reason")
 	}
+
 	if request.GetUpdate().GetRelease().GetId() > 0 {
+		// Allow release id adjustment
+		if request.GetUpdate().GetRelease().GetInstanceId() > 0 {
+			rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
+			if err != nil {
+				return nil, err
+			}
+			rec.Release.Id = request.GetUpdate().Release.Id
+			return &pb.UpdateRecordsResponse{}, s.saveRecord(ctx, rec)
+		}
 		return nil, fmt.Errorf("you cannot do a record update like this")
 	}
 
