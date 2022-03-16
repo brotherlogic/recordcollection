@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/brotherlogic/buildserver v0.0.0-20220316142004-437ef6bbc987 // indirect
-	github.com/brotherlogic/godiscogs v0.0.0-20220316195229-0c8d5683d583
+	github.com/brotherlogic/godiscogs v0.0.0-20220316201210-f64f94a68198
 	github.com/brotherlogic/goserver v0.0.0-20220314202806-2fc704ce5226
 	github.com/brotherlogic/keystore v0.0.0-20220228151757-f026ce254d87
 	github.com/brotherlogic/queue v0.0.0-20220307211952-c95fc3d3506a
