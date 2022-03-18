@@ -695,7 +695,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
-		fmt.Printf("Updated: %v", rec)
+		fmt.Printf("Updated: %v", rec.GetUpdated().GetMetadata())
 	case "cwidth":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.ParseFloat(os.Args[3], 32)
