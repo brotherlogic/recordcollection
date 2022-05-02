@@ -429,6 +429,23 @@ func main() {
 				fmt.Printf("%v %v. %v [%v]\n", time.Since(time.Unix(r.Record.Metadata.GetDateAdded(), 0)).Minutes(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 			}
 		}
+	case "tc":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_ARRIVED}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		fmt.Printf("Found %v records", len(ids.GetInstanceIds()))
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.GetRecord().GetMetadata().GetLastCleanDate() == 0 {
+				if r.Record.GetMetadata().GetGoalFolder() == 242017 {
+					fmt.Printf("%v %v. %v [%v]\n", time.Since(time.Unix(r.Record.Metadata.GetDateAdded(), 0)).Minutes(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+				}
+			}
+		}
 	case "pic":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_IN_COLLECTION}})
 		if err != nil {
