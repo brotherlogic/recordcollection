@@ -460,21 +460,36 @@ func main() {
 			}
 		}
 	case "limbo":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{3380098}})
-		if err != nil {
-			fmt.Printf("Error %v\n", err)
-		}
-		log.Printf("HERE %v", ids)
-		for i, id := range ids.GetInstanceIds() {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+		limboFlags := flag.NewFlagSet("limbo", flag.ExitOnError)
+		var arrived = limboFlags.Bool("arrived", false, "The name of the budget")
+		if err := limboFlags.Parse(os.Args[2:]); err == nil {
+			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{3380098}})
 			if err != nil {
-				fmt.Printf("Error: %v\n", err)
+				fmt.Printf("Error %v\n", err)
 			}
-			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
-				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
-				fmt.Printf("%v. %v [%v] - %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
-
+			log.Printf("HERE %v", ids)
+			for i, id := range ids.GetInstanceIds() {
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					fmt.Printf("Error: %v\n", err)
+				}
+				if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
+					r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
+					fmt.Printf("%v. %v [%v] - %v", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+					if *arrived {
+						up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{DateArrived: time.Now().Unix()}}}
+						_, err := registry.UpdateRecord(ctx, up)
+						if err == nil {
+							fmt.Printf(": ARRIVED")
+						} else {
+							fmt.Printf(": Error settings arrived: %v", err)
+						}
+					}
+					fmt.Printf("\n")
+				}
 			}
+		} else {
+			fmt.Printf("Cannot parse flags: %v", err)
 		}
 	case "psv":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
