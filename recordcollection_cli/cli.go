@@ -747,6 +747,13 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "is_outsize":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, GoalFolder: 242017, FiledUnder: pbrc.ReleaseMetadata_FILE_OUTSIZE}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "is_seven":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, FiledUnder: pbrc.ReleaseMetadata_FILE_7_INCH}}})
