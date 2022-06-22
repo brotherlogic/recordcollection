@@ -325,6 +325,7 @@ message ReleaseMetadata {
     BLEEP = 9;
     DIRECT = 10;
     GROOVE_MERCHANT = 11;
+    SACRED_BONES = 12;
   }
   PurchaseLocation purchase_location = 60;
 

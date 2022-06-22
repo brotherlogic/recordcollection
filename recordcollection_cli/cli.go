@@ -22,6 +22,7 @@ import (
 	pbgd "github.com/brotherlogic/godiscogs"
 	pbks "github.com/brotherlogic/keystore/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
+	rfpb "github.com/brotherlogic/recordfanout/proto"
 
 	//Needed to pull in gzip encoding init
 	_ "google.golang.org/grpc/encoding/gzip"
@@ -345,6 +346,26 @@ func main() {
 				fmt.Printf("Error: %v\n", err)
 			}
 			fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+		}
+	case "arr":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_ARRIVED}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		conn, err := utils.LFDialServer(ctx, "recordfanout")
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		defer conn.Close()
+		client := rfpb.NewRecordFanoutServiceClient(conn)
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: id})
+			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
+
 		}
 	case "next":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
