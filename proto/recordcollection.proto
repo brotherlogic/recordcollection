@@ -83,6 +83,22 @@ enum Purgatory {
   ALL_GOOD = 3;
 }
 
+  enum PurchaseLocation {
+    LOCATION_UNKNOWN = 0;
+    AMOEBA = 1;
+    STRANDED = 2;
+    HERCULES = 3;
+    DISCOGS = 4;
+    GIFT = 5;
+    PBANDCAMP = 6;
+    DOWNLOAD = 7;
+    CHERRY_RED =8;
+    BLEEP = 9;
+    DIRECT = 10;
+    GROOVE_MERCHANT = 11;
+    SACRED_BONES = 12;
+  }
+
 message ReleaseMetadata {
   // The date the release was added
   int64 date_added = 1;
@@ -312,21 +328,6 @@ message ReleaseMetadata {
   }
   SleeveState sleeve = 59;
 
-  enum PurchaseLocation {
-    LOCATION_UNKNOWN = 0;
-    AMOEBA = 1;
-    STRANDED = 2;
-    HERCULES = 3;
-    DISCOGS = 4;
-    GIFT = 5;
-    PBANDCAMP = 6;
-    DOWNLOAD = 7;
-    CHERRY_RED =8;
-    BLEEP = 9;
-    DIRECT = 10;
-    GROOVE_MERCHANT = 11;
-    SACRED_BONES = 12;
-  }
   PurchaseLocation purchase_location = 60;
 
   string purchase_budget = 62;
