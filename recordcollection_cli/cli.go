@@ -1017,7 +1017,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "parents":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PARENTS}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-parents", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PARENTS}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
