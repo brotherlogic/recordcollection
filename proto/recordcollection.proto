@@ -331,6 +331,13 @@ message ReleaseMetadata {
   PurchaseLocation purchase_location = 60;
 
   string purchase_budget = 62;
+
+  enum DigitalAvailability {
+    AVAILABILITY_UNKNOWN = 0;
+    NO_DIGITAL = 1;
+    DIGITAL_AVAILABLE = 2;
+  }
+  DigitalAvailability digital_availability = 63;
 }
 
 // A request to get some records
