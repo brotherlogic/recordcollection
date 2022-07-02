@@ -19,6 +19,7 @@ import (
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 	fopb "github.com/brotherlogic/recordfanout/proto"
 	pbrs "github.com/brotherlogic/recordscores/proto"
+	ropb "github.com/brotherlogic/recordsorganiser/proto"
 	ro "github.com/brotherlogic/recordsorganiser/sales"
 	google_protobuf "github.com/golang/protobuf/ptypes/any"
 
@@ -43,6 +44,29 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "find_sleeve":
+		conn, err := utils.LFDialServer(ctx, "recordsorganiser")
+		if err != nil {
+			log.Fatalf("Unable to dial: %v", err)
+		}
+		client := ropb.NewOrganiserServiceClient(conn)
+		org, err := client.GetOrganisation(ctx, &ropb.GetOrganisationRequest{Locations: []*ropb.Location{&ropb.Location{Name: "12 Inches"}}})
+		if err != nil {
+			log.Fatalf("Unable to get org")
+		}
+		for _, og := range org.GetLocations() {
+			for _, entry := range og.GetReleasesLocation() {
+				record, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: entry.GetInstanceId()})
+				if err != nil {
+					log.Fatalf("Cannot get record: %v", err)
+				}
+				if record.GetRecord().GetMetadata().GetSleeve() != pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP &&
+					record.GetRecord().GetMetadata().GetSleeve() != pbrc.ReleaseMetadata_BOX_SET {
+					fmt.Printf("Slot %v: %v -> %v\n", entry.GetSlot(), record.GetRecord().Release.GetArtists()[0].GetName(), record.GetRecord().GetRelease().GetTitle())
+					return
+				}
+			}
+		}
 	case "cleaning":
 		ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour*24)
 		defer cancel()
