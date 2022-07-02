@@ -62,7 +62,11 @@ func main() {
 				}
 				if record.GetRecord().GetMetadata().GetSleeve() != pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP &&
 					record.GetRecord().GetMetadata().GetSleeve() != pbrc.ReleaseMetadata_BOX_SET {
-					fmt.Printf("Slot %v: %v -> %v\n", entry.GetSlot(), record.GetRecord().Release.GetArtists()[0].GetName(), record.GetRecord().GetRelease().GetTitle())
+					fmt.Printf("Slot %v: %v -> %v [%v]\n",
+						entry.GetSlot(),
+						record.GetRecord().Release.GetArtists()[0].GetName(),
+						record.GetRecord().GetRelease().GetTitle(),
+						record.GetRecord().GetRelease().GetInstanceId())
 					return
 				}
 			}
