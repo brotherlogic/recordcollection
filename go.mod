@@ -4,19 +4,19 @@ go 1.13
 
 require (
 	github.com/andanhm/go-prettytime v1.1.0
-	github.com/brotherlogic/godiscogs v0.0.0-20220523152004-1a5f78dd88d3
-	github.com/brotherlogic/goserver v0.0.0-20220520152650-218b04adea34
-	github.com/brotherlogic/keystore v0.0.0-20220513234718-46a4655a49c0
-	github.com/brotherlogic/lock v0.0.0-20220520161614-9e7f3a71c8ca // indirect
-	github.com/brotherlogic/queue v0.0.0-20220519222727-4cb125a401fe
-	github.com/brotherlogic/recordadder v0.0.0-20220430162741-f708819d3fe5
-	github.com/brotherlogic/recordfanout v0.0.0-20220520005008-cfebda02ff79
-	github.com/brotherlogic/recordmover v0.0.0-20220512183606-e2e72030d3d8
-	github.com/brotherlogic/recordscores v0.0.0-20220521165549-a704c1e3d326
-	github.com/brotherlogic/recordsorganiser v0.0.0-20220521224134-fc57ff1b2755
+	github.com/brotherlogic/discovery v0.0.0-20220705153853-df3958dac42d // indirect
+	github.com/brotherlogic/godiscogs v0.0.0-20220705170308-1d884762e82c
+	github.com/brotherlogic/goserver v0.0.0-20220705153832-58f6cccd50c2
+	github.com/brotherlogic/keystore v0.0.0-20220621052415-70ae78501e3c
+	github.com/brotherlogic/queue v0.0.0-20220704151554-edfa1794ecd6
+	github.com/brotherlogic/recordadder v0.0.0-20220622002137-2008ab57ca5c
+	github.com/brotherlogic/recordfanout v0.0.0-20220630165339-cf7a06a60c09
+	github.com/brotherlogic/recordmover v0.0.0-20220623220532-53a9202ff3a1
+	github.com/brotherlogic/recordscores v0.0.0-20220623135454-12da5018c3c1
+	github.com/brotherlogic/recordsorganiser v0.0.0-20220705163948-d445360386be
 	github.com/golang/protobuf v1.5.2
 	github.com/prometheus/client_golang v1.12.2
-	golang.org/x/net v0.0.0-20220520000938-2e3eb7b945c2
-	google.golang.org/grpc v1.46.2
+	golang.org/x/net v0.0.0-20220630215102-69896b714898
+	google.golang.org/grpc v1.47.0
 	google.golang.org/protobuf v1.28.0
 )

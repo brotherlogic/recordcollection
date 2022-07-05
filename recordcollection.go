@@ -583,7 +583,7 @@ func main() {
 	}
 	server := Init()
 
-	server.PrepServer()
+	server.PrepServer("recordcollection")
 
 	if len(*token) > 0 {
 		server.KSclient.Save(context.Background(), TOKEN, &pb.Token{Token: *token})
@@ -592,7 +592,7 @@ func main() {
 
 	server.Register = server
 
-	err := server.RegisterServerV2("recordcollection", false, true)
+	err := server.RegisterServerV2(false)
 	if err != nil {
 		return
 	}
