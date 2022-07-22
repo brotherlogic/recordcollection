@@ -13,7 +13,7 @@ import (
 
 func InitTestServer(folder string) *Server {
 	s := Init()
-	s.PrepServer()
+	s.PrepServer("recordcollection")
 	s.retr = &testSyncer{}
 	s.mover = &testMover{pass: true}
 	s.scorer = &testScorer{}
@@ -362,7 +362,7 @@ func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
 	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}, Metadata: &pb.WantMetadata{Active: true}})
 
-	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
+	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{ReleaseId: 123}})
 	if err != nil {
 		t.Fatalf("Error updating want: %v", err)
 	}
@@ -373,7 +373,7 @@ func TestUpdateWants(t *testing.T) {
 		t.Fatalf("Error in getting wants: %v", err)
 	}
 
-	if r == nil || len(r.Wants) != 1 || r.Wants[0].GetRelease().Title != "madeup2" {
+	if r == nil || len(r.Wants) != 1 || r.Wants[0].GetReleaseId() != 123 {
 		t.Errorf("Error in getting wants: %v", r)
 	}
 }
@@ -381,7 +381,7 @@ func TestUpdateWants(t *testing.T) {
 func TestAddWant(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
 
-	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
+	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{ReleaseId: 123}})
 	if err != nil {
 		t.Fatalf("Error updating want")
 	}

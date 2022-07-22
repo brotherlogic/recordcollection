@@ -131,11 +131,11 @@ func (t *testSyncer) MoveToFolder(a, b, c, d int) (string, error) {
 	return "ALL GOOD!", nil
 }
 
-func (t *testSyncer) DeleteInstance(a, b, c int) string {
-	return "ALL GOOD!"
+func (t *testSyncer) DeleteInstance(a, b, c int) error {
+	return fmt.Errorf("ALL GOOD!")
 }
 
-func (t *testSyncer) SellRecord(releaseID int, price float32, state string, condition, sleeve string) int {
+func (t *testSyncer) SellRecord(releaseID int, price float32, state string, condition, sleeve string, huh int) int {
 	return 0
 }
 func (t *testSyncer) GetSalePrice(releaseID int) (float32, error) {
@@ -145,8 +145,9 @@ func (t *testSyncer) GetSaleState(releaseID int) pbd.SaleState {
 	return pbd.SaleState_FOR_SALE
 }
 
-func (t *testSyncer) RemoveFromWantlist(releaseID int) {
+func (t *testSyncer) RemoveFromWantlist(releaseID int) error {
 	t.updateWantCount++
+	return nil
 }
 
 func (t *testSyncer) AddToWantlist(releaseID int) error {
@@ -169,7 +170,7 @@ func TestUpdateWantWithPush(t *testing.T) {
 	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123}, Metadata: &pb.WantMetadata{Active: true}})
 	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 12345}, Metadata: &pb.WantMetadata{Active: true}})
 
-	s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123}}, Remove: true})
+	s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{ReleaseId: 123}, Remove: true})
 	//s.pushWants(context.Background())
 
 	if ts.updateWantCount != 1 {
@@ -482,7 +483,7 @@ func TestPushRating(t *testing.T) {
 
 func TestBasic(t *testing.T) {
 	s := InitTestServer(".madeup")
-	s.updateWant(&pb.Want{Release: &pbd.Release{Id: 766489}, Metadata: &pb.WantMetadata{}})
+	s.updateWant(&pb.Want{ReleaseId: 766489})
 }
 
 func TestPushSaleWithFail(t *testing.T) {
