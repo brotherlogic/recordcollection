@@ -258,13 +258,14 @@ func (s *Server) validateSales(ctx context.Context) error {
 		return err
 	}
 
-	s.Log(fmt.Sprintf("Found %v sales", len(sales)))
+	s.Log(fmt.Sprintf("Found %v sales: %v", len(sales), sales))
 	matchCount := 0
 	for _, sale := range sales {
 		found := false
 
 		// This call will not fail
-		recs, _ := s.QueryRecords(ctx, &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{sale.GetId()}})
+		recs, err := s.QueryRecords(ctx, &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{sale.GetId()}})
+		s.Log(fmt.Sprintf("Query result: %v -> %v", recs, err))
 
 		for _, id := range recs.GetInstanceIds() {
 			rec, err := s.getRecord(ctx, id)
