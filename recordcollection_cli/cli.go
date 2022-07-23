@@ -432,7 +432,7 @@ func main() {
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 			width += (r.GetRecord().GetMetadata().GetRecordWidth())
 		}
-		fmt.Printf("Width = %v -> %v\n", width, width*2.5)
+		fmt.Printf("Width = %v -> %v\n", width, width*1.25)
 	case "run_full_update":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
