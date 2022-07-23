@@ -423,13 +423,16 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error %v\n", err)
 		}
+		width := float32(0)
 		for i, id := range ids.GetInstanceIds() {
 			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			width += (r.GetRecord().GetMetadata().GetRecordWidth())
 		}
+		fmt.Printf("Width = %v -> %v\n", width, width*2.5)
 	case "run_full_update":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
