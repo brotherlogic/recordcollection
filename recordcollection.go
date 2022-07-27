@@ -306,6 +306,9 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
+	if err != nil {
+		return err
+	}
 
 	collection, err := s.readRecordCollection(ctx)
 	if err != nil {
@@ -313,7 +316,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 	save := false
 	if collection.GetInstanceToFolder()[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
-		collection.GetInstanceToFolder()[r.GetRelease().InstanceId] = r.GetRelease().FolderId
+		collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
 		save = true
 	}
 
