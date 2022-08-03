@@ -13,6 +13,10 @@ type RecordCollectionClient struct {
 	Test   bool
 }
 
+func (c *RecordCollectionClient) AddRecord(r *pb.Record) {
+	c.getMap[r.GetRelease().GetInstanceId()] = r
+}
+
 func (c *RecordCollectionClient) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.GetRecordResponse, error) {
 	if c.Test {
 		return &pb.GetRecordResponse{Record: c.getMap[req.GetInstanceId()]}, nil
