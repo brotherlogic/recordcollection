@@ -14,6 +14,9 @@ type RecordCollectionClient struct {
 }
 
 func (c *RecordCollectionClient) AddRecord(r *pb.Record) {
+	if c.getMap == nil {
+		c.getMap = make(map[int32]*pb.Record)
+	}
 	c.getMap[r.GetRelease().GetInstanceId()] = r
 }
 
