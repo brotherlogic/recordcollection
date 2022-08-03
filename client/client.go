@@ -29,6 +29,7 @@ func (c *RecordCollectionClient) GetRecord(ctx context.Context, req *pb.GetRecor
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
 
 	client := pb.NewRecordCollectionServiceClient(conn)
 	return client.GetRecord(ctx, req)
