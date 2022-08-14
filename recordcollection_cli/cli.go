@@ -54,7 +54,7 @@ func main() {
 			log.Fatalf("Unable to get inventory: %v", err)
 		}
 		for _, item := range items.GetItems() {
-			fmt.Printf("%v\n", item.GetId())
+			fmt.Printf("%v - %v\n", item.GetId(), item.GetDatePosted())
 		}
 	case "sanity":
 		collection := &pbrc.RecordCollection{}
