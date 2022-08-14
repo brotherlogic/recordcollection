@@ -49,7 +49,7 @@ func main() {
 
 	switch os.Args[1] {
 	case "sales":
-		items, err := registry.GetInventory(ctx, &pb.GetInventoryRequest{})
+		items, err := registry.GetInventory(ctx, &pbrc.GetInventoryRequest{})
 		if err != nil {
 			log.Fatalf("Unable to get inventory: %v", err)
 		}
