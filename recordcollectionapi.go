@@ -19,6 +19,15 @@ import (
 	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
 
+func (s *Server) GetInventory(ctx context.Context, req *pb.GetInventoryRequest) (*pb.GetInventoryResponse, error) {
+	inventory, err := s.retr.GetInventory()
+	if err != nil {
+		return nil, err
+	}
+
+	return &pb.GetInventoryResponse{Items: inventory}, nil
+}
+
 // CommitRecord runs through the record process stuff
 func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordRequest) (*pb.CommitRecordResponse, error) {
 	record, err := s.loadRecord(ctx, request.GetInstanceId(), false)

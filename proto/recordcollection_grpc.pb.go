@@ -29,6 +29,7 @@ type RecordCollectionServiceClient interface {
 	GetOrder(ctx context.Context, in *GetOrderRequest, opts ...grpc.CallOption) (*GetOrderResponse, error)
 	CommitRecord(ctx context.Context, in *CommitRecordRequest, opts ...grpc.CallOption) (*CommitRecordResponse, error)
 	GetPrice(ctx context.Context, in *GetPriceRequest, opts ...grpc.CallOption) (*GetPriceResponse, error)
+	GetInventory(ctx context.Context, in *GetInventoryRequest, opts ...grpc.CallOption) (*GetInventoryResponse, error)
 }
 
 type recordCollectionServiceClient struct {
@@ -147,6 +148,15 @@ func (c *recordCollectionServiceClient) GetPrice(ctx context.Context, in *GetPri
 	return out, nil
 }
 
+func (c *recordCollectionServiceClient) GetInventory(ctx context.Context, in *GetInventoryRequest, opts ...grpc.CallOption) (*GetInventoryResponse, error) {
+	out := new(GetInventoryResponse)
+	err := c.cc.Invoke(ctx, "/recordcollection.RecordCollectionService/GetInventory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RecordCollectionServiceServer is the server API for RecordCollectionService service.
 // All implementations should embed UnimplementedRecordCollectionServiceServer
 // for forward compatibility
@@ -163,6 +173,7 @@ type RecordCollectionServiceServer interface {
 	GetOrder(context.Context, *GetOrderRequest) (*GetOrderResponse, error)
 	CommitRecord(context.Context, *CommitRecordRequest) (*CommitRecordResponse, error)
 	GetPrice(context.Context, *GetPriceRequest) (*GetPriceResponse, error)
+	GetInventory(context.Context, *GetInventoryRequest) (*GetInventoryResponse, error)
 }
 
 // UnimplementedRecordCollectionServiceServer should be embedded to have forward compatible implementations.
@@ -204,6 +215,9 @@ func (UnimplementedRecordCollectionServiceServer) CommitRecord(context.Context, 
 }
 func (UnimplementedRecordCollectionServiceServer) GetPrice(context.Context, *GetPriceRequest) (*GetPriceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPrice not implemented")
+}
+func (UnimplementedRecordCollectionServiceServer) GetInventory(context.Context, *GetInventoryRequest) (*GetInventoryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetInventory not implemented")
 }
 
 // UnsafeRecordCollectionServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -433,6 +447,24 @@ func _RecordCollectionService_GetPrice_Handler(srv interface{}, ctx context.Cont
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RecordCollectionService_GetInventory_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetInventoryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecordCollectionServiceServer).GetInventory(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/recordcollection.RecordCollectionService/GetInventory",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecordCollectionServiceServer).GetInventory(ctx, req.(*GetInventoryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _RecordCollectionService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "recordcollection.RecordCollectionService",
 	HandlerType: (*RecordCollectionServiceServer)(nil),
@@ -484,6 +516,10 @@ var _RecordCollectionService_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPrice",
 			Handler:    _RecordCollectionService_GetPrice_Handler,
+		},
+		{
+			MethodName: "GetInventory",
+			Handler:    _RecordCollectionService_GetInventory_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

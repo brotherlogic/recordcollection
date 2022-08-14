@@ -48,6 +48,14 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "sales":
+		items, err := registry.GetInventory(ctx, &pb.GetInventoryRequest{})
+		if err != nil {
+			log.Fatalf("Unable to get inventory: %v", err)
+		}
+		for _, item := range items.GetItems() {
+			fmt.Printf("%v\n", item.GetId())
+		}
 	case "sanity":
 		collection := &pbrc.RecordCollection{}
 		conn, err := utils.LFDialServer(ctx, "keystore")

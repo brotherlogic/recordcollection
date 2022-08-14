@@ -496,6 +496,12 @@ service RecordCollectionService {
   rpc GetOrder(GetOrderRequest) returns (GetOrderResponse) {};
   rpc CommitRecord(CommitRecordRequest) returns (CommitRecordResponse) {};
   rpc GetPrice(GetPriceRequest) returns (GetPriceResponse) {};
+  rpc GetInventory(GetInventoryRequest) returns (GetInventoryResponse) {};
+}
+
+message GetInventoryRequest {}
+message GetInventoryResponse {
+  repeated godiscogs.ForSale items = 1;
 }
 
 message ClientUpdateRequest{
