@@ -54,7 +54,10 @@ func main() {
 			log.Fatalf("Unable to get inventory: %v", err)
 		}
 		for _, item := range items.GetItems() {
-			fmt.Printf("%v - %v\n", item.GetId(), item.GetDatePosted())
+			td := time.Unix(item.GetDatePosted(), 0)
+			if time.Since(td) > time.Hour*24*7 && item.SalePrice <= 500 {
+				fmt.Printf("%v - %v\n", item.GetId(), td)
+			}
 		}
 	case "sanity":
 		collection := &pbrc.RecordCollection{}
@@ -424,7 +427,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 		}
 	case "lp":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{812802}})
