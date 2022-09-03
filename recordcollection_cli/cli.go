@@ -474,6 +474,20 @@ func main() {
 				}
 			}
 		}
+	case "inner":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.GetRecord().GetMetadata().GetSleeve() == pbrc.ReleaseMetadata_VINYL_STORAGE_NO_INNER {
+				fmt.Printf("%v - %v\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+			}
+		}
 	case "hs":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
 		if err != nil {

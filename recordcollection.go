@@ -99,25 +99,25 @@ func (p *prodQuotaChecker) hasQuota(ctx context.Context, folder int32) (*pbro.Qu
 }
 
 type saver interface {
-	GetCollection() []*godiscogs.Release
-	GetWantlist() ([]*godiscogs.Release, error)
-	GetRelease(id int32) (*godiscogs.Release, error)
-	AddToFolder(folderID int32, releaseID int32) (int, error)
-	SetRating(releaseID int, rating int) error
-	MoveToFolder(folderID, releaseID, instanceID, newFolderID int) (string, error)
-	DeleteInstance(folderID, releaseID, instanceID int) error
-	SellRecord(releaseID int, price float32, state string, condition, sleeve string, weight int) int
-	GetSalePrice(releaseID int) (float32, error)
-	RemoveFromWantlist(releaseID int) error
-	AddToWantlist(releaseID int) error
-	UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error
-	GetCurrentSalePrice(saleID int) float32
-	GetCurrentSaleState(saleID int) godiscogs.SaleState
-	RemoveFromSale(saleID int, releaseID int) error
-	ExpireSale(saleID int, releaseID int, price float32) error
-	GetInventory() ([]*godiscogs.ForSale, error)
-	GetInstanceInfo(ID int32) (map[int32]*godiscogs.InstanceInfo, error)
-	GetOrder(ID string) (map[int32]int32, time.Time, error)
+	GetCollection(ctx context.Context) []*godiscogs.Release
+	GetWantlist(ctx context.Context) ([]*godiscogs.Release, error)
+	GetRelease(ctx context.Context, id int32) (*godiscogs.Release, error)
+	AddToFolder(ctx context.Context, folderID int32, releaseID int32) (int, error)
+	SetRating(ctx context.Context, releaseID int, rating int) error
+	MoveToFolder(ctx context.Context, folderID, releaseID, instanceID, newFolderID int) (string, error)
+	DeleteInstance(ctx context.Context, folderID, releaseID, instanceID int) error
+	SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) int
+	GetSalePrice(ctx context.Context, releaseID int) (float32, error)
+	RemoveFromWantlist(ctx context.Context, releaseID int) error
+	AddToWantlist(ctx context.Context, releaseID int) error
+	UpdateSalePrice(ctx context.Context, saleID int, releaseID int, condition, sleeve string, price float32) error
+	GetCurrentSalePrice(ctx context.Context, saleID int) float32
+	GetCurrentSaleState(ctx context.Context, saleID int) godiscogs.SaleState
+	RemoveFromSale(ctx context.Context, saleID int, releaseID int) error
+	ExpireSale(ctx context.Context, saleID int, releaseID int, price float32) error
+	GetInventory(ctx context.Context) ([]*godiscogs.ForSale, error)
+	GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error)
+	GetOrder(ctx context.Context, ID string) (map[int32]int32, time.Time, error)
 }
 
 type scorer interface {
@@ -278,7 +278,7 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 func (s *Server) saveRecordCollection(ctx context.Context, collection *pb.RecordCollection) error {
 	s.updateMetrics(collection)
 	if len(collection.GetInstanceToUpdateIn()) == 0 {
-		s.Log(fmt.Sprintf("Saving with empty update"))
+		s.CtxLog(ctx, fmt.Sprintf("Saving with empty update"))
 		return fmt.Errorf("Unable to save with empty update in")
 	}
 	return s.KSclient.Save(ctx, KEY, collection)
@@ -346,7 +346,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	if collection.GetInstanceToUpdateIn()[r.GetRelease().InstanceId] != r.GetMetadata().GetLastUpdateIn() {
-		s.Log(fmt.Sprintf("Reading with an empty update"))
+		s.CtxLog(ctx, fmt.Sprintf("Reading with an empty update"))
 		collection.InstanceToUpdateIn[r.GetRelease().InstanceId] = r.GetMetadata().GetLastUpdateIn()
 		save = true
 	}
@@ -538,12 +538,12 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
-			price, err := s.retr.GetSalePrice(int(r.GetRelease().Id))
+			price, err := s.retr.GetSalePrice(ctx, int(r.GetRelease().Id))
 			if err != nil {
-				s.Log(fmt.Sprintf("Sale price error for %v -> %v", r.GetRelease().Id, err))
+				s.CtxLog(ctx, fmt.Sprintf("Sale price error for %v -> %v", r.GetRelease().Id, err))
 				return err
 			}
-			s.Log(fmt.Sprintf("Sale Price Retrieved %v, %v -> %v", price, err, r.GetRelease().Id))
+			s.CtxLog(ctx, fmt.Sprintf("Sale Price Retrieved %v, %v -> %v", price, err, r.GetRelease().Id))
 			r.GetMetadata().CurrentSalePrice = int32(price * 100)
 			r.GetMetadata().SalePriceUpdate = time.Now().Unix()
 			s.saveRecord(ctx, r)
@@ -563,12 +563,12 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 }
 
 func (s *Server) updateRecordSalePrice(ctx context.Context, r *pb.Record) error {
-	price, err := s.retr.GetSalePrice(int(r.GetRelease().Id))
+	price, err := s.retr.GetSalePrice(ctx, int(r.GetRelease().Id))
 	if err != nil {
-		s.Log(fmt.Sprintf("Sale price error for %v -> %v", r.GetRelease().Id, err))
+		s.CtxLog(ctx, fmt.Sprintf("Sale price error for %v -> %v", r.GetRelease().Id, err))
 		return err
 	}
-	s.Log(fmt.Sprintf("Sale Price Retrieved %v, %v -> %v", price, err, r.GetRelease().Id))
+	s.CtxLog(ctx, fmt.Sprintf("Sale Price Retrieved %v, %v -> %v", price, err, r.GetRelease().Id))
 	r.GetMetadata().CurrentSalePrice = int32(price * 100)
 	r.GetMetadata().SalePriceUpdate = time.Now().Unix()
 	return s.saveRecord(ctx, r)
@@ -612,14 +612,13 @@ func main() {
 		}
 		log.Fatalf("Unable to read discogs token: %v", err)
 	}
-	cancel()
 
 	if len(tResp.(*pb.Token).Token) == 0 {
 		log.Fatalf("Read an empty token: %v", tResp)
 
 	}
-	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.Log)
-
+	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.CtxLog)
+	cancel()
 	//go server.runUpdateFanout()
 
 	server.Serve()

@@ -45,10 +45,10 @@ var (
 	}, []string{"method"})
 )
 
-func (s *Server) runUpdateFanout() {
+func (s *Server) runUpdateFanout(ctx context.Context) {
 	for fid := range s.updateFanout {
 		id := fid.iid
-		s.Log(fmt.Sprintf("Running fanout for %+v", fid))
+		s.CtxLog(ctx, fmt.Sprintf("Running fanout for %+v", fid))
 
 		s.repeatCount[id]++
 		if s.repeatCount[id] > 10 {
@@ -56,18 +56,7 @@ func (s *Server) runUpdateFanout() {
 		}
 
 		t := time.Now()
-		ecancel, err := s.ElectKey(fmt.Sprintf("%v", id))
 		loopLatency.With(prometheus.Labels{"method": "elect"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
-
-		if err != nil {
-			s.repeatError[id] = err
-			s.Log(fmt.Sprintf("Unable to elect because %v", err))
-			updateFanoutFailure.With(prometheus.Labels{"server": "elect", "error": fmt.Sprintf("%v", err)}).Inc()
-			s.updateFanout <- fid
-			ecancel()
-			time.Sleep(time.Minute)
-			continue
-		}
 
 		ctx, cancel := utils.ManualContext("rciu", time.Minute)
 
@@ -79,7 +68,7 @@ func (s *Server) runUpdateFanout() {
 			// Ignore out of range errors - these are deleted records
 			if status.Convert(err).Code() != codes.OutOfRange {
 				s.repeatError[id] = err
-				s.Log(fmt.Sprintf("Unable to load: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("Unable to load: %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "load", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
 			}
@@ -88,10 +77,9 @@ func (s *Server) runUpdateFanout() {
 			if status.Convert(err).Code() == codes.InvalidArgument {
 				record = &pb.Record{Release: &pbgd.Release{InstanceId: id}}
 			} else {
-				ecancel()
 				cancel()
 				time.Sleep(time.Minute)
-				s.Log(fmt.Sprintf("Skipping %v because it's %v", id, err))
+				s.CtxLog(ctx, fmt.Sprintf("Skipping %v because it's %v", id, err))
 				continue
 			}
 		}
@@ -99,7 +87,7 @@ func (s *Server) runUpdateFanout() {
 		t = time.Now()
 		err = s.syncWantlist(ctx)
 		if err != nil {
-			s.Log(fmt.Sprintf("Error pulling wantlist: %v", err))
+			s.CtxLog(ctx, fmt.Sprintf("Error pulling wantlist: %v", err))
 			updateFanoutFailure.With(prometheus.Labels{"server": "syncwants", "error": fmt.Sprintf("%v", err)}).Inc()
 		}
 		loopLatency.With(prometheus.Labels{"method": "syncwant"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
@@ -126,10 +114,9 @@ func (s *Server) runUpdateFanout() {
 			loopLatency.With(prometheus.Labels{"method": "pushmeta"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			if err != nil {
 				s.repeatError[id] = err
-				s.Log(fmt.Sprintf("Unable to push: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("Unable to push: %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
-				ecancel()
 				cancel()
 				time.Sleep(time.Minute)
 				continue
@@ -144,10 +131,9 @@ func (s *Server) runUpdateFanout() {
 			loopLatency.With(prometheus.Labels{"method": "push"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			if err != nil {
 				s.repeatError[id] = err
-				s.Log(fmt.Sprintf("Unable to push: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("Unable to push: %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "push", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
-				ecancel()
 				cancel2()
 				cancel()
 				time.Sleep(time.Minute)
@@ -169,10 +155,9 @@ func (s *Server) runUpdateFanout() {
 
 			if err != nil {
 				s.repeatError[id] = err
-				s.Log(fmt.Sprintf("Unable to update record for sale: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("Unable to update record for sale: %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "updateSale", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
-				ecancel()
 				time.Sleep(time.Minute)
 				continue
 			}
@@ -190,10 +175,9 @@ func (s *Server) runUpdateFanout() {
 			cancel()
 			if err != nil {
 				s.repeatError[id] = err
-				s.Log(fmt.Sprintf("Unable to push sale : %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("Unable to push sale : %v", err))
 				updateFanoutFailure.With(prometheus.Labels{"server": "pushSale", "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
-				ecancel()
 				time.Sleep(time.Minute)
 				continue
 			}
@@ -207,7 +191,7 @@ func (s *Server) runUpdateFanout() {
 
 			if err != nil {
 				s.repeatError[id] = err
-				s.Log(fmt.Sprintf("Bad dial of %v -> %v", server, err))
+				s.CtxLog(ctx, fmt.Sprintf("Bad dial of %v -> %v", server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
 				failed = true
@@ -219,7 +203,7 @@ func (s *Server) runUpdateFanout() {
 			loopLatency.With(prometheus.Labels{"method": "update-" + server}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			if err != nil {
 				s.repeatError[id] = err
-				s.Log(fmt.Sprintf("Bad update of (%v) %v -> %v", id, server, err))
+				s.CtxLog(ctx, fmt.Sprintf("Bad update of (%v) %v -> %v", id, server, err))
 				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
 				s.updateFanout <- fid
 				conn.Close()
@@ -241,24 +225,23 @@ func (s *Server) runUpdateFanout() {
 				record.GetMetadata().LastUpdateTime = time.Now().Unix()
 				s.saveRecord(ctx, record)
 			}
-			s.Log(fmt.Sprintf("Ran fanout for %v at %v with %v", id, time.Now(), err))
+			s.CtxLog(ctx, fmt.Sprintf("Ran fanout for %v at %v with %v", id, time.Now(), err))
 
 			updateFanout.Set(float64(len(s.updateFanout)))
 			updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
 		}
 
-		ecancel()
 		time.Sleep(time.Second)
 	}
 }
 
 func (s *Server) validateSales(ctx context.Context) error {
-	sales, err := s.retr.GetInventory()
+	sales, err := s.retr.GetInventory(ctx)
 	if err != nil {
 		return err
 	}
 
-	s.Log(fmt.Sprintf("Found %v sales", len(sales)))
+	s.CtxLog(ctx, fmt.Sprintf("Found %v sales", len(sales)))
 	matchCount := 0
 	for _, sale := range sales {
 		found := false
@@ -269,7 +252,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 		for _, id := range recs.GetInstanceIds() {
 			rec, err := s.getRecord(ctx, id)
 			if err != nil {
-				s.Log(fmt.Sprintf("Err: %v", err))
+				s.CtxLog(ctx, fmt.Sprintf("Err: %v", err))
 				return err
 			}
 
@@ -279,13 +262,13 @@ func (s *Server) validateSales(ctx context.Context) error {
 		}
 
 		if !found {
-			s.Log(fmt.Sprintf("Sending off problem"))
+			s.CtxLog(ctx, fmt.Sprintf("Sending off problem"))
 			s.RaiseIssue("Sale Error Found", fmt.Sprintf("%v is not found in collection", sale))
 			return fmt.Errorf("Found a sale problem")
 		}
 		matchCount++
 	}
-	s.Log(fmt.Sprintf("Matched %v", matchCount))
+	s.CtxLog(ctx, fmt.Sprintf("Matched %v", matchCount))
 
 	// Searching LISTED and STALE
 	for _, folder := range []int32{488127, 1708299} {
@@ -323,9 +306,9 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 			return false, fmt.Errorf("%v [%v/%v] has no condition info", val.GetRelease().Title, val.GetRelease().Id, val.GetRelease().InstanceId)
 		}
 
-		err := s.retr.UpdateSalePrice(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().NewSalePrice)/100)
+		err := s.retr.UpdateSalePrice(ctx, int(val.GetMetadata().SaleId), int(val.GetRelease().Id), val.GetRelease().RecordCondition, val.GetRelease().SleeveCondition, float32(val.GetMetadata().NewSalePrice)/100)
 		time.Sleep(time.Second * 5)
-		s.Log(fmt.Sprintf("Updated sale price: %v -> %v", val.GetRelease().GetInstanceId(), err))
+		s.CtxLog(ctx, fmt.Sprintf("Updated sale price: %v -> %v", val.GetRelease().GetInstanceId(), err))
 
 		if err == nil {
 			// Only trip the time if the price has actually changed
@@ -354,18 +337,18 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	}
 
 	if val.GetMetadata().SaleDirty && val.GetMetadata().GetExpireSale() && (val.GetMetadata().GetSaleState() == pbd.SaleState_FOR_SALE || val.GetMetadata().GetSaleState() < 0) {
-		err := s.retr.ExpireSale(int(val.GetMetadata().SaleId), int(val.GetRelease().Id), float32(val.GetMetadata().SalePrice+1)/100)
+		err := s.retr.ExpireSale(ctx, int(val.GetMetadata().SaleId), int(val.GetRelease().Id), float32(val.GetMetadata().SalePrice+1)/100)
 		val.GetMetadata().ExpireSale = err != nil
 		if err == nil {
 			val.GetMetadata().SaleState = pbd.SaleState_EXPIRED
 			val.GetMetadata().SaleDirty = false
 		}
-		s.Log(fmt.Sprintf("EXPIRE(%v): %v", val.GetRelease().GetInstanceId(), err))
+		s.CtxLog(ctx, fmt.Sprintf("EXPIRE(%v): %v", val.GetRelease().GetInstanceId(), err))
 		return true, err
 	}
 
 	if val.GetMetadata().Category == pb.ReleaseMetadata_SOLD_OFFLINE {
-		err := s.retr.RemoveFromSale(int(val.GetMetadata().SaleId), int(val.GetRelease().Id))
+		err := s.retr.RemoveFromSale(ctx, int(val.GetMetadata().SaleId), int(val.GetRelease().Id))
 
 		if err == nil || fmt.Sprintf("%v", err) == "POST ERROR (STATUS CODE): 404, {\"message\": \"Item not found. It may have been deleted.\"}" {
 			val.GetMetadata().SaleState = pbd.SaleState_SOLD
@@ -385,13 +368,13 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	return false, nil
 }
 
-func (s *Server) updateWant(w *pb.Want) bool {
+func (s *Server) updateWant(ctx context.Context, w *pb.Want) bool {
 	if w.GetReleaseId() == 0 {
 		return false
 	}
 	if w.ClearWant {
-		s.Log(fmt.Sprintf("Removing from the wantlist %v -> %v and %v", w.GetReleaseId(), w.ClearWant))
-		s.retr.RemoveFromWantlist(int(w.GetReleaseId()))
+		s.CtxLog(ctx, fmt.Sprintf("Removing from the wantlist %v -> %v and %v", w.GetReleaseId(), w.ClearWant))
+		s.retr.RemoveFromWantlist(ctx, int(w.GetReleaseId()))
 		w.ClearWant = false
 		return true
 	}
@@ -409,7 +392,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 				return false, fmt.Errorf("Move fail %v -> %v: %v (%v)", r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder(), err, ctx)
 			}
 
-			_, err = s.retr.MoveToFolder(int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
+			_, err = s.retr.MoveToFolder(ctx, int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
 			if err != nil {
 				s.RaiseIssue("Move Failure", fmt.Sprintf("%v -> %v", r.GetRelease().GetInstanceId(), err))
 
@@ -428,8 +411,8 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 
 	// Push the score
 	if (r.GetMetadata().GetSetRating() > 0 || r.GetMetadata().GetSetRating() == -1) && r.GetRelease().Rating != r.GetMetadata().GetSetRating() {
-		err := s.retr.SetRating(int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
-		s.Log(fmt.Sprintf("Attempting to set rating on %v: %v", r.GetRelease().InstanceId, err))
+		err := s.retr.SetRating(ctx, int(r.GetRelease().Id), max(0, int(r.GetMetadata().GetSetRating())))
+		s.CtxLog(ctx, fmt.Sprintf("Attempting to set rating on %v: %v", r.GetRelease().InstanceId, err))
 		r.GetRelease().Rating = int32(max(0, int(r.GetMetadata().SetRating)))
 		if r.GetMetadata().GetSetRating() > 0 {
 			r.GetMetadata().LastListenTime = time.Now().Unix()
@@ -468,7 +451,7 @@ func max(a, b int) int {
 }
 
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
-	s.Log(fmt.Sprintf("Updating cache for : %v (%v)", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition()))
+	s.CtxLog(ctx, fmt.Sprintf("Updating cache for : %v (%v)", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition()))
 	// Don't recache a record that has a pending score
 	if r.GetMetadata().GetSetRating() > 0 {
 		return nil
@@ -476,7 +459,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 
 	//Add the record if it has not instance ID
 	if r.GetRelease().InstanceId == 0 {
-		inst, err := s.retr.AddToFolder(r.GetRelease().FolderId, r.GetRelease().Id)
+		inst, err := s.retr.AddToFolder(ctx, r.GetRelease().FolderId, r.GetRelease().Id)
 		if err == nil {
 			r.GetRelease().InstanceId = int32(inst)
 		} else {
@@ -487,7 +470,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 	//Force a recache if the record has no title or condition; or if it has the old image format
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" ||
 		(len(r.GetRelease().GetImages()) > 0 && strings.Contains(r.GetRelease().GetImages()[0].GetUri(), "img.discogs")) {
-		release, err := s.retr.GetRelease(r.GetRelease().Id)
+		release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
 		if err == nil {
 
 			//Clear repeated fields first
@@ -500,7 +483,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 			r.GetRelease().OtherVersions = []int32{}
 
 			time.Sleep(time.Second * 2)
-			s.Log(fmt.Sprintf("Merged %v", release))
+			s.CtxLog(ctx, fmt.Sprintf("Merged %v", release))
 			proto.Merge(r.GetRelease(), release)
 
 			r.GetMetadata().LastCache = time.Now().Unix()
@@ -511,9 +494,9 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	// Re pull the date_added
-	mp, err := s.retr.GetInstanceInfo(r.GetRelease().GetId())
+	mp, err := s.retr.GetInstanceInfo(ctx, r.GetRelease().GetId())
 	if err == nil && mp[r.GetRelease().GetInstanceId()] != nil {
-		s.Log(fmt.Sprintf("Updating info (%v): %+v", r.GetRelease().GetInstanceId(), mp[r.GetRelease().GetInstanceId()]))
+		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", r.GetRelease().GetInstanceId(), mp[r.GetRelease().GetInstanceId()]))
 		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()].DateAdded
 		r.GetRelease().RecordCondition = mp[r.GetRelease().GetInstanceId()].RecordCondition
 		r.GetRelease().SleeveCondition = mp[r.GetRelease().GetInstanceId()].SleeveCondition
@@ -565,7 +548,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 	if err != nil {
 		return err
 	}
-	records := s.retr.GetCollection()
+	records := s.retr.GetCollection(ctx)
 	for _, record := range records {
 		foundInList := false
 		for iid := range collection.InstanceToFolder {
@@ -600,10 +583,10 @@ func (s *Server) updateSale(ctx context.Context, iid int32) error {
 	if err == nil {
 		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
 			if r.GetMetadata().SaleId > 1 && !r.GetMetadata().SaleDirty {
-				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(int(r.GetMetadata().SaleId)) * 100)
+				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(ctx, int(r.GetMetadata().SaleId)) * 100)
 			}
 			if r.GetMetadata().SaleId > 1 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
-				r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(int(r.GetMetadata().SaleId))
+				r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(ctx, int(r.GetMetadata().SaleId))
 			}
 			return s.saveRecord(ctx, r)
 		}
@@ -617,7 +600,7 @@ func (s *Server) syncWantlist(ctx context.Context) error {
 		return err
 	}
 
-	wants, err := s.retr.GetWantlist()
+	wants, err := s.retr.GetWantlist(ctx)
 	if err != nil {
 		return err
 	}
@@ -692,7 +675,7 @@ func (s *Server) recache(ctx context.Context, r *pb.Record) error {
 	}
 
 	//Force a recache if the record has no title
-	release, err := s.retr.GetRelease(r.GetRelease().Id)
+	release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
 	if err == nil {
 
 		//Clear repeated fields first

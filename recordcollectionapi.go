@@ -20,7 +20,7 @@ import (
 )
 
 func (s *Server) GetInventory(ctx context.Context, req *pb.GetInventoryRequest) (*pb.GetInventoryResponse, error) {
-	inventory, err := s.retr.GetInventory()
+	inventory, err := s.retr.GetInventory(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +57,13 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	// Adjust the sale price
 	if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
 		s.updateRecordSalePrice(ctx, record)
-		s.Log(fmt.Sprintf("Updated sale price"))
+		s.CtxLog(ctx, fmt.Sprintf("Updated sale price"))
 		updated = true
 	}
 
 	/*if time.Since(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24 {
 		err = s.pushMetadata(ctx, record)
-		s.Log(fmt.Sprintf("Pushed Metadata for %v", record.GetRelease().GetInstanceId()))
+		s.CtxLog(ctx, fmt.Sprintf("Pushed Metadata for %v", record.GetRelease().GetInstanceId()))
 		if err != nil {
 			return nil, err
 		}
@@ -128,8 +128,8 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 		return nil, err
 	}
 
-	res := s.retr.DeleteInstance(int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), int(request.GetInstanceId()))
-	s.Log(fmt.Sprintf("Deleted from collection: %v", res))
+	res := s.retr.DeleteInstance(ctx, int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), int(request.GetInstanceId()))
+	s.CtxLog(ctx, fmt.Sprintf("Deleted from collection: %v", res))
 
 	err = s.saveRecordCollection(ctx, collection)
 	if err != nil {
@@ -143,7 +143,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb.GetWantsResponse, error) {
 	response := &pb.GetWantsResponse{Wants: make([]*pb.Want, 0)}
 
-	wants, err := s.retr.GetWantlist()
+	wants, err := s.retr.GetWantlist(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -160,9 +160,9 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
 	var err error
 	if request.GetRemove() {
-		err = s.retr.RemoveFromWantlist(int(request.GetUpdate().GetReleaseId()))
+		err = s.retr.RemoveFromWantlist(ctx, int(request.GetUpdate().GetReleaseId()))
 	} else {
-		err = s.retr.AddToWantlist(int(request.GetUpdate().GetReleaseId()))
+		err = s.retr.AddToWantlist(ctx, int(request.GetUpdate().GetReleaseId()))
 	}
 	return &pb.UpdateWantResponse{}, err
 }
@@ -187,7 +187,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		return nil, fmt.Errorf("you cannot do a record update like this")
 	}
 
-	s.Log(fmt.Sprintf("UpdateRecord %v", request))
+	s.CtxLog(ctx, fmt.Sprintf("UpdateRecord %v", request))
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
 	if err != nil {
@@ -208,7 +208,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				if request.GetUpdate().GetMetadata().GetLastStockCheck() == 0 {
 					if request.GetUpdate().GetMetadata().GetGoalFolder() == 0 {
 						if request.GetUpdate().GetMetadata().GetFiledUnder() >= 0 {
-							s.Log(fmt.Sprintf("Update %v failed because of the box situation", request))
+							s.CtxLog(ctx, fmt.Sprintf("Update %v failed because of the box situation", request))
 							return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
 						}
 					}
@@ -247,7 +247,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	// If this is being sold - mark it for sale
 	if request.GetUpdate().GetMetadata() != nil && request.GetUpdate().GetMetadata().Category == pb.ReleaseMetadata_SOLD && rec.GetMetadata().Category != pb.ReleaseMetadata_SOLD {
 		if !request.NoSell {
-			s.Log(fmt.Sprintf("Running sale path"))
+			s.CtxLog(ctx, fmt.Sprintf("Running sale path"))
 			time.Sleep(time.Second * 2)
 			if len(rec.GetRelease().SleeveCondition) == 0 {
 				s.cacheRecord(ctx, rec)
@@ -259,9 +259,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if s.disableSales {
 				return nil, fmt.Errorf("Sales are disabled")
 			}
-			price, _ := s.retr.GetSalePrice(int(rec.GetRelease().Id))
+			price, _ := s.retr.GetSalePrice(ctx, int(rec.GetRelease().Id))
 			//230 is approx weight of packaging
-			saleid := s.retr.SellRecord(int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
+			saleid := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
 
 			// Cancel changes in the update
 			request.GetUpdate().GetMetadata().SaleId = 0
@@ -375,12 +375,12 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder")
 	}
 
-	s.Log(fmt.Sprintf("AddRecord %v", request))
+	s.CtxLog(ctx, fmt.Sprintf("AddRecord %v", request))
 
 	var err error
 	instanceID := int(request.GetToAdd().GetRelease().InstanceId)
 	if instanceID == 0 {
-		instanceID, err = s.retr.AddToFolder(3380098, request.GetToAdd().GetRelease().Id)
+		instanceID, err = s.retr.AddToFolder(ctx, 3380098, request.GetToAdd().GetRelease().Id)
 	}
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
@@ -464,7 +464,7 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_All:
-		coll := s.retr.GetCollection()
+		coll := s.retr.GetCollection(ctx)
 		for _, rel := range coll {
 			ids = append(ids, rel.GetInstanceId())
 		}
@@ -482,7 +482,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 
 	// Short cut if we're not asking for a specific release
 	if req.GetReleaseId() > 0 {
-		got, err := s.retr.GetRelease(req.GetReleaseId())
+		got, err := s.retr.GetRelease(ctx, req.GetReleaseId())
 		if err != nil {
 			return nil, err
 		}
@@ -499,7 +499,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 
 		st := status.Convert(err)
 		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable && st.Code() != codes.Canceled && st.Code() != codes.OutOfRange && st.Code() != codes.NotFound {
-			s.Log(fmt.Sprintf("Bad receive: %v", req))
+			s.CtxLog(ctx, fmt.Sprintf("Bad receive: %v", req))
 			key, err := utils.GetContextKey(ctx)
 			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, key))
 		}
@@ -544,7 +544,7 @@ func (s *Server) GetUpdates(ctx context.Context, req *pb.GetUpdatesRequest) (*pb
 }
 
 func (s *Server) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.GetOrderResponse, error) {
-	rMap, t, err := s.retr.GetOrder(req.GetId())
+	rMap, t, err := s.retr.GetOrder(ctx, req.GetId())
 	if err != nil {
 		return nil, err
 	}
@@ -562,6 +562,6 @@ func (s *Server) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Get
 
 func (s *Server) GetPrice(ctx context.Context, req *pb.GetPriceRequest) (*pb.GetPriceResponse, error) {
 	time.Sleep(time.Second * 5)
-	price, err := s.retr.GetSalePrice(int(req.GetId()))
+	price, err := s.retr.GetSalePrice(ctx, int(req.GetId()))
 	return &pb.GetPriceResponse{Price: price}, err
 }
