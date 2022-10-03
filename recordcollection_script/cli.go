@@ -44,6 +44,41 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "the_fall":
+		all, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		for _, id := range all.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Printf("Bad read: %v", err)
+			}
+
+			if rec.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
+				fall := false
+				for _, artist := range rec.GetRecord().GetRelease().GetArtists() {
+					if artist.GetName() == "The Fall" {
+						fall = true
+					}
+				}
+				if fall {
+					fmt.Printf("%v\n", rec.GetRecord().GetRelease().GetTitle())
+					update := &pbrc.Record{
+						Release: &pbgd.Release{
+							InstanceId: id,
+						},
+						Metadata: &pbrc.ReleaseMetadata{
+							GoalFolder: 716318,
+						},
+					}
+					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Moving the fall", Update: update})
+					if err != nil {
+						log.Printf("Bad update: %v", err)
+					}
+				}
+			}
+		}
 	case "find_sleeve":
 		conn, err := utils.LFDialServer(ctx, "recordsorganiser")
 		if err != nil {

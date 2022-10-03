@@ -663,8 +663,10 @@ func main() {
 				if err != nil {
 					fmt.Printf("Error: %v\n", err)
 				}
-				rec = r.GetRecord()
-				bid = id
+				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
+					rec = r.GetRecord()
+					bid = id
+				}
 			}
 		}
 		if rec != nil {
@@ -774,7 +776,7 @@ func main() {
 
 	case "force":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "forcing sync from cli", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{LastCache: 1, LastSyncTime: 1}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "forcing sync from cli", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{LastCache: 1, LastSyncTime: 1, LastSalePriceUpdate: 1}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -999,6 +1001,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "gprice":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.GetPriceRequest{Id: int32(i)}
+		rec, err := registry.GetPrice(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "price":
 		i, _ := strconv.Atoi(os.Args[2])
 		p, _ := strconv.Atoi(os.Args[3])
@@ -1167,7 +1177,7 @@ func main() {
 		i, _ := strconv.Atoi(os.Args[2])
 		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Dirty: true, Category: pbrc.ReleaseMetadata_ARRIVED,
 
-			DateArrived: time.Now().Unix()}}}
+			DateArrived: -1}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
