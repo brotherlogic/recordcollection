@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
-	"github.com/golang/protobuf/proto"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/proto"
 
 	pbgd "github.com/brotherlogic/godiscogs"
 	qpb "github.com/brotherlogic/queue/proto"
@@ -156,7 +156,7 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 	return response, nil
 }
 
-//UpdateWant updates the record
+// UpdateWant updates the record
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
 	var err error
 	if request.GetRemove() {
@@ -167,7 +167,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	return &pb.UpdateWantResponse{}, err
 }
 
-//UpdateRecord updates the record
+// UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 
 	if request.GetReason() == "" {
@@ -532,13 +532,13 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	return &pb.GetRecordResponse{Record: rec}, err
 }
 
-//Trigger runs a local sync
+// Trigger runs a local sync
 func (s *Server) Trigger(ctx context.Context, req *pb.TriggerRequest) (*pb.TriggerResponse, error) {
 	err := s.runSync(ctx)
 	return nil, err
 }
 
-//GetUpdates to a record
+// GetUpdates to a record
 func (s *Server) GetUpdates(ctx context.Context, req *pb.GetUpdatesRequest) (*pb.GetUpdatesResponse, error) {
 	updates, err := s.loadUpdates(ctx, req.GetInstanceId())
 	return &pb.GetUpdatesResponse{Updates: updates}, err

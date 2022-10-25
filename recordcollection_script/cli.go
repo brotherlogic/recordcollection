@@ -23,10 +23,7 @@ import (
 	ro "github.com/brotherlogic/recordsorganiser/sales"
 	google_protobuf "github.com/golang/protobuf/ptypes/any"
 
-	//Needed to pull in gzip encoding init
-
 	"google.golang.org/grpc/codes"
-	_ "google.golang.org/grpc/encoding/gzip"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 )

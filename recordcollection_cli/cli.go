@@ -15,7 +15,12 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
-	"github.com/golang/protobuf/proto"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/exporters/jaeger"
+	"go.opentelemetry.io/otel/sdk/resource"
+	tracesdk "go.opentelemetry.io/otel/sdk/trace"
+	semconv "go.opentelemetry.io/otel/semconv/v1.4.0"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/andanhm/go-prettytime"
 
@@ -35,6 +40,26 @@ type wstr struct {
 	Width       float64 `json:"width"`
 }
 
+func tracerProvider(url string) (*tracesdk.TracerProvider, error) {
+	// Create the Jaeger exporter
+	exp, err := jaeger.New(jaeger.WithCollectorEndpoint(jaeger.WithEndpoint(url)))
+	if err != nil {
+		return nil, err
+	}
+	tp := tracesdk.NewTracerProvider(
+		// Always be sure to batch in production.
+		tracesdk.WithBatcher(exp),
+		// Record information about this application in a Resource.
+		tracesdk.WithResource(resource.NewWithAttributes(
+			semconv.SchemaURL,
+			semconv.ServiceNameKey.String("recordcollection-cli"),
+			attribute.String("environment", "prod"),
+			attribute.Int64("ID", 1),
+		)),
+	)
+	return tp, nil
+}
+
 func main() {
 	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Minute*60)
 	defer cancel()
@@ -48,6 +73,29 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "find_digital":
+		items, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Unable to get all records: %v", err)
+		}
+		for _, item := range items.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: item})
+			if err != nil {
+				log.Fatalf("Bad records: %v", err)
+			}
+			if rec.Record.GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL {
+				found := false
+				for _, form := range rec.GetRecord().GetRelease().GetFormats() {
+					if form.GetName() == "File" {
+						found = true
+					}
+				}
+				if !found {
+					fmt.Printf("%v -> %v / %v\n", rec.Record.GetRelease().GetInstanceId(), rec.GetRecord().Release.GetArtists(), rec.GetRecord().GetRelease().GetTitle())
+					return
+				}
+			}
+		}
 	case "sales":
 		items, err := registry.GetInventory(ctx, &pbrc.GetInventoryRequest{})
 		if err != nil {
