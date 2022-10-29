@@ -646,7 +646,6 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error %v\n", err)
 			}
-			log.Printf("HERE %v", ids)
 			for i, id := range ids.GetInstanceIds() {
 				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 				if err != nil {
