@@ -80,21 +80,25 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		}
 	}
 
+	if record.GetMetadata().GetSaleDirty() {
+		pushed, err := s.pushSale(ctx, record)
+		if err != nil {
+			return nil, err
+		}
+		if pushed {
+			updated = true
+		}
+	}
+
 	err = nil
 	if updated {
 		err = s.saveRecord(ctx, record)
 
-		conn, err := s.FDialServer(ctx, "queue")
-		if err != nil {
-			return nil, err
-		}
-		defer conn.Close()
-		qclient := qpb.NewQueueServiceClient(conn)
 		upup := &rfpb.FanoutRequest{
 			InstanceId: record.GetRelease().GetInstanceId(),
 		}
 		data, _ := proto.Marshal(upup)
-		_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 			QueueName: "record_fanout",
 			RunTime:   time.Now().Add(time.Second * 10).Unix(),
 			Payload:   &google_protobuf.Any{Value: data},
