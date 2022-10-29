@@ -568,7 +568,9 @@ func TestUpdateSale(t *testing.T) {
 
 func TestValidateSales(t *testing.T) {
 	s := InitTestServer(".testValidateSales")
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 123}, Metadata: &pb.ReleaseMetadata{Cost: 100, SaleId: 123, GoalFolder: 100, LastCache: time.Now().Unix(), Category: pb.ReleaseMetadata_LISTED_TO_SELL}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{Title: "title1", InstanceId: 123, Id: 123},
+		Metadata: &pb.ReleaseMetadata{LastUpdateIn: 1, Cost: 100, SaleId: 123, GoalFolder: 100, LastCache: time.Now().Unix(), Category: pb.ReleaseMetadata_LISTED_TO_SELL}}})
 	err := s.validateSales(context.Background())
 	if err != nil {
 		t.Errorf("Bad validation: %v", err)

@@ -388,20 +388,15 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().GetRelease().FolderId = int32(3380098)
 		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
 
-		s.saveRecord(ctx, request.GetToAdd())
+		err := s.saveRecord(ctx, request.GetToAdd())
+		s.CtxLog(ctx, fmt.Sprintf("Saved record: %v", err))
 	}
 
-	conn, err := s.FDialServer(ctx, "queue")
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-	qclient := qpb.NewQueueServiceClient(conn)
 	upup := &rfpb.FanoutRequest{
 		InstanceId: int32(instanceID),
 	}
 	data, _ := proto.Marshal(upup)
-	_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 		QueueName:     "record_fanout",
 		RunTime:       time.Now().Unix(),
 		Payload:       &google_protobuf.Any{Value: data},

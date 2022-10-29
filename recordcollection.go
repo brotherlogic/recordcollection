@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"runtime/debug"
 	"time"
 
 	"github.com/brotherlogic/godiscogs"
@@ -22,6 +21,7 @@ import (
 	pbd "github.com/brotherlogic/godiscogs"
 	pbg "github.com/brotherlogic/goserver/proto"
 	pbks "github.com/brotherlogic/keystore/proto"
+	qpb "github.com/brotherlogic/queue/queue_client"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbrs "github.com/brotherlogic/recordscores/proto"
@@ -161,6 +161,7 @@ type Server struct {
 	fanoutServers []string
 	repeatCount   map[int32]int
 	repeatError   map[int32]error
+	queueClient   *qpb.QueueClient
 }
 
 const (
@@ -209,7 +210,7 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	}
 
 	if collection.InstanceToFolder == nil {
-		log.Fatalf("Unable to get the folder: %v", collection)
+		collection.InstanceToFolder = make(map[int32]int32)
 	}
 
 	if collection.InstanceToId == nil {
@@ -222,8 +223,6 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 
 	if collection.InstanceToUpdateIn == nil {
 		s.RaiseIssue("Build reset", fmt.Sprintf("Reset on build for update in: %v", len(collection.InstanceToUpdate)))
-		debug.PrintStack()
-		log.Fatalf("Quitting out: %v", collection)
 		collection.InstanceToUpdateIn = make(map[int32]int64)
 	}
 
@@ -232,7 +231,7 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	}
 
 	if collection.InstanceToMaster == nil {
-		log.Fatalf("Unable to get the master: %v", collection)
+		collection.InstanceToMaster = make(map[int32]int32)
 	}
 
 	if collection.GetOldestRecord() == 0 {
@@ -522,6 +521,7 @@ func Init() *Server {
 	s.scorer = &prodScorer{s.FDialServer}
 	s.quota = &prodQuotaChecker{s.FDialServer}
 	s.mover = &prodMoveRecorder{s.FDialServer}
+	s.queueClient = &qpb.QueueClient{Gs: s.GoServer}
 	return s
 }
 

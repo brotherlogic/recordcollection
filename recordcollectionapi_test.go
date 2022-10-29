@@ -8,12 +8,12 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	keystoreclient "github.com/brotherlogic/keystore/client"
+	qpb "github.com/brotherlogic/queue/queue_client"
 	pb "github.com/brotherlogic/recordcollection/proto"
 )
 
 func InitTestServer(folder string) *Server {
 	s := Init()
-	s.PrepServer("recordcollection")
 	s.retr = &testSyncer{}
 	s.mover = &testMover{pass: true}
 	s.scorer = &testScorer{}
@@ -24,6 +24,8 @@ func InitTestServer(folder string) *Server {
 	s.GoServer.KSclient.Save(context.Background(), KEY, &pb.RecordCollection{})
 	s.SkipLog = true
 	s.SkipIssue = true
+	s.SkipElect = true
+	s.queueClient = &qpb.QueueClient{Test: true}
 
 	return s
 }

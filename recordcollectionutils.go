@@ -249,6 +249,8 @@ func (s *Server) validateSales(ctx context.Context) error {
 		// This call will not fail
 		recs, _ := s.QueryRecords(ctx, &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{sale.GetId()}})
 
+		s.CtxLog(ctx, fmt.Sprintf("Found %v results (%v)", len(recs.GetInstanceIds()), sale.GetId()))
+
 		for _, id := range recs.GetInstanceIds() {
 			rec, err := s.getRecord(ctx, id)
 			if err != nil {
