@@ -387,8 +387,12 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	}
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
-		request.GetToAdd().GetRelease().FolderId = int32(3380098)
-		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
+		if request.GetToAdd().GetRelease().GetFolderId() == 0 {
+			request.GetToAdd().GetRelease().FolderId = int32(3380098)
+		}
+		if request.GetToAdd().GetMetadata().GetDateAdded() == 0 {
+			request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
+		}
 
 		err := s.saveRecord(ctx, request.GetToAdd())
 		s.CtxLog(ctx, fmt.Sprintf("Saved record: %v", err))

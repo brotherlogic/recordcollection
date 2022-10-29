@@ -222,10 +222,7 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
-	/*err = s.pushSales(context.Background())
-	if err != nil {
-		t.Errorf("Error pushing sales: %v", err)
-	}*/
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 177077893})
 
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -255,11 +252,7 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 	if r == nil || !r.GetRecord().GetMetadata().SaleDirty {
 		t.Errorf("Error in updating records: %v", r)
 	}
-
-	/*err = s.pushSales(context.Background())
-	if err != nil {
-		t.Fatalf("Error in pushing sales: %v", err)
-	}*/
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 177077893})
 
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -400,6 +393,10 @@ func TestQueryRecordsWithFolderId(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
 	//s.collection.InstanceToFolder[12] = 12
 
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{InstanceId: 100, MasterId: 100, FolderId: 12},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100}}})
+
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_FolderId{12}})
 
 	if err != nil {
@@ -413,7 +410,9 @@ func TestQueryRecordsWithFolderId(t *testing.T) {
 
 func TestQueryRecordsWithUpdateTime(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
-	//s.collection.InstanceToUpdate[12] = 14
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{InstanceId: 100, MasterId: 100, FolderId: 12},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastUpdateTime: 13}}})
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_UpdateTime{12}})
 
@@ -428,7 +427,9 @@ func TestQueryRecordsWithUpdateTime(t *testing.T) {
 
 func TestQueryRecordsWithCategory(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
-	//s.collection.InstanceToCategory[12] = pb.ReleaseMetadata_PRE_DISTINGUISHED
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{InstanceId: 100, MasterId: 100, FolderId: 12},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Category: pb.ReleaseMetadata_PRE_DISTINGUISHED}}})
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_Category{pb.ReleaseMetadata_PRE_DISTINGUISHED}})
 

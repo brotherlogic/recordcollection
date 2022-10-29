@@ -415,6 +415,8 @@ func TestPushMove(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 123})
+
 	//s.runPush(context.Background())
 	//s.runPush(context.Background())
 
@@ -435,7 +437,7 @@ func TestPushBadMoveRecord(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	//s.runPush(context.Background())
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 123})
 
 	if tRetr.moveRecordCount != 0 {
 		t.Errorf("Update has run when it shouldn't")
@@ -474,7 +476,7 @@ func TestPushRating(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	//s.runPush(context.Background())
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 123})
 
 	if tRetr.setRatingCount != 1 {
 		t.Errorf("Update has not run")
@@ -532,10 +534,6 @@ func TestSyncRecordTracklist(t *testing.T) {
 
 	if !record.GetMetadata().SaleDirty {
 		t.Errorf("Sale dirty not set")
-	}
-
-	if record.GetMetadata().NeedsStockCheck {
-		t.Errorf("Stock check not updated")
 	}
 
 }
