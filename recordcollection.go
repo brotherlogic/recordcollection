@@ -346,7 +346,6 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	if collection.GetInstanceToUpdateIn()[r.GetRelease().InstanceId] != r.GetMetadata().GetLastUpdateIn() {
-		s.CtxLog(ctx, fmt.Sprintf("Reading with an empty update"))
 		collection.InstanceToUpdateIn[r.GetRelease().InstanceId] = r.GetMetadata().GetLastUpdateIn()
 		save = true
 	}

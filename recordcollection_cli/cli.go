@@ -28,9 +28,6 @@ import (
 	pbks "github.com/brotherlogic/keystore/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 	rfpb "github.com/brotherlogic/recordfanout/proto"
-
-	//Needed to pull in gzip encoding init
-	_ "google.golang.org/grpc/encoding/gzip"
 )
 
 type wstr struct {
@@ -134,11 +131,6 @@ func main() {
 		}
 		for _, id := range ids.GetInstanceIds() {
 			fmt.Printf("%v\n", id)
-			up := &pbrc.UpdateRecordRequest{Reason: "cli-sellrequest", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, MoveFolder: 673768, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}}}
-			_, err := registry.UpdateRecord(ctx, up)
-			if err != nil {
-				log.Fatalf("Bad Update: %v", err)
-			}
 		}
 	case "get_price":
 		i, _ := strconv.Atoi(os.Args[2])
@@ -623,6 +615,27 @@ func main() {
 			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
 				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
 				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+			}
+		}
+	case "scorepv":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_VALIDATE}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
+				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
+				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL {
+					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
+						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+							Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}})
+					fmt.Printf("%v\n", err)
+				}
 			}
 		}
 	case "limbo":
