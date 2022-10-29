@@ -342,17 +342,11 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	rec.GetMetadata().LastUpdateIn = time.Now().Unix()
 	err = s.saveRecord(ctx, rec)
 
-	conn, err := s.FDialServer(ctx, "queue")
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-	qclient := qpb.NewQueueServiceClient(conn)
 	upup := &rfpb.FanoutRequest{
 		InstanceId: rec.GetRelease().GetInstanceId(),
 	}
 	data, _ := proto.Marshal(upup)
-	_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 		QueueName: "record_fanout",
 		RunTime:   time.Now().Unix(),
 		Payload:   &google_protobuf.Any{Value: data},
