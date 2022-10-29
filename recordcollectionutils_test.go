@@ -455,7 +455,7 @@ func TestPushBadQuotaMoveWithSpill(t *testing.T) {
 		t.Fatalf("Error in getting records: %v", err)
 	}
 
-	//s.runPush(context.Background())
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 123})
 
 	if tRetr.moveRecordCount != 1 {
 		t.Errorf("Update has not run when it should've")

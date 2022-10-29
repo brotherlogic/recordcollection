@@ -369,6 +369,10 @@ func (s *Server) testForLabels(ctx context.Context, rec *pb.Record, request *pb.
 
 // AddRecord adds a record directly to the listening pile
 func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*pb.AddRecordResponse, error) {
+	if request.GetToAdd().GetMetadata().GetLastUpdateIn() == 0 {
+		request.GetToAdd().GetMetadata().LastUpdateIn = 1
+	}
+
 	//Reject the add if we don't have a cost or goal folder
 	if request.GetToAdd().GetMetadata().GetCost() == 0 || request.GetToAdd().GetMetadata().GetGoalFolder() == 0 {
 		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder")
