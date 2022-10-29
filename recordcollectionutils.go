@@ -373,7 +373,7 @@ func (s *Server) updateWant(ctx context.Context, w *pb.Want) bool {
 		return false
 	}
 	if w.ClearWant {
-		s.CtxLog(ctx, fmt.Sprintf("Removing from the wantlist %v -> %v and %v", w.GetReleaseId(), w.ClearWant))
+		s.CtxLog(ctx, fmt.Sprintf("Removing from the wantlist %v -> %v", w.GetReleaseId(), w.ClearWant))
 		s.retr.RemoveFromWantlist(ctx, int(w.GetReleaseId()))
 		w.ClearWant = false
 		return true

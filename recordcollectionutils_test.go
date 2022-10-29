@@ -65,33 +65,33 @@ type testSyncer struct {
 	badInventory    bool
 }
 
-func (t *testSyncer) GetInstanceInfo(ID int32) (map[int32]*godiscogs.InstanceInfo, error) {
+func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error) {
 	return make(map[int32]*godiscogs.InstanceInfo), nil
 }
 
-func (t *testSyncer) GetInventory() ([]*pbd.ForSale, error) {
+func (t *testSyncer) GetInventory(ctx context.Context) ([]*pbd.ForSale, error) {
 	if t.badInventory {
 		return []*pbd.ForSale{}, fmt.Errorf("Built to fail")
 	}
 	return []*pbd.ForSale{&pbd.ForSale{Id: 123, SaleId: 123}}, nil
 }
 
-func (t *testSyncer) ExpireSale(saleID int, releaseID int, price float32) error {
+func (t *testSyncer) ExpireSale(ctx context.Context, saleID int, releaseID int, price float32) error {
 	return nil
 }
 
-func (t *testSyncer) UpdateSalePrice(saleID int, releaseID int, condition, sleeve string, price float32) error {
+func (t *testSyncer) UpdateSalePrice(ctx context.Context, saleID int, releaseID int, condition, sleeve string, price float32) error {
 	if t.failSalePrice {
 		return fmt.Errorf("built to fail")
 	}
 	return nil
 }
 
-func (t *testSyncer) RemoveFromSale(saleID int, releaseID int) error {
+func (t *testSyncer) RemoveFromSale(ctx context.Context, saleID int, releaseID int) error {
 	return nil
 }
 
-func (t *testSyncer) GetCollection() []*pbd.Release {
+func (t *testSyncer) GetCollection(ctx context.Context) []*pbd.Release {
 	return []*pbd.Release{
 		&pbd.Release{FolderId: 12, InstanceId: 1, Id: 234, MasterId: 12, Title: "Magic", Formats: []*pbd.Format{&pbd.Format{Name: "blah"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}},
 		&pbd.Release{FolderId: 12, InstanceId: 2, Id: 123, Title: "Johnson", MasterId: 12},
@@ -99,26 +99,26 @@ func (t *testSyncer) GetCollection() []*pbd.Release {
 	}
 }
 
-func (t *testSyncer) GetWantlist() ([]*pbd.Release, error) {
+func (t *testSyncer) GetWantlist(ctx context.Context) ([]*pbd.Release, error) {
 	return []*pbd.Release{&pbd.Release{Id: 255, Title: "Mirror"}}, nil
 }
 
-func (t *testSyncer) GetOrder(ID string) (map[int32]int32, time.Time, error) {
+func (t *testSyncer) GetOrder(ctx context.Context, ID string) (map[int32]int32, time.Time, error) {
 	return make(map[int32]int32), time.Now(), nil
 }
 
-func (t *testSyncer) GetRelease(id int32) (*pbd.Release, error) {
+func (t *testSyncer) GetRelease(ctx context.Context, id int32) (*pbd.Release, error) {
 	if id == 4707982 {
 		return &pbd.Release{Id: 4707982, Title: "Future", Images: []*pbd.Image{&pbd.Image{Type: "primary", Uri: "http://magic"}}}, nil
 	}
 	return &pbd.Release{Id: id, InstanceId: 456, Title: "On The Wall", Labels: []*pbd.Label{&pbd.Label{Name: "madeup", Id: 123}}}, nil
 }
 
-func (t *testSyncer) AddToFolder(id int32, folderID int32) (int, error) {
+func (t *testSyncer) AddToFolder(ctx context.Context, id int32, folderID int32) (int, error) {
 	return 200, nil
 }
 
-func (t *testSyncer) SetRating(id int, rating int) error {
+func (t *testSyncer) SetRating(ctx context.Context, id int, rating int) error {
 	if t.failOnRate {
 		return errors.New("Set to fail")
 	}
@@ -126,39 +126,40 @@ func (t *testSyncer) SetRating(id int, rating int) error {
 	return nil
 }
 
-func (t *testSyncer) MoveToFolder(a, b, c, d int) (string, error) {
+func (t *testSyncer) MoveToFolder(ctx context.Context, a, b, c, d int) (string, error) {
 	t.moveRecordCount = 1
 	return "ALL GOOD!", nil
 }
 
-func (t *testSyncer) DeleteInstance(a, b, c int) string {
-	return "ALL GOOD!"
+func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID, instanceID int) error {
+	return fmt.Errorf("ALL GOOD!")
 }
 
-func (t *testSyncer) SellRecord(releaseID int, price float32, state string, condition, sleeve string) int {
+func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) int {
 	return 0
 }
-func (t *testSyncer) GetSalePrice(releaseID int) (float32, error) {
+func (t *testSyncer) GetSalePrice(ctx context.Context, releaseID int) (float32, error) {
 	return 15.5, nil
 }
-func (t *testSyncer) GetSaleState(releaseID int) pbd.SaleState {
+func (t *testSyncer) GetSaleState(ctx context.Context, releaseID int) pbd.SaleState {
 	return pbd.SaleState_FOR_SALE
 }
 
-func (t *testSyncer) RemoveFromWantlist(releaseID int) {
+func (t *testSyncer) RemoveFromWantlist(ctx context.Context, releaseID int) error {
 	t.updateWantCount++
+	return nil
 }
 
-func (t *testSyncer) AddToWantlist(releaseID int) error {
+func (t *testSyncer) AddToWantlist(ctx context.Context, releaseID int) error {
 	// Do nothing
 	return nil
 }
 
-func (t *testSyncer) GetCurrentSalePrice(saleID int) float32 {
+func (t *testSyncer) GetCurrentSalePrice(ctx context.Context, saleID int) float32 {
 	return 12.34
 }
 
-func (t *testSyncer) GetCurrentSaleState(saleID int) pbd.SaleState {
+func (t *testSyncer) GetCurrentSaleState(ctx context.Context, saleID int) pbd.SaleState {
 	return pbd.SaleState_FOR_SALE
 }
 
@@ -169,7 +170,7 @@ func TestUpdateWantWithPush(t *testing.T) {
 	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123}, Metadata: &pb.WantMetadata{Active: true}})
 	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 12345}, Metadata: &pb.WantMetadata{Active: true}})
 
-	s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123}}, Remove: true})
+	s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{ReleaseId: 123}, Remove: true})
 	//s.pushWants(context.Background())
 
 	if ts.updateWantCount != 1 {
@@ -482,7 +483,7 @@ func TestPushRating(t *testing.T) {
 
 func TestBasic(t *testing.T) {
 	s := InitTestServer(".madeup")
-	s.updateWant(&pb.Want{Release: &pbd.Release{Id: 766489}, Metadata: &pb.WantMetadata{}})
+	s.updateWant(context.Background(), &pb.Want{ReleaseId: 766489})
 }
 
 func TestPushSaleWithFail(t *testing.T) {
