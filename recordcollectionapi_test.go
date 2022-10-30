@@ -8,12 +8,12 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs"
 	keystoreclient "github.com/brotherlogic/keystore/client"
+	qpb "github.com/brotherlogic/queue/queue_client"
 	pb "github.com/brotherlogic/recordcollection/proto"
 )
 
 func InitTestServer(folder string) *Server {
 	s := Init()
-	s.PrepServer()
 	s.retr = &testSyncer{}
 	s.mover = &testMover{pass: true}
 	s.scorer = &testScorer{}
@@ -24,6 +24,8 @@ func InitTestServer(folder string) *Server {
 	s.GoServer.KSclient.Save(context.Background(), KEY, &pb.RecordCollection{})
 	s.SkipLog = true
 	s.SkipIssue = true
+	s.SkipElect = true
+	s.queueClient = &qpb.QueueClient{Test: true}
 
 	return s
 }
@@ -220,10 +222,7 @@ func TestUpdateRecordWithSalePrice(t *testing.T) {
 		t.Errorf("Error in updating records: %v", r)
 	}
 
-	/*err = s.pushSales(context.Background())
-	if err != nil {
-		t.Errorf("Error pushing sales: %v", err)
-	}*/
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 177077893})
 
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -253,11 +252,7 @@ func TestUpdateRecordWithNoPriceChangeSalePrice(t *testing.T) {
 	if r == nil || !r.GetRecord().GetMetadata().SaleDirty {
 		t.Errorf("Error in updating records: %v", r)
 	}
-
-	/*err = s.pushSales(context.Background())
-	if err != nil {
-		t.Fatalf("Error in pushing sales: %v", err)
-	}*/
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 177077893})
 
 	r, err = s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -299,10 +294,7 @@ func TestRemoveRecordFromSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	rec := &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 177077893}, Metadata: &pb.ReleaseMetadata{SaleId: 1234, SalePrice: 1234, Category: pb.ReleaseMetadata_SOLD_OFFLINE, SaleDirty: true, Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: rec})
-	//s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(177077893))
-	//s.collection.SaleUpdates = append(s.collection.SaleUpdates, int32(10))
-
-	//err := s.pushSales(context.Background())
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 177077893})
 
 	r, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 177077893})
 
@@ -362,7 +354,7 @@ func TestUpdateWants(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
 	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup1"}, Metadata: &pb.WantMetadata{Active: true}})
 
-	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
+	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{ReleaseId: 123}})
 	if err != nil {
 		t.Fatalf("Error updating want: %v", err)
 	}
@@ -373,7 +365,7 @@ func TestUpdateWants(t *testing.T) {
 		t.Fatalf("Error in getting wants: %v", err)
 	}
 
-	if r == nil || len(r.Wants) != 1 || r.Wants[0].GetRelease().Title != "madeup2" {
+	if r == nil || len(r.Wants) != 1 {
 		t.Errorf("Error in getting wants: %v", r)
 	}
 }
@@ -381,7 +373,7 @@ func TestUpdateWants(t *testing.T) {
 func TestAddWant(t *testing.T) {
 	s := InitTestServer(".testUpdateWant")
 
-	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{Release: &pbd.Release{Id: 123, Title: "madeup2"}}})
+	_, err := s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{ReleaseId: 123}})
 	if err != nil {
 		t.Fatalf("Error updating want")
 	}
@@ -401,6 +393,10 @@ func TestQueryRecordsWithFolderId(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
 	//s.collection.InstanceToFolder[12] = 12
 
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{InstanceId: 100, MasterId: 100, FolderId: 12},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100}}})
+
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_FolderId{12}})
 
 	if err != nil {
@@ -414,7 +410,9 @@ func TestQueryRecordsWithFolderId(t *testing.T) {
 
 func TestQueryRecordsWithUpdateTime(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
-	//s.collection.InstanceToUpdate[12] = 14
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{InstanceId: 100, MasterId: 100, FolderId: 12},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastUpdateTime: 13}}})
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_UpdateTime{12}})
 
@@ -429,7 +427,9 @@ func TestQueryRecordsWithUpdateTime(t *testing.T) {
 
 func TestQueryRecordsWithCategory(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
-	//s.collection.InstanceToCategory[12] = pb.ReleaseMetadata_PRE_DISTINGUISHED
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{InstanceId: 100, MasterId: 100, FolderId: 12},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Category: pb.ReleaseMetadata_PRE_DISTINGUISHED}}})
 
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_Category{pb.ReleaseMetadata_PRE_DISTINGUISHED}})
 

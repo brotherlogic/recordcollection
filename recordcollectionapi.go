@@ -80,21 +80,25 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		}
 	}
 
+	if record.GetMetadata().GetSaleDirty() {
+		pushed, err := s.pushSale(ctx, record)
+		if err != nil {
+			return nil, err
+		}
+		if pushed {
+			updated = true
+		}
+	}
+
 	err = nil
 	if updated {
 		err = s.saveRecord(ctx, record)
 
-		conn, err := s.FDialServer(ctx, "queue")
-		if err != nil {
-			return nil, err
-		}
-		defer conn.Close()
-		qclient := qpb.NewQueueServiceClient(conn)
 		upup := &rfpb.FanoutRequest{
 			InstanceId: record.GetRelease().GetInstanceId(),
 		}
 		data, _ := proto.Marshal(upup)
-		_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 			QueueName: "record_fanout",
 			RunTime:   time.Now().Add(time.Second * 10).Unix(),
 			Payload:   &google_protobuf.Any{Value: data},
@@ -342,17 +346,11 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	rec.GetMetadata().LastUpdateIn = time.Now().Unix()
 	err = s.saveRecord(ctx, rec)
 
-	conn, err := s.FDialServer(ctx, "queue")
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-	qclient := qpb.NewQueueServiceClient(conn)
 	upup := &rfpb.FanoutRequest{
 		InstanceId: rec.GetRelease().GetInstanceId(),
 	}
 	data, _ := proto.Marshal(upup)
-	_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 		QueueName: "record_fanout",
 		RunTime:   time.Now().Unix(),
 		Payload:   &google_protobuf.Any{Value: data},
@@ -371,6 +369,10 @@ func (s *Server) testForLabels(ctx context.Context, rec *pb.Record, request *pb.
 
 // AddRecord adds a record directly to the listening pile
 func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*pb.AddRecordResponse, error) {
+	if request.GetToAdd().GetMetadata().GetLastUpdateIn() == 0 {
+		request.GetToAdd().GetMetadata().LastUpdateIn = 1
+	}
+
 	//Reject the add if we don't have a cost or goal folder
 	if request.GetToAdd().GetMetadata().GetCost() == 0 || request.GetToAdd().GetMetadata().GetGoalFolder() == 0 {
 		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder")
@@ -385,23 +387,22 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	}
 	if err == nil {
 		request.GetToAdd().Release.InstanceId = int32(instanceID)
-		request.GetToAdd().GetRelease().FolderId = int32(3380098)
-		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
+		if request.GetToAdd().GetRelease().GetFolderId() == 0 {
+			request.GetToAdd().GetRelease().FolderId = int32(3380098)
+		}
+		if request.GetToAdd().GetMetadata().GetDateAdded() == 0 {
+			request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
+		}
 
-		s.saveRecord(ctx, request.GetToAdd())
+		err := s.saveRecord(ctx, request.GetToAdd())
+		s.CtxLog(ctx, fmt.Sprintf("Saved record: %v", err))
 	}
 
-	conn, err := s.FDialServer(ctx, "queue")
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-	qclient := qpb.NewQueueServiceClient(conn)
 	upup := &rfpb.FanoutRequest{
 		InstanceId: int32(instanceID),
 	}
 	data, _ := proto.Marshal(upup)
-	_, err = qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 		QueueName:     "record_fanout",
 		RunTime:       time.Now().Unix(),
 		Payload:       &google_protobuf.Any{Value: data},
