@@ -90,6 +90,9 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if err != nil {
 			return nil, err
 		}
+
+		res := s.retr.DeleteInstance(ctx, int(record.GetRelease().GetFolderId()), int(record.GetRelease().GetId()), int(request.GetInstanceId()))
+		s.CtxLog(ctx, fmt.Sprintf("Deleted from collection: %v", res))
 	}
 
 	/*if time.Since(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24 {
