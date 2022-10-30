@@ -644,7 +644,7 @@ func main() {
 		if err := limboFlags.Parse(os.Args[2:]); err == nil {
 			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{3380098}})
 			if err != nil {
-				fmt.Printf("Error %v\n", err)
+				log.Fatalf("Error %v\n", err)
 			}
 			for i, id := range ids.GetInstanceIds() {
 				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
