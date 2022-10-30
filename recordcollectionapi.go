@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	pbd "github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
@@ -59,6 +60,36 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		s.updateRecordSalePrice(ctx, record)
 		s.CtxLog(ctx, fmt.Sprintf("Updated sale price"))
 		updated = true
+	}
+
+	if record.GetMetadata().GetTransferTo() > 0 {
+		trecord, err := s.transfer(ctx, record)
+		if err != nil {
+			return nil, err
+		}
+		record.GetMetadata().TransferIid = trecord.GetRelease().GetInstanceId()
+		updated = true
+
+		err = s.saveRecord(ctx, trecord)
+		if err != nil {
+			return nil, err
+		}
+
+		// Run updates on the transferred record too
+		upup := &rfpb.FanoutRequest{
+			InstanceId: trecord.GetRelease().GetInstanceId(),
+		}
+		data, _ := proto.Marshal(upup)
+		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+			QueueName: "record_fanout",
+			RunTime:   time.Now().Add(time.Second * 10).Unix(),
+			Payload:   &google_protobuf.Any{Value: data},
+			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
+		})
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	/*if time.Since(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24 {
@@ -344,6 +375,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	//Reset the update in value
 	rec.GetMetadata().LastUpdateIn = time.Now().Unix()
+
 	err = s.saveRecord(ctx, rec)
 
 	upup := &rfpb.FanoutRequest{
@@ -365,6 +397,27 @@ func (s *Server) testForLabels(ctx context.Context, rec *pb.Record, request *pb.
 	if len(rec.GetRelease().GetLabels()) == 0 && rec.GetMetadata().GetCategory() != pb.ReleaseMetadata_NO_LABELS && hasLabels {
 		s.RaiseIssue("Label reduction", fmt.Sprintf("Update %v has reduced label count", request))
 	}
+}
+
+func (s *Server) transfer(ctx context.Context, rec *pb.Record) (*pb.Record, error) {
+	s.CtxLog(ctx, "Transferring")
+
+	// Add a record with the transfer id
+	nmeta := proto.Clone(rec.GetMetadata()).(*pb.ReleaseMetadata)
+	trecord, err := s.AddRecord(ctx, &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release:  &pbd.Release{Id: rec.GetMetadata().GetTransferTo()},
+			Metadata: nmeta}})
+	if err != nil {
+		return nil, err
+	}
+
+	// Remove the transfer bit from the trecord
+	trecord.GetAdded().GetMetadata().TransferTo = 0
+
+	s.CtxLog(ctx, fmt.Sprintf("TRANSFER: %v", trecord))
+
+	return trecord.GetAdded(), nil
 }
 
 // AddRecord adds a record directly to the listening pile
@@ -491,9 +544,23 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 		return &pb.GetRecordResponse{Record: &pb.Record{Release: got}}, nil
 	}
 
+	config, err := s.readRecordCollection(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if config.GetTransferMap()[req.GetInstanceId()] > 0 {
+		return s.GetRecord(ctx, &pb.GetRecordRequest{InstanceId: config.GetTransferMap()[req.GetInstanceId()]})
+	}
+
 	rec, err := s.loadRecord(ctx, req.InstanceId, req.GetValidate())
 
 	if err != nil {
+
+		if rec.GetMetadata().GetTransferIid() > 0 {
+			return s.GetRecord(ctx, &pb.GetRecordRequest{InstanceId: rec.GetMetadata().GetTransferTo()})
+		}
+
 		if req.GetForce() > 0 {
 			rec := &pb.Record{Release: &pbgd.Release{Id: req.GetForce(), InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{GoalFolder: 242017, Cost: 1}}
 			return &pb.GetRecordResponse{Record: rec}, s.cacheRecord(ctx, rec)

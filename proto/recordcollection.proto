@@ -46,6 +46,8 @@ message RecordCollection {
 
   // The last time we did a full update
   int64 last_full_update = 19;
+
+  map<int32, int32> transfer_map = 20;
 }
 
 message AllRecords {
@@ -338,6 +340,9 @@ message ReleaseMetadata {
     DIGITAL_AVAILABLE = 2;
   }
   DigitalAvailability digital_availability = 63;
+
+  int32 transfer_to = 64;
+  int32 transfer_iid = 65;
 }
 
 // A request to get some records

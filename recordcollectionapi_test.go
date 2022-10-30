@@ -389,6 +389,51 @@ func TestQueryRecordsBad(t *testing.T) {
 	}
 }
 
+func TestTransfer(t *testing.T) {
+	s := InitTestServer(".testtransfer")
+
+	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{Id: 100, FolderId: 12},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100}}})
+	if err != nil {
+		t.Fatalf("Bad add: %v", err)
+	}
+
+	iid := r.GetAdded().GetRelease().GetInstanceId()
+
+	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "testing",
+		Update: &pb.Record{
+			Release:  &pbd.Release{InstanceId: iid},
+			Metadata: &pb.ReleaseMetadata{TransferTo: 52},
+		}})
+
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: iid})
+
+	rec, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: iid})
+	if err != nil {
+		t.Errorf("Error getting record: %v", err)
+	}
+	if rec.GetRecord().GetRelease().GetId() != 52 {
+		t.Fatalf("Record has not transferred (id not updated): %v", rec.GetRecord())
+	}
+
+	recs, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{100}})
+	if err != nil {
+		t.Fatalf("Bad query: %v", err)
+	}
+	if len(recs.GetInstanceIds()) != 0 {
+		t.Fatalf("Still able to pull the old record: %v", recs.GetInstanceIds())
+	}
+
+	recs, err = s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{52}})
+	if err != nil {
+		t.Fatalf("Bad query: %v", err)
+	}
+	if len(recs.GetInstanceIds()) != 1 {
+		t.Fatalf("Unable to pull the new record: %v", recs.GetInstanceIds())
+	}
+}
+
 func TestQueryRecordsWithFolderId(t *testing.T) {
 	s := InitTestServer(".testqueryrecords")
 	//s.collection.InstanceToFolder[12] = 12
