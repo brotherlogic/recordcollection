@@ -67,9 +67,10 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if err != nil {
 			return nil, err
 		}
-		record.GetMetadata().TransferTo = trecord.GetRelease().GetInstanceId()
+		record.GetMetadata().TransferIid = trecord.GetRelease().GetInstanceId()
+		updated = true
 
-		err = s.saveRecord(ctx, record)
+		err = s.saveRecord(ctx, trecord)
 		if err != nil {
 			return nil, err
 		}
@@ -410,6 +411,11 @@ func (s *Server) transfer(ctx context.Context, rec *pb.Record) (*pb.Record, erro
 		return nil, err
 	}
 
+	// Remove the transfer bit from the trecord
+	trecord.GetAdded().GetMetadata().TransferTo = 0
+
+	s.CtxLog(ctx, fmt.Sprintf("TRANSFER: %v", trecord))
+
 	return trecord.GetAdded(), nil
 }
 
@@ -549,6 +555,11 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	rec, err := s.loadRecord(ctx, req.InstanceId, req.GetValidate())
 
 	if err != nil {
+
+		if rec.GetMetadata().GetTransferIid() > 0 {
+			return s.GetRecord(ctx, &pb.GetRecordRequest{InstanceId: rec.GetMetadata().GetTransferTo()})
+		}
+
 		if req.GetForce() > 0 {
 			rec := &pb.Record{Release: &pbgd.Release{Id: req.GetForce(), InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{GoalFolder: 242017, Cost: 1}}
 			return &pb.GetRecordResponse{Record: rec}, s.cacheRecord(ctx, rec)

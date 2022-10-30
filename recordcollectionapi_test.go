@@ -409,7 +409,7 @@ func TestTransfer(t *testing.T) {
 		t.Errorf("Error getting record: %v", err)
 	}
 	if rec.GetRecord().GetRelease().GetId() != 52 {
-		t.Fatalf("Record has not transferred: %v", rec.GetRecord())
+		t.Fatalf("Record has not transferred (id not updated): %v", rec.GetRecord())
 	}
 
 	recs, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{100}})

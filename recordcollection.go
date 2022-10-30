@@ -304,6 +304,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		return fmt.Errorf("No goal folder")
 	}
 
+	s.CtxLog(ctx, fmt.Sprintf("Save: %v", r))
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
 	if err != nil {
 		return err
