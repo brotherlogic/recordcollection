@@ -205,6 +205,10 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 		collection.InstanceToRecache = make(map[int32]int64)
 	}
 
+	if collection.TransferMap == nil {
+		collection.TransferMap = make(map[int32]int32)
+	}
+
 	if collection.InstanceToLastSalePriceUpdate == nil {
 		collection.InstanceToLastSalePriceUpdate = make(map[int32]int64)
 	}
@@ -310,6 +314,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		return err
 	}
 	save := false
+
 	if collection.GetInstanceToFolder()[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
 		collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
 		save = true
