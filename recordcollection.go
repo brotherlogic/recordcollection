@@ -304,7 +304,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		return fmt.Errorf("No goal folder")
 	}
 
-	s.CtxLog(ctx, fmt.Sprintf("Save: %v", r))
+	s.CtxLog(ctx, fmt.Sprintf("Save (%v): %v", fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r))
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
 	if err != nil {
 		return err
@@ -315,6 +315,19 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		return err
 	}
 	save := false
+
+	if r.GetMetadata().GetTransferIid() > 0 {
+		delete(collection.InstanceToCategory, r.GetRelease().GetInstanceId())
+		delete(collection.InstanceToFolder, r.GetRelease().GetInstanceId())
+		delete(collection.InstanceToId, r.GetRelease().GetInstanceId())
+		delete(collection.InstanceToLastSalePriceUpdate, r.GetRelease().GetInstanceId())
+		delete(collection.InstanceToMaster, r.GetRelease().GetInstanceId())
+		delete(collection.InstanceToRecache, r.GetRelease().GetInstanceId())
+		delete(collection.InstanceToUpdate, r.GetRelease().GetInstanceId())
+		delete(collection.InstanceToUpdateIn, r.GetRelease().GetInstanceId())
+
+		return s.saveRecordCollection(ctx, collection)
+	}
 
 	if collection.GetInstanceToFolder()[r.GetRelease().InstanceId] != r.GetRelease().FolderId {
 		collection.InstanceToFolder[r.GetRelease().InstanceId] = r.GetRelease().FolderId
@@ -408,6 +421,8 @@ func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.R
 	}
 
 	recordToReturn := data.(*pb.Record)
+
+	s.CtxLog(ctx, fmt.Sprintf("Load (%v): %v", fmt.Sprintf("%v%v", SAVEKEY, id), recordToReturn))
 
 	// Let's make sure this is in the folder map
 	if validate {

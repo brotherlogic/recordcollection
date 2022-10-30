@@ -403,10 +403,11 @@ func (s *Server) transfer(ctx context.Context, rec *pb.Record) (*pb.Record, erro
 	s.CtxLog(ctx, "Transferring")
 
 	// Add a record with the transfer id
+	nmeta := proto.Clone(rec.GetMetadata()).(*pb.ReleaseMetadata)
 	trecord, err := s.AddRecord(ctx, &pb.AddRecordRequest{
 		ToAdd: &pb.Record{
 			Release:  &pbd.Release{Id: rec.GetMetadata().GetTransferTo()},
-			Metadata: rec.GetMetadata()}})
+			Metadata: nmeta}})
 	if err != nil {
 		return nil, err
 	}

@@ -392,19 +392,24 @@ func TestQueryRecordsBad(t *testing.T) {
 func TestTransfer(t *testing.T) {
 	s := InitTestServer(".testtransfer")
 
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
-		Release:  &pbd.Release{InstanceId: 100, MasterId: 100, FolderId: 12},
+	r, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{Id: 100, FolderId: 12},
 		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100}}})
+	if err != nil {
+		t.Fatalf("Bad add: %v", err)
+	}
+
+	iid := r.GetAdded().GetRelease().GetInstanceId()
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "testing",
 		Update: &pb.Record{
-			Release:  &pbd.Release{InstanceId: 100},
+			Release:  &pbd.Release{InstanceId: iid},
 			Metadata: &pb.ReleaseMetadata{TransferTo: 52},
 		}})
 
-	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 100})
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: iid})
 
-	rec, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 100})
+	rec, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: iid})
 	if err != nil {
 		t.Errorf("Error getting record: %v", err)
 	}
@@ -425,7 +430,7 @@ func TestTransfer(t *testing.T) {
 		t.Fatalf("Bad query: %v", err)
 	}
 	if len(recs.GetInstanceIds()) != 1 {
-		t.Fatalf("Unable to pull the old record: %v", recs.GetInstanceIds())
+		t.Fatalf("Unable to pull the new record: %v", recs.GetInstanceIds())
 	}
 }
 
