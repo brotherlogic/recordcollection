@@ -338,6 +338,8 @@ message ReleaseMetadata {
     DIGITAL_AVAILABLE = 2;
   }
   DigitalAvailability digital_availability = 63;
+
+  int32 transfer_to = 64;
 }
 
 // A request to get some records
