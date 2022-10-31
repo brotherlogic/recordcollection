@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	"testing"
 	"time"
@@ -400,6 +401,7 @@ func TestTransfer(t *testing.T) {
 	}
 
 	iid := r.GetAdded().GetRelease().GetInstanceId()
+	log.Printf("Added to -> %v", iid)
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "testing",
 		Update: &pb.Record{
@@ -415,6 +417,10 @@ func TestTransfer(t *testing.T) {
 	}
 	if rec.GetRecord().GetRelease().GetId() != 52 {
 		t.Fatalf("Record has not transferred (id not updated): %v", rec.GetRecord())
+	}
+
+	if rec.GetRecord().GetMetadata().GetTransferFrom() != iid {
+		t.Errorf("Did not record transfer from: (%v) -> %v", iid, rec)
 	}
 
 	recs, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{100}})
