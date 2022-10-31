@@ -63,6 +63,7 @@ type testSyncer struct {
 	failSalePrice   bool
 	badLoad         bool
 	badInventory    bool
+	count           int
 }
 
 func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error) {
@@ -111,11 +112,12 @@ func (t *testSyncer) GetRelease(ctx context.Context, id int32) (*pbd.Release, er
 	if id == 4707982 {
 		return &pbd.Release{Id: 4707982, Title: "Future", Images: []*pbd.Image{&pbd.Image{Type: "primary", Uri: "http://magic"}}}, nil
 	}
-	return &pbd.Release{Id: id, InstanceId: 456, Title: "On The Wall", Labels: []*pbd.Label{&pbd.Label{Name: "madeup", Id: 123}}}, nil
+	return &pbd.Release{Id: id, Title: "On The Wall", Labels: []*pbd.Label{&pbd.Label{Name: "madeup", Id: 123}}}, nil
 }
 
 func (t *testSyncer) AddToFolder(ctx context.Context, id int32, folderID int32) (int, error) {
-	return 200, nil
+	t.count++
+	return 200 + t.count, nil
 }
 
 func (t *testSyncer) SetRating(ctx context.Context, id int, rating int) error {

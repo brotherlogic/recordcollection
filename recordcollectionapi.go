@@ -561,10 +561,6 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 
 	if err != nil {
 
-		if rec.GetMetadata().GetTransferIid() > 0 {
-			return s.GetRecord(ctx, &pb.GetRecordRequest{InstanceId: rec.GetMetadata().GetTransferTo()})
-		}
-
 		if req.GetForce() > 0 {
 			rec := &pb.Record{Release: &pbgd.Release{Id: req.GetForce(), InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{GoalFolder: 242017, Cost: 1}}
 			return &pb.GetRecordResponse{Record: rec}, s.cacheRecord(ctx, rec)
@@ -599,6 +595,10 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 		}
 
 		return nil, status.Errorf(st.Code(), fmt.Sprintf("Could not locate %v -> %v", req.InstanceId, err))
+	}
+
+	if rec.GetMetadata().GetTransferIid() > 0 {
+		return s.GetRecord(ctx, &pb.GetRecordRequest{InstanceId: rec.GetMetadata().GetTransferIid()})
 	}
 
 	return &pb.GetRecordResponse{Record: rec}, err
