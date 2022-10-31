@@ -417,6 +417,7 @@ func (s *Server) transfer(ctx context.Context, rec *pb.Record) (*pb.Record, erro
 
 	// Remove the transfer bit from the trecord
 	trecord.GetAdded().GetMetadata().TransferTo = 0
+	trecord.GetAdded().GetMetadata().TransferFrom = rec.GetRelease().GetInstanceId()
 
 	s.CtxLog(ctx, fmt.Sprintf("TRANSFER: %v", trecord))
 
