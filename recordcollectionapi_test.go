@@ -417,6 +417,10 @@ func TestTransfer(t *testing.T) {
 		t.Fatalf("Record has not transferred (id not updated): %v", rec.GetRecord())
 	}
 
+	if rec.GetRecord().GetMetadata().GetTransferFrom() != iid {
+		t.Errorf("Did not record transfer from: %v", rec)
+	}
+
 	recs, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ReleaseId{100}})
 	if err != nil {
 		t.Fatalf("Bad query: %v", err)
