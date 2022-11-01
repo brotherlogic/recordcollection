@@ -409,6 +409,8 @@ func TestTransfer(t *testing.T) {
 			Metadata: &pb.ReleaseMetadata{TransferTo: 52},
 		}})
 
+	// RUn two commits :-)
+	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: iid})
 	s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: iid})
 
 	rec, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: iid})
@@ -438,6 +440,7 @@ func TestTransfer(t *testing.T) {
 	if len(recs.GetInstanceIds()) != 1 {
 		t.Fatalf("Unable to pull the new record: %v", recs.GetInstanceIds())
 	}
+	log.Printf("AND THE RESULT IS: %v", recs.GetInstanceIds())
 }
 
 func TestQueryRecordsWithFolderId(t *testing.T) {
