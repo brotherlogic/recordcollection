@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
@@ -76,7 +75,6 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = true
 
 		err = s.saveRecord(ctx, trecord)
-		log.Printf("SAVE: %v -> %v", trecord, err)
 		if err != nil {
 			return nil, err
 		}

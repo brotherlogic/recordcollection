@@ -352,7 +352,6 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		collection.InstanceToId[r.GetRelease().InstanceId] = r.GetRelease().Id
 		save = true
 	}
-	log.Printf("HERE: %v", collection.InstanceToId)
 
 	if collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] != r.GetMetadata().GetSalePriceUpdate() {
 		collection.InstanceToLastSalePriceUpdate[r.GetRelease().InstanceId] = r.GetMetadata().GetSalePriceUpdate()
