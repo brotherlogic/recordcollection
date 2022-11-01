@@ -6,7 +6,6 @@ import (
 	"time"
 
 	pbd "github.com/brotherlogic/godiscogs"
-	"github.com/brotherlogic/goserver/utils"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -558,12 +557,6 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 		}
 
 		st := status.Convert(err)
-		if st.Code() != codes.DeadlineExceeded && st.Code() != codes.Unavailable && st.Code() != codes.Canceled && st.Code() != codes.OutOfRange && st.Code() != codes.NotFound {
-			s.CtxLog(ctx, fmt.Sprintf("Bad receive: %v", req))
-			key, err := utils.GetContextKey(ctx)
-			s.RaiseIssue("Record receive issue", fmt.Sprintf("%v cannot be found -> %v(%v)", req.InstanceId, err, key))
-		}
-
 		if st.Code() == codes.OutOfRange {
 			config, err := s.readRecordCollection(ctx)
 			if err != nil {
