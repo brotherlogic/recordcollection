@@ -104,6 +104,7 @@ func main() {
 				fmt.Printf("%v - %v\n", item.GetId(), td)
 			}
 		}
+
 	case "sanity":
 		collection := &pbrc.RecordCollection{}
 		conn, err := utils.LFDialServer(ctx, "keystore")
@@ -132,6 +133,15 @@ func main() {
 		for _, id := range ids.GetInstanceIds() {
 			fmt.Printf("%v\n", id)
 		}
+	case "transfer":
+		i, _ := strconv.Atoi(os.Args[2])
+		ni, _ := strconv.Atoi(os.Args[3])
+		ids, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "transfer",
+			Update: &pbrc.Record{
+				Release:  &pbgd.Release{InstanceId: int32(i)},
+				Metadata: &pbrc.ReleaseMetadata{TransferTo: int32(ni)},
+			}})
+		fmt.Printf("Transfer: %v, %v", ids, err)
 	case "get_price":
 		i, _ := strconv.Atoi(os.Args[2])
 		ids, err := registry.GetPrice(ctx, &pbrc.GetPriceRequest{Id: int32(i)})

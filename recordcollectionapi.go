@@ -548,15 +548,6 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 		return &pb.GetRecordResponse{Record: &pb.Record{Release: got}}, nil
 	}
 
-	config, err := s.readRecordCollection(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	if config.GetTransferMap()[req.GetInstanceId()] > 0 {
-		return s.GetRecord(ctx, &pb.GetRecordRequest{InstanceId: config.GetTransferMap()[req.GetInstanceId()]})
-	}
-
 	rec, err := s.loadRecord(ctx, req.InstanceId, req.GetValidate())
 
 	if err != nil {
