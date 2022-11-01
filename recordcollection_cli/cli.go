@@ -134,8 +134,8 @@ func main() {
 			fmt.Printf("%v\n", id)
 		}
 	case "transfer":
-		i, _ := strconv.Atoi(os.Args[2])
-		ni, _ := strconv.Atoi(os.Args[3])
+		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
+		ni, _ := strconv.ParseInt(os.Args[3], 10, 32)
 		ids, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "transfer",
 			Update: &pbrc.Record{
 				Release:  &pbgd.Release{InstanceId: int32(i)},
