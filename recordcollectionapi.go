@@ -39,6 +39,11 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		return nil, err
 	}
 
+	if record.GetMetadata().GetTransferIid() > 0 {
+		s.CtxLog(ctx, "Not commiting transferred record")
+		return &pb.CommitRecordResponse{}, nil
+	}
+
 	// Perform a discogs update if needed
 	if time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 		time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
