@@ -10,9 +10,9 @@ require (
 	github.com/brotherlogic/queue v0.0.0-20221128050840-d7a93213d4d2
 	github.com/brotherlogic/recordadder v0.0.0-20221128050058-67d7c479d889
 	github.com/brotherlogic/recordfanout v0.0.0-20221128050012-4cb4af73ad04
-	github.com/brotherlogic/recordmover v0.0.0-20221128050816-1c491402243a
-	github.com/brotherlogic/recordscores v0.0.0-20221128050030-c26b7e2c40c6
-	github.com/brotherlogic/recordsorganiser v0.0.0-20221128050901-c8a55c0c4351
+	github.com/brotherlogic/recordmover v0.0.0-20221128051644-183d595cc9cb
+	github.com/brotherlogic/recordscores v0.0.0-20221128051118-d2dbcbe7f5b4
+	github.com/brotherlogic/recordsorganiser v0.0.0-20221128051702-cf1730950c00
 	github.com/golang/protobuf v1.5.2
 	github.com/prometheus/client_golang v1.14.0
 	go.opentelemetry.io/otel v1.11.1
