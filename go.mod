@@ -8,11 +8,11 @@ require (
 	github.com/brotherlogic/goserver v0.0.0-20221202193151-b0b39691c212
 	github.com/brotherlogic/keystore v0.0.0-20221210190215-af3698c6a2c9
 	github.com/brotherlogic/queue v0.0.0-20221209225040-8d7768320cb0
-	github.com/brotherlogic/recordadder v0.0.0-20221203202011-cc3d9bfcdacf
-	github.com/brotherlogic/recordfanout v0.0.0-20221211022418-70f21305dc12
-	github.com/brotherlogic/recordmover v0.0.0-20221203185006-77ef0c1ac5d7
+	github.com/brotherlogic/recordadder v0.0.0-20221211031045-6799533ae19c
+	github.com/brotherlogic/recordfanout v0.0.0-20221211025914-1f21f3a724c0
+	github.com/brotherlogic/recordmover v0.0.0-20221211030837-bcdeb6047ee0
 	github.com/brotherlogic/recordscores v0.0.0-20221210202243-5abaf265688d
-	github.com/brotherlogic/recordsorganiser v0.0.0-20221211022240-145ff219050c
+	github.com/brotherlogic/recordsorganiser v0.0.0-20221211030048-fe48f12a592c
 	github.com/golang/protobuf v1.5.2
 	github.com/prometheus/client_golang v1.14.0
 	go.opentelemetry.io/otel v1.11.2
@@ -29,9 +29,9 @@ require (
 	github.com/brotherlogic/datastore v0.0.0-20221210190216-dcfbc825557b // indirect
 	github.com/brotherlogic/discovery v0.0.0-20221209181332-1dd8f71c375f // indirect
 	github.com/brotherlogic/dstore v0.0.0-20221209194838-9d0611d5184d // indirect
-	github.com/brotherlogic/githubcard v0.0.0-20221211022121-9a75db32e04b // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20221211024758-405be96c2ccf // indirect
 	github.com/brotherlogic/gobuildslave v0.0.0-20221210200228-ef727a7dcab2 // indirect
-	github.com/brotherlogic/lock v0.0.0-20221211020737-76774cf470a8 // indirect
+	github.com/brotherlogic/lock v0.0.0-20221211025725-c7b14345e31e // indirect
 	github.com/brotherlogic/logging v0.0.0-20221211023411-3e56b8c66cc1 // indirect
 	github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6 // indirect
 	github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 // indirect
