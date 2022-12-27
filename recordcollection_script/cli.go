@@ -1246,6 +1246,62 @@ func main() {
 				}
 			}
 		}
+	case "this_sold":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				//Pass
+			}
+
+			t := time.Unix(r.GetRecord().GetMetadata().GetDateAdded(), 0)
+			if t.Year() == time.Now().Year() {
+				cat := r.GetRecord().GetMetadata().GetCategory()
+				if cat == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+					fmt.Printf("%v %v: %v - %v (%v) [%v]\n",
+						r.Record.GetMetadata().GetSoldPrice(),
+						id,
+						t,
+						r.GetRecord().GetRelease().GetTitle(),
+						r.GetRecord().GetMetadata().GetCategory(),
+						r.GetRecord().GetMetadata().GetFiledUnder())
+				}
+			}
+		}
+	case "this_retrospective":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				//Pass
+			}
+
+			t := time.Unix(r.GetRecord().GetMetadata().GetDateAdded(), 0)
+			if t.Year() == time.Now().Year() {
+				cat := r.GetRecord().GetMetadata().GetCategory()
+				gf := r.GetRecord().GetMetadata().GetGoalFolder()
+				if cat != pbrc.ReleaseMetadata_PARENTS &&
+					cat != pbrc.ReleaseMetadata_GOOGLE_PLAY &&
+					cat != pbrc.ReleaseMetadata_SOLD_ARCHIVE && gf != 565206 && gf != 1782105 && gf != 242018 {
+					fmt.Printf("%v %v: %v - %v (%v) [%v]\n",
+						r.Record.GetMetadata().GetCost(),
+						id,
+						t,
+						r.GetRecord().GetRelease().GetTitle(),
+						r.GetRecord().GetMetadata().GetCategory(),
+						r.GetRecord().GetMetadata().GetFiledUnder())
+				}
+			}
+		}
 	case "most_expensive":
 		meFlags := flag.NewFlagSet("ME", flag.ExitOnError)
 		var folder = meFlags.Int("folder", -1, "Id of the record to add")
