@@ -34,3 +34,14 @@ func (c *RecordCollectionClient) GetRecord(ctx context.Context, req *pb.GetRecor
 	client := pb.NewRecordCollectionServiceClient(conn)
 	return client.GetRecord(ctx, req)
 }
+
+func (c *RecordCollectionClient) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
+	conn, err := c.Gs.FDialServer(ctx, "recordcollection")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := pb.NewRecordCollectionServiceClient(conn)
+	return client.QueryRecords(ctx, req)
+}
