@@ -36,6 +36,13 @@ func (c *RecordCollectionClient) GetRecord(ctx context.Context, req *pb.GetRecor
 }
 
 func (c *RecordCollectionClient) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
+	if c.Test {
+		var keys []int32
+		for k, _ := range c.getMap {
+			keys = append(keys, k)
+		}
+		return &pb.QueryRecordsResponse{InstanceIds: keys}, nil
+	}
 	conn, err := c.Gs.FDialServer(ctx, "recordcollection")
 	if err != nil {
 		return nil, err
