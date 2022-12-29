@@ -47,6 +47,9 @@ func (c *RecordCollectionClient) QueryRecords(ctx context.Context, req *pb.Query
 }
 
 func (c *RecordCollectionClient) GetPrice(ctx context.Context, req *pb.GetPriceRequest) (*pb.GetPriceResponse, error) {
+	if c.Test {
+		return &pb.GetPriceResponse{Price: 23.45}, nil
+	}
 	conn, err := c.Gs.FDialServer(ctx, "recordcollection")
 	if err != nil {
 		return nil, err
