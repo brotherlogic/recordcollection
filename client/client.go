@@ -45,3 +45,14 @@ func (c *RecordCollectionClient) QueryRecords(ctx context.Context, req *pb.Query
 	client := pb.NewRecordCollectionServiceClient(conn)
 	return client.QueryRecords(ctx, req)
 }
+
+func (c *RecordCollectionClient) GetPrice(ctx context.Context, req *pb.GetPriceRequest) (*pb.GetPriceResponse, error) {
+	conn, err := c.Gs.FDialServer(ctx, "recordcollection")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := pb.NewRecordCollectionServiceClient(conn)
+	return client.GetPrice(ctx, req)
+}
