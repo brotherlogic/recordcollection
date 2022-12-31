@@ -1251,12 +1251,10 @@ func main() {
 		if err != nil {
 			log.Fatalf("Bad query: %v", err)
 		}
+		overall := 0
 
 		for _, id := range ids.GetInstanceIds() {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
-			if err != nil {
-				//Pass
-			}
+			r, _ := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 
 			t := time.Unix(r.GetRecord().GetMetadata().GetDateAdded(), 0)
 			if t.Year() == time.Now().Year() {
@@ -1269,9 +1267,11 @@ func main() {
 						r.GetRecord().GetRelease().GetTitle(),
 						r.GetRecord().GetMetadata().GetCategory(),
 						r.GetRecord().GetMetadata().GetFiledUnder())
+					overall += int(r.GetRecord().GetMetadata().GetSoldPrice())
 				}
 			}
 		}
+		fmt.Printf("Overall: %v\n", float64(overall)/100)
 	case "this_retrospective":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
