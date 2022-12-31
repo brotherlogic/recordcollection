@@ -473,6 +473,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" ||
 		(len(r.GetRelease().GetImages()) > 0 && strings.Contains(r.GetRelease().GetImages()[0].GetUri(), "img.discogs")) {
 		release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
+		s.CtxLog(ctx, fmt.Sprintf("Retreived release for re-cache: %v", err))
 		if err == nil {
 
 			//Clear repeated fields first
@@ -484,7 +485,6 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
 			r.GetRelease().DigitalVersions = []int32{}
 			r.GetRelease().OtherVersions = []int32{}
 
-			time.Sleep(time.Second * 2)
 			s.CtxLog(ctx, fmt.Sprintf("Merged %v", release))
 			proto.Merge(r.GetRelease(), release)
 
