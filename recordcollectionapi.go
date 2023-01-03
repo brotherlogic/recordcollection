@@ -51,11 +51,11 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		(len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")) ||
 		len(record.GetRelease().GetTracklist()) == 0 {
 		s.cacheRecord(ctx, record, fmt.Sprintf("%v or %v or %v or %v or %v",
-			time.Unix(record.GetMetadata().GetLastCache(), 0),
-			time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0),
+			time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)),
+			time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)),
 			record.GetRelease().GetRecordCondition(),
 			record.GetRelease().GetImages(),
-			record.GetRelease().GetTracklist(),
+			len(record.GetRelease().GetTracklist()),
 		))
 
 		// Queue up an update for a month from now
