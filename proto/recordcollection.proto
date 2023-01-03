@@ -345,7 +345,7 @@ message ReleaseMetadata {
   int32 transfer_iid = 65;
   int32 transfer_from = 66;
 
-  string sale_type = 67;
+  string sale_budget = 67;
 }
 
 // A request to get some records
