@@ -492,6 +492,9 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 			r.GetMetadata().LastCache = time.Now().Unix()
 			r.GetMetadata().LastUpdateTime = time.Now().Unix()
 		} else {
+			if strings.Contains(fmt.Sprintf("%v", err), "404") {
+				s.RaiseIssue("404 Error on record get", fmt.Sprintf("%v led to %v", r, err))
+			}
 			return err
 		}
 	}
