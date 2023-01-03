@@ -97,7 +97,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 			time.Now().Sub(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
 			record.GetRelease().GetRecordCondition() == "" {
 			t = time.Now()
-			s.cacheRecord(ctx, record)
+			s.cacheRecord(ctx, record, fmt.Sprintf("Last cached: %v", time.Unix(record.GetMetadata().GetLastCache(), 0)))
 			loopLatency.With(prometheus.Labels{"method": "cache"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 		}
 
@@ -452,8 +452,8 @@ func max(a, b int) int {
 	return b
 }
 
-func (s *Server) cacheRecord(ctx context.Context, r *pb.Record) error {
-	s.CtxLog(ctx, fmt.Sprintf("Updating cache for : %v (%v)", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition()))
+func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) error {
+	s.CtxLog(ctx, fmt.Sprintf("Updating cache for : %v (%v): %v", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition(), reason))
 	// Don't recache a record that has a pending score
 	if r.GetMetadata().GetSetRating() > 0 {
 		return nil

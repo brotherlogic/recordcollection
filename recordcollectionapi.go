@@ -50,7 +50,13 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && record.GetRelease().GetRecordCondition() == "") ||
 		(len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")) ||
 		len(record.GetRelease().GetTracklist()) == 0 {
-		s.cacheRecord(ctx, record)
+		s.cacheRecord(ctx, record, fmt.Sprintf("%v or %v or %v or %v or %v",
+			time.Unix(record.GetMetadata().GetLastCache(), 0),
+			time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0),
+			record.GetRelease().GetRecordCondition(),
+			record.GetRelease().GetImages(),
+			record.GetRelease().GetTracklist(),
+		))
 
 		// Queue up an update for a month from now
 		upup := &rfpb.FanoutRequest{
@@ -310,7 +316,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			s.CtxLog(ctx, fmt.Sprintf("Running sale path"))
 			time.Sleep(time.Second * 2)
 			if len(rec.GetRelease().SleeveCondition) == 0 {
-				s.cacheRecord(ctx, rec)
+				s.cacheRecord(ctx, rec, fmt.Sprintf("Sleeve condition: %v", rec.GetRelease().GetSleeveCondition()))
 				if len(rec.GetRelease().SleeveCondition) == 0 {
 					s.RaiseIssue(fmt.Sprintf("%v needs condition", rec.GetRelease().GetInstanceId()), "Yes")
 					return nil, status.Errorf(codes.FailedPrecondition, "No Condition info")
@@ -577,7 +583,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 
 		if req.GetForce() > 0 {
 			rec := &pb.Record{Release: &pbgd.Release{Id: req.GetForce(), InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{GoalFolder: 242017, Cost: 1}}
-			return &pb.GetRecordResponse{Record: rec}, s.cacheRecord(ctx, rec)
+			return &pb.GetRecordResponse{Record: rec}, s.cacheRecord(ctx, rec, "Request Force")
 		}
 
 		st := status.Convert(err)
