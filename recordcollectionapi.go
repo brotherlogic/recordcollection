@@ -50,12 +50,12 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && record.GetRelease().GetRecordCondition() == "") ||
 		(len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")) ||
 		len(record.GetRelease().GetTracklist()) == 0 {
-		s.cacheRecord(ctx, record, fmt.Sprintf("%v or %v (%v) or %v or %v or %v",
-			time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)),
-			time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)), time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0),
-			record.GetRelease().GetRecordCondition(),
-			record.GetRelease().GetImages(),
-			len(record.GetRelease().GetTracklist()),
+		s.cacheRecord(ctx, record, fmt.Sprintf("%v (%v) or %v (%v) or %v (%v) or %v (%v) or %v (%v)",
+			time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)), time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30,
+			time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)), time.Since(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30,
+			record.GetRelease().GetRecordCondition(), record.GetRelease().GetRecordCondition() == "",
+			record.GetRelease().GetImages(), (len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")),
+			len(record.GetRelease().GetTracklist()), len(record.GetRelease().GetTracklist()) == 0,
 		))
 
 		// Queue up an update for a month from now
