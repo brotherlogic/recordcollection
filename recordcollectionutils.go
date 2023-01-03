@@ -682,6 +682,7 @@ func (s *Server) recache(ctx context.Context, r *pb.Record) error {
 
 	//Force a recache if the record has no title
 	release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
+	s.CtxLog(ctx, fmt.Sprintf("Retreived release for re-cache: %v", err))
 	if err == nil {
 
 		//Clear repeated fields first
