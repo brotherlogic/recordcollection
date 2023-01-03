@@ -38,8 +38,10 @@ func (c *RecordCollectionClient) GetRecord(ctx context.Context, req *pb.GetRecor
 func (c *RecordCollectionClient) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
 	if c.Test {
 		var keys []int32
-		for k, _ := range c.getMap {
-			keys = append(keys, k)
+		for k, r := range c.getMap {
+			if req.GetReleaseId() > 0 && r.GetRelease().GetId() == req.GetReleaseId() {
+				keys = append(keys, k)
+			}
 		}
 		return &pb.QueryRecordsResponse{InstanceIds: keys}, nil
 	}
