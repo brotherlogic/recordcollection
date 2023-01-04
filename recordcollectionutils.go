@@ -682,8 +682,10 @@ func (s *Server) recache(ctx context.Context, r *pb.Record) error {
 
 	//Force a recache if the record has no title
 	release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
-	s.CtxLog(ctx, fmt.Sprintf("Retreived release for re-cache: %v", err))
-	if err == nil {
+	if status.Code(err) == codes.NotFound {
+		s.RaiseIssue(fmt.Sprintf("Cannot read %v from Discogs", r.GetRelease().GetTitle()),
+			fmt.Sprintf("https://www.discogs.com/release/%v cannot be read -> %v [%v]", r.GetRelease().GetId(), err, r.GetRelease().GetInstanceId()))
+	} else if err == nil {
 
 		//Clear repeated fields first
 		r.GetRelease().Images = []*pbd.Image{}
