@@ -5,13 +5,13 @@ import (
 	"strings"
 	"time"
 
-	pbd "github.com/brotherlogic/godiscogs"
 	"github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
+	pbd "github.com/brotherlogic/godiscogs"
 	pbgd "github.com/brotherlogic/godiscogs"
 	qpb "github.com/brotherlogic/queue/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
