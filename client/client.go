@@ -2,6 +2,9 @@ package recordcollection_client
 
 import (
 	"context"
+	
+	"google.golang.org/grpc/codes"
+		"google.golang.org/grpc/status"
 
 	pbgs "github.com/brotherlogic/goserver"
 	pb "github.com/brotherlogic/recordcollection/proto"
@@ -11,6 +14,7 @@ type RecordCollectionClient struct {
 	Gs     *pbgs.GoServer
 	getMap map[int32]*pb.Record
 	Test   bool
+	ErrorCode codes.Code
 }
 
 func (c *RecordCollectionClient) AddRecord(r *pb.Record) {
@@ -22,6 +26,9 @@ func (c *RecordCollectionClient) AddRecord(r *pb.Record) {
 
 func (c *RecordCollectionClient) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.GetRecordResponse, error) {
 	if c.Test {
+	        if c.ErrorCode != codes.OK {
+		   return nil, status.Errorf(c.ErrorCode, "built to fail")
+		}
 		return &pb.GetRecordResponse{Record: c.getMap[req.GetInstanceId()]}, nil
 	}
 
