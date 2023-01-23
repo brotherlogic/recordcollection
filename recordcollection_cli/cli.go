@@ -1308,7 +1308,7 @@ func main() {
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "old":
-		i, _ := strconv.Atoi(os.Args[2])
+		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
 		up := &pbrc.UpdateRecordRequest{Reason: "cli-ready", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{AccountingYear: 2022}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
