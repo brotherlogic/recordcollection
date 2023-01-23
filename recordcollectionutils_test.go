@@ -260,14 +260,14 @@ func TestCleanSync(t *testing.T) {
 func TestImageMerge(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
 	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{}}
-	s.cacheRecord(context.Background(), r)
+	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
 		t.Fatalf("Record has not been recached %v", r)
 	}
 
 	r.Metadata.LastCache = 0
-	s.cacheRecord(context.Background(), r)
+	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetMetadata().LastCache == 0 {
 		t.Fatalf("Record has not been double cached: %v", r)
@@ -281,14 +281,14 @@ func TestImageMerge(t *testing.T) {
 func TestInstanceIdCache(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
 	r := &pb.Record{Release: &pbd.Release{Id: 4707982}, Metadata: &pb.ReleaseMetadata{}}
-	s.cacheRecord(context.Background(), r)
+	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
 		t.Fatalf("Record has not been recached %v", r)
 	}
 
 	r.Metadata.LastCache = 0
-	s.cacheRecord(context.Background(), r)
+	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetMetadata().LastCache == 0 {
 		t.Fatalf("Record has not been double cached: %v", r)
@@ -299,14 +299,14 @@ func TestImageMergeWithFailScore(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
 	s.scorer = &testScorer{fail: true}
 	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{}}
-	s.cacheRecord(context.Background(), r)
+	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
 		t.Fatalf("Record has not been recached %v", r)
 	}
 
 	r.Metadata.LastCache = 0
-	s.cacheRecord(context.Background(), r)
+	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetMetadata().LastCache == 0 {
 		t.Fatalf("Record has not been double cached: %v", r)
@@ -320,7 +320,7 @@ func TestImageMergeWithFailScore(t *testing.T) {
 func TestDirtyMerge(t *testing.T) {
 	s := InitTestServer(".testDirtyMerge")
 	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}
-	s.cacheRecord(context.Background(), r)
+	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetMetadata().LastCache != 0 {
 		t.Fatalf("Record has not been cached despite being dirty %v", r)
