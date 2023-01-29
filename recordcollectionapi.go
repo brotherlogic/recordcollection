@@ -44,6 +44,24 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		return &pb.CommitRecordResponse{}, nil
 	}
 
+	// Update for sale records every 24 hours
+	if record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE {
+		// Queue up an update for a month from now
+		upup := &rfpb.FanoutRequest{
+			InstanceId: record.GetRelease().GetInstanceId(),
+		}
+		data, _ := proto.Marshal(upup)
+		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+			QueueName: "record_fanout",
+			RunTime:   time.Now().Add(time.Hour * 24).Unix(),
+			Payload:   &google_protobuf.Any{Value: data},
+			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	// Perform a discogs update if needed
 	if time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && record.GetRelease().GetFolderId() == 812802 && record.GetRelease().GetRecordCondition() == "") ||
@@ -325,8 +343,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 			price, _ := s.retr.GetSalePrice(ctx, int(rec.GetRelease().Id))
 			//230 is approx weight of packaging
-			//saleid := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
-			saleid := 100
+			saleid := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
+			//saleid := 100
 
 			// Cancel changes in the update
 			request.GetUpdate().GetMetadata().SaleId = 0
