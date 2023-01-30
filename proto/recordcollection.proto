@@ -473,7 +473,7 @@ message GetOrderRequest{
 }
 
 message GetOrderResponse{
-  map<int32,int32> listing_to_price = 2;
+  map<int64,int32> listing_to_price = 2;
   int64 sale_date = 3;
 }
 
