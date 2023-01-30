@@ -349,7 +349,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			// Cancel changes in the update
 			request.GetUpdate().GetMetadata().SaleId = 0
 			request.GetUpdate().GetMetadata().SaleState = 0
-			rec.GetMetadata().SaleId = int32(saleid)
+			rec.GetMetadata().SaleId = saleid
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 			rec.GetMetadata().SalePrice = int32(price * 100)
 
