@@ -13,7 +13,7 @@ import (
 
 	"github.com/brotherlogic/goserver/utils"
 
-	pbgd "github.com/brotherlogic/godiscogs"
+	pbgd "github.com/brotherlogic/godiscogs/proto"
 	qpb "github.com/brotherlogic/queue/proto"
 	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"

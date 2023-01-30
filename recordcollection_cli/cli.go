@@ -24,7 +24,7 @@ import (
 
 	"github.com/andanhm/go-prettytime"
 
-	pbgd "github.com/brotherlogic/godiscogs"
+	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbks "github.com/brotherlogic/keystore/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 	rfpb "github.com/brotherlogic/recordfanout/proto"

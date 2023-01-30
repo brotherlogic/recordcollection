@@ -4,7 +4,7 @@ package recordcollection;
 
 option go_package = "github.com/brotherlogic/recordcollection/proto";
 
-import "github.com/brotherlogic/godiscogs/godiscogs.proto";
+import "github.com/brotherlogic/godiscogs/proto/godiscogs.proto";
 
 message StoredMetadata {
   int32 width = 1;

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	pbd "github.com/brotherlogic/godiscogs"
+	pbd "github.com/brotherlogic/godiscogs/proto"
 	keystoreclient "github.com/brotherlogic/keystore/client"
 	qpb "github.com/brotherlogic/queue/queue_client"
 	pb "github.com/brotherlogic/recordcollection/proto"
