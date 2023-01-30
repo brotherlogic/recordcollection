@@ -104,8 +104,8 @@ func (t *testSyncer) GetWantlist(ctx context.Context) ([]*pbgd.Release, error) {
 	return []*pbgd.Release{&pbgd.Release{Id: 255, Title: "Mirror"}}, nil
 }
 
-func (t *testSyncer) GetOrder(ctx context.Context, ID string) (map[int32]int32, time.Time, error) {
-	return make(map[int32]int32), time.Now(), nil
+func (t *testSyncer) GetOrder(ctx context.Context, ID string) (map[int64]int32, time.Time, error) {
+	return make(map[int64]int32), time.Now(), nil
 }
 
 func (t *testSyncer) GetRelease(ctx context.Context, id int32) (*pbgd.Release, error) {
