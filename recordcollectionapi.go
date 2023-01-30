@@ -11,8 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
-	pbd "github.com/brotherlogic/godiscogs"
-	pbgd "github.com/brotherlogic/godiscogs"
+	pbgd "github.com/brotherlogic/godiscogs/proto"
 	qpb "github.com/brotherlogic/queue/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	rfpb "github.com/brotherlogic/recordfanout/proto"
@@ -349,7 +348,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			// Cancel changes in the update
 			request.GetUpdate().GetMetadata().SaleId = 0
 			request.GetUpdate().GetMetadata().SaleState = 0
-			rec.GetMetadata().SaleId = int32(saleid)
+			rec.GetMetadata().SaleId = saleid
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
 			rec.GetMetadata().SalePrice = int32(price * 100)
 
@@ -455,7 +454,7 @@ func (s *Server) transfer(ctx context.Context, rec *pb.Record) (*pb.Record, erro
 	nmeta := proto.Clone(rec.GetMetadata()).(*pb.ReleaseMetadata)
 	trecord, err := s.AddRecord(ctx, &pb.AddRecordRequest{
 		ToAdd: &pb.Record{
-			Release:  &pbd.Release{Id: rec.GetMetadata().GetTransferTo()},
+			Release:  &pbgd.Release{Id: rec.GetMetadata().GetTransferTo()},
 			Metadata: nmeta}})
 	if err != nil {
 		return nil, err

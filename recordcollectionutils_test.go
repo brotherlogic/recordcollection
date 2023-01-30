@@ -6,12 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/brotherlogic/godiscogs"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	pbd "github.com/brotherlogic/godiscogs"
+	godiscogs "github.com/brotherlogic/godiscogs"
+	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
 )
@@ -70,11 +70,11 @@ func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*
 	return make(map[int32]*godiscogs.InstanceInfo), nil
 }
 
-func (t *testSyncer) GetInventory(ctx context.Context) ([]*pbd.ForSale, error) {
+func (t *testSyncer) GetInventory(ctx context.Context) ([]*pbgd.ForSale, error) {
 	if t.badInventory {
-		return []*pbd.ForSale{}, fmt.Errorf("Built to fail")
+		return []*pbgd.ForSale{}, fmt.Errorf("Built to fail")
 	}
-	return []*pbd.ForSale{&pbd.ForSale{Id: 123, SaleId: 123}}, nil
+	return []*pbgd.ForSale{&pbgd.ForSale{Id: 123, SaleId: 123}}, nil
 }
 
 func (t *testSyncer) ExpireSale(ctx context.Context, saleID int, releaseID int, price float32) error {
@@ -92,27 +92,27 @@ func (t *testSyncer) RemoveFromSale(ctx context.Context, saleID int, releaseID i
 	return nil
 }
 
-func (t *testSyncer) GetCollection(ctx context.Context) []*pbd.Release {
-	return []*pbd.Release{
-		&pbd.Release{FolderId: 12, InstanceId: 1, Id: 234, MasterId: 12, Title: "Magic", Formats: []*pbd.Format{&pbd.Format{Name: "blah"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blahblahblah"}}},
-		&pbd.Release{FolderId: 12, InstanceId: 2, Id: 123, Title: "Johnson", MasterId: 12},
-		&pbd.Release{FolderId: 12, InstanceId: 3, Id: 1255, Title: "Johnson", MasterId: 123},
+func (t *testSyncer) GetCollection(ctx context.Context) []*pbgd.Release {
+	return []*pbgd.Release{
+		&pbgd.Release{FolderId: 12, InstanceId: 1, Id: 234, MasterId: 12, Title: "Magic", Formats: []*pbgd.Format{&pbgd.Format{Name: "blah"}}, Images: []*pbgd.Image{&pbgd.Image{Uri: "blahblahblah"}}},
+		&pbgd.Release{FolderId: 12, InstanceId: 2, Id: 123, Title: "Johnson", MasterId: 12},
+		&pbgd.Release{FolderId: 12, InstanceId: 3, Id: 1255, Title: "Johnson", MasterId: 123},
 	}
 }
 
-func (t *testSyncer) GetWantlist(ctx context.Context) ([]*pbd.Release, error) {
-	return []*pbd.Release{&pbd.Release{Id: 255, Title: "Mirror"}}, nil
+func (t *testSyncer) GetWantlist(ctx context.Context) ([]*pbgd.Release, error) {
+	return []*pbgd.Release{&pbgd.Release{Id: 255, Title: "Mirror"}}, nil
 }
 
 func (t *testSyncer) GetOrder(ctx context.Context, ID string) (map[int32]int32, time.Time, error) {
 	return make(map[int32]int32), time.Now(), nil
 }
 
-func (t *testSyncer) GetRelease(ctx context.Context, id int32) (*pbd.Release, error) {
+func (t *testSyncer) GetRelease(ctx context.Context, id int32) (*pbgd.Release, error) {
 	if id == 4707982 {
-		return &pbd.Release{Id: 4707982, Title: "Future", Images: []*pbd.Image{&pbd.Image{Type: "primary", Uri: "http://magic"}}}, nil
+		return &pbgd.Release{Id: 4707982, Title: "Future", Images: []*pbgd.Image{&pbgd.Image{Type: "primary", Uri: "http://magic"}}}, nil
 	}
-	return &pbd.Release{Id: id, Title: "On The Wall", Labels: []*pbd.Label{&pbd.Label{Name: "madeup", Id: 123}}}, nil
+	return &pbgd.Release{Id: id, Title: "On The Wall", Labels: []*pbgd.Label{&pbgd.Label{Name: "madeup", Id: 123}}}, nil
 }
 
 func (t *testSyncer) AddToFolder(ctx context.Context, id int32, folderID int32) (int, error) {
@@ -137,14 +137,14 @@ func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID, in
 	return fmt.Errorf("ALL GOOD!")
 }
 
-func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) int {
+func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) int64 {
 	return 0
 }
 func (t *testSyncer) GetSalePrice(ctx context.Context, releaseID int) (float32, error) {
 	return 15.5, nil
 }
-func (t *testSyncer) GetSaleState(ctx context.Context, releaseID int) pbd.SaleState {
-	return pbd.SaleState_FOR_SALE
+func (t *testSyncer) GetSaleState(ctx context.Context, releaseID int) pbgd.SaleState {
+	return pbgd.SaleState_FOR_SALE
 }
 
 func (t *testSyncer) RemoveFromWantlist(ctx context.Context, releaseID int) error {
@@ -161,16 +161,16 @@ func (t *testSyncer) GetCurrentSalePrice(ctx context.Context, saleID int) float3
 	return 12.34
 }
 
-func (t *testSyncer) GetCurrentSaleState(ctx context.Context, saleID int) pbd.SaleState {
-	return pbd.SaleState_FOR_SALE
+func (t *testSyncer) GetCurrentSaleState(ctx context.Context, saleID int) pbgd.SaleState {
+	return pbgd.SaleState_FOR_SALE
 }
 
 func TestUpdateWantWithPush(t *testing.T) {
 	s := InitTestServer(".testupdateWants")
 	ts := &testSyncer{}
 	s.retr = ts
-	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 123}, Metadata: &pb.WantMetadata{Active: true}})
-	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbd.Release{Id: 12345}, Metadata: &pb.WantMetadata{Active: true}})
+	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbgd.Release{Id: 123}, Metadata: &pb.WantMetadata{Active: true}})
+	//s.collection.NewWants = append(s.collection.NewWants, &pb.Want{Release: &pbgd.Release{Id: 12345}, Metadata: &pb.WantMetadata{Active: true}})
 
 	s.UpdateWant(context.Background(), &pb.UpdateWantRequest{Update: &pb.Want{ReleaseId: 123}, Remove: true})
 	//s.pushWants(context.Background())
@@ -259,7 +259,7 @@ func TestCleanSync(t *testing.T) {
 
 func TestImageMerge(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{}}
+	r := &pb.Record{Release: &pbgd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{}}
 	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
@@ -280,7 +280,7 @@ func TestImageMerge(t *testing.T) {
 
 func TestInstanceIdCache(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982}, Metadata: &pb.ReleaseMetadata{}}
+	r := &pb.Record{Release: &pbgd.Release{Id: 4707982}, Metadata: &pb.ReleaseMetadata{}}
 	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
@@ -298,7 +298,7 @@ func TestInstanceIdCache(t *testing.T) {
 func TestImageMergeWithFailScore(t *testing.T) {
 	s := InitTestServer(".testImageMerge")
 	s.scorer = &testScorer{fail: true}
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{}}
+	r := &pb.Record{Release: &pbgd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{}}
 	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetRelease().Title != "Future" || r.GetMetadata().LastCache == 0 {
@@ -319,7 +319,7 @@ func TestImageMergeWithFailScore(t *testing.T) {
 
 func TestDirtyMerge(t *testing.T) {
 	s := InitTestServer(".testDirtyMerge")
-	r := &pb.Record{Release: &pbd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}
+	r := &pb.Record{Release: &pbgd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}
 	s.cacheRecord(context.Background(), r, "For Testing")
 
 	if r.GetMetadata().LastCache != 0 {
@@ -329,7 +329,7 @@ func TestDirtyMerge(t *testing.T) {
 
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
-	//s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
+	//s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbgd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbgd.Release{Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
 	s.runSync(context.Background())
 	s.runSyncWants(context.Background())
 
@@ -341,7 +341,7 @@ func TestGoodMergeSync(t *testing.T) {
 
 func TestGoodMergeSyncWithDirty(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSyncWithDirty")
-	//s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Rating: 5, Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
+	//s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbgd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbgd.Release{Rating: 5, Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
 	s.runSync(context.Background())
 
 	// Check that we have one record and one want
@@ -351,7 +351,7 @@ func TestGoodMergeSyncWithDirty(t *testing.T) {
 }
 
 func TestSimplePush(t *testing.T) {
-	r := &pb.Record{Release: &pbd.Release{FolderId: 268147}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_DIGITAL, GoalFolder: 268147, Dirty: true, MoveFolder: 268147}}
+	r := &pb.Record{Release: &pbgd.Release{FolderId: 268147}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_DIGITAL, GoalFolder: 268147, Dirty: true, MoveFolder: 268147}}
 	s := InitTestServer(".testsimplepush")
 	v, _ := s.pushRecord(context.Background(), r)
 	if v {
@@ -363,7 +363,7 @@ func TestSimplePush(t *testing.T) {
 }
 
 func TestFailPush(t *testing.T) {
-	r := &pb.Record{Release: &pbd.Release{FolderId: 268147}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_DIGITAL, GoalFolder: 268148, Dirty: true, MoveFolder: 268150}}
+	r := &pb.Record{Release: &pbgd.Release{FolderId: 268147}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_DIGITAL, GoalFolder: 268148, Dirty: true, MoveFolder: 268150}}
 	s := InitTestServer(".testsimplepush")
 	s.mover = &testMover{pass: false}
 	v, _ := s.pushRecord(context.Background(), r)
@@ -378,15 +378,15 @@ func TestBadPush(t *testing.T) {
 	}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
-	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title2", InstanceId: 1235, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbgd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbgd.Release{Title: "title2", InstanceId: 1235, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
 	if err != nil {
 		t.Fatalf("Error in adding record: %v", err)
 	}
 
-	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
-	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 1235}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbgd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbgd.Release{InstanceId: 1235}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
@@ -403,15 +403,15 @@ func TestPushMove(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testpushmove")
 	s.retr = tRetr
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
-	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title2", InstanceId: 1235, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbgd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbgd.Release{Title: "title2", InstanceId: 1235, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
 	if err != nil {
 		t.Fatalf("Error in adding record: %v", err)
 	}
 
-	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
-	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 1235}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbgd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbgd.Release{InstanceId: 1235}, Metadata: &pb.ReleaseMetadata{SetRating: 3}}})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
@@ -432,8 +432,8 @@ func TestPushBadMoveRecord(t *testing.T) {
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
 	s.mover = &testMover{pass: false}
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbgd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbgd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
@@ -451,9 +451,9 @@ func TestPushBadQuotaMoveWithSpill(t *testing.T) {
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
 	s.quota = &testQuota{pass: false, spill: 123}
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbgd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbgd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{MoveFolder: 26}}})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
@@ -470,9 +470,9 @@ func TestPushRating(t *testing.T) {
 	tRetr := &testSyncer{}
 	s := InitTestServer(".testrecache")
 	s.retr = tRetr
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbgd.Release{Title: "title1", InstanceId: 123, Id: 234}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
 
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}})
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Release: &pbgd.Release{InstanceId: 123}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}})
 
 	if err != nil {
 		t.Fatalf("Error in getting records: %v", err)
@@ -494,7 +494,7 @@ func TestPushSaleWithFail(t *testing.T) {
 	s := InitTestServer(".saleadjust")
 	s.retr = &testSyncer{failSalePrice: true}
 
-	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, NewSalePrice: 100, SaleDirty: true}}
+	record := &pb.Record{Release: &pbgd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_LISTED_TO_SELL, NewSalePrice: 100, SaleDirty: true}}
 	_, err := s.pushSale(context.Background(), record)
 	if err != nil {
 		t.Errorf("Sale push failed: %v", err)
@@ -505,7 +505,7 @@ func TestPushSaleWithFail(t *testing.T) {
 func TestPushSaleBasic(t *testing.T) {
 	s := InitTestServer(".saleadjust")
 
-	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true}}
+	record := &pb.Record{Release: &pbgd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true}}
 	_, err := s.pushSale(context.Background(), record)
 	if err != nil {
 		t.Errorf("Sale push failed: %v", err)
@@ -516,7 +516,7 @@ func TestPushSaleBasic(t *testing.T) {
 func TestPushSaleExpire(t *testing.T) {
 	s := InitTestServer(".saleadjust")
 
-	record := &pb.Record{Release: &pbd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true, ExpireSale: true, SaleState: pbd.SaleState_FOR_SALE}}
+	record := &pb.Record{Release: &pbgd.Release{SleeveCondition: "blah", RecordCondition: "blah"}, Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_POSTDOC, CurrentSalePrice: 100, SaleDirty: true, ExpireSale: true, SaleState: pbgd.SaleState_FOR_SALE}}
 	_, err := s.pushSale(context.Background(), record)
 	if err != nil {
 		t.Errorf("Sale push failed: %v", err)
@@ -527,8 +527,8 @@ func TestPushSaleExpire(t *testing.T) {
 func TestSyncRecordTracklist(t *testing.T) {
 	s := InitTestServer(".syncrecord")
 
-	record := &pb.Record{Release: &pbd.Release{Rating: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
-	s.syncRecords(context.Background(), record, &pbd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
+	record := &pb.Record{Release: &pbgd.Release{Rating: 12, Tracklist: []*pbgd.Track{&pbgd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
+	s.syncRecords(context.Background(), record, &pbgd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbgd.Track{&pbgd.Track{Title: "Two"}, &pbgd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
 
 	if len(record.GetRelease().GetTracklist()) != 2 {
 		t.Errorf("Tracklisting not updated correctly")
@@ -542,16 +542,16 @@ func TestSyncRecordTracklist(t *testing.T) {
 
 func TestRecache(t *testing.T) {
 	s := InitTestServer(".runrecache")
-	record := &pb.Record{Release: &pbd.Release{Rating: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
-	s.syncRecords(context.Background(), record, &pbd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
+	record := &pb.Record{Release: &pbgd.Release{Rating: 12, Tracklist: []*pbgd.Track{&pbgd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix()}}
+	s.syncRecords(context.Background(), record, &pbgd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbgd.Track{&pbgd.Track{Title: "Two"}, &pbgd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
 
 	s.recache(context.Background(), record)
 }
 
 func TestRecacheWithPendingScore(t *testing.T) {
 	s := InitTestServer(".runrecache")
-	record := &pb.Record{Release: &pbd.Release{Rating: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix(), SetRating: 12}}
-	s.syncRecords(context.Background(), record, &pbd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbd.Track{&pbd.Track{Title: "Two"}, &pbd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
+	record := &pb.Record{Release: &pbgd.Release{Rating: 12, Tracklist: []*pbgd.Track{&pbgd.Track{Title: "One"}}}, Metadata: &pb.ReleaseMetadata{NeedsStockCheck: true, LastStockCheck: time.Now().Unix(), SetRating: 12}}
+	s.syncRecords(context.Background(), record, &pbgd.Release{Rating: 24, FolderId: 12, Tracklist: []*pbgd.Track{&pbgd.Track{Title: "Two"}, &pbgd.Track{Title: "Three"}}, RecordCondition: "blah", SleeveCondition: "alsoblah"}, int64(12))
 
 	err := s.recache(context.Background(), record)
 
@@ -569,7 +569,7 @@ func TestUpdateSale(t *testing.T) {
 func TestValidateSales(t *testing.T) {
 	s := InitTestServer(".testValidateSales")
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
-		Release:  &pbd.Release{Title: "title1", InstanceId: 123, Id: 123},
+		Release:  &pbgd.Release{Title: "title1", InstanceId: 123, Id: 123},
 		Metadata: &pb.ReleaseMetadata{LastUpdateIn: 1, Cost: 100, SaleId: 123, GoalFolder: 100, LastCache: time.Now().Unix(), Category: pb.ReleaseMetadata_LISTED_TO_SELL}}})
 	err := s.validateSales(context.Background())
 	if err != nil {

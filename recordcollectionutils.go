@@ -5,8 +5,7 @@ import (
 	"strings"
 	"time"
 
-	pbd "github.com/brotherlogic/godiscogs"
-	pbgd "github.com/brotherlogic/godiscogs"
+	pbgd "github.com/brotherlogic/godiscogs/proto"
 	"github.com/brotherlogic/goserver/utils"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	"github.com/prometheus/client_golang/prometheus"
@@ -167,7 +166,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 		// Push the sale (only if we're listed to sell and the record is for sale)
 		if record.GetMetadata().GetSaleDirty() &&
 			(record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE) &&
-			record.GetMetadata().GetSaleState() != pbd.SaleState_SOLD {
+			record.GetMetadata().GetSaleState() != pbgd.SaleState_SOLD {
 			ctx, cancel := utils.ManualContext("rciu", time.Minute)
 			t = time.Now()
 			_, err = s.pushSale(ctx, record)
@@ -333,16 +332,16 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		return true, err
 	}
 
-	if val.GetMetadata().GetExpireSale() && val.GetMetadata().GetSaleState() == pbd.SaleState_EXPIRED {
+	if val.GetMetadata().GetExpireSale() && val.GetMetadata().GetSaleState() == pbgd.SaleState_EXPIRED {
 		val.GetMetadata().ExpireSale = false
 		return true, s.saveRecord(ctx, val)
 	}
 
-	if val.GetMetadata().SaleDirty && val.GetMetadata().GetExpireSale() && (val.GetMetadata().GetSaleState() == pbd.SaleState_FOR_SALE || val.GetMetadata().GetSaleState() < 0) {
+	if val.GetMetadata().SaleDirty && val.GetMetadata().GetExpireSale() && (val.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE || val.GetMetadata().GetSaleState() < 0) {
 		err := s.retr.ExpireSale(ctx, int(val.GetMetadata().SaleId), int(val.GetRelease().Id), float32(val.GetMetadata().SalePrice+1)/100)
 		val.GetMetadata().ExpireSale = err != nil
 		if err == nil {
-			val.GetMetadata().SaleState = pbd.SaleState_EXPIRED
+			val.GetMetadata().SaleState = pbgd.SaleState_EXPIRED
 			val.GetMetadata().SaleDirty = false
 		}
 		s.CtxLog(ctx, fmt.Sprintf("EXPIRE(%v): %v", val.GetRelease().GetInstanceId(), err))
@@ -353,7 +352,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 		err := s.retr.RemoveFromSale(ctx, int(val.GetMetadata().SaleId), int(val.GetRelease().Id))
 
 		if err == nil || fmt.Sprintf("%v", err) == "POST ERROR (STATUS CODE): 404, {\"message\": \"Item not found. It may have been deleted.\"}" {
-			val.GetMetadata().SaleState = pbd.SaleState_SOLD
+			val.GetMetadata().SaleState = pbgd.SaleState_SOLD
 			val.GetMetadata().SaleDirty = false
 			val.GetMetadata().LastUpdateTime = time.Now().Unix()
 		}
@@ -361,7 +360,7 @@ func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	}
 
 	//Handle hanging clause
-	if val.GetMetadata().GetExpireSale() && val.GetMetadata().GetSaleState() == pbd.SaleState_EXPIRED {
+	if val.GetMetadata().GetExpireSale() && val.GetMetadata().GetSaleState() == pbgd.SaleState_EXPIRED {
 		val.GetMetadata().ExpireSale = false
 	}
 
@@ -429,7 +428,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 		r.GetMetadata().NewBoxState = pb.ReleaseMetadata_BOX_UNKNOWN
 
 		r.GetMetadata().SaleId = 0
-		r.GetMetadata().SaleState = pbd.SaleState_EXPIRED
+		r.GetMetadata().SaleState = pbgd.SaleState_EXPIRED
 		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL ||
 			r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE ||
 			r.GetMetadata().GetCategory() == pb.ReleaseMetadata_SOLD_ARCHIVE ||
@@ -478,11 +477,11 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 		if err == nil {
 
 			//Clear repeated fields first
-			r.GetRelease().Images = []*pbd.Image{}
-			r.GetRelease().Artists = []*pbd.Artist{}
-			r.GetRelease().Formats = []*pbd.Format{}
-			r.GetRelease().Labels = []*pbd.Label{}
-			r.GetRelease().Tracklist = []*pbd.Track{}
+			r.GetRelease().Images = []*pbgd.Image{}
+			r.GetRelease().Artists = []*pbgd.Artist{}
+			r.GetRelease().Formats = []*pbgd.Format{}
+			r.GetRelease().Labels = []*pbgd.Label{}
+			r.GetRelease().Tracklist = []*pbgd.Track{}
 			r.GetRelease().DigitalVersions = []int32{}
 			r.GetRelease().OtherVersions = []int32{}
 
@@ -514,23 +513,23 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 	return s.saveRecord(ctx, r)
 }
 
-func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbd.Release, num int64) {
+func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbgd.Release, num int64) {
 	//Update record if releases don't match
 	hasCondition := len(r.GetRelease().RecordCondition) > 0
 
 	//Clear repeated fields first to prevent growth, but images come from
 	//a hard sync so ignore that
 	if len(record.GetFormats()) > 0 {
-		r.GetRelease().Formats = []*pbd.Format{}
-		r.GetRelease().Artists = []*pbd.Artist{}
-		r.GetRelease().Labels = []*pbd.Label{}
+		r.GetRelease().Formats = []*pbgd.Format{}
+		r.GetRelease().Artists = []*pbgd.Artist{}
+		r.GetRelease().Labels = []*pbgd.Label{}
 	}
 
 	if len(record.GetImages()) > 0 {
-		r.GetRelease().Images = []*pbd.Image{}
+		r.GetRelease().Images = []*pbgd.Image{}
 	}
 	if len(record.GetTracklist()) > 0 {
-		r.GetRelease().Tracklist = []*pbd.Track{}
+		r.GetRelease().Tracklist = []*pbgd.Track{}
 	}
 
 	proto.Merge(r.Release, record)
@@ -591,7 +590,7 @@ func (s *Server) updateSale(ctx context.Context, iid int32) error {
 			if r.GetMetadata().SaleId > 1 && !r.GetMetadata().SaleDirty {
 				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(ctx, int(r.GetMetadata().SaleId)) * 100)
 			}
-			if r.GetMetadata().SaleId > 1 && r.GetMetadata().SaleState != pbd.SaleState_SOLD {
+			if r.GetMetadata().SaleId > 1 && r.GetMetadata().SaleState != pbgd.SaleState_SOLD {
 				r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(ctx, int(r.GetMetadata().SaleId))
 			}
 			return s.saveRecord(ctx, r)
@@ -688,11 +687,11 @@ func (s *Server) recache(ctx context.Context, r *pb.Record) error {
 	} else if err == nil {
 
 		//Clear repeated fields first
-		r.GetRelease().Images = []*pbd.Image{}
-		r.GetRelease().Artists = []*pbd.Artist{}
-		r.GetRelease().Formats = []*pbd.Format{}
-		r.GetRelease().Labels = []*pbd.Label{}
-		r.GetRelease().Tracklist = []*pbd.Track{}
+		r.GetRelease().Images = []*pbgd.Image{}
+		r.GetRelease().Artists = []*pbgd.Artist{}
+		r.GetRelease().Formats = []*pbgd.Format{}
+		r.GetRelease().Labels = []*pbgd.Label{}
+		r.GetRelease().Tracklist = []*pbgd.Track{}
 
 		proto.Merge(r.GetRelease(), release)
 

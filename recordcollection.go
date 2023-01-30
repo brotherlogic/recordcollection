@@ -7,7 +7,6 @@ import (
 	"log"
 	"time"
 
-	"github.com/brotherlogic/godiscogs"
 	"github.com/brotherlogic/goserver"
 	"github.com/brotherlogic/goserver/utils"
 	"github.com/prometheus/client_golang/prometheus"
@@ -18,7 +17,8 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
-	pbd "github.com/brotherlogic/godiscogs"
+	godiscogs "github.com/brotherlogic/godiscogs"
+	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbg "github.com/brotherlogic/goserver/proto"
 	pbks "github.com/brotherlogic/keystore/proto"
 	qpb "github.com/brotherlogic/queue/queue_client"
@@ -99,23 +99,23 @@ func (p *prodQuotaChecker) hasQuota(ctx context.Context, folder int32) (*pbro.Qu
 }
 
 type saver interface {
-	GetCollection(ctx context.Context) []*godiscogs.Release
-	GetWantlist(ctx context.Context) ([]*godiscogs.Release, error)
-	GetRelease(ctx context.Context, id int32) (*godiscogs.Release, error)
+	GetCollection(ctx context.Context) []*pbgd.Release
+	GetWantlist(ctx context.Context) ([]*pbgd.Release, error)
+	GetRelease(ctx context.Context, id int32) (*pbgd.Release, error)
 	AddToFolder(ctx context.Context, folderID int32, releaseID int32) (int, error)
 	SetRating(ctx context.Context, releaseID int, rating int) error
 	MoveToFolder(ctx context.Context, folderID, releaseID, instanceID, newFolderID int) (string, error)
 	DeleteInstance(ctx context.Context, folderID, releaseID, instanceID int) error
-	SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) int
+	SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) int64
 	GetSalePrice(ctx context.Context, releaseID int) (float32, error)
 	RemoveFromWantlist(ctx context.Context, releaseID int) error
 	AddToWantlist(ctx context.Context, releaseID int) error
 	UpdateSalePrice(ctx context.Context, saleID int, releaseID int, condition, sleeve string, price float32) error
 	GetCurrentSalePrice(ctx context.Context, saleID int) float32
-	GetCurrentSaleState(ctx context.Context, saleID int) godiscogs.SaleState
+	GetCurrentSaleState(ctx context.Context, saleID int) pbgd.SaleState
 	RemoveFromSale(ctx context.Context, saleID int, releaseID int) error
 	ExpireSale(ctx context.Context, saleID int, releaseID int, price float32) error
-	GetInventory(ctx context.Context) ([]*godiscogs.ForSale, error)
+	GetInventory(ctx context.Context) ([]*pbgd.ForSale, error)
 	GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error)
 	GetOrder(ctx context.Context, ID string) (map[int32]int32, time.Time, error)
 }
@@ -630,7 +630,7 @@ func main() {
 		log.Fatalf("Read an empty token: %v", tResp)
 
 	}
-	server.retr = pbd.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.CtxLog)
+	server.retr = godiscogs.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.CtxLog)
 	cancel()
 	//go server.runUpdateFanout()
 
