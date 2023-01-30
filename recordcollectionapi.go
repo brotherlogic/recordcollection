@@ -354,7 +354,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			rec.GetMetadata().SalePrice = int32(price * 100)
 
 			// Preemptive save to ensure we get the saleid
-			s.CtxLog(ctx, fmt.Sprintf("Got sale id: %v", rec.GetMetadata()))
+			s.CtxLog(ctx, fmt.Sprintf("Got sale id (%v): %v", saleid, rec.GetMetadata()))
 			s.saveRecord(ctx, rec)
 		}
 	}
