@@ -1141,6 +1141,8 @@ github.com/brotherlogic/godiscogs v0.0.0-20221008131707-6944ba63cf54/go.mod h1:s
 github.com/brotherlogic/godiscogs v0.0.0-20221025153630-9ad31d9fab21/go.mod h1:sL013Uuw2cQUi8XvArqz3T3DhEcghVH2K3xvXWLaP78=
 github.com/brotherlogic/godiscogs v0.0.0-20230104162206-2759618e526a h1:IfshVkQX4s3zpzbQXJT5w/6llAM7dcmT53UqDFu/L3Q=
 github.com/brotherlogic/godiscogs v0.0.0-20230104162206-2759618e526a/go.mod h1:sL013Uuw2cQUi8XvArqz3T3DhEcghVH2K3xvXWLaP78=
+github.com/brotherlogic/godiscogs v0.0.0-20230130195059-7278f77467a6 h1:2xWE7TVORLSj7b28HIyBaZNH+M/s5rrtfPEv9wVXt/k=
+github.com/brotherlogic/godiscogs v0.0.0-20230130195059-7278f77467a6/go.mod h1:sL013Uuw2cQUi8XvArqz3T3DhEcghVH2K3xvXWLaP78=
 github.com/brotherlogic/goserver v0.0.0-20201114004248-7d9270a3430f/go.mod h1:SzhCEYerd/LBncZyJu9u9iZaM1598RYz43r0FaSwclU=
 github.com/brotherlogic/goserver v0.0.0-20210428164755-c1f4f9b8fe28/go.mod h1:ijbwmsxhkWF15vlLOxz1ig6j28ZDHWdLVWDmUk/b/1c=
 github.com/brotherlogic/goserver v0.0.0-20210517140105-372f30a83363/go.mod h1:ijbwmsxhkWF15vlLOxz1ig6j28ZDHWdLVWDmUk/b/1c=
