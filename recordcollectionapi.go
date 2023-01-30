@@ -654,7 +654,7 @@ func (s *Server) GetOrder(ctx context.Context, req *pb.GetOrderRequest) (*pb.Get
 
 	resp := &pb.GetOrderResponse{
 		SaleDate:       t.Unix(),
-		ListingToPrice: make(map[int32]int32),
+		ListingToPrice: make(map[int64]int32),
 	}
 	for ID, price := range rMap {
 		resp.ListingToPrice[ID] = price

@@ -117,7 +117,7 @@ type saver interface {
 	ExpireSale(ctx context.Context, saleID int, releaseID int, price float32) error
 	GetInventory(ctx context.Context) ([]*pbgd.ForSale, error)
 	GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error)
-	GetOrder(ctx context.Context, ID string) (map[int32]int32, time.Time, error)
+	GetOrder(ctx context.Context, ID string) (map[int64]int32, time.Time, error)
 }
 
 type scorer interface {
