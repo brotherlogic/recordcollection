@@ -111,8 +111,8 @@ type saver interface {
 	RemoveFromWantlist(ctx context.Context, releaseID int) error
 	AddToWantlist(ctx context.Context, releaseID int) error
 	UpdateSalePrice(ctx context.Context, saleID int, releaseID int, condition, sleeve string, price float32) error
-	GetCurrentSalePrice(ctx context.Context, saleID int) float32
-	GetCurrentSaleState(ctx context.Context, saleID int) pbgd.SaleState
+	GetCurrentSalePrice(ctx context.Context, saleID int64) float32
+	GetCurrentSaleState(ctx context.Context, saleID int64) pbgd.SaleState
 	RemoveFromSale(ctx context.Context, saleID int, releaseID int) error
 	ExpireSale(ctx context.Context, saleID int, releaseID int, price float32) error
 	GetInventory(ctx context.Context) ([]*pbgd.ForSale, error)

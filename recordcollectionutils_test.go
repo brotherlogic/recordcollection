@@ -157,11 +157,11 @@ func (t *testSyncer) AddToWantlist(ctx context.Context, releaseID int) error {
 	return nil
 }
 
-func (t *testSyncer) GetCurrentSalePrice(ctx context.Context, saleID int) float32 {
+func (t *testSyncer) GetCurrentSalePrice(ctx context.Context, saleID int64) float32 {
 	return 12.34
 }
 
-func (t *testSyncer) GetCurrentSaleState(ctx context.Context, saleID int) pbgd.SaleState {
+func (t *testSyncer) GetCurrentSaleState(ctx context.Context, saleID int64) pbgd.SaleState {
 	return pbgd.SaleState_FOR_SALE
 }
 
