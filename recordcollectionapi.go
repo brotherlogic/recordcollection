@@ -101,6 +101,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	// Update the sale state
 	if record.GetMetadata().GetSaleId() > 0 && record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE {
 		record.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
+		updated = true
 	}
 
 	// Adjust the sale price
