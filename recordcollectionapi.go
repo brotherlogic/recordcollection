@@ -66,6 +66,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			record.GetMetadata().CurrentSalePrice = int32(price * 100)
 		}
 		record.GetMetadata().SaleState = s.retr.GetCurrentSaleState(ctx, int(record.GetMetadata().GetSaleId()))
+		updated = true
 	}
 
 	// Perform a discogs update if needed
