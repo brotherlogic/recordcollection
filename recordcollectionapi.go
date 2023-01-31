@@ -43,6 +43,12 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		return &pb.CommitRecordResponse{}, nil
 	}
 
+	// Update the sale state
+	if record.GetMetadata().GetSaleId() > 100 && record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE {
+		record.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
+		updated = true
+	}
+
 	// Update for sale records every 24 hours
 	if record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE {
 		// Queue up an update for a month from now
@@ -104,12 +110,6 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	// Reset filed under
 	if record.GetMetadata().GetFiledUnder() == -1 {
 		record.GetMetadata().FiledUnder = pb.ReleaseMetadata_FILE_UNKNOWN
-		updated = true
-	}
-
-	// Update the sale state
-	if record.GetMetadata().GetSaleId() > 100 && record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE {
-		record.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
 		updated = true
 	}
 
