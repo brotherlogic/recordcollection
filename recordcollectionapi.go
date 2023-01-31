@@ -98,6 +98,11 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = true
 	}
 
+	// Update the sale state
+	if record.GetMetadata().GetSaleId() > 0 && record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE {
+		record.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
+	}
+
 	// Adjust the sale price
 	if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
 		s.updateRecordSalePrice(ctx, record)
