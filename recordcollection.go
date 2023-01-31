@@ -421,6 +421,7 @@ func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.R
 	}
 
 	recordToReturn := data.(*pb.Record)
+	s.CtxLog(ctx, fmt.Sprintf("LOADED: %v", recordToReturn.GetMetadata()))
 
 	// Let's make sure this is in the folder map
 	if validate {
