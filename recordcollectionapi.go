@@ -59,6 +59,13 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if err != nil {
 			return nil, err
 		}
+
+		// Update the sale price
+		price := s.retr.GetCurrentSalePrice(ctx, int(record.GetMetadata().GetSaleId()))
+		if price > 0 {
+			record.GetMetadata().CurrentSalePrice = int32(price * 100)
+		}
+		record.GetMetadata().SaleState = s.retr.GetCurrentSaleState(ctx, int(record.GetMetadata().GetSaleId()))
 	}
 
 	// Perform a discogs update if needed
