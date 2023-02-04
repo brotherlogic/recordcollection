@@ -62,6 +62,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			Payload:   &google_protobuf.Any{Value: data},
 			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 		})
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v for sale updates", record.GetRelease().GetInstanceId()))
 		if err != nil {
 			return nil, err
 		}
@@ -99,6 +100,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			Payload:   &google_protobuf.Any{Value: data},
 			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 		})
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v in a month", record.GetRelease().GetInstanceId()))
 
 		if err != nil {
 			return nil, err
@@ -144,6 +146,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			Payload:   &google_protobuf.Any{Value: data},
 			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 		})
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v for transfer", record.GetRelease().GetInstanceId()))
 
 		if err != nil {
 			return nil, err
@@ -196,6 +199,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			Payload:   &google_protobuf.Any{Value: data},
 			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 		})
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v because we updated it", record.GetRelease().GetInstanceId()))
 		queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 	}
 	return &pb.CommitRecordResponse{}, err
@@ -450,6 +454,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		Payload:   &google_protobuf.Any{Value: data},
 		Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
 	})
+	s.CtxLog(ctx, fmt.Sprintf("Updating %v for some unkown reason", rec.GetRelease().GetInstanceId()))
 
 	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 
@@ -526,6 +531,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		Key:           fmt.Sprintf("%v", instanceID),
 		RequireUnique: true,
 	})
+	s.CtxLog(ctx, fmt.Sprintf("Updating because we just added %v", instanceID))
 	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 
 	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err
