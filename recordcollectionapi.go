@@ -79,7 +79,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 
 	// Perform a discogs update if needed
 	if time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
-		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && record.GetRelease().GetFolderId() == 812802 && record.GetRelease().GetRecordCondition() == "") ||
+		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && (record.GetRelease().GetFolderId() == 812802 || record.GetRelease().GetFolderId() == 3386035) && record.GetRelease().GetRecordCondition() == "") ||
 		(len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")) ||
 		len(record.GetRelease().GetTracklist()) == 0 {
 		s.cacheRecord(ctx, record, fmt.Sprintf("%v (%v) or %v (%v) or %v (%v) or %v (%v)",
