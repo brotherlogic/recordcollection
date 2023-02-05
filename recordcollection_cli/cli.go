@@ -1017,8 +1017,8 @@ func main() {
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "fixfolder":
-		i, _ := strconv.Atoi(os.Args[2])
-		f, _ := strconv.Atoi(os.Args[3])
+		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
+		f, _ := strconv.ParseInt(os.Args[3], 10, 32)
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i), FolderId: int32(f)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
