@@ -305,6 +305,11 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		return fmt.Errorf("No goal folder")
 	}
 
+	if r.GetMetadata().GetSaleId() < 0 {
+		code, err := utils.GetContextKey(ctx)
+		s.RaiseIssue(fmt.Sprintf("Bad Sale ID for %v", r.GetRelease().GetInstanceId()), fmt.Sprintf("%v - %v", code, err))
+	}
+
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
 	if err != nil {
 		return err
