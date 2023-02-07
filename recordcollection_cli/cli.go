@@ -1104,7 +1104,7 @@ func main() {
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "sold_offline":
-		i, _ := strconv.Atoi(os.Args[2])
+		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
 		up := &pbrc.UpdateRecordRequest{Reason: "cli-sellrequest", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_SOLD_OFFLINE, SoldDate: time.Now().Unix(), SoldPrice: 1}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
