@@ -49,6 +49,11 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = true
 	}
 
+	if record.GetMetadata().GetSaleId() == -1 {
+		record.GetMetadata().SaleId = 0
+		updated = true
+	}
+
 	// Update for sale records every 24 hours
 	if record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE {
 		// Queue up an update for a month from now
