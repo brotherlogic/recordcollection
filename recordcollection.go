@@ -299,7 +299,6 @@ func (s *Server) deleteRecord(ctx context.Context, i int32) error {
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
-	s.CtxLog(ctx, fmt.Sprintf("Saving: %v", r.GetMetadata()))
 	if r.GetMetadata().GoalFolder == 0 {
 		s.RaiseIssue("Save Error", fmt.Sprintf("Trying to save a record without a goal folder: %v", r))
 		return fmt.Errorf("No goal folder")
@@ -426,7 +425,6 @@ func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.R
 	}
 
 	recordToReturn := data.(*pb.Record)
-	s.CtxLog(ctx, fmt.Sprintf("LOADED: %v", recordToReturn.GetMetadata()))
 
 	// Let's make sure this is in the folder map
 	if validate {
