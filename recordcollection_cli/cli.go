@@ -408,6 +408,23 @@ func main() {
 			}
 			fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 		}
+	case "phs-digital":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL {
+				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
+					Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+						Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}})
+				fmt.Printf("%v. %v, %v\n", i, id, err)
+			}
+		}
 	case "arr":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_ARRIVED}})
 		if err != nil {
@@ -1103,6 +1120,29 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "adjust":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+		for _, rec := range recs.GetInstanceIds() {
+			reco, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: rec})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+
+			if time.Unix(reco.GetRecord().Metadata.DateAdded, 0).Year() == 2023 && reco.GetRecord().GetMetadata().GetPurchaseBudget() == "float" {
+				fmt.Printf("%v\n", rec)
+				rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: rec},
+					Metadata: &pbrc.ReleaseMetadata{
+						PurchaseBudget: "float2023",
+					}}})
+				if err != nil {
+					log.Fatalf("%v -> %v", rec, err)
+				}
+			}
+		}
+
 	case "sold_offline":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
 		up := &pbrc.UpdateRecordRequest{Reason: "cli-sellrequest", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_SOLD_OFFLINE, SoldDate: time.Now().Unix(), SoldPrice: 1}}}
