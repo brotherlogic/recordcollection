@@ -123,7 +123,6 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	// Adjust the sale price
 	if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
 		s.updateRecordSalePrice(ctx, record)
-		s.CtxLog(ctx, fmt.Sprintf("Updated sale price"))
 		updated = true
 	}
 
