@@ -54,7 +54,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = true
 	}
 
-	// Update for sale records every 24 hours
+	// Update for sale records every 48 hours
 	if record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE {
 		// Queue up an update for a month from now
 		upup := &rfpb.FanoutRequest{
@@ -73,13 +73,14 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		}
 
 		// Update the sale price
+		cp := record.GetMetadata().GetCurrentSalePrice()
 		price := s.retr.GetCurrentSalePrice(ctx, record.GetMetadata().GetSaleId())
 		if price > 0 {
 			record.GetMetadata().CurrentSalePrice = int32(price * 100)
 		}
 		record.GetMetadata().SaleState = s.retr.GetCurrentSaleState(ctx, record.GetMetadata().GetSaleId())
 		s.CtxLog(ctx, fmt.Sprintf("UPDATEDSALESTATE: %v", record.GetMetadata()))
-		updated = true
+		updated = cp != record.GetMetadata().GetCurrentSalePrice()
 	}
 
 	// Perform a discogs update if needed
