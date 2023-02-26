@@ -455,7 +455,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	data, _ := proto.Marshal(upup)
 	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 		QueueName: "record_fanout",
-		RunTime:   time.Now().Add(time.Hour * 24).Unix(),
+		RunTime:   time.Now().Add(time.Minute).Unix(),
 		Payload:   &google_protobuf.Any{Value: data},
 		Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
 	})
