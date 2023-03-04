@@ -67,7 +67,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			Payload:   &google_protobuf.Any{Value: data},
 			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 		})
-		s.CtxLog(ctx, fmt.Sprintf("Updating %v for sale updates -> %v", record.GetRelease().GetInstanceId()))
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v for sale updates", record.GetRelease().GetInstanceId()))
 		if err != nil {
 			return nil, err
 		}
