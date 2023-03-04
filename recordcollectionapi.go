@@ -44,7 +44,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	}
 
 	// Update the sale state
-	if record.GetMetadata().GetSaleId() > 100 && (record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE || record.GetMetadata().GetSaleState() == pbgd.SaleState_EXPIRED) {
+	if record.GetMetadata().GetSaleId() > 100 && (record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE) {
 		record.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
 		updated = true
 	}
@@ -67,7 +67,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			Payload:   &google_protobuf.Any{Value: data},
 			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 		})
-		s.CtxLog(ctx, fmt.Sprintf("Updating %v for sale updates", record.GetRelease().GetInstanceId()))
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v for sale updates -> %v", record.GetRelease().GetInstanceId()))
 		if err != nil {
 			return nil, err
 		}
