@@ -24,7 +24,7 @@ func (t *testScorer) GetScore(ctx context.Context, instanceID int32) (float32, e
 	if t.fail {
 		return -1, errors.New("Built to fail")
 	}
-	return 2.5, nil
+	return 2.5, nil blah
 }
 
 type testMover struct {
