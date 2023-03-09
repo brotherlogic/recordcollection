@@ -7,7 +7,6 @@ on:
     # The branches below must be a subset of the branches above
     branches: [ master ]
 
-
 jobs:
   checks:
     name: basic_assess
@@ -35,3 +34,6 @@ jobs:
       with:
         path-to-profile: profile.cov
         ignore: recordcollection.go
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
