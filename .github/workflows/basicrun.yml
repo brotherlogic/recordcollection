@@ -4,9 +4,7 @@ on:
   push:
     branches: [ master ]
   pull_request:
-    # The branches below must be a subset of the branches above
     branches: [ master ]
-
 
 jobs:
   checks:
@@ -35,3 +33,9 @@ jobs:
       with:
         path-to-profile: profile.cov
         ignore: recordcollection.go
+    
+    - name: Run coverage
+      run: go test -race -coverprofile=coverage.out -covermode=atomic
+
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3
