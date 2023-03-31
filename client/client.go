@@ -42,6 +42,24 @@ func (c *RecordCollectionClient) GetRecord(ctx context.Context, req *pb.GetRecor
 	return client.GetRecord(ctx, req)
 }
 
+func (c *RecordCollectionClient) GetInventory(ctx context.Context, req *pb.GetInventoryRequest) (*pb.GetInventoryResponse, error) {
+	if c.Test {
+		if c.ErrorCode != codes.OK {
+			return nil, status.Errorf(c.ErrorCode, "built to fail")
+		}
+		return &pb.GetInventoryResponse{}, nil
+	}
+
+	conn, err := c.Gs.FDialServer(ctx, "recordcollection")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := pb.NewRecordCollectionServiceClient(conn)
+	return client.GetInventory(ctx, req)
+}
+
 func (c *RecordCollectionClient) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
 	if c.Test {
 		var keys []int32
