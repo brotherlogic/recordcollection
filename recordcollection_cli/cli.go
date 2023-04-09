@@ -24,8 +24,12 @@ import (
 
 	"github.com/andanhm/go-prettytime"
 
+	google_protobuf "github.com/golang/protobuf/ptypes/any"
+
+	dspb "github.com/brotherlogic/dstore/proto"
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbks "github.com/brotherlogic/keystore/proto"
+	qpb "github.com/brotherlogic/queue/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 	rfpb "github.com/brotherlogic/recordfanout/proto"
 )
@@ -133,6 +137,31 @@ func main() {
 		for _, id := range ids.GetInstanceIds() {
 			fmt.Printf("%v\n", id)
 		}
+	case "bad_bandcamp":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+
+			if rec.Record.GetMetadata().GetGoalFolder() == 1782105 {
+				found := false
+				for _, format := range rec.GetRecord().GetRelease().GetFormats() {
+					if format.Name == "File" {
+						found = true
+					}
+				}
+
+				if !found {
+					fmt.Printf("%v\n", id)
+				}
+			}
+		}
+
 	case "transfer":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
 		ni, _ := strconv.ParseInt(os.Args[3], 10, 32)
@@ -1161,21 +1190,53 @@ func main() {
 		if err != nil {
 			log.Fatalf("Bad read: %v", err)
 		}
+
+		conn, err := utils.LFDialServer(ctx, "dstore")
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		client := dspb.NewDStoreServiceClient(conn)
+		res, err := client.Read(ctx, &dspb.ReadRequest{Key: fmt.Sprintf("%v/%v", "github.com/brotherlogic/queue/queues", "record_fanout")})
+		if err != nil {
+			log.Fatalf("Err: %v", err)
+		}
+
+		if res.GetConsensus() < 0.5 {
+			log.Fatalf("could not get read consensus (%v)", res.GetConsensus())
+		}
+
+		queue := &qpb.Queue{}
+		err = proto.Unmarshal(res.GetValue().GetValue(), queue)
+		if err != nil {
+			log.Fatalf("Err: %v", err)
+		}
+
+		conn2, err := utils.LFDialServer(ctx, "queue")
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		client2 := qpb.NewQueueServiceClient(conn2)
+
 		for _, rec := range recs.GetInstanceIds() {
-			reco, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: rec})
-			if err != nil {
-				log.Fatalf("Bad read: %v", err)
+			found := false
+			for _, entry := range queue.GetEntries() {
+				if entry.GetKey() == fmt.Sprintf("%v", rec) {
+					found = true
+				}
 			}
 
-			if time.Unix(reco.GetRecord().Metadata.DateAdded, 0).Year() == 2023 && reco.GetRecord().GetMetadata().GetPurchaseBudget() == "float" {
-				fmt.Printf("%v\n", rec)
-				rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: rec},
-					Metadata: &pbrc.ReleaseMetadata{
-						PurchaseBudget: "float2023",
-					}}})
-				if err != nil {
-					log.Fatalf("%v -> %v", rec, err)
+			if !found {
+				fmt.Printf("Not found: %v\n", rec)
+				upup := &rfpb.FanoutRequest{
+					InstanceId: rec,
 				}
+				data, _ := proto.Marshal(upup)
+				client2.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+					Key:       fmt.Sprintf("%v", rec),
+					QueueName: "record_fanout",
+					RunTime:   time.Now().Unix(),
+					Payload:   &google_protobuf.Any{Value: data},
+				})
 			}
 		}
 
