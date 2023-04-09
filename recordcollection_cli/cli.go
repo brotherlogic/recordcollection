@@ -551,6 +551,7 @@ func main() {
 			}
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 		}
+
 	case "sts":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_STAGED_TO_SELL}})
 		if err != nil {
@@ -687,8 +688,8 @@ func main() {
 				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 			}
 		}
-	case "scorepv":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_VALIDATE}})
+	case "scorepic":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_IN_COLLECTION}})
 		if err != nil {
 			fmt.Printf("Error %v\n", err)
 		}
@@ -700,7 +701,28 @@ func main() {
 			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
 				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
 				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
-				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL {
+				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL || r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_CD {
+					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
+						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+							Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}})
+					fmt.Printf("%v\n", err)
+				}
+			}
+		}
+	case "scorephs":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
+				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
+				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL || r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_CD {
 					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
 						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
 							Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}})
