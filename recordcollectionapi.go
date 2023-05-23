@@ -39,7 +39,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	}
 
 	if record.GetMetadata().GetTransferIid() > 0 {
-		s.CtxLog(ctx, "Not commiting transferred record")
+		s.CtxLog(ctx, fmt.Sprintf("Not commiting transferred record %v: (%v)", record.GetRelease().GetInstanceId(), record.GetMetadata()))
 		return &pb.CommitRecordResponse{}, nil
 	}
 
