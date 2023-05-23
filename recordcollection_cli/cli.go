@@ -1092,7 +1092,7 @@ func main() {
 
 	case "force_sale":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleDirty: true}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "force_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_FOR_SALE}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
