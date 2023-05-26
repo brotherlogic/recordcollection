@@ -1160,6 +1160,32 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "set_arrived":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for i, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad rec: %v", err)
+			}
+
+			if rec.Record.GetRelease().GetFolderId() != 3380098 &&
+				(rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX || rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN) {
+				if rec.GetRecord().GetMetadata().GetDateArrived() == 0 {
+					up := &pbrc.UpdateRecordRequest{Reason: "cli-updatearrived",
+						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+							Metadata: &pbrc.ReleaseMetadata{DateArrived: rec.GetRecord().GetMetadata().GetDateAdded()}}}
+					_, err := registry.UpdateRecord(ctx, up)
+					if err != nil {
+						log.Fatalf("Error: %v", err)
+					}
+					fmt.Printf("Update: %v/%v: %v\n", i, len(recs.GetInstanceIds()), id)
+				}
+			}
+		}
 	case "adjust":
 		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
