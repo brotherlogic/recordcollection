@@ -328,6 +328,13 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.Metadata = &pb.ReleaseMetadata{}
 	}
 
+	// Adjust keeper if we keeping a record that's staged to sell that we've marked as not a keeper
+	if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_STAGED_TO_SELL && request.GetUpdate().GetMetadata().GetSetRating() == 5 {
+		if rec.GetMetadata().GetKeep() == pb.ReleaseMetadata_NOT_KEEPER {
+			rec.GetMetadata().Keep = pb.ReleaseMetadata_KEEP_UNKNOWN
+		}
+	}
+
 	// If we've loaded the record correctly we're probably fine
 	updates, err := s.loadUpdates(ctx, request.GetUpdate().GetRelease().InstanceId)
 	code := status.Convert(err).Code()
