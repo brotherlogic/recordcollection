@@ -398,7 +398,22 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
+
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+		}
+	case "fix_budget":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{FolderId: 488127}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.GetRecord().GetMetadata().GetPurchaseBudget() == "" {
+				fmt.Printf("%v %v [%v]\n", id, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			}
 		}
 	case "phs":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
@@ -411,6 +426,37 @@ func main() {
 				fmt.Printf("Error: %v\n", err)
 			}
 			fmt.Printf("%v. %v %v %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
+		}
+	case "bad_sale":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.GetRecord().GetMetadata().GetSaleId() == 0 || r.GetRecord().GetMetadata().GetSaleId() == 100 || r.GetRecord().GetMetadata().GetSaleState() != pbgd.SaleState_FOR_SALE {
+				fmt.Printf("%v. %v %v %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
+			}
+		}
+	case "set_for_sale":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.GetRecord().GetMetadata().GetSaleState() != pbgd.SaleState_FOR_SALE && (r.GetRecord().GetMetadata().BoxState == pbrc.ReleaseMetadata_BOX_UNKNOWN || r.GetRecord().GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX) {
+				_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "force-slae", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_FOR_SALE}}})
+				if err != nil {
+					log.Fatalf("%v", err)
+				}
+			}
 		}
 	case "withbudget":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
@@ -482,6 +528,26 @@ func main() {
 			if r.GetRecord().GetMetadata().GetBoxState() != pbrc.ReleaseMetadata_OUT_OF_BOX &&
 				r.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_SOLD_ARCHIVE {
 				fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+			}
+		}
+	case "all_cleaned":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+
+		sort.SliceStable(ids.InstanceIds, func(a, b int) bool {
+			return ids.InstanceIds[a] < ids.InstanceIds[b]
+		})
+
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+
+			if r.GetRecord().GetMetadata().GetLastCleanDate() > 0 {
+				fmt.Printf("%v %v\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetLastCleanDate())
 			}
 		}
 	case "bad":
@@ -1092,7 +1158,7 @@ func main() {
 
 	case "force_sale":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleDirty: true}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "force-slae", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_FOR_SALE}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
