@@ -412,6 +412,18 @@ func main() {
 			}
 			fmt.Printf("%v. %v %v %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
 		}
+	case "phs-ping":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_HIGH_SCHOOL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			fmt.Printf("%v. %v %v %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
+		}
 	case "withbudget":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
@@ -462,6 +474,40 @@ func main() {
 			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: id})
 			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 
+		}
+	case "ping":
+		conn, err := utils.LFDialServer(ctx, "recordfanout")
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		defer conn.Close()
+		client := rfpb.NewRecordFanoutServiceClient(conn)
+
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_HIGH_SCHOOL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: id})
+			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
+		}
+		ids, err = registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_STAGED}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: id})
+			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 		}
 	case "next":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
@@ -1160,6 +1206,36 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "get_cleaned":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad rec: %v", err)
+			}
+			if rec.GetRecord().GetMetadata().GetLastCleanDate() > 0 {
+				fmt.Printf("%v %v\n", id, rec.GetRecord().GetMetadata().GetLastCleanDate())
+			}
+		}
+	case "get_widths":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad rec: %v", err)
+			}
+			if rec.GetRecord().GetMetadata().GetRecordWidth() > 0 {
+				fmt.Printf("./gram width %v %v\n", id, rec.GetRecord().GetMetadata().GetRecordWidth())
+			}
+		}
 	case "set_arrived":
 		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
