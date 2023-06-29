@@ -1230,7 +1230,7 @@ func main() {
 		for _, id := range recs.GetInstanceIds() {
 			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 			if err != nil {
-				log.Fatalf("Bad rec: %v", err)
+				log.Fatalf("Bad get record: %v", err)
 			}
 			if rec.GetRecord().GetMetadata().GetRecordWidth() > 0 {
 				fmt.Printf("./gram width %v %v\n", id, rec.GetRecord().GetMetadata().GetRecordWidth())
