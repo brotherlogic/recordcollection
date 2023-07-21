@@ -43,14 +43,18 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		return &pb.CommitRecordResponse{}, nil
 	}
 
+	updateReason := ""
+
 	// Update the sale state
 	if record.GetMetadata().GetSaleId() > 100 && (record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE) {
 		record.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
+		updateReason += " FOR_SALE"
 		updated = true
 	}
 
 	if record.GetMetadata().GetSaleId() == -1 {
 		record.GetMetadata().SaleId = 0
+		updateReason += " SALE_ID"
 		updated = true
 	}
 
@@ -113,18 +117,21 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			return nil, err
 		}
 
+		updateReason += " CONDITION"
 		updated = record.GetRelease().GetRecordCondition() != ""
 	}
 
 	// Reset filed under
 	if record.GetMetadata().GetFiledUnder() == -1 {
 		record.GetMetadata().FiledUnder = pb.ReleaseMetadata_FILE_UNKNOWN
+		updateReason += " FILED_UNDER"
 		updated = true
 	}
 
 	// Adjust the sale price
 	if time.Now().Sub(time.Unix(record.GetMetadata().GetSalePriceUpdate(), 0)) > time.Hour*24*7 {
 		s.updateRecordSalePrice(ctx, record)
+		updateReason += " SALE_PRICE"
 		updated = true
 	}
 
@@ -134,6 +141,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			return nil, err
 		}
 		record.GetMetadata().TransferIid = trecord.GetRelease().GetInstanceId()
+		updateReason += " TRANSFER"
 		updated = true
 
 		err = s.saveRecord(ctx, trecord)
@@ -312,10 +320,12 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if request.GetUpdate().GetMetadata().GetLastCleanDate() == 0 &&
 				request.GetUpdate().GetMetadata().GetRecordWidth() == 0 {
 				if request.GetUpdate().GetMetadata().GetLastStockCheck() == 0 {
-					if request.GetUpdate().GetMetadata().GetGoalFolder() == 0 {
-						if request.GetUpdate().GetMetadata().GetFiledUnder() >= 0 {
-							s.CtxLog(ctx, fmt.Sprintf("Update %v failed because of the box situation", request))
-							return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
+					if request.GetUpdate().GetMetadata().GetDateArrived() == 0 {
+						if request.GetUpdate().GetMetadata().GetGoalFolder() == 0 {
+							if request.GetUpdate().GetMetadata().GetFiledUnder() >= 0 {
+								s.CtxLog(ctx, fmt.Sprintf("Update %v failed because of the box situation", request))
+								return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
+							}
 						}
 					}
 				}
