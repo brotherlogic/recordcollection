@@ -1248,8 +1248,7 @@ func main() {
 				log.Fatalf("Bad rec: %v", err)
 			}
 
-			if rec.Record.GetRelease().GetFolderId() != 3380098 &&
-				(rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX || rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN) {
+			if rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_45S_BOX {
 				if rec.GetRecord().GetMetadata().GetDateArrived() == 0 {
 					up := &pbrc.UpdateRecordRequest{Reason: "cli-updatearrived",
 						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
