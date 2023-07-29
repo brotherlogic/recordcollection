@@ -346,6 +346,8 @@ message ReleaseMetadata {
   int32 transfer_from = 66;
 
   string sale_budget = 67;
+
+  bool needs_gram_update = 68;
 }
 
 // A request to get some records
