@@ -507,6 +507,12 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 		r.GetRelease().RecordCondition = mp[r.GetRelease().GetInstanceId()].RecordCondition
 		r.GetRelease().SleeveCondition = mp[r.GetRelease().GetInstanceId()].SleeveCondition
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
+
+		// Don't overwrite an existing clean time
+		if r.GetMetadata().LastCleanDate == 0 {
+			p, _ := time.Parse("2006-01-02", mp[r.GetRelease().GetInstanceId()].LastCleanDate)
+			r.GetMetadata().LastCleanDate = p.Unix()
+		}
 	} else {
 		return err
 	}

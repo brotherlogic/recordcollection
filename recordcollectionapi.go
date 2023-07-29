@@ -89,7 +89,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	}
 
 	// Perform a discogs update if needed
-	if time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
+	if record.GetMetadata().GetNeedsGramUpdate() || time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && (record.GetRelease().GetFolderId() == 812802 || record.GetRelease().GetFolderId() == 3386035) && record.GetRelease().GetRecordCondition() == "") ||
 		(len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")) ||
 		len(record.GetRelease().GetTracklist()) == 0 {
@@ -99,6 +99,9 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			record.GetRelease().GetImages(), (len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")),
 			len(record.GetRelease().GetTracklist()), len(record.GetRelease().GetTracklist()) == 0,
 		))
+
+		// Assume that caching pulls in the labels
+		record.GetMetadata().NeedsGramUpdate = false
 
 		// Queue up an update for a month from now
 		upup := &rfpb.FanoutRequest{
