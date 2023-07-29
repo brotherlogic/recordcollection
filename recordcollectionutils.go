@@ -510,8 +510,12 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 
 		// Don't overwrite an existing clean time
 		if r.GetMetadata().LastCleanDate == 0 {
-			p, _ := time.Parse("2006-01-02", mp[r.GetRelease().GetInstanceId()].LastCleanDate)
-			r.GetMetadata().LastCleanDate = p.Unix()
+			p, err := time.Parse("2006-01-02", mp[r.GetRelease().GetInstanceId()].LastCleanDate)
+			if err == nil {
+				r.GetMetadata().LastCleanDate = p.Unix()
+			} else {
+				s.CtxLog(ctx, fmt.Sprintf("Cannot parse: %v -> %v", mp[r.GetRelease().GetInstanceId()].LastCleanDate, err))
+			}
 		}
 	} else {
 		return err
