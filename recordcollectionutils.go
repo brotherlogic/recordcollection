@@ -470,7 +470,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 	}
 
 	//Force a recache if the record has no title or condition; or if it has the old image format
-	if time.Now().Unix()-r.GetMetadata().GetLastCache() > 60*60*24*30 || r.GetRelease().Title == "" ||
+	if time.Since(time.Unix(r.GetMetadata().GetLastCache())) > time.Hour*24 || r.GetRelease().Title == "" ||
 		len(r.GetRelease().GetTracklist()) == 0 ||
 		(len(r.GetRelease().GetImages()) > 0 && strings.Contains(r.GetRelease().GetImages()[0].GetUri(), "img.discogs")) {
 		release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
