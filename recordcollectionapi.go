@@ -58,6 +58,11 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = true
 	}
 
+	// Update keeper status
+	if record.GetMetadata().GetKeep() == pb.ReleaseMetadata_RESET_TO_UNKNOWN {
+		record.GetMetadata().Keep = pb.ReleaseMetadata_KEEP_UNKNOWN
+	}
+
 	// Update for sale records every 48 hours
 	if record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE {
 		// Queue up an update for a month from now

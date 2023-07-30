@@ -250,6 +250,7 @@ message ReleaseMetadata {
 
     // We want to keep this until we get a digital version
     DIGITAL_KEEPER = 3;
+    RESET_TO_UNKNOWN = 4;
   }
   KeepState keep = 29;
 
