@@ -824,12 +824,16 @@ func main() {
 			fmt.Printf("Error %v\n", err)
 		}
 		for i, id := range ids.GetInstanceIds() {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-			}
-			if r.GetRecord().GetMetadata().GetSleeve() == pbrc.ReleaseMetadata_SLEEVE_UNKNOWN {
-				fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+		    fmt.Printf("START %v/%v\n", i, len(ids.GetInstanceIds()))
+		    		      r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				      if err == nil && (r.GetRecord().GetMetadata().GetKeep() != pbrc.ReleaseMetadata_RESET_TO_UNKNOWN && r.GetRecord().GetMetadata().GetKeep() != pbrc.ReleaseMetadata_KEEP_UNKNOWN) {
+			_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{
+				Reason: "Resetting keep status",
+				Update: &pbrc.Record{
+					Release:  &pbgd.Release{InstanceId: id},
+					Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_RESET_TO_UNKNOWN},
+				}})
+			fmt.Printf("RESET %v/%v = %v -> %v\n", i, len(ids.GetInstanceIds()), id, err)
 			}
 		}
 	case "in_coll":

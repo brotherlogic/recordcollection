@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	pbgd "github.com/brotherlogic/godiscogs/proto"
+	"github.com/brotherlogic/goserver/utils"
 	qpb "github.com/brotherlogic/queue/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	rfpb "github.com/brotherlogic/recordfanout/proto"
@@ -291,6 +292,10 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 
 // UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
+	key, err := utils.GetContextKey(ctx)
+	if err == nil && strings.Contains(key, "recordcollectioncli") {
+		s.BounceIssue(ctx, "Implementation Required", fmt.Sprintf("Update %v with %v needs gram equivalent", request, key), "gramophile")
+	}
 
 	if request.GetReason() == "" {
 		return nil, fmt.Errorf("you must supply a reason")
