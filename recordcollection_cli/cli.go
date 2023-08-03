@@ -530,6 +530,26 @@ func main() {
 				fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 			}
 		}
+	case "all_listen":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+
+		sort.SliceStable(ids.InstanceIds, func(a, b int) bool {
+			return ids.InstanceIds[a] < ids.InstanceIds[b]
+		})
+
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+
+			if r.GetRecord().GetMetadata().GetLastCleanDate() > 0 {
+				fmt.Printf("%v %v\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetLastListenTime())
+			}
+		}
 	case "bad":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
@@ -559,6 +579,46 @@ func main() {
 				fmt.Printf("Error: %v\n", err)
 			}
 			fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+		}
+	case "staged":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_STAGED}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		var records []*pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			records = append(records, r.GetRecord())
+		}
+		sort.SliceStable(records, func(i, j int) bool {
+			return records[i].GetMetadata().GetLastListenTime() < records[j].GetMetadata().GetLastListenTime()
+		})
+
+		for i, r := range records {
+			fmt.Printf("%v. %v [%v] %v\n", i, r.GetRelease().GetTitle(), r.GetRelease().GetInstanceId(), r.GetMetadata().GetFiledUnder())
+		}
+	case "hs":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_HIGH_SCHOOL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		var records []*pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			records = append(records, r.GetRecord())
+		}
+		sort.SliceStable(records, func(i, j int) bool {
+			return records[i].GetMetadata().GetLastListenTime() < records[j].GetMetadata().GetLastListenTime()
+		})
+
+		for i, r := range records {
+			fmt.Printf("%v. %v [%v] %v\n", i, r.GetRelease().GetTitle(), r.GetRelease().GetInstanceId(), r.GetMetadata().GetFiledUnder())
 		}
 	case "lp":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{812802}})
@@ -618,20 +678,6 @@ func main() {
 			}
 			if r.GetRecord().GetMetadata().GetSleeve() == pbrc.ReleaseMetadata_VINYL_STORAGE_NO_INNER {
 				fmt.Printf("%v - %v\n", r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
-			}
-		}
-	case "hs":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
-		if err != nil {
-			fmt.Printf("Error %v\n", err)
-		}
-		for i, id := range ids.GetInstanceIds() {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
-			if err != nil {
-				fmt.Printf("Error: %v\n", err)
-			}
-			if r.Record.GetMetadata().GetGoalFolder() == 242017 && r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
-				fmt.Printf("%v %v. %v [%v]\n", time.Since(time.Unix(r.Record.Metadata.GetDateAdded(), 0)).Minutes(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 			}
 		}
 	case "twelve_scores":
