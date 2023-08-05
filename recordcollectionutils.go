@@ -519,7 +519,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 			}
 		}
 
-		if r.GetMetadata().GetRecordWidth() == 0 {
+		if r.GetMetadata().GetRecordWidth() <= 0 {
 			val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Width, 32)
 			if err == nil {
 				r.GetMetadata().RecordWidth = float32(val)
