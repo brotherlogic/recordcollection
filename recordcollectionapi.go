@@ -222,7 +222,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			Payload:   &google_protobuf.Any{Value: data},
 			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 		})
-		s.CtxLog(ctx, fmt.Sprintf("Updating %v because we updated it", record.GetRelease().GetInstanceId()))
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v because we updated it (%v)", record.GetRelease().GetInstanceId(), updateReason))
 		queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 	}
 	return &pb.CommitRecordResponse{}, err
