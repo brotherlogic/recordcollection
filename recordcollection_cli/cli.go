@@ -870,16 +870,16 @@ func main() {
 			fmt.Printf("Error %v\n", err)
 		}
 		for i, id := range ids.GetInstanceIds() {
-		    fmt.Printf("START %v/%v\n", i, len(ids.GetInstanceIds()))
-		    		      r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
-				      if err == nil && (r.GetRecord().GetMetadata().GetKeep() != pbrc.ReleaseMetadata_RESET_TO_UNKNOWN && r.GetRecord().GetMetadata().GetKeep() != pbrc.ReleaseMetadata_KEEP_UNKNOWN) {
-			_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{
-				Reason: "Resetting keep status",
-				Update: &pbrc.Record{
-					Release:  &pbgd.Release{InstanceId: id},
-					Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_RESET_TO_UNKNOWN},
-				}})
-			fmt.Printf("RESET %v/%v = %v -> %v\n", i, len(ids.GetInstanceIds()), id, err)
+			fmt.Printf("START %v/%v\n", i, len(ids.GetInstanceIds()))
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err == nil && (r.GetRecord().GetMetadata().GetKeep() != pbrc.ReleaseMetadata_RESET_TO_UNKNOWN && r.GetRecord().GetMetadata().GetKeep() != pbrc.ReleaseMetadata_KEEP_UNKNOWN) {
+				_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{
+					Reason: "Resetting keep status",
+					Update: &pbrc.Record{
+						Release:  &pbgd.Release{InstanceId: id},
+						Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_RESET_TO_UNKNOWN},
+					}})
+				fmt.Printf("RESET %v/%v = %v -> %v\n", i, len(ids.GetInstanceIds()), id, err)
 			}
 		}
 	case "in_coll":
@@ -1076,11 +1076,9 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "fwidth":
 		i, _ := strconv.Atoi(os.Args[2])
-		f, _ := strconv.ParseFloat(os.Args[3], 32)
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
 			Metadata: &pbrc.ReleaseMetadata{
-				RecordWidth: float32(f),
-				Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
+				Sleeve: pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
 			}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
