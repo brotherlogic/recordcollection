@@ -294,7 +294,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	key, err := utils.GetContextKey(ctx)
 	if err == nil && strings.Contains(key, "recordcollectioncli") {
-		s.BounceIssue(ctx, "Implementation Required", fmt.Sprintf("Update %v with %v needs gram equivalent", request, key), "gramophile")
+		s.BounceIssue(ctx, "Implementation Required", fmt.Sprintf("Update %v wifth %v needs gram equivalent", request, key), "gramophile")
 	}
 
 	if request.GetReason() == "" {
@@ -490,7 +490,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		Payload:   &google_protobuf.Any{Value: data},
 		Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
 	})
-	s.CtxLog(ctx, fmt.Sprintf("Updating %v for some unkown reason", rec.GetRelease().GetInstanceId()))
+	s.CtxLog(ctx, fmt.Sprintf("Updating %v for some unkown reason (%v)", rec.GetRelease().GetInstanceId(), request))
 
 	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 
