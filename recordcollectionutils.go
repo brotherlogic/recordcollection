@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -515,6 +516,13 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 				r.GetMetadata().LastCleanDate = p.Unix()
 			} else {
 				s.CtxLog(ctx, fmt.Sprintf("Cannot parse: %v -> %v", mp[r.GetRelease().GetInstanceId()].LastCleanDate, err))
+			}
+		}
+
+		if r.GetMetadata().GetRecordWidth() == 0 {
+			val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Width, 32)
+			if err == nil {
+				r.GetMetadata().RecordWidth = float32(val)
 			}
 		}
 	} else {
