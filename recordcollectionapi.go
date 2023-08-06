@@ -108,23 +108,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 
 		// Assume that caching pulls in the labels
 		record.GetMetadata().NeedsGramUpdate = false
-
-		// Queue up an update for a month from now
-		upup := &rfpb.FanoutRequest{
-			InstanceId: record.GetRelease().GetInstanceId(),
-		}
-		data, _ := proto.Marshal(upup)
-		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-			QueueName: "record_fanout",
-			RunTime:   time.Now().Add(time.Hour * 24).Unix(),
-			Payload:   &google_protobuf.Any{Value: data},
-			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
-		})
-		s.CtxLog(ctx, fmt.Sprintf("Updating %v in a month", record.GetRelease().GetInstanceId()))
-
-		if err != nil {
-			return nil, err
-		}
+		updated = true
 	}
 
 	// Reset filed under
