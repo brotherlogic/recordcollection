@@ -109,6 +109,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		// Assume that caching pulls in the labels
 		record.GetMetadata().NeedsGramUpdate = false
 		updated = true
+		updateReason += " RECACHE"
 	}
 
 	// Reset filed under
