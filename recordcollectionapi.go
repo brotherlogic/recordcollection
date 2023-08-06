@@ -304,8 +304,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	if request.GetUpdate().GetMetadata().GetNeedsGramUpdate() {
-		if rec.GetMetadata().GetLastCleanDate() > 0 &&
-			rec.GetMetadata().GetRecordWidth() > 0 {
+		if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_SOLD_ARCHIVE || (rec.GetMetadata().GetLastCleanDate() > 0 &&
+			rec.GetMetadata().GetRecordWidth() > 0) {
 			return &pb.UpdateRecordsResponse{}, nil
 		}
 	}
