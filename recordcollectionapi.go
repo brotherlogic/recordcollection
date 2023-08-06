@@ -303,6 +303,14 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		return nil, err
 	}
 
+	if request.GetUpdate().GetMetadata().GetNeedsGramUpdate() {
+		if rec.GetMetadata().GetWeightInGrams() > 0 &&
+			rec.GetMetadata().GetLastCleanDate() > 0 &&
+			rec.GetMetadata().GetRecordWidth() > 0 {
+			return &pb.UpdateRecordsResponse{}, nil
+		}
+	}
+
 	// We are limited in what we can do to records that are in the box
 	if rec.GetMetadata().GetBoxState() != pb.ReleaseMetadata_BOX_UNKNOWN && rec.GetMetadata().GetBoxState() != pb.ReleaseMetadata_OUT_OF_BOX {
 		if request.GetUpdate().GetMetadata().GetNewBoxState() != pb.ReleaseMetadata_OUT_OF_BOX &&
