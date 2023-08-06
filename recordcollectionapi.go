@@ -304,8 +304,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	if request.GetUpdate().GetMetadata().GetNeedsGramUpdate() {
-		if rec.GetMetadata().GetWeightInGrams() > 0 &&
-			rec.GetMetadata().GetLastCleanDate() > 0 &&
+		if rec.GetMetadata().GetLastCleanDate() > 0 &&
 			rec.GetMetadata().GetRecordWidth() > 0 {
 			return &pb.UpdateRecordsResponse{}, nil
 		}
