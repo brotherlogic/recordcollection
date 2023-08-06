@@ -99,11 +99,6 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && (record.GetRelease().GetFolderId() == 812802 || record.GetRelease().GetFolderId() == 3386035) && record.GetRelease().GetRecordCondition() == "") ||
 		(len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")) ||
 		len(record.GetRelease().GetTracklist()) == 0 {
-
-		precacheWeight := record.GetMetadata().GetWeightInGrams()
-		precacheCleaned := record.GetMetadata().GetLastCleanDate()
-		precacheWidth := record.GetMetadata().GetRecordWidth()
-
 		s.cacheRecord(ctx, record, fmt.Sprintf("%v (%v) or %v (%v) or %v (%v) or %v (%v)",
 			time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)), time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30,
 			record.GetRelease().GetRecordCondition(), record.GetRelease().GetFolderId() == 812802 && record.GetRelease().GetRecordCondition() == "",
@@ -113,10 +108,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 
 		// Assume that caching pulls in the labels
 		record.GetMetadata().NeedsGramUpdate = false
-		updated = updated ||
-			record.GetMetadata().GetWeightInGrams() != precacheWeight ||
-			record.GetMetadata().GetLastCleanDate() != precacheCleaned ||
-			record.GetMetadata().GetRecordWidth() != precacheWidth
+		updated = true
 	}
 
 	// Reset filed under
