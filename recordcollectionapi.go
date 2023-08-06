@@ -125,9 +125,6 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if err != nil {
 			return nil, err
 		}
-
-		updateReason += " CONDITION"
-		updated = record.GetRelease().GetRecordCondition() != ""
 	}
 
 	// Reset filed under
