@@ -455,10 +455,6 @@ func max(a, b int) int {
 
 func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) error {
 	s.CtxLog(ctx, fmt.Sprintf("Updating cache for : %v (%v): %v", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition(), reason))
-	// Don't recache a record that has a pending score
-	if r.GetMetadata().GetSetRating() > 0 {
-		return nil
-	}
 
 	//Add the record if it has not instance ID
 	if r.GetRelease().InstanceId == 0 {
