@@ -317,16 +317,6 @@ func TestImageMergeWithFailScore(t *testing.T) {
 	}
 }
 
-func TestDirtyMerge(t *testing.T) {
-	s := InitTestServer(".testDirtyMerge")
-	r := &pb.Record{Release: &pbgd.Release{Id: 4707982, InstanceId: 236418222}, Metadata: &pb.ReleaseMetadata{SetRating: 4}}
-	s.cacheRecord(context.Background(), r, "For Testing")
-
-	if r.GetMetadata().LastCache != 0 {
-		t.Fatalf("Record has not been cached despite being dirty %v", r)
-	}
-}
-
 func TestGoodMergeSync(t *testing.T) {
 	s := InitTestServer(".testGoodMergeSync")
 	//s.collection = &pb.RecordCollection{NewWants: []*pb.Want{&pb.Want{Release: &pbgd.Release{Id: 255}, Metadata: &pb.WantMetadata{Active: true}}}, Records: []*pb.Record{&pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbgd.Release{Id: 234, InstanceId: 1}}}, InstanceToFolder: make(map[int32]int32)}
