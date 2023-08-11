@@ -525,6 +525,13 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 				r.GetMetadata().RecordWidth = float32(val)
 			}
 		}
+
+		if r.GetMetadata().GetWeightInGrams() <= 0 {
+			val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Weight, 32)
+			if err == nil {
+				r.GetMetadata().WeightInGrams = int32(val)
+			}
+		}
 	} else {
 		return err
 	}
