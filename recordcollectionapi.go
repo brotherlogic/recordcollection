@@ -39,6 +39,8 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		return nil, err
 	}
 
+	gUpdate := record.GetMetadata().GetNeedsGramUpdate()
+
 	if record.GetMetadata().GetTransferIid() > 0 {
 		s.CtxLog(ctx, fmt.Sprintf("Not commiting transferred record %v: (%v)", record.GetRelease().GetInstanceId(), record.GetMetadata()))
 		return &pb.CommitRecordResponse{}, nil
@@ -206,6 +208,10 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		})
 		s.CtxLog(ctx, fmt.Sprintf("Updating %v because we updated it (%v)", record.GetRelease().GetInstanceId(), updateReason))
 		queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+	}
+
+	if gUpdate {
+		return &pb.CommitRecordResponse{}, status.Errorf(codes.FailedPrecondition, "Auto fail on gram update")
 	}
 	return &pb.CommitRecordResponse{}, err
 }
