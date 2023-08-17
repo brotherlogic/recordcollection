@@ -1284,6 +1284,74 @@ func main() {
 				fmt.Printf("./gram width %v %v\n", id, rec.GetRecord().GetMetadata().GetRecordWidth())
 			}
 		}
+	case "get_goal_folders":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("bad get record: %v", err)
+			}
+			switch rec.GetRecord().GetMetadata().GetGoalFolder() {
+			case 242017:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "12 Inches")
+			case 1727264:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Parents")
+			case 267116:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "7 Inches")
+			case 565206:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Tapes")
+			case 1782105:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Bandcap")
+			case 242018:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "CDs")
+			case 1708299:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Limbo")
+			case 1607992:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "12 Inches")
+			case 1613206:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Limbo")
+			case 716318:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "The Fall")
+			case 1435521:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "12 Inches")
+			case 488127:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Limbo")
+			case 288751:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "CDs")
+			case 267115:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "12 Inches")
+			case 466902:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "12 Inches")
+			case 3903712:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Natalie")
+			case 857449:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Outside")
+			case 2274270:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Computer")
+			case 1694651:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "CDs")
+			case 472403:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "7 Inches")
+			case 2259637:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Limbo")
+			case 1191108:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "12 Inches")
+			case 1456851:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "12 Inches")
+			case 1409151:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "12 Inches")
+			case 1419704:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Tapes")
+			case 3007807:
+				fmt.Printf("./gram goalfolder %v %v\n", id, "CDs")
+			default:
+				log.Fatalf("Unknown folder: %v", rec.GetRecord().GetMetadata().GetGoalFolder())
+			}
+		}
 	case "set_arrived":
 		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
