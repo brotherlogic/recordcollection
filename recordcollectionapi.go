@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -44,6 +45,15 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	if record.GetMetadata().GetTransferIid() > 0 {
 		s.CtxLog(ctx, fmt.Sprintf("Not commiting transferred record %v: (%v)", record.GetRelease().GetInstanceId(), record.GetMetadata()))
 		return &pb.CommitRecordResponse{}, nil
+	}
+
+	if record.GetRelease().GetFolderId() == 812802 && record.GetMetadata().GetGoalFolder() == 6268933 && record.GetMetadata().GetLastListenTime() > 0 {
+		if record.GetMetadata().GetFiledUnder() == pb.ReleaseMetadata_FILE_12_INCH {
+			record.GetMetadata().GoalFolder = 242017
+			updated = true
+		} else {
+			log.Fatalf("Unknown state: %v", record)
+		}
 	}
 
 	updateReason := ""
