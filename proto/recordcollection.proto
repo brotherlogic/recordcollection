@@ -349,6 +349,7 @@ message ReleaseMetadata {
   string sale_budget = 67;
 
   bool needs_gram_update = 68;
+  bool was_parents = 69;
 }
 
 // A request to get some records

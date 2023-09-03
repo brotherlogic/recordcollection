@@ -1349,7 +1349,7 @@ func main() {
 			case 3007807:
 				fmt.Printf("./gram goalfolder %v %v\n", id, "CDs")
 			default:
-				log.Fatalf("Unknown folder: %v", rec.GetRecord().GetMetadata().GetGoalFolder())
+				fmt.Printf("./gram goalfolder %v %v\n", id, "Limbo")
 			}
 		}
 	case "set_arrived":
