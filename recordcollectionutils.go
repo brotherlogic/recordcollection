@@ -522,6 +522,13 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 			}
 		}
 
+		if r.GetMetadata().GetSleeve() == pb.ReleaseMetadata_SLEEVE_UNKNOWN {
+			switch mp[r.GetRelease().GetInstanceId()].Sleeve {
+			case VinylStorageDoubleFlap:
+				r.GetMetadata().Sleeve = pb.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP
+			}
+		}
+
 		if r.GetMetadata().GetWeightInGrams() <= 0 {
 			val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Weight, 32)
 			if err == nil {
