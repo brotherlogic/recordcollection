@@ -526,6 +526,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 			switch mp[r.GetRelease().GetInstanceId()].Sleeve {
 			case "VinylStorageDoubleFlap":
 				r.GetMetadata().Sleeve = pb.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP
+			case "Boxset":
+				r.GetMetadata().Sleeve = pb.ReleaseMetadata_BOX_SET
 			}
 		}
 
