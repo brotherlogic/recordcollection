@@ -537,10 +537,12 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 				r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
 			case "digital":
 				r.GetMetadata().Keep = pb.ReleaseMetadata_DIGITAL_KEEPER
-			case "keep":
+			case "KEEP":
 				r.GetMetadata().Keep = pb.ReleaseMetadata_KEEPER
 			case "mintup":
 				r.GetMetadata().Keep = pb.ReleaseMetadata_DIGITAL_KEEPER
+			default:
+				panic(fmt.Sprintf("UNKNOWN KEEP STATE: %v", mp[r.GetRelease().GetInstanceId()].Keep))
 			}
 		}
 
