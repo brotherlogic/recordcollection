@@ -531,6 +531,19 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 			}
 		}
 
+		if r.GetMetadata().GetKeep() == pb.ReleaseMetadata_KEEP_UNKNOWN {
+			switch mp[r.GetRelease().GetInstanceId()].Keep {
+			case "none":
+				r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
+			case "digital":
+				r.GetMetadata().Keep = pb.ReleaseMetadata_DIGITAL_KEEPER
+			case "keep":
+				r.GetMetadata().Keep = pb.ReleaseMetadata_KEEPER
+			case "mintup":
+				r.GetMetadata().Keep = pb.ReleaseMetadata_DIGITAL_KEEPER
+			}
+		}
+
 		if r.GetMetadata().GetWeightInGrams() <= 0 {
 			val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Weight, 32)
 			if err == nil {
