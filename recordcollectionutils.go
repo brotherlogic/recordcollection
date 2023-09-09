@@ -533,7 +533,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 
 		if r.GetMetadata().GetKeep() == pb.ReleaseMetadata_KEEP_UNKNOWN {
 			switch mp[r.GetRelease().GetInstanceId()].Keep {
-			case "none":
+			case "none", "NO_KEEP":
 				r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
 			case "digital":
 				r.GetMetadata().Keep = pb.ReleaseMetadata_DIGITAL_KEEPER
