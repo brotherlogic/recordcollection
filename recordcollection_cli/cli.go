@@ -36,6 +36,20 @@ type wstr struct {
 	Width       float64 `json:"width"`
 }
 
+func convertKeep(k pbrc.ReleaseMetadata_KeepState) string {
+	switch k {
+	case pbrc.ReleaseMetadata_DIGITAL_KEEPER:
+		return "digital"
+	case pbrc.ReleaseMetadata_KEEPER:
+		return "keep"
+	case pbrc.ReleaseMetadata_NOT_KEEPER:
+		return "none"
+	}
+
+	log.Fatalf("Bad state: %v", k)
+	return ""
+}
+
 func main() {
 	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Minute*60)
 	defer cancel()
@@ -1282,6 +1296,21 @@ func main() {
 			}
 			if rec.GetRecord().GetMetadata().GetRecordWidth() > 0 {
 				fmt.Printf("./gram width %v %v\n", id, rec.GetRecord().GetMetadata().GetRecordWidth())
+			}
+		}
+	case "get_keeps":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("bad get record: %v", err)
+			}
+			if rec.GetRecord().GetMetadata().GetKeep() != pbrc.ReleaseMetadata_KEEP_UNKNOWN {
+				fmt.Printf("./gram keep %v %v\n", id, convertKeep(rec.GetRecord().GetMetadata().GetKeep()))
 			}
 		}
 	case "get_goal_folders":
