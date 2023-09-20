@@ -1298,6 +1298,21 @@ func main() {
 				fmt.Printf("./gram width %v %v\n", id, rec.GetRecord().GetMetadata().GetRecordWidth())
 			}
 		}
+	case "get_listens":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("bad get record: %v", err)
+			}
+			if rec.GetRecord().GetMetadata().GetLastListenTime() > 0 {
+				fmt.Printf("./gram listen %v %v\n", id, rec.GetRecord().GetMetadata().GetLastListenTime())
+			}
+		}
 	case "get_keeps":
 		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
@@ -1424,6 +1439,27 @@ func main() {
 					log.Fatalf("Bad update: %v", err)
 				}
 				fmt.Printf("%v/%v\n", i, len(recs.GetInstanceIds()))
+			}
+		}
+
+	case "move_parents":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad rec: %v", err)
+			}
+
+			if rec.Record.GetMetadata().GetGoalFolder() == 6268933 { //&& rec.GetRecord().GetRelease().GetId() == 697925 {
+				_, err = registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "moveing", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pbrc.ReleaseMetadata{Dirty: true, MoveFolder: 6268933}}})
+				if err != nil {
+					log.Fatalf("Bad update: %v", err)
+				}
+				fmt.Printf("recordcollection_cli commit %v\n", id)
 			}
 		}
 	case "adjust":
