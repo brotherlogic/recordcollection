@@ -5,7 +5,7 @@ go 1.18
 require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/brotherlogic/dstore v0.0.0-20230916211458-905e25cf4003
-	github.com/brotherlogic/godiscogs v0.0.0-20230921222536-98274e28b4d7
+	github.com/brotherlogic/godiscogs v0.0.0-20230922000443-fb73651e941c
 	github.com/brotherlogic/goserver v0.0.0-20230726200050-779ae6811580
 	github.com/brotherlogic/keystore v0.0.0-20230916020517-f58eeed86330
 	github.com/brotherlogic/queue v0.0.0-20230919174236-c1f1b729bcf4
@@ -17,7 +17,7 @@ require (
 	github.com/golang/protobuf v1.5.3
 	github.com/prometheus/client_golang v1.16.0
 	golang.org/x/net v0.15.0
-	google.golang.org/grpc v1.58.1
+	google.golang.org/grpc v1.58.2
 	google.golang.org/protobuf v1.31.0
 )
 
