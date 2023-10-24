@@ -984,6 +984,35 @@ func main() {
 		} else {
 			fmt.Printf("Error: %v", err)
 		}
+	case "mp":
+		i, _ := strconv.Atoi(os.Args[2])
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{int32(i)}})
+
+		if err == nil {
+			if len(ids.GetInstanceIds()) > 1 {
+				log.Fatalf("Bad iids: %v", ids)
+			}
+
+			for _, id := range ids.GetInstanceIds() {
+				up, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{
+					Reason: "Parents Move",
+					Update: &pbrc.Record{
+						Release: &pbgd.Release{
+							InstanceId: id,
+						},
+						Metadata: &pbrc.ReleaseMetadata{
+							WasParents:     true,
+							GoalFolder:     6268933,
+							LastListenTime: -1,
+							Category:       pbrc.ReleaseMetadata_IN_COLLECTION,
+							FiledUnder:     pbrc.ReleaseMetadata_FILE_12_INCH,
+						},
+					}})
+				log.Printf("%v -> %v", err, up)
+			}
+		} else {
+			fmt.Printf("Error: %v", err)
+		}
 	case "reset_sale_price":
 		i, f := strconv.Atoi(os.Args[2])
 		if f != nil {
