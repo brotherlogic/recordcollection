@@ -535,7 +535,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 			switch mp[r.GetRelease().GetInstanceId()].Keep {
 			case "none", "NO_KEEP":
 				r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
-			case "digital":
+			case "digital", "DIGITAL_KEEP":
 				r.GetMetadata().Keep = pb.ReleaseMetadata_DIGITAL_KEEPER
 			case "KEEP":
 				r.GetMetadata().Keep = pb.ReleaseMetadata_KEEPER
