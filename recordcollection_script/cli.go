@@ -1272,6 +1272,23 @@ func main() {
 			}
 		}
 		fmt.Printf("Overall: %v\n", float64(overall)/100)
+	case "reset_keep":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad query: %v", err)
+		}
+
+		fmt.Printf("Processing %v records\n", len(ids.GetInstanceIds()))
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				//Pass
+			}
+			if r.GetRecord().GetMetadata().GetKeep() == pbrc.ReleaseMetadata_NOT_KEEPER && r.GetRecord().GetRelease().GetFolderId() == 1727264 {
+				fmt.Printf("./gram keep %v reset\n", id)
+			}
+		}
+
 	case "this_retrospective":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {

@@ -644,7 +644,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 		}
 
 	case "sts":
