@@ -77,7 +77,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	}
 
 	// Update for sale records every 48 hours
-	if record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE {
+	if record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE && !gUpdate {
 		// Queue up an update for a month from now
 		upup := &rfpb.FanoutRequest{
 			InstanceId: record.GetRelease().GetInstanceId(),
@@ -138,7 +138,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = true
 	}
 
-	if record.GetMetadata().GetTransferTo() > 0 {
+	if record.GetMetadata().GetTransferTo() > 0 && !gUpdate {
 		trecord, err := s.transfer(ctx, record)
 		if err != nil {
 			return nil, err
@@ -203,7 +203,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	}
 
 	err = nil
-	if updated {
+	if updated && !gUpdate {
 		err = s.saveRecord(ctx, record)
 
 		upup := &rfpb.FanoutRequest{
