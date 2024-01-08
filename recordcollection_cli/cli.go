@@ -1266,7 +1266,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
-
+	case "mark_parents":
+		i, _ := strconv.Atoi(os.Args[2])
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{WasParents: true}}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "direct_sale":
 		i, _ := strconv.Atoi(os.Args[2])
 		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_LISTED_TO_SELL}}}
@@ -1325,6 +1332,38 @@ func main() {
 			}
 			if rec.GetRecord().GetMetadata().GetRecordWidth() > 0 {
 				fmt.Printf("./gram width %v %v\n", id, rec.GetRecord().GetMetadata().GetRecordWidth())
+			}
+		}
+	case "was_parents":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("bad get record: %v", err)
+			}
+			if rec.GetRecord().GetMetadata().GetWasParents() {
+				fmt.Printf("%v\n", id)
+			}
+		}
+	case "maybe_parents":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("bad get record: %v", err)
+			}
+			if !rec.GetRecord().GetMetadata().GetWasParents() && time.Unix(rec.GetRecord().GetMetadata().GetDateAdded(), 0).Year() == 2023 {
+				if rec.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
+					fmt.Printf("%v %v %v\n", rec.GetRecord().GetMetadata().GetDateAdded(), id, rec.GetRecord().GetRelease().GetTitle())
+				}
 			}
 		}
 	case "get_listens":
