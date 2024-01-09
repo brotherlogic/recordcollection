@@ -203,21 +203,27 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	}
 
 	err = nil
-	if updated && !gUpdate {
+	if updated {
 		err = s.saveRecord(ctx, record)
-
-		upup := &rfpb.FanoutRequest{
-			InstanceId: record.GetRelease().GetInstanceId(),
+		if err != nil {
+			return nil, err
 		}
-		data, _ := proto.Marshal(upup)
-		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-			QueueName: "record_fanout",
-			RunTime:   time.Now().Add(time.Second * 10).Unix(),
-			Payload:   &google_protobuf.Any{Value: data},
-			Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
-		})
-		s.CtxLog(ctx, fmt.Sprintf("Updating %v because we updated it (%v)", record.GetRelease().GetInstanceId(), updateReason))
-		queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+
+		if !gUpdate {
+
+			upup := &rfpb.FanoutRequest{
+				InstanceId: record.GetRelease().GetInstanceId(),
+			}
+			data, _ := proto.Marshal(upup)
+			_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+				QueueName: "record_fanout",
+				RunTime:   time.Now().Add(time.Second * 10).Unix(),
+				Payload:   &google_protobuf.Any{Value: data},
+				Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
+			})
+			s.CtxLog(ctx, fmt.Sprintf("Updating %v because we updated it (%v)", record.GetRelease().GetInstanceId(), updateReason))
+			queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+		}
 	}
 
 	if gUpdate {
