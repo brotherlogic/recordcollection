@@ -484,17 +484,19 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	err = s.saveRecord(ctx, rec)
 
-	upup := &rfpb.FanoutRequest{
-		InstanceId: rec.GetRelease().GetInstanceId(),
+	if !request.GetUpdate().GetMetadata().GetNeedsGramUpdate() {
+		upup := &rfpb.FanoutRequest{
+			InstanceId: rec.GetRelease().GetInstanceId(),
+		}
+		data, _ := proto.Marshal(upup)
+		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+			QueueName: "record_fanout",
+			RunTime:   time.Now().Add(time.Minute).Unix(),
+			Payload:   &google_protobuf.Any{Value: data},
+			Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
+		})
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v for some unknown reason (%v)", rec.GetRelease().GetInstanceId(), request))
 	}
-	data, _ := proto.Marshal(upup)
-	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-		QueueName: "record_fanout",
-		RunTime:   time.Now().Add(time.Minute).Unix(),
-		Payload:   &google_protobuf.Any{Value: data},
-		Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
-	})
-	s.CtxLog(ctx, fmt.Sprintf("Updating %v for some unkown reason (%v)", rec.GetRelease().GetInstanceId(), request))
 
 	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 
