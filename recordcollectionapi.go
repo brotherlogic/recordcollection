@@ -484,7 +484,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	err = s.saveRecord(ctx, rec)
 
-	if !request.GetUpdate().GetMetadata().GetNeedsGramUpdate() {
+	if request.GetReason() != "Tripping gram update" {
 		upup := &rfpb.FanoutRequest{
 			InstanceId: rec.GetRelease().GetInstanceId(),
 		}
