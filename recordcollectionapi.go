@@ -495,7 +495,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			Payload:   &google_protobuf.Any{Value: data},
 			Key:       fmt.Sprintf("%v", rec.GetRelease().GetInstanceId()),
 		})
-		s.CtxLog(ctx, fmt.Sprintf("Updating %v for some unknown reason (%v)", rec.GetRelease().GetInstanceId(), request))
+		s.CtxLog(ctx, fmt.Sprintf("Updating %v for some unknown reason (%v) but :%v:", rec.GetRelease().GetInstanceId(), request, request.GetReason()))
 	}
 
 	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
