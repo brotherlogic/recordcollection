@@ -137,8 +137,8 @@ func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID, in
 	return fmt.Errorf("ALL GOOD!")
 }
 
-func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) int64 {
-	return 0
+func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) (int64, error) {
+	return 0, nil
 }
 func (t *testSyncer) GetSalePrice(ctx context.Context, releaseID int) (float32, error) {
 	return 15.5, nil

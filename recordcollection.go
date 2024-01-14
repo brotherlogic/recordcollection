@@ -106,7 +106,7 @@ type saver interface {
 	SetRating(ctx context.Context, releaseID int, rating int) error
 	MoveToFolder(ctx context.Context, folderID, releaseID, instanceID, newFolderID int) (string, error)
 	DeleteInstance(ctx context.Context, folderID, releaseID, instanceID int) error
-	SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) int64
+	SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) (int64, error)
 	GetSalePrice(ctx context.Context, releaseID int) (float32, error)
 	RemoveFromWantlist(ctx context.Context, releaseID int) error
 	AddToWantlist(ctx context.Context, releaseID int) error
