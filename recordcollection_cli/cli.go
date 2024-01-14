@@ -879,7 +879,7 @@ func main() {
 			}
 		}
 	case "twelves":
-		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{242017}})
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{267116}})
 		if err != nil {
 			fmt.Printf("Error %v\n", err)
 		}
@@ -932,6 +932,31 @@ func main() {
 		} else {
 			fmt.Printf("Cannot find record for sleeving\n")
 		}
+	case "listsales":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_LISTED_TO_SELL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			fmt.Printf("%v [%v]\n", r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
+		}
+	case "problems":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_SOLD}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			fmt.Printf("%v %v %v [%v]\n", id, time.Since(time.Unix(r.GetRecord().GetMetadata().GetLastUpdateTime(), 0)), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
+		}
+
 	case "sevensleeve":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_SOFT_VALIDATE}})
 		if err != nil {
