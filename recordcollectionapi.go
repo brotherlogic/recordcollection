@@ -402,6 +402,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			price, _ := s.retr.GetSalePrice(ctx, int(rec.GetRelease().Id))
 			//230 is approx weight of packaging
 			saleid, err := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
+			s.CtxLog(ctx, fmt.Sprintf("Sale return %v and %v", saleid, err))
 			if err != nil {
 				if status.Code(err) == codes.FailedPrecondition {
 					// This item is not allowed to be sold, so set to saleid of 1 to filter it out
