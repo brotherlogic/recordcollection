@@ -403,7 +403,12 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			//230 is approx weight of packaging
 			saleid, err := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
 			if err != nil {
-				return nil, err
+				if status.Code(err) == codes.FailedPrecondition {
+					// This item is not allowed to be sold, so set to saleid of 1 to filter it out
+					saleid = 1
+				} else {
+					return nil, err
+				}
 			}
 			//saleid := 100
 
