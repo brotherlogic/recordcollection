@@ -77,7 +77,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	}
 
 	// Update for sale records every 48 hours
-	if record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE && !gUpdate {
+	if (record.GetMetadata().GetSaleState() == pbgd.SaleState_EXPIRED || record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE) && !gUpdate {
 		// Queue up an update for a month from now
 		upup := &rfpb.FanoutRequest{
 			InstanceId: record.GetRelease().GetInstanceId(),
