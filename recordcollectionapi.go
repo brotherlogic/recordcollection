@@ -100,8 +100,9 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if price > 0 {
 			record.GetMetadata().CurrentSalePrice = int32(price * 100)
 		}
-		record.GetMetadata().SaleState = s.retr.GetCurrentSaleState(ctx, record.GetMetadata().GetSaleId())
-		updated = cp != record.GetMetadata().GetCurrentSalePrice()
+		nss := s.retr.GetCurrentSaleState(ctx, record.GetMetadata().GetSaleId())
+		updated = (cp != record.GetMetadata().GetCurrentSalePrice() || nss != record.GetMetadata().GetSaleState())
+		record.GetMetadata().SaleState = nss
 		s.CtxLog(ctx, fmt.Sprintf("UPDATEDSALESTATE: [%v] => %v", cp, record.GetMetadata()))
 
 	}
