@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 
 	"github.com/andanhm/go-prettytime"
@@ -27,6 +29,7 @@ import (
 	qpb "github.com/brotherlogic/queue/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
 	rfpb "github.com/brotherlogic/recordfanout/proto"
+	pbro "github.com/brotherlogic/recordsorganiser/proto"
 )
 
 type wstr struct {
@@ -150,7 +153,34 @@ func main() {
 				}
 			}
 		}
+	case "all_locations":
+		c2, e2 := utils.LFDialServer(ctx, "recordsorganiser")
+		if e2 != nil {
+			log.Fatalf("Bad: %v", e2)
+		}
+		client := pbro.NewOrganiserServiceClient(c2)
 
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+			location, err := client.Locate(ctx, &pbro.LocateRequest{InstanceId: id})
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					fmt.Printf("%v [UNKNOWN]\n", rec.GetRecord().GetRelease().GetTitle())
+				} else {
+					log.Fatalf("Unable to locate: %v", err)
+				}
+			}
+
+			fmt.Printf("%v [%v]\n", rec.GetRecord().GetRelease().GetTitle(), location.GetFoundLocation().GetName())
+
+		}
 	case "transfer":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
 		ni, _ := strconv.ParseInt(os.Args[3], 10, 32)
@@ -338,6 +368,24 @@ func main() {
 			Release: &pbgd.Release{
 				InstanceId: srec.GetRecord().GetRelease().InstanceId},
 			Metadata: &pbrc.ReleaseMetadata{NewBoxState: pbrc.ReleaseMetadata_OUT_OF_BOX, Dirty: true},
+		}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+	case "wp":
+		i, _ := strconv.Atoi(os.Args[2])
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+
+		if err != nil {
+			log.Fatalf("Error getting record: %v", err)
+		}
+
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-unbox", Update: &pbrc.Record{
+			Release: &pbgd.Release{
+				InstanceId: srec.GetRecord().GetRelease().InstanceId},
+			Metadata: &pbrc.ReleaseMetadata{WasParents: true},
 		}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
@@ -942,7 +990,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			fmt.Printf("%v [%v]\n", r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
+			fmt.Printf("%v %v [%v]\n", id, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
 		}
 	case "problems":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_SOLD}})
@@ -1417,8 +1465,8 @@ func main() {
 			if err != nil {
 				log.Fatalf("bad get record: %v", err)
 			}
-			if rec.GetRecord().GetMetadata().GetKeep() != pbrc.ReleaseMetadata_KEEP_UNKNOWN {
-				fmt.Printf("./gram keep %v %v\n", id, convertKeep(rec.GetRecord().GetMetadata().GetKeep()))
+			if rec.GetRecord().GetMetadata().GetKeep() == pbrc.ReleaseMetadata_NOT_KEEPER {
+				fmt.Printf("./gram keep %v reset\n", id)
 			}
 		}
 	case "get_goal_folders":
