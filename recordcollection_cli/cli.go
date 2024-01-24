@@ -1439,6 +1439,15 @@ func main() {
 				}
 			}
 		}
+	case "all_iids":
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad read: %v", err)
+		}
+
+		for _, id := range recs.GetInstanceIds() {
+			fmt.Printf("%v\n", id)
+		}
 	case "get_listens":
 		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
