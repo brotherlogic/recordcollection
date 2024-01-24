@@ -31,6 +31,7 @@ func (s *Server) GetInventory(ctx context.Context, req *pb.GetInventoryRequest) 
 
 // CommitRecord runs through the record process stuff
 func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordRequest) (*pb.CommitRecordResponse, error) {
+	added := false
 	record, err := s.loadRecord(ctx, request.GetInstanceId(), false)
 	updated := false
 	if err != nil {
@@ -93,6 +94,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if err != nil {
 			return nil, err
 		}
+		added = true
 
 		// Update the sale price
 		cp := record.GetMetadata().GetCurrentSalePrice()
@@ -169,6 +171,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if err != nil {
 			return nil, err
 		}
+		added = true
 
 		res := s.retr.DeleteInstance(ctx, int(record.GetRelease().GetFolderId()), int(record.GetRelease().GetId()), int(request.GetInstanceId()))
 		s.CtxLog(ctx, fmt.Sprintf("Deleted from collection: %v", res))
@@ -226,7 +229,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 		}
 	} else {
-		if !gUpdate {
+		if !gUpdate && !added {
 			upup := &rfpb.FanoutRequest{
 				InstanceId: record.GetRelease().GetInstanceId(),
 			}
