@@ -35,6 +35,7 @@ type RecordCollectionServiceClient interface {
 	CommitRecord(ctx context.Context, in *CommitRecordRequest, opts ...grpc.CallOption) (*CommitRecordResponse, error)
 	GetPrice(ctx context.Context, in *GetPriceRequest, opts ...grpc.CallOption) (*GetPriceResponse, error)
 	GetInventory(ctx context.Context, in *GetInventoryRequest, opts ...grpc.CallOption) (*GetInventoryResponse, error)
+	DeleteSale(ctx context.Context, in *DeleteSaleRequest, opts ...grpc.CallOption) (*DeleteSaleResponse, error)
 }
 
 type recordCollectionServiceClient struct {
@@ -162,6 +163,15 @@ func (c *recordCollectionServiceClient) GetInventory(ctx context.Context, in *Ge
 	return out, nil
 }
 
+func (c *recordCollectionServiceClient) DeleteSale(ctx context.Context, in *DeleteSaleRequest, opts ...grpc.CallOption) (*DeleteSaleResponse, error) {
+	out := new(DeleteSaleResponse)
+	err := c.cc.Invoke(ctx, "/recordcollection.RecordCollectionService/DeleteSale", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // RecordCollectionServiceServer is the server API for RecordCollectionService service.
 // All implementations should embed UnimplementedRecordCollectionServiceServer
 // for forward compatibility
@@ -179,6 +189,7 @@ type RecordCollectionServiceServer interface {
 	CommitRecord(context.Context, *CommitRecordRequest) (*CommitRecordResponse, error)
 	GetPrice(context.Context, *GetPriceRequest) (*GetPriceResponse, error)
 	GetInventory(context.Context, *GetInventoryRequest) (*GetInventoryResponse, error)
+	DeleteSale(context.Context, *DeleteSaleRequest) (*DeleteSaleResponse, error)
 }
 
 // UnimplementedRecordCollectionServiceServer should be embedded to have forward compatible implementations.
@@ -223,6 +234,9 @@ func (UnimplementedRecordCollectionServiceServer) GetPrice(context.Context, *Get
 }
 func (UnimplementedRecordCollectionServiceServer) GetInventory(context.Context, *GetInventoryRequest) (*GetInventoryResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetInventory not implemented")
+}
+func (UnimplementedRecordCollectionServiceServer) DeleteSale(context.Context, *DeleteSaleRequest) (*DeleteSaleResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSale not implemented")
 }
 
 // UnsafeRecordCollectionServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -470,6 +484,24 @@ func _RecordCollectionService_GetInventory_Handler(srv interface{}, ctx context.
 	return interceptor(ctx, in, info, handler)
 }
 
+func _RecordCollectionService_DeleteSale_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSaleRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(RecordCollectionServiceServer).DeleteSale(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/recordcollection.RecordCollectionService/DeleteSale",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(RecordCollectionServiceServer).DeleteSale(ctx, req.(*DeleteSaleRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // RecordCollectionService_ServiceDesc is the grpc.ServiceDesc for RecordCollectionService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -528,6 +560,10 @@ var RecordCollectionService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetInventory",
 			Handler:    _RecordCollectionService_GetInventory_Handler,
+		},
+		{
+			MethodName: "DeleteSale",
+			Handler:    _RecordCollectionService_DeleteSale_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

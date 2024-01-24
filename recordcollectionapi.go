@@ -20,6 +20,21 @@ import (
 	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
 
+func (s *Server) DeleteSale(ctx context.Context, req *pb.DeleteSaleRequest) (*pb.DeleteSaleResponse, error) {
+	sales, err := s.retr.GetInventory(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, sale := range sales {
+		if sale.GetSaleId() == req.GetSaleId() {
+			err = s.retr.ExpireSale(ctx, int(sale.GetSaleId()), int(sale.GetId()), float32(sale.GetSalePrice())/100.0)
+		}
+	}
+
+	return &pb.DeleteSaleResponse{}, nil
+}
+
 func (s *Server) GetInventory(ctx context.Context, req *pb.GetInventoryRequest) (*pb.GetInventoryResponse, error) {
 	inventory, err := s.retr.GetInventory(ctx)
 	if err != nil {

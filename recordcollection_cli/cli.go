@@ -95,9 +95,18 @@ func main() {
 			log.Fatalf("Unable to get inventory: %v", err)
 		}
 		for _, item := range items.GetItems() {
-			td := time.Unix(item.GetDatePosted(), 0)
-			if time.Since(td) > time.Hour*24*7 && item.SalePrice <= 500 {
-				fmt.Printf("%v - %v\n", item.GetId(), td)
+			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{item.GetId()}})
+			if err != nil {
+				fmt.Printf("Error %v\n", err)
+			}
+			for _, id := range ids.GetInstanceIds() {
+				rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+				if rec.GetRecord().GetMetadata().GetSaleId() != item.GetSaleId() {
+					fmt.Printf("%v is a bad sale id for %v\n", item.GetSaleId(), id)
+				}
 			}
 		}
 

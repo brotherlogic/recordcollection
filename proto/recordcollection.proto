@@ -509,7 +509,14 @@ service RecordCollectionService {
   rpc CommitRecord(CommitRecordRequest) returns (CommitRecordResponse) {};
   rpc GetPrice(GetPriceRequest) returns (GetPriceResponse) {};
   rpc GetInventory(GetInventoryRequest) returns (GetInventoryResponse) {};
+  rpc DeleteSale(DeleteSaleRequest) returns (DeleteSaleResponse) {};
 }
+
+message DeleteSaleRequest {
+  int64 sale_id = 1;
+}
+
+message DeleteSaleResponse {}
 
 message GetInventoryRequest {}
 message GetInventoryResponse {
