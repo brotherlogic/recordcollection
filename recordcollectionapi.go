@@ -250,10 +250,11 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			}
 			data, _ := proto.Marshal(upup)
 			_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-				QueueName: "record_fanout",
-				RunTime:   time.Now().Add(time.Hour * 24 * 7).Unix(),
-				Payload:   &google_protobuf.Any{Value: data},
-				Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
+				QueueName:       "record_fanout",
+				RunTime:         time.Now().Add(time.Hour * 24 * 7).Unix(),
+				Payload:         &google_protobuf.Any{Value: data},
+				Key:             fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
+				AddIfNotPresent: true,
 			})
 			s.CtxLog(ctx, fmt.Sprintf("Updating %v in 24 hours because we did not update it (%v)", record.GetRelease().GetInstanceId(), updateReason))
 		}
