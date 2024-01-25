@@ -105,7 +105,12 @@ func main() {
 					log.Fatalf("Error: %v", err)
 				}
 				if rec.GetRecord().GetMetadata().GetSaleId() != item.GetSaleId() {
-					fmt.Printf("%v is a bad sale id for %v\n", item.GetSaleId(), id)
+					_, err := registry.DeleteSale(ctx, &pbrc.DeleteSaleRequest{SaleId: item.GetSaleId()})
+					fmt.Printf("%v is a bad sale id for %v -> %v\n", item.GetSaleId(), id, err)
+					if err != nil && status.Code(err) != codes.ResourceExhausted {
+						log.Fatalf("%v", err)
+					}
+					time.Sleep(time.Second * 10)
 				}
 			}
 		}

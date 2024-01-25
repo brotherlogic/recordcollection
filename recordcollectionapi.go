@@ -244,7 +244,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
 		}
 	} else {
-		if !gUpdate && !added {
+		/*if !gUpdate && !added {
 			upup := &rfpb.FanoutRequest{
 				InstanceId: record.GetRelease().GetInstanceId(),
 			}
@@ -256,7 +256,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 				Key:       fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 			})
 			s.CtxLog(ctx, fmt.Sprintf("Updating %v in 24 hours because we did not update it (%v)", record.GetRelease().GetInstanceId(), updateReason))
-		}
+		}*/
 	}
 
 	if gUpdate {
