@@ -94,7 +94,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Unable to get inventory: %v", err)
 		}
-		for _, item := range items.GetItems() {
+		for i, item := range items.GetItems() {
 			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{item.GetId()}})
 			if err != nil {
 				fmt.Printf("Error %v\n", err)
@@ -106,7 +106,7 @@ func main() {
 				}
 				if rec.GetRecord().GetMetadata().GetSaleId() != item.GetSaleId() {
 					_, err := registry.DeleteSale(ctx, &pbrc.DeleteSaleRequest{SaleId: item.GetSaleId()})
-					fmt.Printf("%v is a bad sale id for %v -> %v\n", item.GetSaleId(), id, err)
+					fmt.Printf("%v (%v / %v) is a bad sale id for %v -> %v\n", item.GetSaleId(), i, len(items.GetItems()), id, err)
 					if err != nil && status.Code(err) != codes.ResourceExhausted {
 						log.Fatalf("%v", err)
 					}
