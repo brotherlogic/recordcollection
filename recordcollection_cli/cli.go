@@ -831,6 +831,21 @@ func main() {
 				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 			}
 		}
+	case "pvc":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_VALIDATE}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{
+				Reason: "Resetting PV",
+				Update: &pbrc.Record{
+					Release:  &pbgd.Release{InstanceId: id},
+					Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_IN_COLLECTION},
+				},
+			})
+			fmt.Printf("%v. %v - %v\n", i, id, err)
+		}
 	case "scorepic":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_IN_COLLECTION}})
 		if err != nil {
