@@ -537,8 +537,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	//Reset the update in value
 	rec.GetMetadata().LastUpdateIn = time.Now().Unix()
 
-	s.CtxLog(ctx, fmt.Sprintf("Saving with metada: %v -> %v", rec.GetRelease().GetInstanceId(), rec.GetMetadata()))
 	err = s.saveRecord(ctx, rec)
+	s.CtxLog(ctx, fmt.Sprintf("Saving with metada: %v [%v]-> %v", rec.GetRelease().GetInstanceId(), err, rec.GetMetadata()))
 
 	if request.GetReason() != "Tripping gram update" {
 		upup := &rfpb.FanoutRequest{
