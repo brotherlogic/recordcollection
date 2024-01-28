@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -18,6 +19,13 @@ import (
 	pb "github.com/brotherlogic/recordcollection/proto"
 	rfpb "github.com/brotherlogic/recordfanout/proto"
 	google_protobuf "github.com/golang/protobuf/ptypes/any"
+)
+
+var (
+	updateCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "recordcollection_update",
+		Help: "Push Size",
+	}, []string{"reason"})
 )
 
 func (s *Server) DeleteSale(ctx context.Context, req *pb.DeleteSaleRequest) (*pb.DeleteSaleResponse, error) {
@@ -338,6 +346,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	if request.GetReason() == "" {
 		return nil, fmt.Errorf("you must supply a reason")
 	}
+
+	updateCount.With(prometheus.Labels{"reason": request.GetReason()}).Inc()
 
 	if request.GetUpdate().GetRelease().GetId() > 0 {
 		// Allow release id adjustment
