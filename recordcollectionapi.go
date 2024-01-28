@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	updateCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
+	updateCount = promauto.NewCounterVec(prometheus.CounterOpts{
 		Name: "recordcollection_update",
 		Help: "Push Size",
 	}, []string{"reason"})
