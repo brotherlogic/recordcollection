@@ -713,6 +713,9 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	}
 
 	rec, err := s.loadRecord(ctx, req.InstanceId, req.GetValidate())
+	if rec.GetRelease().GetInstanceId() == 365221500 {
+		s.CtxLog(ctx, fmt.Sprintf("READ %v", rec))
+	}
 
 	if err != nil {
 

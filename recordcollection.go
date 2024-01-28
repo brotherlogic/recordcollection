@@ -428,6 +428,9 @@ func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.R
 	}
 
 	recordToReturn := data.(*pb.Record)
+	if id == 365221500 {
+		s.CtxLog(ctx, fmt.Sprintf("RAW %v", recordToReturn))
+	}
 
 	// Let's make sure this is in the folder map
 	if validate {
