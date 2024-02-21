@@ -635,7 +635,11 @@ func (s *Server) updateSale(ctx context.Context, iid int32) error {
 				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(ctx, (r.GetMetadata().SaleId)) * 100)
 			}
 			if r.GetMetadata().SaleId > 1 && r.GetMetadata().SaleState != pbgd.SaleState_SOLD {
-				r.GetMetadata().SaleState = s.retr.GetCurrentSaleState(ctx, (r.GetMetadata().SaleId))
+				state, err := s.retr.GetCurrentSaleState(ctx, (r.GetMetadata().SaleId))
+				if err != nil {
+					return err
+				}
+				r.GetMetadata().SaleState = state
 			}
 			return s.saveRecord(ctx, r)
 		}
