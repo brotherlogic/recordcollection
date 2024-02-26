@@ -344,6 +344,34 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	updateCount.With(prometheus.Labels{"reason": request.GetReason()}).Inc()
 
+	// Run a sale udpate
+	if request.GetUpdate().GetMetadata().GetSaleId() > 0 && request.GetUpdate().GetRelease().GetInstanceId() == 0 {
+		collection, err := s.readRecordCollection(ctx)
+		if err != nil {
+			return nil, err
+		}
+		for iid, _ := range collection.GetInstanceToLastSalePriceUpdate() {
+			r, err := s.loadRecord(ctx, iid, false)
+			if err != nil {
+				return nil, err
+			}
+			if r.GetMetadata().GetSaleId() == request.GetUpdate().GetMetadata().GetSaleId() {
+				upup := &rfpb.FanoutRequest{
+					InstanceId: r.GetRelease().GetInstanceId(),
+				}
+				data, _ := proto.Marshal(upup)
+				_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+					QueueName: "record_fanout",
+					RunTime:   time.Now().Add(time.Minute).Unix(),
+					Payload:   &google_protobuf.Any{Value: data},
+					Key:       fmt.Sprintf("%v", r.GetRelease().GetInstanceId()),
+				})
+				return &pb.UpdateRecordsResponse{}, err
+			}
+		}
+		return nil, status.Errorf(codes.NotFound, "Could not find sale: %v", request)
+	}
+
 	if request.GetUpdate().GetRelease().GetId() > 0 {
 		// Allow release id adjustment
 		if request.GetUpdate().GetRelease().GetInstanceId() > 0 {
