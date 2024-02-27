@@ -353,7 +353,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		for iid, _ := range collection.GetInstanceToLastSalePriceUpdate() {
 			r, err := s.loadRecord(ctx, iid, false)
 			if err != nil {
-				return nil, err
+				if status.Code(err) != codes.OutOfRange {
+					return nil, err
+				}
 			}
 			if r.GetMetadata().GetSaleId() == request.GetUpdate().GetMetadata().GetSaleId() {
 				upup := &rfpb.FanoutRequest{
