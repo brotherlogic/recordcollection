@@ -350,25 +350,27 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		if err != nil {
 			return nil, err
 		}
-		for iid, _ := range collection.GetInstanceToLastSalePriceUpdate() {
-			r, err := s.loadRecord(ctx, iid, false)
-			if err != nil {
-				if status.Code(err) != codes.OutOfRange {
-					return nil, err
+		for iid, cat := range collection.GetInstanceToCategory() {
+			if cat == pb.ReleaseMetadata_LISTED_TO_SELL {
+				r, err := s.loadRecord(ctx, iid, false)
+				if err != nil {
+					if status.Code(err) != codes.OutOfRange {
+						return nil, err
+					}
 				}
-			}
-			if r.GetMetadata().GetSaleId() == request.GetUpdate().GetMetadata().GetSaleId() {
-				upup := &rfpb.FanoutRequest{
-					InstanceId: r.GetRelease().GetInstanceId(),
+				if r.GetMetadata().GetSaleId() == request.GetUpdate().GetMetadata().GetSaleId() {
+					upup := &rfpb.FanoutRequest{
+						InstanceId: r.GetRelease().GetInstanceId(),
+					}
+					data, _ := proto.Marshal(upup)
+					_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+						QueueName: "record_fanout",
+						RunTime:   time.Now().Add(time.Minute).Unix(),
+						Payload:   &google_protobuf.Any{Value: data},
+						Key:       fmt.Sprintf("%v", r.GetRelease().GetInstanceId()),
+					})
+					return &pb.UpdateRecordsResponse{}, err
 				}
-				data, _ := proto.Marshal(upup)
-				_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-					QueueName: "record_fanout",
-					RunTime:   time.Now().Add(time.Minute).Unix(),
-					Payload:   &google_protobuf.Any{Value: data},
-					Key:       fmt.Sprintf("%v", r.GetRelease().GetInstanceId()),
-				})
-				return &pb.UpdateRecordsResponse{}, err
 			}
 		}
 		return nil, status.Errorf(codes.NotFound, "Could not find sale: %v", request)
