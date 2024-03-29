@@ -66,29 +66,6 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
-	case "find_digital":
-		items, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
-		if err != nil {
-			log.Fatalf("Unable to get all records: %v", err)
-		}
-		for _, item := range items.GetInstanceIds() {
-			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: item})
-			if err != nil {
-				log.Fatalf("Bad records: %v", err)
-			}
-			if rec.Record.GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL {
-				found := false
-				for _, form := range rec.GetRecord().GetRelease().GetFormats() {
-					if form.GetName() == "File" {
-						found = true
-					}
-				}
-				if !found {
-					fmt.Printf("%v -> %v / %v\n", rec.Record.GetRelease().GetInstanceId(), rec.GetRecord().Release.GetArtists(), rec.GetRecord().GetRelease().GetTitle())
-					return
-				}
-			}
-		}
 	case "sales":
 		items, err := registry.GetInventory(ctx, &pbrc.GetInventoryRequest{})
 		if err != nil {
@@ -112,6 +89,22 @@ func main() {
 					}
 					time.Sleep(time.Second * 10)
 				}
+			}
+		}
+	case "find_digital":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{int32(242017)}})
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad: %v", err)
+			}
+
+			if r.GetRecord().GetMetadata().GetKeep() == pbrc.ReleaseMetadata_DIGITAL_KEEPER && len(r.GetRecord().GetRelease().GetDigitalVersions()) > 0 {
+				fmt.Printf("%v - %v\n", id, r.GetRecord().GetRelease().GetTitle())
+				return
 			}
 		}
 
@@ -167,6 +160,22 @@ func main() {
 				}
 			}
 		}
+	case "budgetf":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Bad read: %v", err)
+			}
+
+			if rec.Record.GetMetadata().GetPurchaseBudget() == "float2024" {
+				fmt.Printf("%v - %v\n", rec.GetRecord().GetMetadata().GetCost(), rec.GetRecord().GetRelease().GetTitle())
+			}
+		}
+
 	case "all_locations":
 		c2, e2 := utils.LFDialServer(ctx, "recordsorganiser")
 		if e2 != nil {
@@ -422,8 +431,29 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
-		fmt.Printf("Updated: %v", rec)
+		fmt.Printf("Sold: %v - %v\n", i, rec.GetUpdated().GetRelease().GetTitle())
+	case "sale_cull":
+		i, _ := strconv.Atoi(os.Args[2])
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{int32(i)}})
+		if err != nil {
+			log.Fatalf("Error getting record: %v", err)
+		}
 
+		for _, id := range ids.GetInstanceIds() {
+			srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("Error getting record: %v", err)
+			}
+			if srec.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
+
+				up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: srec.GetRecord().GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1}}}
+				rec, err := registry.UpdateRecord(ctx, up)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+				fmt.Printf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())
+			}
+		}
 	case "validate":
 		i, _ := strconv.Atoi(os.Args[2])
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
