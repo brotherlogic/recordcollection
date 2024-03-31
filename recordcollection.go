@@ -304,11 +304,6 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		return fmt.Errorf("No goal folder")
 	}
 
-	if r.GetMetadata().GetSaleId() < 0 && r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL {
-		code, err := utils.GetContextKey(ctx)
-		s.RaiseIssue(fmt.Sprintf("Bad Sale ID for %v", r.GetRelease().GetInstanceId()), fmt.Sprintf("%v - %v", code, err))
-	}
-
 	if r.GetRelease().GetInstanceId() == 365221500 {
 		s.CtxLog(ctx, fmt.Sprintf("SAVE %v", r.GetMetadata()))
 	}
