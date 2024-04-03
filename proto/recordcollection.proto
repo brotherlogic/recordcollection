@@ -512,6 +512,14 @@ service RecordCollectionService {
   rpc DeleteSale(DeleteSaleRequest) returns (DeleteSaleResponse) {};
 }
 
+message GetSalesRequest {
+  bool all = 1;
+}
+
+message GetSalesResponse {
+  repeated int64 sale_id = 1;
+}
+
 message DeleteSaleRequest {
   int64 sale_id = 1;
 }

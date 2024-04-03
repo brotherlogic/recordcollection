@@ -72,6 +72,7 @@ func main() {
 			log.Fatalf("Unable to get inventory: %v", err)
 		}
 		for i, item := range items.GetItems() {
+			fmt.Printf("Checking %v\n", item.GetId())
 			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{item.GetId()}})
 			if err != nil {
 				fmt.Printf("Error %v\n", err)
@@ -81,9 +82,10 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error: %v", err)
 				}
+				fmt.Printf(" Found %v\n", rec.GetRecord().GetRelease().GetTitle())
 				if rec.GetRecord().GetMetadata().GetSaleId() != item.GetSaleId() {
 					_, err := registry.DeleteSale(ctx, &pbrc.DeleteSaleRequest{SaleId: item.GetSaleId()})
-					fmt.Printf("%v (%v / %v) is a bad sale id for %v -> %v\n", item.GetSaleId(), i, len(items.GetItems()), id, err)
+					fmt.Printf("  %v (%v / %v) is a bad sale id for %v -> %v\n", item.GetSaleId(), i, len(items.GetItems()), id, err)
 					if err != nil && status.Code(err) != codes.ResourceExhausted {
 						log.Fatalf("%v", err)
 					}
@@ -426,7 +428,7 @@ func main() {
 			log.Fatalf("Error getting record: %v", err)
 		}
 
-		up := &pbrc.UpdateRecordRequest{Reason: "CLI-stock", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: srec.GetRecord().GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(price), SoldDate: int64(date)}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-stock", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: srec.GetRecord().GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{SaleId: -1, SoldPrice: int32(price), SoldDate: int64(date)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)

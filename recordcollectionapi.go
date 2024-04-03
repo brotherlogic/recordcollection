@@ -336,6 +336,10 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	return &pb.UpdateWantResponse{}, err
 }
 
+func (s *Server) GetSalesRequest(ctx context.Context, request *pb.GetSalesRequest) (*pb.GetSalesResponse, error) {
+	res, err := s.retr.Get
+}
+
 // UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	if request.GetReason() == "" {
