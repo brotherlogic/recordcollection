@@ -124,8 +124,8 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if price > 0 {
 			record.GetMetadata().CurrentSalePrice = int32(price * 100)
 		}
-		nss := s.retr.GetCurrentSaleState(ctx, record.GetMetadata().GetSaleId())
-		s.CtxLog(ctx, fmt.Sprintf("SALE %v From %v -> %v", request.GetInstanceId(), record.GetMetadata().SaleState, nss))
+		nss, err  := s.retr.GetCurrentSaleState(ctx, record.GetMetadata().GetSaleId())
+		s.CtxLog(ctx, fmt.Sprintf("SALE %v From %v -> %v (%v)", request.GetInstanceId(), record.GetMetadata().SaleState, nss, err))
 		updated = (cp != record.GetMetadata().GetCurrentSalePrice() || nss != record.GetMetadata().GetSaleState())
 		record.GetMetadata().SaleState = nss
 		s.CtxLog(ctx, fmt.Sprintf("UPDATEDSALESTATE: [%v] => %v", cp, record.GetMetadata()))
@@ -335,6 +335,7 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	}
 	return &pb.UpdateWantResponse{}, err
 }
+
 
 // UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {

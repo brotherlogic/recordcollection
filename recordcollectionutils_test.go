@@ -161,8 +161,8 @@ func (t *testSyncer) GetCurrentSalePrice(ctx context.Context, saleID int64) floa
 	return 12.34
 }
 
-func (t *testSyncer) GetCurrentSaleState(ctx context.Context, saleID int64) pbgd.SaleState {
-	return pbgd.SaleState_FOR_SALE
+func (t *testSyncer) GetCurrentSaleState(ctx context.Context, saleID int64) (pbgd.SaleState, error) {
+	return pbgd.SaleState_FOR_SALE, nil
 }
 
 func TestUpdateWantWithPush(t *testing.T) {
