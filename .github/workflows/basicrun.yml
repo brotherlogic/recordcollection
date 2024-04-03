@@ -17,7 +17,7 @@ jobs:
     - name: Setup Go
       uses: actions/setup-go@v2
       with:
-        go-version: '1.19.2'
+        go-version: '1.22'
    
     - name: Check for logs
       run: ./look_for_logs.sh
