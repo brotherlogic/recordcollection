@@ -7,7 +7,7 @@ toolchain go1.22.1
 require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/brotherlogic/dstore v0.0.0-20240213113129-6ba7a68ec1dd
-	github.com/brotherlogic/godiscogs v0.0.0-20240403140054-ab28474c9596
+	github.com/brotherlogic/godiscogs v0.0.0-20240403143827-f1692f7a0410
 	github.com/brotherlogic/goserver v0.0.0-20240303220030-80da220f0393
 	github.com/brotherlogic/keystore v0.0.0-20240328162824-66cac326ee10
 	github.com/brotherlogic/queue v0.0.0-20240313234054-d4c43c06b429
