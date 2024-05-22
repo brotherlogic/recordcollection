@@ -396,7 +396,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 			}
 
 			_, err = s.retr.MoveToFolder(ctx, int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
-			if err != nil {
+			if err != nil && status.Code(err) != codes.ResourceExhausted {
 				s.RaiseIssue("Move Failure", fmt.Sprintf("%v -> %v", r.GetRelease().GetInstanceId(), err))
 
 				//We need to clear the move to allow it to change
@@ -635,11 +635,11 @@ func (s *Server) updateSale(ctx context.Context, iid int32) error {
 				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(ctx, (r.GetMetadata().SaleId)) * 100)
 			}
 			if r.GetMetadata().SaleId > 1 && r.GetMetadata().SaleState != pbgd.SaleState_SOLD {
-				 v, err := s.retr.GetCurrentSaleState(ctx, (r.GetMetadata().SaleId))
-				 if err != nil {
+				v, err := s.retr.GetCurrentSaleState(ctx, (r.GetMetadata().SaleId))
+				if err != nil {
 					return err
-				 }
-				 r.GetMetadata().SaleState = v
+				}
+				r.GetMetadata().SaleState = v
 			}
 			return s.saveRecord(ctx, r)
 		}
