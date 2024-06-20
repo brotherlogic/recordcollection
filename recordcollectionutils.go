@@ -550,6 +550,11 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 		if err == nil {
 			r.GetMetadata().WeightInGrams = int32(val)
 		}
+
+		if mp[r.GetRelease().GetInstanceId()].Arrived > 0 && r.GetMetadata().GetDateArrived() == 0 {
+			r.GetMetadata().DateArrived = mp[r.GetRelease().GetInstanceId()].Arrived
+		}
+
 	} else {
 		return err
 	}
