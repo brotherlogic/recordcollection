@@ -1,8 +1,10 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"math"
 	"os"
@@ -14,6 +16,7 @@ import (
 	"github.com/brotherlogic/goserver/utils"
 
 	pbgd "github.com/brotherlogic/godiscogs/proto"
+	pbg "github.com/brotherlogic/gramophile/proto"
 	qpb "github.com/brotherlogic/queue/proto"
 	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
@@ -23,10 +26,36 @@ import (
 	ro "github.com/brotherlogic/recordsorganiser/sales"
 	google_protobuf "github.com/golang/protobuf/ptypes/any"
 
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 )
+
+func buildContext() (context.Context, context.CancelFunc, error) {
+	dirname, err := os.UserHomeDir()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	text, err := ioutil.ReadFile(fmt.Sprintf("%v/.gramophile", dirname))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	user := &pbg.GramophileAuth{}
+	err = prototext.Unmarshal(text, user)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	mContext := metadata.AppendToOutgoingContext(context.Background(), "auth-token", user.GetToken())
+	ctx, cancel := context.WithTimeout(mContext, time.Minute*60)
+	return ctx, cancel, nil
+}
 
 func main() {
 	ctx, cancel := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Hour)
@@ -41,6 +70,93 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
+	case "run_sales":
+		mctx, mcancel, err := buildContext()
+		defer mcancel()
+		conn, err := grpc.Dial("gramophile-grpc.brotherlogic-backend.com:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		client := pbg.NewGramophileEServiceClient(conn)
+
+		sales, err := client.GetSale(mctx, &pbg.GetSaleRequest{MinMedian: 1})
+		if err != nil {
+			log.Fatalf("Bad get sale: %v", err)
+		}
+
+		var saleids []int64
+		for _, sale := range sales.GetSales() {
+			lowdate := time.Now().Add(time.Hour).UnixNano()
+			for _, hist := range sale.GetUpdates() {
+				if hist.GetSetPrice().GetValue() == sale.GetLowPrice().GetValue() {
+					if hist.GetDate() < lowdate {
+						lowdate = hist.GetDate()
+					}
+				}
+			}
+			if time.Since(time.Unix(0, lowdate)) > time.Hour*24*7 {
+				saleids = append(saleids, sale.GetReleaseId())
+			}
+		}
+
+		fmt.Printf("Found %v eligible sales\n", len(saleids))
+
+		var records []*pbrc.Record
+		for _, i := range saleids {
+			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ReleaseId{int32(i)}})
+			if err != nil {
+				log.Fatalf("Error getting record: %v", err)
+			}
+
+			for _, id := range ids.GetInstanceIds() {
+				srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Bad get record: %v", err)
+				}
+
+				if srec.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
+					records = append(records, srec.GetRecord())
+				}
+			}
+		}
+
+		fmt.Printf("Found %v 12 inches\n", len(records))
+
+		// Sort these by sale price
+		sort.SliceStable(records, func(i, j int) bool {
+			return records[i].GetMetadata().GetCurrentSalePrice() < records[j].GetMetadata().GetCurrentSalePrice()
+		})
+
+		//Get the width we need to get
+		conn, err = utils.LFDialServer(ctx, "recordsorganiser")
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		oc := ropb.NewOrganiserServiceClient(conn)
+		elems, err := oc.GetOrganisation(ctx, &ropb.GetOrganisationRequest{
+			Locations: []*ropb.Location{{Name: "12 Inches"}},
+		})
+		if err != nil {
+			log.Fatalf("Bad request: %v", err)
+		}
+
+		totalWidth := float32(0)
+		for _, elem := range elems.GetLocations()[0].GetReleasesLocation() {
+			if elem.GetSlot() == 4 {
+				totalWidth += elem.GetDeterminedWidth()
+			}
+		}
+		fmt.Printf("Selling %vmm of records\n", totalWidth)
+
+		cWidth := float32(0)
+		for _, r := range records {
+			if cWidth > totalWidth {
+				break
+			}
+
+			fmt.Printf("SELL %v\n", r.GetRelease().GetTitle())
+			cWidth += r.GetMetadata().GetRecordWidth()
+		}
 	case "the_fall":
 		all, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
