@@ -203,7 +203,7 @@ func main() {
 				}
 			}
 
-			fmt.Printf("%v [%v]\n", rec.GetRecord().GetRelease().GetTitle(), location.GetFoundLocation().GetName())
+			fmt.Printf("%v %v [%v]\n", rec.GetRecord().GetRelease().GetId(), rec.GetRecord().GetRelease().GetTitle(), location.GetFoundLocation().GetName())
 
 		}
 	case "transfer":

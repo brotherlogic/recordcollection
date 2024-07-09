@@ -546,6 +546,11 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 			panic(fmt.Sprintf("UNKNOWN KEEP STATE: %v", mp[r.GetRelease().GetInstanceId()].Keep))
 		}
 
+		if r.GetMetadata().GetDateArrived() == 0 && mp[r.GetRelease().GetInstanceId()].Arrived > 0 {
+			r.GetMetadata().DateArrived = mp[r.GetRelease().GetInstanceId()].Arrived
+
+		}
+
 		val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Weight, 32)
 		if err == nil {
 			r.GetMetadata().WeightInGrams = int32(val)
