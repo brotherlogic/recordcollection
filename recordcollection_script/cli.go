@@ -79,7 +79,8 @@ func main() {
 		}
 		client := pbg.NewGramophileEServiceClient(conn)
 
-		sales, err := client.GetSale(mctx, &pbg.GetSaleRequest{MinMedian: 1})
+		// Get all active sales
+		sales, err := client.GetSale(mctx, &pbg.GetSaleRequest{MinMedian: -1})
 		if err != nil {
 			log.Fatalf("Bad get sale: %v", err)
 		}
@@ -88,13 +89,13 @@ func main() {
 		for _, sale := range sales.GetSales() {
 			lowdate := time.Now().Add(time.Hour).UnixNano()
 			for _, hist := range sale.GetUpdates() {
-				if hist.GetSetPrice().GetValue() == sale.GetLowPrice().GetValue() {
+				if hist.GetSetPrice().GetValue() == sale.GetMedianPrice().GetValue() {
 					if hist.GetDate() < lowdate {
 						lowdate = hist.GetDate()
 					}
 				}
 			}
-			if time.Since(time.Unix(0, lowdate)) > time.Hour*24*7 {
+			if time.Since(time.Unix(0, lowdate)) > time.Hour*24 {
 				saleids = append(saleids, sale.GetReleaseId())
 			}
 		}
@@ -155,6 +156,18 @@ func main() {
 			}
 
 			fmt.Printf("SELL %v\n", r.GetRelease().GetTitle())
+
+			if len(os.Args) > 2 && os.Args[2] == "sell" {
+				up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{
+					Release:  &pbgd.Release{InstanceId: r.GetRelease().InstanceId},
+					Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1}}}
+				rec, err := registry.UpdateRecord(ctx, up)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+				fmt.Printf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())
+			}
+
 			cWidth += r.GetMetadata().GetRecordWidth()
 		}
 	case "the_fall":
