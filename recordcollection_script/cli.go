@@ -80,7 +80,7 @@ func main() {
 		}
 		client := pbg.NewGramophileEServiceClient(conn)
 
-		sales, err := client.GetSale(mctx, &pbg.GetSaleRequest{MinMedian: 1})
+		sales, err := client.GetSale(mctx, &pbg.GetSaleRequest{MinMedian: -1})
 		if err != nil {
 			log.Fatalf("Bad get sale: %v", err)
 		}
@@ -159,6 +159,13 @@ func main() {
 
 			fmt.Printf("SELL %v (%v)\n", r.GetRelease().GetTitle(), r.GetMetadata().GetCurrentSalePrice())
 			cWidth += r.GetMetadata().GetRecordWidth()
+			up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1}}}
+			rec, err := registry.UpdateRecord(ctx, up)
+			if err != nil {
+				log.Fatalf("Error: %v", err)
+			}
+			fmt.Printf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())
+			return
 		}
 		fmt.Printf("Sold %v / %v mm of records (%v/%v in total)\n", cWidth, totalWidth, count, len(records))
 	case "the_fall":
