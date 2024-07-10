@@ -15,6 +15,7 @@ import (
 
 	"github.com/brotherlogic/goserver/utils"
 
+	pbd "github.com/brotherlogic/discogs/proto"
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbg "github.com/brotherlogic/gramophile/proto"
 	qpb "github.com/brotherlogic/queue/proto"
@@ -88,13 +89,13 @@ func main() {
 		for _, sale := range sales.GetSales() {
 			lowdate := time.Now().Add(time.Hour).UnixNano()
 			for _, hist := range sale.GetUpdates() {
-				if hist.GetSetPrice().GetValue() == sale.GetLowPrice().GetValue() {
+				if hist.GetSetPrice().GetValue() == sale.MedianPrice.GetValue() {
 					if hist.GetDate() < lowdate {
 						lowdate = hist.GetDate()
 					}
 				}
 			}
-			if time.Since(time.Unix(0, lowdate)) > time.Hour*24*7 {
+			if time.Since(time.Unix(0, lowdate)) > time.Hour*24 && sale.GetSaleState() == pbd.SaleStatus_FOR_SALE {
 				saleids = append(saleids, sale.GetReleaseId())
 			}
 		}
@@ -134,7 +135,7 @@ func main() {
 		}
 		oc := ropb.NewOrganiserServiceClient(conn)
 		elems, err := oc.GetOrganisation(ctx, &ropb.GetOrganisationRequest{
-			Locations: []*ropb.Location{{Name: "12 Inches"}},
+			Locations: []*ropb.Location{{Name: "12 Inch Sales"}},
 		})
 		if err != nil {
 			log.Fatalf("Bad request: %v", err)
@@ -149,14 +150,17 @@ func main() {
 		fmt.Printf("Selling %vmm of records\n", totalWidth)
 
 		cWidth := float32(0)
+		count := 0
 		for _, r := range records {
+			count++
 			if cWidth > totalWidth {
 				break
 			}
 
-			fmt.Printf("SELL %v\n", r.GetRelease().GetTitle())
+			fmt.Printf("SELL %v (%v)\n", r.GetRelease().GetTitle(), r.GetMetadata().GetCurrentSalePrice())
 			cWidth += r.GetMetadata().GetRecordWidth()
 		}
+		fmt.Printf("Sold %v / %v mm of records (%v/%v in total)\n", cWidth, totalWidth, count, len(records))
 	case "the_fall":
 		all, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
