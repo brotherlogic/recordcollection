@@ -32,6 +32,8 @@ github.com/brotherlogic/logging v0.0.0-20240705200534-8393fef76211 h1:iyrSGAhBVE
 github.com/brotherlogic/logging v0.0.0-20240705200534-8393fef76211/go.mod h1:TCGtmRHE5c1cmcd9DL/DRPMz43O4rCFgoqaDwvqtidQ=
 github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6 h1:hxu2T9JspE76sL3XAx/CNtA9bOO6QCEJkyG9rBXFEVA=
 github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6/go.mod h1:babny4VO2GqFwjXqhJsP4a6la4XJeMT6f4BgLBPq4G8=
+github.com/brotherlogic/printqueue v0.42.0 h1:jfHSZgG4r2RCFRzGNqpbxactwKJpehbIShmZOT3TVdQ=
+github.com/brotherlogic/printqueue v0.42.0/go.mod h1:axLSRNex+YFQ3ocddeIlCyPMvHv5UbcptQHSksFYRNc=
 github.com/brotherlogic/queue v0.0.0-20240705222433-b943c1e3b57d h1:NbEKWMsC687vbcUI9Vb64UCOpFAExaJxEU04I1PsEpw=
 github.com/brotherlogic/queue v0.0.0-20240705222433-b943c1e3b57d/go.mod h1:4uCcWOmj/CLlFYZ1kLNe7gPAukr0Hk9GYwo58oxKPsk=
 github.com/brotherlogic/recordadder v0.0.0-20240705221035-b9bfe8d072e2 h1:Wl0JIOCjyVssYY4QO6/o79RKWYbDcVkBLPwEIRdK7IU=

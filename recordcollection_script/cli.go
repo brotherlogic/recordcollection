@@ -17,6 +17,7 @@ import (
 
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbg "github.com/brotherlogic/gramophile/proto"
+	ppb "github.com/brotherlogic/printqueue/proto"
 	qpb "github.com/brotherlogic/queue/proto"
 	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
@@ -165,7 +166,21 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error: %v", err)
 				}
-				fmt.Printf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())
+				conn, err := grpc.Dial("print.brotherlogic-backend.com:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
+				if err != nil {
+					log.Fatalf("Bad dial: %v", err)
+				}
+				pclient := ppb.NewPrintServiceClient(conn)
+				_, err = pclient.Print(ctx, &ppb.PrintRequest{
+					Lines:       []string{fmt.Sprintf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())},
+					Destination: ppb.Destination_DESTINATION_RECEIPT,
+					Fanout:      ppb.Fanout_FANOUT_ONE,
+					Origin:      "print-client",
+					Urgency:     ppb.Urgency_URGENCY_REGULAR,
+				})
+				if err != nil {
+					log.Fatalf("Bad print: %v", err)
+				}
 			}
 
 			cWidth += r.GetMetadata().GetRecordWidth()

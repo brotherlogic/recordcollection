@@ -9,6 +9,7 @@ require (
 	github.com/brotherlogic/goserver v0.0.0-20240303220030-80da220f0393
 	github.com/brotherlogic/gramophile v0.786.0
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
+	github.com/brotherlogic/printqueue v0.42.0
 	github.com/brotherlogic/queue v0.0.0-20240705222433-b943c1e3b57d
 	github.com/brotherlogic/recordadder v0.0.0-20240705221035-b9bfe8d072e2
 	github.com/brotherlogic/recordfanout v0.0.0-20240709214329-4dc032503a10
