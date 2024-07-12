@@ -18,6 +18,7 @@ import (
 	pbd "github.com/brotherlogic/discogs/proto"
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbg "github.com/brotherlogic/gramophile/proto"
+	ppb "github.com/brotherlogic/printqueue/proto"
 	qpb "github.com/brotherlogic/queue/proto"
 	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
@@ -80,6 +81,7 @@ func main() {
 		}
 		client := pbg.NewGramophileEServiceClient(conn)
 
+		// Get all active sales
 		sales, err := client.GetSale(mctx, &pbg.GetSaleRequest{MinMedian: -1})
 		if err != nil {
 			log.Fatalf("Bad get sale: %v", err)
@@ -89,15 +91,17 @@ func main() {
 		for _, sale := range sales.GetSales() {
 			lowdate := time.Now().Add(time.Hour).UnixNano()
 			for _, hist := range sale.GetUpdates() {
-				if hist.GetSetPrice().GetValue() == sale.MedianPrice.GetValue() {
+				if hist.GetSetPrice().GetValue() == sale.GetMedianPrice().GetValue() {
 					if hist.GetDate() < lowdate {
 						lowdate = hist.GetDate()
 					}
 				}
 			}
-			if time.Since(time.Unix(0, lowdate)) > time.Hour*24 && sale.GetSaleState() == pbd.SaleStatus_FOR_SALE {
+			//if time.Since(time.Unix(0, lowdate)) > time.Hour*24 && sale.GetSaleState() == pbd.SaleStatus_FOR_SALE {
+			if sale.GetSaleState() == pbd.SaleStatus_FOR_SALE {
 				saleids = append(saleids, sale.GetReleaseId())
 			}
+			//}
 		}
 
 		fmt.Printf("Found %v eligible sales\n", len(saleids))
@@ -158,14 +162,33 @@ func main() {
 			}
 
 			fmt.Printf("SELL %v (%v)\n", r.GetRelease().GetTitle(), r.GetMetadata().GetCurrentSalePrice())
-			cWidth += r.GetMetadata().GetRecordWidth()
-			up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRelease().InstanceId}, Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1}}}
-			rec, err := registry.UpdateRecord(ctx, up)
-			if err != nil {
-				log.Fatalf("Error: %v", err)
+
+			if len(os.Args) > 2 && os.Args[2] == "sell" {
+				up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{
+					Release:  &pbgd.Release{InstanceId: r.GetRelease().InstanceId},
+					Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1}}}
+				rec, err := registry.UpdateRecord(ctx, up)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+				conn, err := grpc.Dial("print.brotherlogic-backend.com:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
+				if err != nil {
+					log.Fatalf("Bad dial: %v", err)
+				}
+				pclient := ppb.NewPrintServiceClient(conn)
+				_, err = pclient.Print(ctx, &ppb.PrintRequest{
+					Lines:       []string{fmt.Sprintf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())},
+					Destination: ppb.Destination_DESTINATION_RECEIPT,
+					Fanout:      ppb.Fanout_FANOUT_ONE,
+					Origin:      "print-client",
+					Urgency:     ppb.Urgency_URGENCY_REGULAR,
+				})
+				if err != nil {
+					log.Fatalf("Bad print: %v", err)
+				}
 			}
-			fmt.Printf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())
-			return
+
+			cWidth += r.GetMetadata().GetRecordWidth()
 		}
 		fmt.Printf("Sold %v / %v mm of records (%v/%v in total)\n", cWidth, totalWidth, count, len(records))
 	case "the_fall":
