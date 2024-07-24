@@ -15,6 +15,7 @@ import (
 
 	"github.com/brotherlogic/goserver/utils"
 
+	pbd "github.com/brotherlogic/discogs/proto"
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbg "github.com/brotherlogic/gramophile/proto"
 	ppb "github.com/brotherlogic/printqueue/proto"
@@ -74,6 +75,10 @@ func main() {
 	case "run_sales":
 		mctx, mcancel, err := buildContext()
 		defer mcancel()
+		if err != nil {
+			log.Fatalf("Bad context:%v", err)
+		}
+
 		conn, err := grpc.Dial("gramophile-grpc.brotherlogic-backend.com:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("Bad dial: %v", err)
@@ -96,9 +101,11 @@ func main() {
 					}
 				}
 			}
-			if time.Since(time.Unix(0, lowdate)) > time.Hour*24 {
+			//if time.Since(time.Unix(0, lowdate)) > time.Hour*24 && sale.GetSaleState() == pbd.SaleStatus_FOR_SALE {
+			if sale.GetSaleState() == pbd.SaleStatus_FOR_SALE {
 				saleids = append(saleids, sale.GetReleaseId())
 			}
+			//}
 		}
 
 		fmt.Printf("Found %v eligible sales\n", len(saleids))
@@ -136,7 +143,7 @@ func main() {
 		}
 		oc := ropb.NewOrganiserServiceClient(conn)
 		elems, err := oc.GetOrganisation(ctx, &ropb.GetOrganisationRequest{
-			Locations: []*ropb.Location{{Name: "12 Inches"}},
+			Locations: []*ropb.Location{{Name: "12 Inch Sales"}},
 		})
 		if err != nil {
 			log.Fatalf("Bad request: %v", err)
@@ -151,12 +158,14 @@ func main() {
 		fmt.Printf("Selling %vmm of records\n", totalWidth)
 
 		cWidth := float32(0)
+		count := 0
 		for _, r := range records {
+			count++
 			if cWidth > totalWidth {
 				break
 			}
 
-			fmt.Printf("SELL %v\n", r.GetRelease().GetTitle())
+			fmt.Printf("SELL %v (%v)\n", r.GetRelease().GetTitle(), r.GetMetadata().GetCurrentSalePrice())
 
 			if len(os.Args) > 2 && os.Args[2] == "sell" {
 				up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{
@@ -166,13 +175,21 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error: %v", err)
 				}
+
+				_, err = registry.DeleteSale(ctx, &pbrc.DeleteSaleRequest{
+					SaleId: r.GetMetadata().GetSaleId(),
+				})
+				if err != nil {
+					log.Fatalf("Error in deleting sale: %v", err)
+				}
+
 				conn, err := grpc.Dial("print.brotherlogic-backend.com:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
 				if err != nil {
 					log.Fatalf("Bad dial: %v", err)
 				}
 				pclient := ppb.NewPrintServiceClient(conn)
 				_, err = pclient.Print(ctx, &ppb.PrintRequest{
-					Lines:       []string{fmt.Sprintf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())},
+					Lines:       []string{fmt.Sprintf("Sold: %v [%v]\n", rec.GetUpdated().GetRelease().GetTitle(), rec.GetUpdated().GetRelease().GetLabels())},
 					Destination: ppb.Destination_DESTINATION_RECEIPT,
 					Fanout:      ppb.Fanout_FANOUT_ONE,
 					Origin:      "print-client",
@@ -185,6 +202,7 @@ func main() {
 
 			cWidth += r.GetMetadata().GetRecordWidth()
 		}
+		fmt.Printf("Sold %v / %v mm of records (%v/%v in total)\n", cWidth, totalWidth, count, len(records))
 	case "the_fall":
 		all, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
