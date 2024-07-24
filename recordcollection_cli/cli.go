@@ -83,7 +83,8 @@ func main() {
 					log.Fatalf("Error: %v", err)
 				}
 				fmt.Printf(" Found %v\n", rec.GetRecord().GetRelease().GetTitle())
-				if rec.GetRecord().GetMetadata().GetSaleId() != item.GetSaleId() {
+				if rec.GetRecord().GetMetadata().GetSaleId() != item.GetSaleId() || rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+					fmt.Printf(" Deleting %v [%v]\n", item.GetSaleId(), i)
 					_, err := registry.DeleteSale(ctx, &pbrc.DeleteSaleRequest{SaleId: item.GetSaleId()})
 					fmt.Printf("  %v (%v / %v) is a bad sale id for %v -> %v\n", item.GetSaleId(), i, len(items.GetItems()), id, err)
 					if err != nil && status.Code(err) != codes.ResourceExhausted {

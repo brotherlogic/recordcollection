@@ -345,6 +345,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	updateCount.With(prometheus.Labels{"reason": request.GetReason()}).Inc()
 
+	s.RaiseIssue("Update", fmt.Sprintf("%v", request))
+
 	// Run a sale udpate
 	if request.GetUpdate().GetMetadata().GetSaleId() > 0 && request.GetUpdate().GetRelease().GetInstanceId() == 0 {
 		collection, err := s.readRecordCollection(ctx)

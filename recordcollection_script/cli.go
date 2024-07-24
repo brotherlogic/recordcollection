@@ -75,6 +75,10 @@ func main() {
 	case "run_sales":
 		mctx, mcancel, err := buildContext()
 		defer mcancel()
+		if err != nil {
+			log.Fatalf("Bad context:%v", err)
+		}
+
 		conn, err := grpc.Dial("gramophile-grpc.brotherlogic-backend.com:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
 		if err != nil {
 			log.Fatalf("Bad dial: %v", err)
@@ -171,13 +175,21 @@ func main() {
 				if err != nil {
 					log.Fatalf("Error: %v", err)
 				}
+
+				_, err = registry.DeleteSale(ctx, &pbrc.DeleteSaleRequest{
+					SaleId: r.GetMetadata().GetSaleId(),
+				})
+				if err != nil {
+					log.Fatalf("Error in deleting sale: %v", err)
+				}
+
 				conn, err := grpc.Dial("print.brotherlogic-backend.com:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
 				if err != nil {
 					log.Fatalf("Bad dial: %v", err)
 				}
 				pclient := ppb.NewPrintServiceClient(conn)
 				_, err = pclient.Print(ctx, &ppb.PrintRequest{
-					Lines:       []string{fmt.Sprintf("Sold: %v\n", rec.GetUpdated().GetRelease().GetTitle())},
+					Lines:       []string{fmt.Sprintf("Sold: %v [%v]\n", rec.GetUpdated().GetRelease().GetTitle(), rec.GetUpdated().GetRelease().GetLabels())},
 					Destination: ppb.Destination_DESTINATION_RECEIPT,
 					Fanout:      ppb.Fanout_FANOUT_ONE,
 					Origin:      "print-client",
