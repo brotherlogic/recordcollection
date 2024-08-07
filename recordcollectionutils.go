@@ -504,6 +504,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 		r.GetRelease().RecordCondition = mp[r.GetRelease().GetInstanceId()].RecordCondition
 		r.GetRelease().SleeveCondition = mp[r.GetRelease().GetInstanceId()].SleeveCondition
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
+		r.GetRelease().GetFolderId() = mp[r.GetRelease().GetInstanceId()].FolderId
 
 		// Don't overwrite an existing clean time
 		if r.GetMetadata().LastCleanDate == 0 {
