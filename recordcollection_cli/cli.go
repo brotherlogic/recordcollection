@@ -1818,6 +1818,17 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "delete_sale":
+		i, _ := strconv.ParseInt(os.Args[2], 10, 64)
+		rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		_, err = registry.DeleteSale(ctx, &pbrc.DeleteSaleRequest{SaleId: rec.GetRecord().GetMetadata().GetSaleId()})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Deleted %v\n", i)
 	case "addsale":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.ParseInt(os.Args[3], 10, 64)
