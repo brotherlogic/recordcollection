@@ -507,7 +507,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 		r.GetRelease().FolderId = mp[r.GetRelease().GetInstanceId()].FolderId
 
 		// Don't overwrite an existing clean time
-		if r.GetMetadata().LastCleanDate == 0 {
+		if r.GetMetadata().LastCleanDate == 0 || mp[r.GetRelease().GetInstanceId()].LastCleanDate != "" {
 			p, err := time.Parse("2006-01-02", mp[r.GetRelease().GetInstanceId()].LastCleanDate)
 			if err == nil {
 				r.GetMetadata().LastCleanDate = p.Unix()
