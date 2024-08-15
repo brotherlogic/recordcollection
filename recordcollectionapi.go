@@ -627,7 +627,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 
 	//Reject the add if we don't have a cost or goal folder
 	if request.GetToAdd().GetMetadata().GetCost() == 0 || request.GetToAdd().GetMetadata().GetGoalFolder() == 0 {
-		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder")
+		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder (%v)", request)
 	}
 
 	s.CtxLog(ctx, fmt.Sprintf("AddRecord %v", request))
