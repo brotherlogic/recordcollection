@@ -98,7 +98,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 			time.Now().Sub(time.Unix(record.GetMetadata().GetLastInfoUpdate(), 0)) > time.Hour*24*30 ||
 			record.GetRelease().GetRecordCondition() == "" {
 			t = time.Now()
-			s.cacheRecord(ctx, record, fmt.Sprintf("Last cached: %v", time.Unix(record.GetMetadata().GetLastCache(), 0)))
+			s.cacheRecord(ctx, record, true)
 			loopLatency.With(prometheus.Labels{"method": "cache"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 		}
 
@@ -453,8 +453,8 @@ func max(a, b int) int {
 	return b
 }
 
-func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) error {
-	s.CtxLog(ctx, fmt.Sprintf("Updating cache for : %v (%v): %v", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition(), reason))
+func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) error {
+	s.CtxLog(ctx, fmt.Sprintf("Updating cache for : %v (%v): %v", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition(), force))
 
 	//Add the record if it has not instance ID
 	if r.GetRelease().InstanceId == 0 {
@@ -467,7 +467,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, reason string) e
 	}
 
 	//Force a recache if the record has no title or condition; or if it has the old image format
-	if time.Since(time.Unix(r.GetMetadata().GetLastCache(), 0)) > time.Hour*24 || r.GetRelease().Title == "" ||
+	if force || time.Since(time.Unix(r.GetMetadata().GetLastCache(), 0)) > time.Hour*24 || r.GetRelease().Title == "" ||
 		len(r.GetRelease().GetTracklist()) == 0 ||
 		(len(r.GetRelease().GetImages()) > 0 && strings.Contains(r.GetRelease().GetImages()[0].GetUri(), "img.discogs")) {
 		release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
