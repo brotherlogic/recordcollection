@@ -467,7 +467,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 	}
 
 	//Force a recache if the record has no title or condition; or if it has the old image format
-	if force || time.Since(time.Unix(r.GetMetadata().GetLastCache(), 0)) > time.Hour*24 || r.GetRelease().Title == "" ||
+	if time.Since(time.Unix(r.GetMetadata().GetLastCache(), 0)) > time.Hour*24 || r.GetRelease().Title == "" ||
 		len(r.GetRelease().GetTracklist()) == 0 ||
 		(len(r.GetRelease().GetImages()) > 0 && strings.Contains(r.GetRelease().GetImages()[0].GetUri(), "img.discogs")) {
 		release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
@@ -505,6 +505,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		r.GetRelease().SleeveCondition = mp[r.GetRelease().GetInstanceId()].SleeveCondition
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
 		r.GetRelease().FolderId = mp[r.GetRelease().GetInstanceId()].FolderId
+		r.GetRelease().Rating = mp[r.GetRelease().GetInstanceId()].Rating
 
 		// Don't overwrite an existing clean time
 		if r.GetMetadata().LastCleanDate == 0 || mp[r.GetRelease().GetInstanceId()].LastCleanDate != "" {
