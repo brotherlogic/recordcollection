@@ -505,6 +505,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		r.GetRelease().SleeveCondition = mp[r.GetRelease().GetInstanceId()].SleeveCondition
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
 		r.GetRelease().FolderId = mp[r.GetRelease().GetInstanceId()].FolderId
+		r.GetRelease().Rating = mp[r.GetRelease().GetInstanceId()].Rating
 
 		// Don't overwrite an existing clean time
 		if r.GetMetadata().LastCleanDate == 0 || mp[r.GetRelease().GetInstanceId()].LastCleanDate != "" {
