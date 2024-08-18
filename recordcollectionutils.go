@@ -507,6 +507,10 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		r.GetRelease().FolderId = mp[r.GetRelease().GetInstanceId()].FolderId
 		r.GetRelease().Rating = mp[r.GetRelease().GetInstanceId()].Rating
 
+		if mp[r.GetRelease().GetInstanceId()].LastListenTime > r.GetMetadata().LastListenTime {
+			r.GetMetadata().LastListenTime = mp[r.GetRelease().GetInstanceId()].LastListenTime
+		}
+
 		// Don't overwrite an existing clean time
 		if r.GetMetadata().LastCleanDate == 0 || mp[r.GetRelease().GetInstanceId()].LastCleanDate != "" {
 			p, err := time.Parse("2006-01-02", mp[r.GetRelease().GetInstanceId()].LastCleanDate)

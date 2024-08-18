@@ -7,15 +7,15 @@ toolchain go1.22.5
 require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/brotherlogic/dstore v0.0.0-20240816193730-559fd8155f3f
-	github.com/brotherlogic/godiscogs v0.0.0-20240817150050-bde4a2c00f40
+	github.com/brotherlogic/godiscogs v0.0.0-20240818210034-6e072f0f7a47
 	github.com/brotherlogic/goserver v0.0.0-20240303220030-80da220f0393
-	github.com/brotherlogic/gramophile v0.940.0
+	github.com/brotherlogic/gramophile v0.946.0
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
 	github.com/brotherlogic/printqueue v0.42.0
 	github.com/brotherlogic/queue v0.0.0-20240817030510-d25dc3d09e5f
 	github.com/brotherlogic/recordadder v0.0.0-20240815144131-1a8c95cb4bdf
-	github.com/brotherlogic/recordfanout v0.0.0-20240815143927-1292e899e219
-	github.com/brotherlogic/recordmover v0.0.0-20240814040241-83b1ddf92b1c
+	github.com/brotherlogic/recordfanout v0.0.0-20240817152543-85a9dcb40bc6
+	github.com/brotherlogic/recordmover v0.0.0-20240817220935-8c71f744097b
 	github.com/brotherlogic/recordscores v0.0.0-20240815143802-4439d1e66c22
 	github.com/brotherlogic/recordsorganiser v0.0.0-20240816180810-59a033361d1a
 	github.com/golang/protobuf v1.5.4
@@ -25,7 +25,7 @@ require (
 	google.golang.org/protobuf v1.34.2
 )
 
-require github.com/brotherlogic/discogs v0.0.0-20240816225936-eb34e3085d34
+require github.com/brotherlogic/discogs v0.0.0-20240817231401-1eb0f0ad58cb
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
