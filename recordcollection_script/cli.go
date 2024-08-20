@@ -177,7 +177,7 @@ func main() {
 
 			fmt.Printf("SELL %v (%v)\n", r.GetRelease().GetTitle(), r.GetMetadata().GetCurrentSalePrice())
 
-			if len(os.Args) > 2 && os.Args[2] == "sell" {
+			if (len(os.Args) > 2 && os.Args[2] == "sell") || (len(os.Args) > 3 && os.Args[3] == "sell"){
 				up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{
 					Release:  &pbgd.Release{InstanceId: r.GetRelease().InstanceId},
 					Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1}}}
