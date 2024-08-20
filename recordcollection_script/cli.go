@@ -136,7 +136,17 @@ func main() {
 			return records[i].GetMetadata().GetCurrentSalePrice() < records[j].GetMetadata().GetCurrentSalePrice()
 		})
 
-		//Get the width we need to get
+	
+		totalWidth := float32(0)
+
+		if len(os.Args) > 2 {
+			tw, err := strconv.ParseInt(os.Args[2], 10, 32)
+			if err != nil {
+				log.Fatalf("Bad width: %v", tw)
+			}
+			totalWidth = tw
+		} else {
+				//Get the width we need to get
 		conn, err = utils.LFDialServer(ctx, "recordsorganiser")
 		if err != nil {
 			log.Fatalf("Bad dial: %v", err)
@@ -149,12 +159,12 @@ func main() {
 			log.Fatalf("Bad request: %v", err)
 		}
 
-		totalWidth := float32(0)
 		for _, elem := range elems.GetLocations()[0].GetReleasesLocation() {
 			if elem.GetSlot() == 4 {
 				totalWidth += elem.GetDeterminedWidth()
 			}
 		}
+	}
 		fmt.Printf("Selling %vmm of records\n", totalWidth)
 
 		cWidth := float32(0)
