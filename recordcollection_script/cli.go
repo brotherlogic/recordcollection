@@ -136,7 +136,6 @@ func main() {
 			return records[i].GetMetadata().GetCurrentSalePrice() < records[j].GetMetadata().GetCurrentSalePrice()
 		})
 
-	
 		totalWidth := float32(0)
 
 		if len(os.Args) > 2 {
@@ -144,27 +143,27 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad width: %v", tw)
 			}
-			totalWidth = tw
+			totalWidth = float32(tw)
 		} else {
-				//Get the width we need to get
-		conn, err = utils.LFDialServer(ctx, "recordsorganiser")
-		if err != nil {
-			log.Fatalf("Bad dial: %v", err)
-		}
-		oc := ropb.NewOrganiserServiceClient(conn)
-		elems, err := oc.GetOrganisation(ctx, &ropb.GetOrganisationRequest{
-			Locations: []*ropb.Location{{Name: "12 Inch Sales"}},
-		})
-		if err != nil {
-			log.Fatalf("Bad request: %v", err)
-		}
+			//Get the width we need to get
+			conn, err = utils.LFDialServer(ctx, "recordsorganiser")
+			if err != nil {
+				log.Fatalf("Bad dial: %v", err)
+			}
+			oc := ropb.NewOrganiserServiceClient(conn)
+			elems, err := oc.GetOrganisation(ctx, &ropb.GetOrganisationRequest{
+				Locations: []*ropb.Location{{Name: "12 Inch Sales"}},
+			})
+			if err != nil {
+				log.Fatalf("Bad request: %v", err)
+			}
 
-		for _, elem := range elems.GetLocations()[0].GetReleasesLocation() {
-			if elem.GetSlot() == 4 {
-				totalWidth += elem.GetDeterminedWidth()
+			for _, elem := range elems.GetLocations()[0].GetReleasesLocation() {
+				if elem.GetSlot() == 4 {
+					totalWidth += elem.GetDeterminedWidth()
+				}
 			}
 		}
-	}
 		fmt.Printf("Selling %vmm of records\n", totalWidth)
 
 		cWidth := float32(0)
@@ -177,7 +176,7 @@ func main() {
 
 			fmt.Printf("SELL %v (%v)\n", r.GetRelease().GetTitle(), r.GetMetadata().GetCurrentSalePrice())
 
-			if (len(os.Args) > 2 && os.Args[2] == "sell") || (len(os.Args) > 3 && os.Args[3] == "sell"){
+			if (len(os.Args) > 2 && os.Args[2] == "sell") || (len(os.Args) > 3 && os.Args[3] == "sell") {
 				up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{
 					Release:  &pbgd.Release{InstanceId: r.GetRelease().InstanceId},
 					Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1}}}
