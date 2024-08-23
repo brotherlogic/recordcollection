@@ -204,7 +204,11 @@ func main() {
 				}
 			}
 
-			fmt.Printf("%v %v [%v]\n", rec.GetRecord().GetRelease().GetId(), rec.GetRecord().GetRelease().GetTitle(), location.GetFoundLocation().GetName())
+			artist := "UNKNOWN"
+			for _, art := range rec.GetRecord().GetRelease().GetArtists() {
+				artist = art.GetName()
+			}
+			fmt.Printf("%v %v - %v [%v] %v\n", rec.GetRecord().GetRelease().GetId(), artist, rec.GetRecord().GetRelease().GetTitle(), location.GetFoundLocation().GetName(), rec.GetRecord().GetMetadata().GetFiledUnder())
 
 		}
 	case "transfer":
@@ -2019,9 +2023,10 @@ func main() {
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.Atoi(os.Args[3])
 		c, _ := strconv.Atoi(os.Args[4])
+		iid, _ := strconv.Atoi(os.Args[5])
 		rec, err := registry.AddRecord(ctx, &pbrc.AddRecordRequest{
 			ToAdd: &pbrc.Record{
-				Release:  &pbgd.Release{Id: int32(i)},
+				Release:  &pbgd.Release{Id: int32(i), InstanceId: int32(iid)},
 				Metadata: &pbrc.ReleaseMetadata{Cost: int32(c), GoalFolder: int32(f), AccountingYear: 2021},
 			},
 		})

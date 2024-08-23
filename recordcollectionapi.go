@@ -138,7 +138,10 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && (record.GetRelease().GetFolderId() == 812802 || record.GetRelease().GetFolderId() == 3386035) && record.GetRelease().GetRecordCondition() == "") ||
 		(len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")) ||
 		len(record.GetRelease().GetTracklist()) == 0 {
-		s.cacheRecord(ctx, record, record.GetMetadata().GetNeedsGramUpdate())
+		err = s.cacheRecord(ctx, record, record.GetMetadata().GetNeedsGramUpdate())
+		if err != nil {
+			return nil, err
+		}
 
 		// Assume that caching pulls in the labels
 		record.GetMetadata().NeedsGramUpdate = false
