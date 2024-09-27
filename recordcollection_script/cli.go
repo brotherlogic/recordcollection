@@ -1574,7 +1574,7 @@ func main() {
 				r.GetRecord().GetMetadata().NewSalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
 				u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: r.GetRecord()})
 				if err != nil {
-					fmt.Printf("Error[%v]: %v\n", err)
+					fmt.Printf("Error[%v]\n", err)
 				}
 				fmt.Printf("Updated %v\n", u.GetUpdated().GetRelease().GetId())
 			}
@@ -1668,7 +1668,7 @@ func main() {
 					r.GetRecord().GetMetadata().NewSalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
 					u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: r.GetRecord().GetRelease().GetInstanceId()}, Metadata: &pbrc.ReleaseMetadata{NewSalePrice: r.GetRecord().GetMetadata().GetCurrentSalePrice()}}, Reason: "reset_sale_price"})
 					if err != nil {
-						fmt.Printf("Error[%v]: %v\n", err)
+						fmt.Printf("Error[%v]\n", err)
 					}
 					fmt.Printf("Updated %v\n", u.GetUpdated().GetRelease().GetArtists()[0].GetName()+" - "+u.GetUpdated().GetRelease().GetTitle())
 
