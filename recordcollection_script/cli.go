@@ -144,7 +144,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad width: %v", tw)
 			}
-			totalWidth = tw
+			totalWidth = float32(tw)
 		} else {
 				//Get the width we need to get
 		conn, err = utils.LFDialServer(ctx, "recordsorganiser")
