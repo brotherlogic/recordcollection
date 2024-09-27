@@ -350,6 +350,8 @@ message ReleaseMetadata {
 
   bool needs_gram_update = 68;
   bool was_parents = 69;
+
+  bool sell_offline = 70;
 }
 
 // A request to get some records
