@@ -13,7 +13,7 @@ require (
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
 	github.com/brotherlogic/printqueue v0.42.0
 	github.com/brotherlogic/queue v0.0.0-20240929175943-b3cb07a3f056
-	github.com/brotherlogic/recordadder v0.0.0-20241004061350-7e0d2e215cb6
+	github.com/brotherlogic/recordadder v0.0.0-20241004091815-a70162820576
 	github.com/brotherlogic/recordfanout v0.0.0-20240927182325-1af0332678d0
 	github.com/brotherlogic/recordmover v0.0.0-20241004081725-159e5396ce1b
 	github.com/brotherlogic/recordscores v0.0.0-20241004091441-78119ebb7503
