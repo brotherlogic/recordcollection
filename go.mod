@@ -6,17 +6,17 @@ toolchain go1.22.5
 
 require (
 	github.com/andanhm/go-prettytime v1.1.0
-	github.com/brotherlogic/dstore v0.0.0-20240927215217-97df5df1b375
+	github.com/brotherlogic/dstore v0.0.0-20241004215524-da369341b2eb
 	github.com/brotherlogic/godiscogs v0.0.0-20240823195726-9a8d322e6898
 	github.com/brotherlogic/goserver v0.0.0-20240826215223-fccbac46b3d4
 	github.com/brotherlogic/gramophile v0.1016.0
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
 	github.com/brotherlogic/printqueue v0.42.0
 	github.com/brotherlogic/queue v0.0.0-20240929175943-b3cb07a3f056
-	github.com/brotherlogic/recordadder v0.0.0-20241004192550-6ba62ba0c539
-	github.com/brotherlogic/recordfanout v0.0.0-20241004195506-cb9dc542527f
+	github.com/brotherlogic/recordadder v0.0.0-20241004212756-d5ab9cc9a38c
+	github.com/brotherlogic/recordfanout v0.0.0-20241004213326-a8888606bed8
 	github.com/brotherlogic/recordmover v0.0.0-20241004202905-4a357328b845
-	github.com/brotherlogic/recordscores v0.0.0-20241004202747-cbef5075eb05
+	github.com/brotherlogic/recordscores v0.0.0-20241004213157-7be9c1a52357
 	github.com/brotherlogic/recordsorganiser v0.0.0-20240928002405-17eeaf3494e9
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.20.4
