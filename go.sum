@@ -40,10 +40,10 @@ github.com/brotherlogic/recordadder v0.0.0-20241004172355-d7b9187ded94 h1:r11U7T
 github.com/brotherlogic/recordadder v0.0.0-20241004172355-d7b9187ded94/go.mod h1:AmNHZhaw7y97DoyZdXciWA+hzqwBYXjm7OkRnGoHzIo=
 github.com/brotherlogic/recordfanout v0.0.0-20240927182325-1af0332678d0 h1:kymzxhFNF0jdAkCb7mDIhPnm3llJVT/gHify4JGaSEg=
 github.com/brotherlogic/recordfanout v0.0.0-20240927182325-1af0332678d0/go.mod h1:suVCnmkPTJmLrNen67q7SbjLMLHlywS3vBW+2l0rYwQ=
-github.com/brotherlogic/recordmover v0.0.0-20241004172251-e2fc3d5d6848 h1:KEPYPechMxrTDn4Sj/t+4oUQ5VpBRvRUnQ9FJjw3CFM=
-github.com/brotherlogic/recordmover v0.0.0-20241004172251-e2fc3d5d6848/go.mod h1:Zd/u7IiceLBfTh8FiLOBg0ly7MdLeLg0PK1uzIqPPJY=
-github.com/brotherlogic/recordscores v0.0.0-20241004172729-27748d973cae h1:fkPSyWe7D5EnLUsYYg/ix1p4VH9C5dqjm965hYn8gPQ=
-github.com/brotherlogic/recordscores v0.0.0-20241004172729-27748d973cae/go.mod h1:bvfHfOwr48hTvFBXU3e/tqnirxym0h4kLp0GOnFyNeg=
+github.com/brotherlogic/recordmover v0.0.0-20241004182808-38d1a43797ce h1:2c0M+UdFQGhfww671szoD689GcnxUpsdyK85cdVrob4=
+github.com/brotherlogic/recordmover v0.0.0-20241004182808-38d1a43797ce/go.mod h1:vqME+tmfs5HQB7N8nUTXyOUsb5vPN7DsYwMKpfLHtpM=
+github.com/brotherlogic/recordscores v0.0.0-20241004182757-4821897a5f07 h1:rKFs47+ooat2lQeXtKndEX/ZdvhbrKvKubAcA7fXvKU=
+github.com/brotherlogic/recordscores v0.0.0-20241004182757-4821897a5f07/go.mod h1:UsOa1HJIwelrTznvvhD10LLxXtVKJVErpPHZGxGu9Vs=
 github.com/brotherlogic/recordsorganiser v0.0.0-20240928002405-17eeaf3494e9 h1:/kabF0XZUDMAZ2ov8i0wOpHJ/qQLlnPV4cKprwPaAHQ=
 github.com/brotherlogic/recordsorganiser v0.0.0-20240928002405-17eeaf3494e9/go.mod h1:VGExcxqO+49LE5UYHS1DG0O8G0m6G1f0rde9+MIwZQg=
 github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 h1:YjFE4Sa+wwbl4yJwJaMQVeA4CMzLIDbbIuSMdsEp5/w=
