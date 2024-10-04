@@ -13,9 +13,9 @@ require (
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
 	github.com/brotherlogic/printqueue v0.42.0
 	github.com/brotherlogic/queue v0.0.0-20240929175943-b3cb07a3f056
-	github.com/brotherlogic/recordadder v0.0.0-20241004091815-a70162820576
+	github.com/brotherlogic/recordadder v0.0.0-20241004111703-a3d9ea7fca24
 	github.com/brotherlogic/recordfanout v0.0.0-20240927182325-1af0332678d0
-	github.com/brotherlogic/recordmover v0.0.0-20241004081725-159e5396ce1b
+	github.com/brotherlogic/recordmover v0.0.0-20241004102152-f1252674e5af
 	github.com/brotherlogic/recordscores v0.0.0-20241004091441-78119ebb7503
 	github.com/brotherlogic/recordsorganiser v0.0.0-20240928002405-17eeaf3494e9
 	github.com/golang/protobuf v1.5.4

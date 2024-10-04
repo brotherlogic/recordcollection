@@ -36,12 +36,12 @@ github.com/brotherlogic/printqueue v0.42.0 h1:jfHSZgG4r2RCFRzGNqpbxactwKJpehbISh
 github.com/brotherlogic/printqueue v0.42.0/go.mod h1:axLSRNex+YFQ3ocddeIlCyPMvHv5UbcptQHSksFYRNc=
 github.com/brotherlogic/queue v0.0.0-20240929175943-b3cb07a3f056 h1:lyG4hNCMqUWz0RjvC+1AqSVq/dOX0hYNYUmxWOIIXFI=
 github.com/brotherlogic/queue v0.0.0-20240929175943-b3cb07a3f056/go.mod h1:ZSjKL/3hUWyLfSPnUlmhsOln47s14LKriELKy2vKYW8=
-github.com/brotherlogic/recordadder v0.0.0-20241004091815-a70162820576 h1:P1NZBSeX3xiPUCX6LIABZ+SHGCGtThX46ztoqcJcP0Q=
-github.com/brotherlogic/recordadder v0.0.0-20241004091815-a70162820576/go.mod h1:jzuHoE54WT2FPwQDfB3MiaVcT3kIZoGXGIbuAZlUHVM=
+github.com/brotherlogic/recordadder v0.0.0-20241004111703-a3d9ea7fca24 h1:pTN1z9RGLN3ge5ESej715DmWFUIEgB/3tyGqKnDuB10=
+github.com/brotherlogic/recordadder v0.0.0-20241004111703-a3d9ea7fca24/go.mod h1:o/Zm5oUN/yTkle7qstHIEI6SDIi2KxDCmtgyZi381nI=
 github.com/brotherlogic/recordfanout v0.0.0-20240927182325-1af0332678d0 h1:kymzxhFNF0jdAkCb7mDIhPnm3llJVT/gHify4JGaSEg=
 github.com/brotherlogic/recordfanout v0.0.0-20240927182325-1af0332678d0/go.mod h1:suVCnmkPTJmLrNen67q7SbjLMLHlywS3vBW+2l0rYwQ=
-github.com/brotherlogic/recordmover v0.0.0-20241004081725-159e5396ce1b h1:IonbY8zCHIckIymD7t2mUK5eSRcxd6m04cOlz2wOK/M=
-github.com/brotherlogic/recordmover v0.0.0-20241004081725-159e5396ce1b/go.mod h1:IQ2BWWEq1AE/z+ktEn9VK9msslXbJnk34X/2z4P3i0A=
+github.com/brotherlogic/recordmover v0.0.0-20241004102152-f1252674e5af h1:DWRBd4xUZB7Nu7DHl1ayN3gQXsD6InaW+wu0YWW6M1k=
+github.com/brotherlogic/recordmover v0.0.0-20241004102152-f1252674e5af/go.mod h1:Gcvjpe8fnkfFPvTgL/W0E5YXGBnanSuiDYucymiatNs=
 github.com/brotherlogic/recordscores v0.0.0-20241004091441-78119ebb7503 h1:lHe5i7A9lQqKxQEtUCgSqk9TZpZzrw9lPCSzC02Uxm4=
 github.com/brotherlogic/recordscores v0.0.0-20241004091441-78119ebb7503/go.mod h1:Jmn098R/xEYs+Vk+ayNQddatcTz5VbNSColFWOguLGk=
 github.com/brotherlogic/recordsorganiser v0.0.0-20240928002405-17eeaf3494e9 h1:/kabF0XZUDMAZ2ov8i0wOpHJ/qQLlnPV4cKprwPaAHQ=
