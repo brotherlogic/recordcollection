@@ -357,7 +357,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	updateCount.With(prometheus.Labels{"reason": request.GetReason()}).Inc()
 
-	if request.GetReason() != "Tripping gram update" {
+	if request.GetReason() != "Tripping gram update" ||
+		request.GetReason() != "ping_from_gramophile" {
 		s.RaiseIssue("Update", fmt.Sprintf("%v", request))
 	}
 
