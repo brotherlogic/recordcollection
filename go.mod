@@ -10,12 +10,12 @@ require (
 	github.com/brotherlogic/gramophile v0.1057.0
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
 	github.com/brotherlogic/printqueue v0.42.0
-	github.com/brotherlogic/queue v0.0.0-20241130161706-3e0b2581a23b
-	github.com/brotherlogic/recordadder v0.0.0-20241130161320-e3284302565f
+	github.com/brotherlogic/queue v0.0.0-20241130171616-6b41f02287a9
+	github.com/brotherlogic/recordadder v0.0.0-20241130171341-d86cedc5e44c
 	github.com/brotherlogic/recordfanout v0.0.0-20241130170855-4e2d64458f66
-	github.com/brotherlogic/recordmover v0.0.0-20241130161252-0fde39bbc0c3
+	github.com/brotherlogic/recordmover v0.0.0-20241130171308-d47cc6c1a84c
 	github.com/brotherlogic/recordscores v0.0.0-20241123103103-5d45a78056ed
-	github.com/brotherlogic/recordsorganiser v0.0.0-20241130161633-3d86c5335b0d
+	github.com/brotherlogic/recordsorganiser v0.0.0-20241130171710-c706508ee9c3
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.20.5
 	golang.org/x/net v0.31.0
