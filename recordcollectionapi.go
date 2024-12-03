@@ -81,6 +81,20 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 
 	updateReason := ""
 
+	if record.GetMetadata().GetSellOffline() {
+		// Remove the sale
+		err := s.retr.RemoveFromSale(ctx, int(record.GetMetadata().GetSaleId()), int(record.GetRelease().GetId()))
+		if err != nil {
+			return nil, err
+		}
+		record.GetMetadata().SoldPrice = 1
+		record.GetMetadata().SoldDate = time.Now().Unix()
+		record.GetMetadata().SellOffline = false
+
+		updateReason = "SOLD_OFFLINE"
+		updated = true
+	}
+
 	// Update the sale state
 	if record.GetMetadata().GetSaleId() > 100 && (record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE) {
 		record.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
@@ -343,7 +357,8 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	updateCount.With(prometheus.Labels{"reason": request.GetReason()}).Inc()
 
-	if request.GetReason() != "Tripping gram update" {
+	if request.GetReason() != "Tripping gram update" &&
+		request.GetReason() != "ping_from_gramophile" {
 		s.RaiseIssue("Update", fmt.Sprintf("%v", request))
 	}
 
