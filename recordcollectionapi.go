@@ -83,9 +83,11 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 
 	if record.GetMetadata().GetSellOffline() {
 		// Remove the sale
-		err := s.retr.RemoveFromSale(ctx, int(record.GetMetadata().GetSaleId()), int(record.GetRelease().GetId()))
-		if err != nil {
-			return nil, err
+		if record.GetMetadata().GetSaleId() > 0 {
+			err := s.retr.RemoveFromSale(ctx, int(record.GetMetadata().GetSaleId()), int(record.GetRelease().GetId()))
+			if err != nil {
+				return nil, err
+			}
 		}
 		record.GetMetadata().SoldPrice = 1
 		record.GetMetadata().SoldDate = time.Now().Unix()
