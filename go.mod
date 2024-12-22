@@ -13,7 +13,7 @@ require (
 	github.com/brotherlogic/queue v0.0.0-20241217020702-37d483d4038a
 	github.com/brotherlogic/recordadder v0.0.0-20241217021420-497c25c707b0
 	github.com/brotherlogic/recordfanout v0.0.0-20241217012934-55753c93e750
-	github.com/brotherlogic/recordmover v0.0.0-20241221231317-79aacf389b03
+	github.com/brotherlogic/recordmover v0.0.0-20241222042023-5ff884b022f9
 	github.com/brotherlogic/recordscores v0.0.0-20241217020936-225ba038887f
 	github.com/brotherlogic/recordsorganiser v0.0.0-20241217021212-9f295f58bc7d
 	github.com/golang/protobuf v1.5.4
