@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/andanhm/go-prettytime v1.1.0
-	github.com/brotherlogic/dstore v0.0.0-20241223014616-9695c5706b41
+	github.com/brotherlogic/dstore v0.0.0-20241223044543-4c45b3971d83
 	github.com/brotherlogic/godiscogs v0.0.0-20240823195726-9a8d322e6898
 	github.com/brotherlogic/goserver v0.0.0-20240826215223-fccbac46b3d4
 	github.com/brotherlogic/gramophile v0.1088.0
@@ -13,7 +13,7 @@ require (
 	github.com/brotherlogic/queue v0.0.0-20241217020702-37d483d4038a
 	github.com/brotherlogic/recordadder v0.0.0-20241217021420-497c25c707b0
 	github.com/brotherlogic/recordfanout v0.0.0-20241217012934-55753c93e750
-	github.com/brotherlogic/recordmover v0.0.0-20241223023423-1f15ab69227c
+	github.com/brotherlogic/recordmover v0.0.0-20241223043825-5f2acdb3f83e
 	github.com/brotherlogic/recordscores v0.0.0-20241217020936-225ba038887f
 	github.com/brotherlogic/recordsorganiser v0.0.0-20241217021212-9f295f58bc7d
 	github.com/golang/protobuf v1.5.4
