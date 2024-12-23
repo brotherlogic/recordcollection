@@ -13,7 +13,7 @@ require (
 	github.com/brotherlogic/queue v0.0.0-20241217020702-37d483d4038a
 	github.com/brotherlogic/recordadder v0.0.0-20241217021420-497c25c707b0
 	github.com/brotherlogic/recordfanout v0.0.0-20241217012934-55753c93e750
-	github.com/brotherlogic/recordmover v0.0.0-20241223124316-063252b66cb5
+	github.com/brotherlogic/recordmover v0.0.0-20241223144358-add45aa6dab1
 	github.com/brotherlogic/recordscores v0.0.0-20241217020936-225ba038887f
 	github.com/brotherlogic/recordsorganiser v0.0.0-20241217021212-9f295f58bc7d
 	github.com/golang/protobuf v1.5.4
@@ -30,7 +30,7 @@ require (
 	github.com/brotherlogic/buildserver v0.0.0-20241217013905-c06e5382fd2a // indirect
 	github.com/brotherlogic/datastore v0.0.0-20241220230045-434035a99d2b // indirect
 	github.com/brotherlogic/discovery v0.0.0-20241109204028-02908558af09 // indirect
-	github.com/brotherlogic/githubcard v0.0.0-20241223094254-cecf9a3824ed // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20241223134345-69ba582c9307 // indirect
 	github.com/brotherlogic/githubridge v0.2824.0 // indirect
 	github.com/brotherlogic/gobuildslave v0.0.0-20241111085829-8d4e5069a7fd // indirect
 	github.com/brotherlogic/lock v0.0.0-20241217020620-bb98363cbe7e // indirect
@@ -47,5 +47,5 @@ require (
 	github.com/struCoder/pidusage v0.2.1 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20241219192143-6b3ec007d9bb // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20241223144023-3abc09e42ca8 // indirect
 )
