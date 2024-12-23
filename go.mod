@@ -13,14 +13,14 @@ require (
 	github.com/brotherlogic/queue v0.0.0-20241217020702-37d483d4038a
 	github.com/brotherlogic/recordadder v0.0.0-20241217021420-497c25c707b0
 	github.com/brotherlogic/recordfanout v0.0.0-20241217012934-55753c93e750
-	github.com/brotherlogic/recordmover v0.0.0-20241223074049-c6a2468c1d06
+	github.com/brotherlogic/recordmover v0.0.0-20241223124316-063252b66cb5
 	github.com/brotherlogic/recordscores v0.0.0-20241217020936-225ba038887f
 	github.com/brotherlogic/recordsorganiser v0.0.0-20241217021212-9f295f58bc7d
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.20.5
 	golang.org/x/net v0.33.0
 	google.golang.org/grpc v1.69.2
-	google.golang.org/protobuf v1.36.0
+	google.golang.org/protobuf v1.36.1
 )
 
 require github.com/brotherlogic/discogs v0.0.0-20241205225822-b84cda670aa7
