@@ -4,7 +4,7 @@ go 1.23.2
 
 require (
 	github.com/andanhm/go-prettytime v1.1.0
-	github.com/brotherlogic/dstore v0.0.0-20241223204831-91d81c02ba5a
+	github.com/brotherlogic/dstore v0.0.0-20241224014911-3fb14cfb6dc7
 	github.com/brotherlogic/godiscogs v0.0.0-20240823195726-9a8d322e6898
 	github.com/brotherlogic/goserver v0.0.0-20240826215223-fccbac46b3d4
 	github.com/brotherlogic/gramophile v0.1088.0
