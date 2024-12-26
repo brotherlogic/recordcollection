@@ -2,8 +2,8 @@ github.com/andanhm/go-prettytime v1.1.0 h1:7Zr0ZiYUhV+aG7fFaVx+z/8di961R6btNyidM
 github.com/andanhm/go-prettytime v1.1.0/go.mod h1:uizwLzwLZu1FTvSz8DSGkqm8Vc4edGa2VIMu16aoiZg=
 github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
-github.com/brotherlogic/buildserver v0.0.0-20241226061512-cfd9c30464df h1:EMGNpZp1tmn+L0hk1Pqb4Ysar75DKK3lv+RBekw/U2s=
-github.com/brotherlogic/buildserver v0.0.0-20241226061512-cfd9c30464df/go.mod h1:Wt/7ZdaqbjckYp0L7oJ5k0JcZDfD3FBM3Kro0yp9IlE=
+github.com/brotherlogic/buildserver v0.0.0-20241226071357-1768400e378e h1:HFAUu4HOjCsIc7C9b9Rp5wFW1nJqUMOd2nTseNfsLmQ=
+github.com/brotherlogic/buildserver v0.0.0-20241226071357-1768400e378e/go.mod h1:FnHUbYNCfO2TtET5UfWYT0zbmdbrVrR6Y1+NcdBMRq4=
 github.com/brotherlogic/datastore v0.0.0-20241220230045-434035a99d2b h1:FN4LvXMbi0YzzFq4W/t4hg+5kYiiZyzKhwS/gq+Bl9U=
 github.com/brotherlogic/datastore v0.0.0-20241220230045-434035a99d2b/go.mod h1:ut6pt8So9tl44tskYl51pBGkqCLNczPUSdDb9fREZxA=
 github.com/brotherlogic/discogs v0.0.0-20241205225822-b84cda670aa7 h1:oAZrZ9UQrD5IsLyEgZ8+QlZ8WbudLzpBsbg4VjUi/Dg=
@@ -40,8 +40,8 @@ github.com/brotherlogic/recordadder v0.0.0-20241226060534-60f8c6a66af4 h1:O+t1WW
 github.com/brotherlogic/recordadder v0.0.0-20241226060534-60f8c6a66af4/go.mod h1:sVis4R/aqC/mKGj+32kh4Iz/z7zzto6ILxjjPyQ3Kcw=
 github.com/brotherlogic/recordfanout v0.0.0-20241226051024-54231ce2482f h1:Q3TFNAOgMs18fWYCT77OZhWWVdpxUgIe8uTWwi7109M=
 github.com/brotherlogic/recordfanout v0.0.0-20241226051024-54231ce2482f/go.mod h1:assOJ8UGZ2K2exxl6lg49OSed5d4+3ut086nLpTrDtI=
-github.com/brotherlogic/recordmover v0.0.0-20241226050900-df2e8bdb19c4 h1:bZnJcyzGC9odeJmboITYt2C80OoO9lNbO5+1hhfBdpA=
-github.com/brotherlogic/recordmover v0.0.0-20241226050900-df2e8bdb19c4/go.mod h1:JZ4gFcb+eHAREgrJIsKoegldQJOvY2/bfdDqCXG26YI=
+github.com/brotherlogic/recordmover v0.0.0-20241226071140-0fe6c4388833 h1:iVqX/4p9wBsWDr4WaIugNhjcJ+Cpu/0Meb5hPET15Ko=
+github.com/brotherlogic/recordmover v0.0.0-20241226071140-0fe6c4388833/go.mod h1:RX4vtnHSX7ueAjuxHpCpwjdo7HDfEA33izOxu2ujQ5U=
 github.com/brotherlogic/recordscores v0.0.0-20241226060931-912a7f3ec32c h1:mniRoYNuMZsUCbgDHRnuhp3zVza5HQ5aHrMl1zG00KA=
 github.com/brotherlogic/recordscores v0.0.0-20241226060931-912a7f3ec32c/go.mod h1:NrxLvrv6w9fMhn9jZpu/FKNynOX7mC9zQ3+2KiHB9Og=
 github.com/brotherlogic/recordsorganiser v0.0.0-20241226060905-078749fe22ad h1:72DYZF0WtOWAzlUwZakWor3q/1cHsoURUSEPTLPCUFE=
