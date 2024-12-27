@@ -40,12 +40,12 @@ github.com/brotherlogic/recordadder v0.0.0-20241227163638-a04809dcc11f h1:RUpr+L
 github.com/brotherlogic/recordadder v0.0.0-20241227163638-a04809dcc11f/go.mod h1:dPEbda9TsV5YiqzzKMMX//OSbvmZ5hsF1UxBfddREIw=
 github.com/brotherlogic/recordfanout v0.0.0-20241227153658-6362af598d70 h1:i0MZDyuuXrzW5/pCfJ/SXFxTHsdCqhx2EXhQPxs3guM=
 github.com/brotherlogic/recordfanout v0.0.0-20241227153658-6362af598d70/go.mod h1:wZswOTNwO2FSobbafLsxtOA1Iw9sp6SY8swsW0nPgxI=
-github.com/brotherlogic/recordmover v0.0.0-20241227153615-d11babf73f84 h1:yDq9ojVsOuYBVS+b5nyg0VSxK3JBnKAJzlN+JCYgNhg=
-github.com/brotherlogic/recordmover v0.0.0-20241227153615-d11babf73f84/go.mod h1:I8MErmS/RW60bymyBmGxff4GtKH6EeeZtWdiBGQyQmk=
+github.com/brotherlogic/recordmover v0.0.0-20241227164240-0bb0ebc07b8b h1:TmbaA3MSUybbeq4fFVrCanmu5ZHNl3ogTS/RFo5p3es=
+github.com/brotherlogic/recordmover v0.0.0-20241227164240-0bb0ebc07b8b/go.mod h1:rIo85O5rMH6YXD0mNYbLJ4fr1MP0lF/2a3FJzm2E1+4=
 github.com/brotherlogic/recordscores v0.0.0-20241227143648-22965b888a5e h1:meg6a5dfRLE5e9TSNFVZgtYlOz32SxUGiXUxudCZzxU=
 github.com/brotherlogic/recordscores v0.0.0-20241227143648-22965b888a5e/go.mod h1:Bh6ioZy7yLAGwjsSTzCOHhE6El8h6DV2zxCaAx/oiLE=
-github.com/brotherlogic/recordsorganiser v0.0.0-20241227153851-7b1d49eb3acb h1:m/ZdX7Q8yFmbwTwEYvMg0zTbh/dMpIup8fM9YrVwzlc=
-github.com/brotherlogic/recordsorganiser v0.0.0-20241227153851-7b1d49eb3acb/go.mod h1:NQXd8DNHHzVleo/PACvzME3dhxHrCPYHwluUZ+Y4bvk=
+github.com/brotherlogic/recordsorganiser v0.0.0-20241227163952-38b328041573 h1:sbxZppz3YlOR75QUPpdo0um3+P7twfcp4cCPgFFpoZk=
+github.com/brotherlogic/recordsorganiser v0.0.0-20241227163952-38b328041573/go.mod h1:Yw+eZBYAOVMFcipjjLY6LSwyBHHiNKCzS9LBD/vTRqI=
 github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 h1:YjFE4Sa+wwbl4yJwJaMQVeA4CMzLIDbbIuSMdsEp5/w=
 github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2/go.mod h1:ODrbMDhG+yOp2vie9vE4oaKsKhILDralZMr7PJ4HrJY=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=

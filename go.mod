@@ -13,9 +13,9 @@ require (
 	github.com/brotherlogic/queue v0.0.0-20241227163756-cf6e5bbe1aec
 	github.com/brotherlogic/recordadder v0.0.0-20241227163638-a04809dcc11f
 	github.com/brotherlogic/recordfanout v0.0.0-20241227153658-6362af598d70
-	github.com/brotherlogic/recordmover v0.0.0-20241227153615-d11babf73f84
+	github.com/brotherlogic/recordmover v0.0.0-20241227164240-0bb0ebc07b8b
 	github.com/brotherlogic/recordscores v0.0.0-20241227143648-22965b888a5e
-	github.com/brotherlogic/recordsorganiser v0.0.0-20241227153851-7b1d49eb3acb
+	github.com/brotherlogic/recordsorganiser v0.0.0-20241227163952-38b328041573
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.20.5
 	golang.org/x/net v0.33.0
