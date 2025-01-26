@@ -274,7 +274,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			data, _ := proto.Marshal(upup)
 			_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 				QueueName:       "record_fanout",
-				RunTime:         time.Now().Add(time.Hour * 24 * 30).Unix(),
+				RunTime:         time.Now().Add(time.Hour * 24 * 2).Unix(),
 				Payload:         &google_protobuf.Any{Value: data},
 				Key:             fmt.Sprintf("%v", record.GetRelease().GetInstanceId()),
 				AddIfNotPresent: true,
