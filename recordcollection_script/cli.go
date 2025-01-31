@@ -123,7 +123,7 @@ func main() {
 					log.Fatalf("Bad get record: %v", err)
 				}
 
-				if srec.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
+				if srec.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH && !srec.GetRecord().GetMetadata().GetTakenToStore() {
 					records = append(records, srec.GetRecord())
 				}
 			}
@@ -179,7 +179,7 @@ func main() {
 			if (len(os.Args) > 2 && os.Args[2] == "sell") || (len(os.Args) > 3 && os.Args[3] == "sell") {
 				up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{
 					Release:  &pbgd.Release{InstanceId: r.GetRelease().InstanceId},
-					Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1}}}
+					Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1, TakenToStore: true}}}
 				rec, err := registry.UpdateRecord(ctx, up)
 				if err != nil {
 					log.Fatalf("Error: %v", err)
