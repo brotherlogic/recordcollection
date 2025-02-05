@@ -498,6 +498,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 
 	// Re pull the date_added
 	mp, err := s.retr.GetInstanceInfo(ctx, r.GetRelease().GetId())
+	s.CtxLog(ctx, fmt.Sprintf("Got %v -> %+v", err, mp))
 	if err == nil && mp[r.GetRelease().GetInstanceId()] != nil {
 		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", r.GetRelease().GetInstanceId(), mp[r.GetRelease().GetInstanceId()]))
 		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()].DateAdded

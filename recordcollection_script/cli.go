@@ -169,6 +169,8 @@ func main() {
 		cWidth := float32(0)
 		count := 0
 		for _, r := range records {
+			time.Sleep(time.Second * 10)
+
 			count++
 			if cWidth > totalWidth {
 				break
