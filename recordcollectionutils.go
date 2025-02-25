@@ -522,11 +522,10 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			}
 		}
 
-		if r.GetMetadata().GetRecordWidth() <= 0.5 {
-			val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Width, 32)
-			if err == nil {
-				r.GetMetadata().RecordWidth = float32(val)
-			}
+		val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Width, 32)
+
+		if err == nil && val > 0 {
+			r.GetMetadata().RecordWidth = float32(val)
 		}
 
 		if r.GetMetadata().GetSleeve() == pb.ReleaseMetadata_SLEEVE_UNKNOWN {

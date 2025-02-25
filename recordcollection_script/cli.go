@@ -19,14 +19,11 @@ import (
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbg "github.com/brotherlogic/gramophile/proto"
 	ppb "github.com/brotherlogic/printqueue/proto"
-	qpb "github.com/brotherlogic/queue/proto"
 	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
-	fopb "github.com/brotherlogic/recordfanout/proto"
 	pbrs "github.com/brotherlogic/recordscores/proto"
 	ropb "github.com/brotherlogic/recordsorganiser/proto"
 	ro "github.com/brotherlogic/recordsorganiser/sales"
-	google_protobuf "github.com/golang/protobuf/ptypes/any"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -34,7 +31,6 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/prototext"
-	"google.golang.org/protobuf/proto"
 )
 
 func buildContext() (context.Context, context.CancelFunc, error) {
@@ -384,28 +380,9 @@ func main() {
 		for _, id := range ids.GetInstanceIds() {
 			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 			if err != nil {
-				log.Fatalf("Bad read: %v", err)
-			}
-			//fmt.Printf("%v. [%v] %v\n", rec.GetRecord().GetMetadata().GetDateAdded(), rec.GetRecord().GetMetadata().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle())
-
-			if rec.GetRecord().GetRelease().GetFolderId() == 3380098 {
-				conn, err := utils.LFDialServer(ctx, "queue")
-				if err != nil {
-					log.Fatalf("Unable to dial: %v", err)
-				}
-				defer conn.Close()
-
-				client := qpb.NewQueueServiceClient(conn)
-				update := &fopb.FanoutRequest{InstanceId: rec.GetRecord().GetRelease().GetInstanceId()}
-				data, _ := proto.Marshal(update)
-				res, err := client.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-					QueueName: "record_fanout",
-					RunTime:   int64(time.Now().Unix()),
-					Payload:   &google_protobuf.Any{Value: data},
-					Key:       fmt.Sprintf("%v", rec.GetRecord().GetRelease().GetInstanceId()),
-				})
-				fmt.Printf("%v and %v from %v\n", res, err, rec.GetRecord().GetRelease().GetInstanceId())
-				//log.Fatalf("Aha")
+				fmt.Printf("Bad read: %v\n", err)
+			} else {
+				fmt.Printf("%v. [%v] %v\n", rec.GetRecord().GetMetadata().GetDateAdded(), rec.GetRecord().GetMetadata().GetInstanceId(), rec.GetRecord().GetRelease().GetTitle())
 			}
 		}
 	case "categories":

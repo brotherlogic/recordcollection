@@ -757,6 +757,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
+//			if r.GetMetadata()
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 			width += (r.GetRecord().GetMetadata().GetRecordWidth())
 		}
