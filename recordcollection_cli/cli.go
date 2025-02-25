@@ -757,6 +757,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
+//			if r.GetMetadata()
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 			width += (r.GetRecord().GetMetadata().GetRecordWidth())
 		}
@@ -1732,6 +1733,26 @@ func main() {
 				})
 			}
 		}
+	case "enqueue":
+		iv, _ := strconv.ParseInt(os.Args[2], 10, 32)
+		i := int32(iv)
+		conn2, err := utils.LFDialServer(ctx, "queue")
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		client2 := qpb.NewQueueServiceClient(conn2)
+						upup := &rfpb.FanoutRequest{
+					InstanceId: i,
+				}
+				data, _ := proto.Marshal(upup)
+
+				res, err := client2.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+					Key:       fmt.Sprintf("%v", i),
+					QueueName: "record_fanout",
+					RunTime:   time.Now().Unix(),
+					Payload:   &google_protobuf.Any{Value: data},
+				})
+			fmt.Printf("%v and %v\n", res, err)
 
 	case "sold_offline":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
