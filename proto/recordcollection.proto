@@ -352,6 +352,8 @@ message ReleaseMetadata {
   bool was_parents = 69;
 
   bool sell_offline = 70;
+
+  bool taken_to_store = 71;
 }
 
 // A request to get some records
