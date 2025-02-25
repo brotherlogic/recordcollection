@@ -557,7 +557,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 
 		}
 
-		val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Weight, 32)
+		val, err = strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Weight, 32)
 		if err == nil {
 			r.GetMetadata().WeightInGrams = int32(val)
 		}
