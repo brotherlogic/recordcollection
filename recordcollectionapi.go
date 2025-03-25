@@ -313,7 +313,7 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 	}
 
 	res := s.retr.DeleteInstance(ctx, int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), int(request.GetInstanceId()))
-	s.CtxLog(ctx, fmt.Sprintf("Deleted from collection: %v", res))
+	s.CtxLog(ctx, fmt.Sprintf("Deleted from collection: %v -> %v and %v and %v", res, int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), int(request.GetInstanceId())))
 
 	err = s.saveRecordCollection(ctx, collection)
 	if err != nil {

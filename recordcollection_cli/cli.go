@@ -179,6 +179,15 @@ func main() {
 			}
 		}
 
+	case "all":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad: %v", err)
+		}
+		for _, id := range ids.GetInstanceIds() {
+			fmt.Printf("%v\n", id)
+		}
+
 	case "all_locations":
 		c2, e2 := utils.LFDialServer(ctx, "recordsorganiser")
 		if e2 != nil {
@@ -757,7 +766,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-//			if r.GetMetadata()
+			//			if r.GetMetadata()
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 			width += (r.GetRecord().GetMetadata().GetRecordWidth())
 		}
@@ -1741,18 +1750,18 @@ func main() {
 			log.Fatalf("Bad dial: %v", err)
 		}
 		client2 := qpb.NewQueueServiceClient(conn2)
-						upup := &rfpb.FanoutRequest{
-					InstanceId: i,
-				}
-				data, _ := proto.Marshal(upup)
+		upup := &rfpb.FanoutRequest{
+			InstanceId: i,
+		}
+		data, _ := proto.Marshal(upup)
 
-				res, err := client2.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-					Key:       fmt.Sprintf("%v", i),
-					QueueName: "record_fanout",
-					RunTime:   time.Now().Unix(),
-					Payload:   &google_protobuf.Any{Value: data},
-				})
-			fmt.Printf("%v and %v\n", res, err)
+		res, err := client2.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+			Key:       fmt.Sprintf("%v", i),
+			QueueName: "record_fanout",
+			RunTime:   time.Now().Unix(),
+			Payload:   &google_protobuf.Any{Value: data},
+		})
+		fmt.Printf("%v and %v\n", res, err)
 
 	case "sold_offline":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
