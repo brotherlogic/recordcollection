@@ -114,7 +114,7 @@ type saver interface {
 	GetCurrentSalePrice(ctx context.Context, saleID int64) float32
 	GetCurrentSaleState(ctx context.Context, saleID int64) (pbgd.SaleState, error)
 	RemoveFromSale(ctx context.Context, saleID int, releaseID int) error
-	ExpireSale(ctx context.Context, saleID int, releaseID int, price float32) error
+	ExpireSale(ctx context.Context, saleID int64, releaseID int, price float32) error
 	GetInventory(ctx context.Context) ([]*pbgd.ForSale, error)
 	GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error)
 	GetOrder(ctx context.Context, ID string) (map[int64]int32, time.Time, error)

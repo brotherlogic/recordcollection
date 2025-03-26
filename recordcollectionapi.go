@@ -35,7 +35,7 @@ func (s *Server) DeleteSale(ctx context.Context, req *pb.DeleteSaleRequest) (*pb
 
 	for _, sale := range sales {
 		if sale.GetSaleId() == req.GetSaleId() {
-			err = s.retr.ExpireSale(ctx, int(sale.GetSaleId()), int(sale.GetId()), float32(sale.GetSalePrice())/100.0)
+			err = s.retr.ExpireSale(ctx, int64(sale.GetSaleId()), int(sale.GetId()), float32(sale.GetSalePrice())/100.0)
 		}
 	}
 
