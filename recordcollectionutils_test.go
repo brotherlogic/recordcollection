@@ -77,7 +77,7 @@ func (t *testSyncer) GetInventory(ctx context.Context) ([]*pbgd.ForSale, error) 
 	return []*pbgd.ForSale{&pbgd.ForSale{Id: 123, SaleId: 123}}, nil
 }
 
-func (t *testSyncer) ExpireSale(ctx context.Context, saleID int, releaseID int, price float32) error {
+func (t *testSyncer) ExpireSale(ctx context.Context, saleID int64, releaseID int, price float32) error {
 	return nil
 }
 
