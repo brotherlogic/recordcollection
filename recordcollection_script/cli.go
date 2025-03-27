@@ -177,17 +177,10 @@ func main() {
 			if (len(os.Args) > 2 && os.Args[2] == "sell") || (len(os.Args) > 3 && os.Args[3] == "sell") {
 				up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{
 					Release:  &pbgd.Release{InstanceId: r.GetRelease().InstanceId},
-					Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1, TakenToStore: true}}}
+					Metadata: &pbrc.ReleaseMetadata{SoldPrice: int32(1), SoldDate: time.Now().Unix(), SaleId: -1, DeleteSaleState: pbrc.ReleaseMetadata_DELETE, TakenToStore: true}}}
 				rec, err := registry.UpdateRecord(ctx, up)
 				if err != nil {
 					log.Fatalf("Error: %v", err)
-				}
-
-				_, err = registry.DeleteSale(ctx, &pbrc.DeleteSaleRequest{
-					SaleId: r.GetMetadata().GetSaleId(),
-				})
-				if err != nil {
-					log.Fatalf("Error in deleting sale: %v", err)
 				}
 
 				conn, err := grpc.Dial("print.brotherlogic-backend.com:80", grpc.WithTransportCredentials(insecure.NewCredentials()))
