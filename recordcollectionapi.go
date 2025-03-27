@@ -63,6 +63,15 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		return nil, err
 	}
 
+	// Fast push on deletes
+	if record.GetMetadata().GetDeleteSaleState() == pb.ReleaseMetadata_DELETE {
+		_, err = s.DeleteSale(ctx, &pb.DeleteSaleRequest{SaleId: record.GetMetadata().GetSaleId()})
+		if err != nil {
+			return nil, err
+		}
+		record.GetMetadata().SaleId = -1
+	}
+
 	gUpdate := record.GetMetadata().GetNeedsGramUpdate()
 
 	if record.GetMetadata().GetTransferIid() > 0 {
