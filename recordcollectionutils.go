@@ -537,6 +537,23 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			}
 		}
 
+		if r.GetMetadata().GetPurchaseLocation() == pb.PurchaseLocation_LOCATION_UNKNOWN {
+			switch mp[r.GetRelease().GetInstanceId()].PurchaseLocation {
+			case "Amoeba":
+				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_AMOEBA
+			case "Hercules":
+				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_HERCULES
+			case "Lloyds":
+				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_LLOYDS
+			default:
+				s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[r.GetRelease().GetInstanceId()].PurchaseLocation))
+			}
+		}
+
+		if r.GetMetadata().GetCost() == 0 {
+			r.GetMetadata().Cost = mp[r.GetRelease().GetInstanceId()].PurchasePrice
+		}
+
 		switch mp[r.GetRelease().GetInstanceId()].Keep {
 		case "none", "NO_KEEP":
 			r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
