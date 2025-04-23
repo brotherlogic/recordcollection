@@ -99,6 +99,7 @@ enum Purgatory {
     DIRECT = 10;
     GROOVE_MERCHANT = 11;
     SACRED_BONES = 12;
+    LLOYDS = 13;
   }
 
 message ReleaseMetadata {
