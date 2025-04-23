@@ -422,7 +422,17 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
 	if err != nil {
-		return nil, err
+		if status.Convert(err).Code() == codes.NotFound && request.GetReason() == "ping_from_gramophile" {
+			// This is a record added in gramophile, which we need to add here
+			rec = &pb.Record{
+				Release:  &pbgd.Release{InstanceId: request.GetUpdate().GetRelease().GetInstanceId()},
+				Metadata: &pb.ReleaseMetadata{NeedsGramUpdate: true}}
+		} else {
+			if request.GetReason() == "ping_from_gramophile" {
+				s.RaiseIssue("Bad read", fmt.Sprintf("Read from gramophile was %v", err))
+			}
+			return nil, err
+		}
 	}
 
 	// We are limited in what we can do to records that are in the box
