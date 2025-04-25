@@ -7,7 +7,7 @@ require (
 	github.com/brotherlogic/dstore v0.0.0-20250418222254-6bb8cca22722
 	github.com/brotherlogic/godiscogs v0.0.0-20250423134217-27caff832e51
 	github.com/brotherlogic/goserver v0.0.0-20250123145056-95c6fbb2310a
-	github.com/brotherlogic/gramophile v0.1143.0
+	github.com/brotherlogic/gramophile v0.1145.0
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
 	github.com/brotherlogic/printqueue v0.42.0
 	github.com/brotherlogic/queue v0.0.0-20250418232334-b7d1952f01af
@@ -23,13 +23,13 @@ require (
 	google.golang.org/protobuf v1.36.6
 )
 
-require github.com/brotherlogic/discogs v0.0.0-20250108144950-fc78f5083d93
+require github.com/brotherlogic/discogs v0.0.0-20250424132410-b01ee5e4de2a
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/brotherlogic/buildserver v0.0.0-20250419002757-c39455075e25 // indirect
-	github.com/brotherlogic/datastore v0.0.0-20250416231626-1b1caafef0c9 // indirect
-	github.com/brotherlogic/discovery v0.0.0-20241109204028-02908558af09 // indirect
+	github.com/brotherlogic/datastore v0.0.0-20250424084642-25f24507fc39 // indirect
+	github.com/brotherlogic/discovery v0.0.0-20250424083833-47e726a05047 // indirect
 	github.com/brotherlogic/githubcard v0.0.0-20250418232527-4db041ebed1e // indirect
 	github.com/brotherlogic/githubridge v0.2853.0 // indirect
 	github.com/brotherlogic/gobuildslave v0.0.0-20250418184627-bbb8bc944f50 // indirect
