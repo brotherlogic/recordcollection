@@ -413,7 +413,17 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
 	if err != nil {
-		return nil, err
+		if status.Code(err) == codes.InvalidArgument {
+			// See if this is an actual record that we've overlooked
+			_, err := s.retr.GetInstanceInfo(ctx, request.GetUpdate().GetRelease().GetInstanceId())
+			if err != nil {
+				return nil, err
+			}
+			rec = &pb.Record{Release: &pbgd.Release{InstanceId: request.GetUpdate().GetRelease().GetInstanceId()}, Metadata: &pb.ReleaseMetadata{NeedsGramUpdate: true}}
+
+		} else {
+			return nil, err
+		}
 	}
 
 	// We are limited in what we can do to records that are in the box
