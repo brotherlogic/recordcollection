@@ -545,6 +545,9 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_HERCULES
 			case "Lloyds":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_LLOYDS
+			case "Discogs":
+				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_DISCOGS
+
 			default:
 				if mp[r.GetRelease().GetInstanceId()].PurchaseLocation != "" {
 					s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[r.GetRelease().GetInstanceId()].PurchaseLocation))
