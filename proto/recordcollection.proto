@@ -99,6 +99,7 @@ enum Purgatory {
     DIRECT = 10;
     GROOVE_MERCHANT = 11;
     SACRED_BONES = 12;
+    LLOYDS = 13;
   }
 
 message ReleaseMetadata {
@@ -354,6 +355,13 @@ message ReleaseMetadata {
   bool sell_offline = 70;
 
   bool taken_to_store = 71;
+
+  enum DeleteSaleState {
+    NO_DELETE = 0;
+    DELETE = 1;
+    CLEAR_DELETE = 2;
+  }
+  DeleteSaleState delete_sale_state = 72;
 }
 
 // A request to get some records
@@ -371,6 +379,7 @@ message GetRecordsRequest {
 
   // Reference the caller
   string caller = 5;
+  
 
 }
 
