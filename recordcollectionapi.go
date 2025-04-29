@@ -422,13 +422,19 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
 	if err != nil {
-		if status.Code(err) == codes.InvalidArgument {
+		if status.Code(err) == codes.InvalidArgument && request.GetUpdate().GetRelease().GetId() > 0 {
 			// See if this is an actual record that we've overlooked
-			_, err := s.retr.GetInstanceInfo(ctx, request.GetUpdate().GetRelease().GetInstanceId())
+			_, err := s.retr.GetInstanceInfo(ctx, request.GetUpdate().GetRelease().GetId())
 			if err != nil {
 				return nil, err
 			}
-			rec = &pb.Record{Release: &pbgd.Release{InstanceId: request.GetUpdate().GetRelease().GetInstanceId()}, Metadata: &pb.ReleaseMetadata{NeedsGramUpdate: true}}
+			rec = &pb.Record{
+				Release: &pbgd.Release{
+					Id:         request.GetUpdate().GetRelease().GetId(),
+					InstanceId: request.GetUpdate().GetRelease().GetInstanceId()},
+				Metadata: &pb.ReleaseMetadata{
+					NeedsGramUpdate: true,
+				}}
 
 		} else {
 			return nil, err
