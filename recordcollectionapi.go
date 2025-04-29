@@ -422,15 +422,15 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
 	if err != nil {
-		if status.Convert(err).Code() == codes.NotFound && request.GetReason() == "ping_from_gramophile" {
-			// This is a record added in gramophile, which we need to add here
-			rec = &pb.Record{
-				Release:  &pbgd.Release{InstanceId: request.GetUpdate().GetRelease().GetInstanceId()},
-				Metadata: &pb.ReleaseMetadata{NeedsGramUpdate: true}}
-		} else {
-			if request.GetReason() == "ping_from_gramophile" {
-				s.RaiseIssue("Bad read", fmt.Sprintf("Read from gramophile was %v", err))
+		if status.Code(err) == codes.InvalidArgument {
+			// See if this is an actual record that we've overlooked
+			_, err := s.retr.GetInstanceInfo(ctx, request.GetUpdate().GetRelease().GetInstanceId())
+			if err != nil {
+				return nil, err
 			}
+			rec = &pb.Record{Release: &pbgd.Release{InstanceId: request.GetUpdate().GetRelease().GetInstanceId()}, Metadata: &pb.ReleaseMetadata{NeedsGramUpdate: true}}
+
+		} else {
 			return nil, err
 		}
 	}
