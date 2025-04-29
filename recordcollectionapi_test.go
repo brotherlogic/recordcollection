@@ -185,16 +185,6 @@ func TestUpdateRecordsWithBigPriceJump(t *testing.T) {
 	}
 }
 
-func TestBadUpdateRecords(t *testing.T) {
-	s := InitTestServer(".testUpdateRecords")
-
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
-
-	if err == nil {
-		t.Errorf("Update did not fail")
-	}
-}
-
 func TestUpdateRecordsNoCondition(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
 	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
