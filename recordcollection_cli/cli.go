@@ -1361,7 +1361,8 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "gupdate":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Tripping gram update", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{NeedsGramUpdate: true}}})
+		i2, _ := strconv.Atoi(os.Args[3])
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Tripping gram update", Update: &pbrc.Record{Release: &pbgd.Release{Id: int32(i2), InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{NeedsGramUpdate: true}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
