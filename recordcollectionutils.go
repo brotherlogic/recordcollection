@@ -546,7 +546,9 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			case "Lloyds":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_LLOYDS
 			default:
-				s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[r.GetRelease().GetInstanceId()].PurchaseLocation))
+				if mp[r.GetRelease().GetInstanceId()].PurchaseLocation != "" {
+					s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[r.GetRelease().GetInstanceId()].PurchaseLocation))
+				}
 			}
 		}
 
