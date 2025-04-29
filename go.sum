@@ -32,6 +32,8 @@ github.com/brotherlogic/godiscogs v0.0.0-20250423134217-27caff832e51 h1:+ZiZOBSS
 github.com/brotherlogic/godiscogs v0.0.0-20250423134217-27caff832e51/go.mod h1:4wYe3uogEJqP77td2b2j69c+TLcSDrqgd5pqj7vlb6U=
 github.com/brotherlogic/godiscogs v0.0.0-20250429162031-0fe2b1b7c308 h1:tin092TQm1tZSa2f8XPMybLE5EM+NuKhQxLc2EvWFcM=
 github.com/brotherlogic/godiscogs v0.0.0-20250429162031-0fe2b1b7c308/go.mod h1:4wYe3uogEJqP77td2b2j69c+TLcSDrqgd5pqj7vlb6U=
+github.com/brotherlogic/godiscogs v0.0.0-20250429182651-404c7473edf8 h1:A520v1rgl5+aFLI4jkARcBiRE29tEL4lUx/HIOsEaTc=
+github.com/brotherlogic/godiscogs v0.0.0-20250429182651-404c7473edf8/go.mod h1:4wYe3uogEJqP77td2b2j69c+TLcSDrqgd5pqj7vlb6U=
 github.com/brotherlogic/goserver v0.0.0-20250123145056-95c6fbb2310a h1:rni9hUmBPIAdPCP3FsrgX570YIWTsagksIoPmKXo42Q=
 github.com/brotherlogic/goserver v0.0.0-20250123145056-95c6fbb2310a/go.mod h1:QbrdZ+d2/FKUG5c9BmQS3yXssOTMOb0nlZyZNcS0UMM=
 github.com/brotherlogic/gramophile v0.1145.0 h1:xX5SaZEuXIkKcQRd49rrvd14zCoZD4zKWuBHKhodeQU=
