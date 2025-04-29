@@ -369,7 +369,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	updateCount.With(prometheus.Labels{"reason": request.GetReason()}).Inc()
 
 	if !request.GetUpdate().GetMetadata().GetNeedsGramUpdate() {
-		s.RaiseIssue("Update", fmt.Sprintf("%v", request))
+		//s.RaiseIssue("Update", fmt.Sprintf("%v", request))
 	}
 
 	// Run a sale udpate
