@@ -411,10 +411,14 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if err != nil {
 				return nil, err
 			}
-			rec.Release.Id = request.GetUpdate().Release.Id
-			return &pb.UpdateRecordsResponse{}, s.saveRecord(ctx, rec)
+			if rec.Release.Id != request.GetUpdate().GetRelease().GetId() {
+
+				rec.Release.Id = request.GetUpdate().Release.Id
+				return &pb.UpdateRecordsResponse{}, s.saveRecord(ctx, rec)
+			}
+		} else {
+			return nil, fmt.Errorf("you cannot do a record update like this")
 		}
-		return nil, fmt.Errorf("you cannot do a record update like this")
 	}
 
 	s.CtxLog(ctx, fmt.Sprintf("UpdateRecord %v", request))
