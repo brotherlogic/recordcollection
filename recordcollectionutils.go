@@ -504,19 +504,18 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 
 		// Are we moving out of the 12 Inch collection
 		if r.GetRelease().GetFolderId() == 242017 && mp[r.GetRelease().GetInstanceId()].FolderId != 242017 {
-			// Run an update
-			conn, err := s.FDialServer(ctx, "recordsorganiser")
-			if err != nil {
-				return err
-			}
-			oclient := pbro.NewOrganiserServiceClient(conn)
-			_, err = oclient.GetOrganisation(ctx, &pbro.GetOrganisationRequest{
-				Locations:  []*pbro.Location{&pbro.Location{Name: "12 Inches"}},
-				ForceReorg: true,
-			})
-			if err != nil {
-				return err
-			}
+			// Run an update - but do it at the end of the request
+			defer func() {
+				conn, err := s.FDialServer(ctx, "recordsorganiser")
+				if err == nil {
+					oclient := pbro.NewOrganiserServiceClient(conn)
+					oclient.GetOrganisation(ctx, &pbro.GetOrganisationRequest{
+						Locations:  []*pbro.Location{&pbro.Location{Name: "12 Inches"}},
+						ForceReorg: true,
+					})
+				}
+			}()
+
 		}
 
 		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", r.GetRelease().GetInstanceId(), mp[r.GetRelease().GetInstanceId()]))
