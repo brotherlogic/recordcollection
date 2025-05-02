@@ -404,7 +404,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		return nil, status.Errorf(codes.NotFound, "Could not find sale: %v", request)
 	}
 
-	if request.GetUpdate().GetRelease().GetId() > 0 {
+	if request.GetUpdate().GetRelease().GetId() > 0 && request.GetReason() != "ping_from_gramophile" {
 		// Allow release id adjustment
 		if request.GetUpdate().GetRelease().GetInstanceId() > 0 {
 			rec, err := s.loadRecord(ctx, request.GetUpdate().GetRelease().InstanceId, false)
