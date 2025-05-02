@@ -299,14 +299,6 @@ func (s *Server) deleteRecord(ctx context.Context, i int32) error {
 }
 
 func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
-	if r.GetMetadata().GoalFolder == 0 {
-		s.RaiseIssue("Save Error", fmt.Sprintf("Trying to save a record without a goal folder: %v", r))
-		return fmt.Errorf("No goal folder")
-	}
-
-	if r.GetRelease().GetInstanceId() == 365221500 {
-		s.CtxLog(ctx, fmt.Sprintf("SAVE %v", r.GetMetadata()))
-	}
 	err := s.KSclient.Save(ctx, fmt.Sprintf("%v%v", SAVEKEY, r.GetRelease().InstanceId), r)
 	if err != nil {
 		return err
