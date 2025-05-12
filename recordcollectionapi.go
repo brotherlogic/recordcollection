@@ -349,6 +349,14 @@ func (s *Server) GetWants(ctx context.Context, request *pb.GetWantsRequest) (*pb
 	return response, nil
 }
 
+func (s *Server) SalePrice(ctx context.Context, r *pb.Record) (float32, error) {
+	price, err := s.retr.GetSalePrice(ctx, int(r.GetRelease().GetId()))
+	if err != nil {
+		return 0, err
+	}
+	return price, nil
+}
+
 // UpdateWant updates the record
 func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) (*pb.UpdateWantResponse, error) {
 	var err error
@@ -518,7 +526,10 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if s.disableSales {
 				return nil, fmt.Errorf("Sales are disabled")
 			}
-			price, _ := s.retr.GetSalePrice(ctx, int(rec.GetRelease().Id))
+			price, err := s.SalePrice(ctx, rec)
+			if err != nil {
+				return nil, err
+			}
 			//230 is approx weight of packaging
 			saleid, err := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
 			s.CtxLog(ctx, fmt.Sprintf("Sale return %v and %v => %v", saleid, err, status.Code(err)))
