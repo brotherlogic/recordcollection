@@ -196,7 +196,7 @@ func main() {
 					Urgency:     ppb.Urgency_URGENCY_REGULAR,
 				})
 				if err != nil {
-					log.Fatalf("Bad print: %v", err)
+					log.Printf("Bad print: %v", err)
 				}
 			}
 
