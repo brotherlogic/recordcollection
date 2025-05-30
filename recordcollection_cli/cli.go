@@ -1367,6 +1367,13 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+		case "mark_for_remove_sale":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Marking for sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{DeleteSaleState: pbrc.ReleaseMetadata_DELETE}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "fixfolder":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
 		f, _ := strconv.ParseInt(os.Args[3], 10, 32)
