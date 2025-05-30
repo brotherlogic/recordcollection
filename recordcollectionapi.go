@@ -70,6 +70,8 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			return nil, err
 		}
 		record.GetMetadata().SaleId = -1
+		record.GetMetadata().DeleteSaleState = pb.ReleaseMetadata_NO_DELETE
+		updated = true
 	}
 
 	gUpdate := record.GetMetadata().GetNeedsGramUpdate()
