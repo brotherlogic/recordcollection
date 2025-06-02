@@ -10,9 +10,9 @@ require (
 	github.com/brotherlogic/gramophile v0.1208.0
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
 	github.com/brotherlogic/printqueue v0.42.0
-	github.com/brotherlogic/queue v0.0.0-20250602202922-cc5961146d9f
+	github.com/brotherlogic/queue v0.0.0-20250602204134-8901eae25e40
 	github.com/brotherlogic/recordadder v0.0.0-20250602201509-4068d6e08a92
-	github.com/brotherlogic/recordfanout v0.0.0-20250602203419-4086eb66214a
+	github.com/brotherlogic/recordfanout v0.0.0-20250602204140-6c95e177df02
 	github.com/brotherlogic/recordmover v0.0.0-20250602203652-e8cd012138eb
 	github.com/brotherlogic/recordscores v0.0.0-20250602202703-b419ff8e3225
 	github.com/brotherlogic/recordsorganiser v0.0.0-20250522071341-e94f0b2c7f87
