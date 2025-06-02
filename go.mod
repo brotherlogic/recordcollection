@@ -14,7 +14,7 @@ require (
 	github.com/brotherlogic/recordadder v0.0.0-20250602201509-4068d6e08a92
 	github.com/brotherlogic/recordfanout v0.0.0-20250602204140-6c95e177df02
 	github.com/brotherlogic/recordmover v0.0.0-20250602203652-e8cd012138eb
-	github.com/brotherlogic/recordscores v0.0.0-20250602202703-b419ff8e3225
+	github.com/brotherlogic/recordscores v0.0.0-20250602204506-182b5cbc7c5d
 	github.com/brotherlogic/recordsorganiser v0.0.0-20250522071341-e94f0b2c7f87
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.22.0
@@ -30,7 +30,7 @@ require (
 	github.com/brotherlogic/buildserver v0.0.0-20250602201412-6457418ba6bb // indirect
 	github.com/brotherlogic/datastore v0.0.0-20250602203041-d6f41fd1a46b // indirect
 	github.com/brotherlogic/discovery v0.0.0-20250510023052-d0207340fd9e // indirect
-	github.com/brotherlogic/githubcard v0.0.0-20250602203538-91b8c6f93b00 // indirect
+	github.com/brotherlogic/githubcard v0.0.0-20250602204331-7262160c91b9 // indirect
 	github.com/brotherlogic/githubridge v0.2859.0 // indirect
 	github.com/brotherlogic/gobuildslave v0.0.0-20250509192246-2e37750a2b43 // indirect
 	github.com/brotherlogic/lock v0.0.0-20250602203756-3a5c3fc602c2 // indirect
