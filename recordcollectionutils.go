@@ -567,6 +567,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_DISCOGS
 			case "Bandcamp":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_PBANDCAMP
+			case "Stranded":
+				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_STRANDED
 			default:
 				if mp[r.GetRelease().GetInstanceId()].PurchaseLocation != "" {
 					s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[r.GetRelease().GetInstanceId()].PurchaseLocation))
