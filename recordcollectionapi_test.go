@@ -327,6 +327,10 @@ func TestDoUpdateRecordsForSale(t *testing.T) {
 	if r == nil || r.GetRecord().Release.Title != "madeup2" {
 		t.Errorf("Error in updating records: %v", r)
 	}
+
+	if r.GetRecord().GetMetadata().GetSalePrice() != 1550 {
+		t.Errorf("Sale price not set: %v", r)
+	}
 }
 
 func TestUpdateRecordsForSaleSellingIsDisabled(t *testing.T) {

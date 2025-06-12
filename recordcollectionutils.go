@@ -515,6 +515,21 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 					})
 				}
 			}()
+		}
+
+		// Are we moving out of the 7 Inch collection
+		if r.GetRelease().GetFolderId() == 267116 && mp[r.GetRelease().GetInstanceId()].FolderId != 267116 {
+			// Run an update - but do it at the end of the request
+			defer func() {
+				conn, err := s.FDialServer(ctx, "recordsorganiser")
+				if err == nil {
+					oclient := pbro.NewOrganiserServiceClient(conn)
+					oclient.GetOrganisation(ctx, &pbro.GetOrganisationRequest{
+						Locations:  []*pbro.Location{&pbro.Location{Name: "7 Inches"}},
+						ForceReorg: true,
+					})
+				}
+			}()
 
 		}
 
@@ -569,6 +584,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_PBANDCAMP
 			case "Stranded":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_STRANDED
+			case "Direct":
+				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_DIRECT
 			default:
 				if mp[r.GetRelease().GetInstanceId()].PurchaseLocation != "" {
 					s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[r.GetRelease().GetInstanceId()].PurchaseLocation))
