@@ -207,6 +207,38 @@ func main() {
 			cWidth += r.GetMetadata().GetRecordWidth()
 		}
 		fmt.Printf("Sold %v / %v mm of records (%v/%v in total)\n", cWidth, totalWidth, count, len(records))
+	case "factory_reset":
+		all, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		for _, id := range all.GetInstanceIds() {
+			rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Printf("Bad read: %v", err)
+			}
+			if rec.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
+				log.Printf("Found 12 Inch: %v", rec.GetRecord().GetRelease().GetTitle())
+				if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_HIGH_SCHOOL ||
+					rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_STAGED ||
+					rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_UNLISTENED {
+					log.Printf("Found applicable: %v", rec.GetRecord().GetMetadata().GetCategory())
+					update := &pbrc.Record{
+						Release: &pbgd.Release{
+							InstanceId: id,
+						},
+						Metadata: &pbrc.ReleaseMetadata{
+							Category: pbrc.ReleaseMetadata_PRE_IN_COLLECTION,
+						},
+					}
+					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Moving the fall", Update: update})
+					if err != nil {
+						log.Printf("Bad update: %v", err)
+					}
+				}
+			}
+		}
+
 	case "the_fall":
 		all, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
