@@ -231,9 +231,14 @@ func main() {
 							Category: pbrc.ReleaseMetadata_PRE_IN_COLLECTION,
 						},
 					}
-					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Moving the fall", Update: update})
-					if err != nil {
-						log.Printf("Bad update: %v", err)
+					for i := 0; i < 10; i++ {
+						_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Moving the fall", Update: update})
+						if err != nil {
+							log.Printf("Bad update: %v", err)
+							time.Sleep(time.Second * 5)
+						} else {
+							break
+						}
 					}
 				}
 			}
