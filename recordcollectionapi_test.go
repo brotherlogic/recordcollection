@@ -314,7 +314,7 @@ func TestUpdateRecordNullFolder(t *testing.T) {
 
 func TestDoUpdateRecordsForSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, HighPrice: 100, LastCache: time.Now().Unix()}}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 

@@ -362,6 +362,8 @@ message ReleaseMetadata {
     CLEAR_DELETE = 2;
   }
   DeleteSaleState delete_sale_state = 72;
+
+  int32 high_price = 73;
 }
 
 // A request to get some records
