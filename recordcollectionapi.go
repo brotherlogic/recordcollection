@@ -532,6 +532,20 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			if err != nil {
 				return nil, err
 			}
+
+			// Adjust the sale price if it's too low
+			if rec.GetMetadata().GetHighPrice() == 0 {
+				return nil, status.Errorf(codes.Internal, "High price is not set")
+			}
+
+			if float32(rec.GetMetadata().GetHighPrice()/100.0) > price {
+				price = float32(rec.GetMetadata().GetHighPrice()) / 100
+			}
+
+			if float32(rec.GetMetadata().GetCost())/100.0 > price {
+				price = float32(rec.GetMetadata().GetCost())
+			}
+
 			//230 is approx weight of packaging
 			saleid, err := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
 			s.CtxLog(ctx, fmt.Sprintf("Sale return %v and %v => %v", saleid, err, status.Code(err)))
