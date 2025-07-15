@@ -642,7 +642,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	err = s.saveRecord(ctx, rec)
 	s.CtxLog(ctx, fmt.Sprintf("Saving with metada: %v [%v]-> %v", rec.GetRelease().GetInstanceId(), err, rec.GetMetadata()))
 
-	if request.GetReason() != "Tripping gram update" {
+	if request.GetReason() != "Tripping gram update" && request.GetReason() != "updating from grambridge" {
 		upup := &rfpb.FanoutRequest{
 			InstanceId: rec.GetRelease().GetInstanceId(),
 		}
