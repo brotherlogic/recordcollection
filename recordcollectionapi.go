@@ -454,30 +454,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		}
 	}
 
-	// We are limited in what we can do to records that are in the box
-	if rec.GetMetadata().GetBoxState() != pb.ReleaseMetadata_BOX_UNKNOWN && rec.GetMetadata().GetBoxState() != pb.ReleaseMetadata_OUT_OF_BOX {
-		if request.GetUpdate().GetMetadata().GetNewBoxState() != pb.ReleaseMetadata_OUT_OF_BOX &&
-			request.GetUpdate().GetMetadata().GetMoveFolder() != 3282985 &&
-			request.GetUpdate().GetMetadata().GetMoveFolder() != 3291655 &&
-			request.GetUpdate().GetMetadata().GetMoveFolder() != 3291970 &&
-			request.GetUpdate().GetMetadata().GetMoveFolder() != 3299890 &&
-			request.GetUpdate().GetMetadata().GetMoveFolder() != 3358141 &&
-			request.GetUpdate().GetMetadata().GetSetRating() == 0 {
-			if request.GetUpdate().GetMetadata().GetLastCleanDate() == 0 &&
-				request.GetUpdate().GetMetadata().GetRecordWidth() == 0 {
-				if request.GetUpdate().GetMetadata().GetLastStockCheck() == 0 {
-					if request.GetUpdate().GetMetadata().GetDateArrived() == 0 {
-						if request.GetUpdate().GetMetadata().GetGoalFolder() == 0 {
-							if request.GetUpdate().GetMetadata().GetFiledUnder() >= 0 {
-								s.CtxLog(ctx, fmt.Sprintf("Update %v failed because of the box situation", request))
-								return nil, status.Errorf(codes.FailedPrecondition, "You cannot do %v to a given boxed record", request)
-							}
-						}
-					}
-				}
-			}
-		}
-	}
+
 
 	// Set the metadata if it's not
 	if rec.GetMetadata() == nil {
