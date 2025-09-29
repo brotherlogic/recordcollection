@@ -547,7 +547,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 
 		// Don't overwrite an existing clean time
 		if r.GetMetadata().LastCleanDate == 0 || mp[r.GetRelease().GetInstanceId()].LastCleanDate != "" {
-			p, err := time.Parse("2006-01-02", mp[r.GetRelease().GetInstanceId()].LastCleanDate)
+			p, err := time.ParseInLocation("2006-01-02", mp[r.GetRelease().GetInstanceId()].LastCleanDate, time.Now().Location())
 			if err == nil {
 				r.GetMetadata().LastCleanDate = p.Unix()
 			} else {

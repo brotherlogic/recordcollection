@@ -767,7 +767,7 @@ func main() {
 				fmt.Printf("Error: %v\n", err)
 			}
 			//			if r.GetMetadata()
-			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
+			fmt.Printf("%v %v [%v] %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
 			width += (r.GetRecord().GetMetadata().GetRecordWidth())
 		}
 		fmt.Printf("Width = %v -> %v\n", width, width*1.25)
