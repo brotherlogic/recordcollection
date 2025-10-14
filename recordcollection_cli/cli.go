@@ -413,6 +413,24 @@ func main() {
 			log.Fatalf("error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "skip_refresh":
+		i, _ := strconv.Atoi(os.Args[2])
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+
+		if err != nil {
+			log.Fatalf("Error getting record: %v", err)
+		}
+
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-skip-refresh", Update: &pbrc.Record{
+			Release: &pbgd.Release{
+				InstanceId: srec.GetRecord().GetRelease().InstanceId},
+			Metadata: &pbrc.ReleaseMetadata{SkipRefresh: true},
+		}}
+		rec, err := registry.UpdateRecord(ctx, up)
+		if err != nil {
+			log.Fatalf("error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
 	case "wp":
 		i, _ := strconv.Atoi(os.Args[2])
 		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
