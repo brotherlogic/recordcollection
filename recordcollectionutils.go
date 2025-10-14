@@ -468,32 +468,34 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 	}
 
 	//Force a recache if the record has no title or condition; or if it has the old image format
-	if time.Since(time.Unix(r.GetMetadata().GetLastCache(), 0)) > time.Hour*24 || r.GetRelease().Title == "" ||
-		len(r.GetRelease().GetTracklist()) == 0 ||
-		(len(r.GetRelease().GetImages()) > 0 && strings.Contains(r.GetRelease().GetImages()[0].GetUri(), "img.discogs")) {
-		release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
-		s.CtxLog(ctx, fmt.Sprintf("Retreived release for re-cache: %v", err))
-		if err == nil {
+	if !r.GetMetadata().GetSkipRefresh() {
+		if time.Since(time.Unix(r.GetMetadata().GetLastCache(), 0)) > time.Hour*24 || r.GetRelease().Title == "" ||
+			len(r.GetRelease().GetTracklist()) == 0 ||
+			(len(r.GetRelease().GetImages()) > 0 && strings.Contains(r.GetRelease().GetImages()[0].GetUri(), "img.discogs")) {
+			release, err := s.retr.GetRelease(ctx, r.GetRelease().Id)
+			s.CtxLog(ctx, fmt.Sprintf("Retreived release for re-cache: %v", err))
+			if err == nil {
 
-			//Clear repeated fields first
-			r.GetRelease().Images = []*pbgd.Image{}
-			r.GetRelease().Artists = []*pbgd.Artist{}
-			r.GetRelease().Formats = []*pbgd.Format{}
-			r.GetRelease().Labels = []*pbgd.Label{}
-			r.GetRelease().Tracklist = []*pbgd.Track{}
-			r.GetRelease().DigitalVersions = []int32{}
-			r.GetRelease().OtherVersions = []int32{}
+				//Clear repeated fields first
+				r.GetRelease().Images = []*pbgd.Image{}
+				r.GetRelease().Artists = []*pbgd.Artist{}
+				r.GetRelease().Formats = []*pbgd.Format{}
+				r.GetRelease().Labels = []*pbgd.Label{}
+				r.GetRelease().Tracklist = []*pbgd.Track{}
+				r.GetRelease().DigitalVersions = []int32{}
+				r.GetRelease().OtherVersions = []int32{}
 
-			s.CtxLog(ctx, fmt.Sprintf("Merged %v", release))
-			proto.Merge(r.GetRelease(), release)
+				s.CtxLog(ctx, fmt.Sprintf("Merged %v", release))
+				proto.Merge(r.GetRelease(), release)
 
-			r.GetMetadata().LastCache = time.Now().Unix()
-			r.GetMetadata().LastUpdateTime = time.Now().Unix()
-		} else {
-			if strings.Contains(fmt.Sprintf("%v", err), "404") {
-				s.RaiseIssue("404 Error on record get", fmt.Sprintf("%v led to %v", r, err))
+				r.GetMetadata().LastCache = time.Now().Unix()
+				r.GetMetadata().LastUpdateTime = time.Now().Unix()
+			} else {
+				if strings.Contains(fmt.Sprintf("%v", err), "404") {
+					s.RaiseIssue("404 Error on record get", fmt.Sprintf("%v led to %v", r, err))
+				}
+				return err
 			}
-			return err
 		}
 	}
 
