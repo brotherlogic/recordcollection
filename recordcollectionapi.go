@@ -174,6 +174,8 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		record.GetMetadata().NeedsGramUpdate = false
 		updated = true
 		updateReason += " RECACHE"
+	} else {
+		s.CtxLog(ctx, fmt.Sprintf("Not recaching %v -> %v", request.GetInstanceId(), record.GetMetadata().GetNeedsGramUpdate()))
 	}
 
 	// Reset filed under
@@ -453,8 +455,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			return nil, err
 		}
 	}
-
-
 
 	// Set the metadata if it's not
 	if rec.GetMetadata() == nil {
