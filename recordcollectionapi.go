@@ -724,6 +724,18 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 	ids := make([]int32, 0)
 	switch x := req.Query.(type) {
 
+	case *pb.QueryRecordsRequest_ListenTime:
+		for id, _ := range collection.InstanceToUpdate {
+			record, err := s.loadRecord(ctx, id, false)
+			if err != nil {
+				return nil, err
+			}
+			if record.GetMetadata().GetLastListenTime() >= x.ListenTime {
+				ids = append(ids, id)
+			}
+		}
+		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
+
 	case *pb.QueryRecordsRequest_FolderId:
 		for id, folder := range collection.GetInstanceToFolder() {
 			if folder == x.FolderId {
