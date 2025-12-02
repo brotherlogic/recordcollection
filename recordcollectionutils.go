@@ -586,6 +586,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_PBANDCAMP
 			case "Stranded":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_STRANDED
+			case "Downhome":
+				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_DOWNHOME
 			case "Direct":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_DIRECT
 			default:

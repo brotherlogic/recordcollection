@@ -100,6 +100,7 @@ enum Purgatory {
     GROOVE_MERCHANT = 11;
     SACRED_BONES = 12;
     LLOYDS = 13;
+    DOWNHOME = 14;
   }
 
 message ReleaseMetadata {
@@ -453,6 +454,7 @@ message QueryRecordsRequest {
     int32 master_id = 4;
     int32 release_id = 5;
     bool all = 7;
+    int64 listen_time = 8;
   }
 
   string origin = 6;
