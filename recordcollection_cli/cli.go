@@ -540,6 +540,18 @@ func main() {
 			}
 			fmt.Printf("%v. %v [%v]\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId())
 		}
+	case "uc":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_FolderId{0}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			fmt.Printf("%v. %v %v %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
+		}
 	case "phs":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
 		if err != nil {
@@ -877,6 +889,20 @@ func main() {
 				fmt.Printf("Error: %v\n", err)
 			}
 			if r.Record.GetMetadata().GetKeep() == pbrc.ReleaseMetadata_DIGITAL_KEEPER {
+				fmt.Printf("%v. %v %v %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
+			}
+		}
+	case "nk":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_IN_COLLECTION}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetKeep() == pbrc.ReleaseMetadata_NOT_KEEPER {
 				fmt.Printf("%v. %v %v %v\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
 			}
 		}
