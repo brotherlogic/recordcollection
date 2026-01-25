@@ -837,7 +837,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 			}
 		}
 
-		return nil, status.Errorf(st.Code(), fmt.Sprintf("Could not locate %v -> %v", req.InstanceId, err))
+		return nil, status.Errorf(st.Code(), "Could not locate %v -> %v", req.InstanceId, err)
 	}
 
 	if rec.GetMetadata().GetTransferIid() > 0 {
