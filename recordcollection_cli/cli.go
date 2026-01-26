@@ -185,7 +185,11 @@ func main() {
 			log.Fatalf("Bad: %v", err)
 		}
 		for _, id := range ids.GetInstanceIds() {
-			fmt.Printf("%v\n", id)
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				log.Fatalf("%v", err)
+			}
+			fmt.Printf("%v %v\n", id, r.GetRecord().GetMetadata().GetCategory())
 		}
 
 	case "all_locations":
@@ -590,6 +594,33 @@ func main() {
 				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetMetadata().GetCost(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 			}
 		}
+	case "olds":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+
+		count1 := 0
+		count2 := 0
+
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_IN_COLLECTION && r.GetRecord().GetRelease().GetFolderId() == 242017 {
+				if time.Since(time.Unix(r.GetRecord().GetMetadata().GetLastListenTime(), 0)) > time.Hour*24*265*2 {
+					count1++
+					if time.Since(time.Unix(r.GetRecord().GetMetadata().GetLastListenTime(), 0)) > time.Hour*24*265*4 {
+						fmt.Printf("Super over: %v\n", r.GetRecord().GetRelease().GetTitle())
+						count2++
+					}
+				}
+			}
+		}
+
+		log.Printf("HERE: %v and %v\n", count1, count2)
+
 	case "phs-digital":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_HIGH_SCHOOL}})
 		if err != nil {
@@ -875,7 +906,7 @@ func main() {
 			}
 			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
 				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
-				fmt.Printf("%v. %v [%v] %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
+				fmt.Printf("%v. %v [%v] %v %v %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), r.GetRecord().GetRelease().GetRating(), r.GetRecord().GetMetadata().GetNeedsGramUpdate())
 			}
 		}
 	case "dk":
