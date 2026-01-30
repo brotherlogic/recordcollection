@@ -68,15 +68,15 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
-	case "fortnight":
-		records, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ListenTime{time.Now().Add(time.Hour * 24 * 14)}})
-		if err != nil {
-			log.Fatalf("Error getting records: %v", err)
-		}
-		fmt.Printf("Found %v records\n", len(records.GetRecords()))
-		for _, record := range records.GetRecords() {
-			fmt.Printf("%v\n", record.GetRelease().GetTitle())
-		}
+	//	case "fortnight":
+	//		records, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ListenTime{time.Now().Add(time.Hour * 24 * 14)}})
+	//		if err != nil {
+	//			log.Fatalf("Error getting records: %v", err)
+	//		}
+	//		fmt.Printf("Found %v records\n", len(records.GetRecords()))
+	//		for _, record := range records.GetRecords() {
+	//			fmt.Printf("%v\n", record.GetRelease().GetTitle())
+	//		}
 	case "run_sales":
 		mctx, mcancel, err := buildContext()
 		defer mcancel()
