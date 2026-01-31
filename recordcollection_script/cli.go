@@ -14,13 +14,17 @@ import (
 	"time"
 
 	"github.com/brotherlogic/goserver/utils"
+	"github.com/golang/protobuf/proto"
 
 	pbd "github.com/brotherlogic/discogs/proto"
+	dspb "github.com/brotherlogic/dstore/proto"
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pbg "github.com/brotherlogic/gramophile/proto"
 	ppb "github.com/brotherlogic/printqueue/proto"
+	qpb "github.com/brotherlogic/queue/proto"
 	rapb "github.com/brotherlogic/recordadder/proto"
 	pbrc "github.com/brotherlogic/recordcollection/proto"
+	rfpb "github.com/brotherlogic/recordfanout/proto"
 	pbrs "github.com/brotherlogic/recordscores/proto"
 	ropb "github.com/brotherlogic/recordsorganiser/proto"
 	ro "github.com/brotherlogic/recordsorganiser/sales"
@@ -31,6 +35,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/prototext"
+
+	google_protobuf "github.com/golang/protobuf/ptypes/any"
 )
 
 func buildContext() (context.Context, context.CancelFunc, error) {
@@ -68,15 +74,7 @@ func main() {
 	registry := pbrc.NewRecordCollectionServiceClient(conn)
 
 	switch os.Args[1] {
-	case "fortnight":
-		records, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ListenTime{time.Now().Add(time.Hour * 24 * 14)}})
-		if err != nil {
-			log.Fatalf("Error getting records: %v", err)
-		}
-		fmt.Printf("Found %v records\n", len(records.GetRecords()))
-		for _, record := range records.GetRecords() {
-			fmt.Printf("%v\n", record.GetRelease().GetTitle())
-		}
+
 	case "run_sales":
 		mctx, mcancel, err := buildContext()
 		defer mcancel()
@@ -250,6 +248,62 @@ func main() {
 						}
 					}
 				}
+			}
+		}
+	case "run_queue":
+		all, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		if err != nil {
+			log.Fatalf("Unable to get records: %v", err)
+		}
+
+		conn, err := utils.LFDialServer(ctx, "dstore")
+		if err != nil {
+			log.Fatalf("Err: %v", err)
+		}
+		defer conn.Close()
+
+		client := dspb.NewDStoreServiceClient(conn)
+		res, err := client.Read(ctx, &dspb.ReadRequest{Key: fmt.Sprintf("%v/%v", "github.com/brotherlogic/queue/queues/record_fanout")})
+		if err != nil {
+			log.Fatalf("Err: %v", err)
+		}
+
+		if res.GetConsensus() < 0.5 {
+			log.Fatalf("could not get read consensus (%v)", res.GetConsensus())
+		}
+
+		queue := &qpb.Queue{}
+		err = proto.Unmarshal(res.GetValue().GetValue(), queue)
+		if err != nil {
+			log.Fatalf("Err: %v", err)
+		}
+
+		conn, err = utils.LFDialServer(ctx, "queue")
+		if err != nil {
+			log.Fatalf("Bad dial: %v", err)
+		}
+		qclient := qpb.NewQueueServiceClient(conn)
+
+		for _, id := range all.GetInstanceIds() {
+			found := false
+			for _, qid := range queue.GetEntries() {
+				if qid.GetKey() == fmt.Sprintf("%v", id) {
+					found = true
+					break
+				}
+			}
+			if !found {
+				fmt.Printf("Found missing id: %v\n", id)
+				upup := &rfpb.FanoutRequest{
+					InstanceId: id,
+				}
+				data, _ := proto.Marshal(upup)
+				qclient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+					QueueName: "record_fanout",
+					RunTime:   time.Now().Unix(),
+					Payload:   &google_protobuf.Any{Value: data},
+					Key:       fmt.Sprintf("%v", id),
+				})
 			}
 		}
 
