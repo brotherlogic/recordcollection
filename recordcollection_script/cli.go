@@ -263,7 +263,7 @@ func main() {
 		defer conn.Close()
 
 		client := dspb.NewDStoreServiceClient(conn)
-		res, err := client.Read(ctx, &dspb.ReadRequest{Key: fmt.Sprintf("%v/%v", "github.com/brotherlogic/queue/queues/record_fanout")})
+		res, err := client.Read(ctx, &dspb.ReadRequest{Key: "github.com/brotherlogic/queue/queues/record_fanout"})
 		if err != nil {
 			log.Fatalf("Err: %v", err)
 		}
@@ -294,6 +294,15 @@ func main() {
 			}
 			if !found {
 				fmt.Printf("Found missing id: %v\n", id)
+				record, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+				if err != nil {
+					log.Fatalf("Bad get record: %v", err)
+				}
+
+				if record.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+					fmt.Printf("Skipping sold archive\n")
+					continue
+				}
 				upup := &rfpb.FanoutRequest{
 					InstanceId: id,
 				}
@@ -304,7 +313,10 @@ func main() {
 					Payload:   &google_protobuf.Any{Value: data},
 					Key:       fmt.Sprintf("%v", id),
 				})
+			} else {
+				fmt.Printf("Not missing: %v\n", id)
 			}
+
 		}
 
 	case "the_fall":
