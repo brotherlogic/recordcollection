@@ -8,3 +8,6 @@ tic -x ghostty.terminfo
 
 # Install tmux and emacs
 sudo apt-get update && sudo apt-get install -y tmux emacs
+
+# Install dependencies
+go install github.com/brotherlogic/godiscogs@latest
