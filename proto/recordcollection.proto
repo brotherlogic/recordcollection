@@ -369,6 +369,8 @@ message ReleaseMetadata {
   bool skip_refresh = 74;
 
   int64 last_rip_date = 75;
+
+  string notes = 76;
 }
 
 // A request to get some records
