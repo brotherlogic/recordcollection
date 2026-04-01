@@ -10,4 +10,4 @@ tic -x ghostty.terminfo
 sudo apt-get update && sudo apt-get install -y tmux emacs
 
 # Install dependencies
-go install github.com/brotherlogic/godiscogs@latest
+go get github.com/brotherlogic/godiscogs@latest
