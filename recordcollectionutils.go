@@ -542,6 +542,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
 		r.GetRelease().FolderId = mp[r.GetRelease().GetInstanceId()].FolderId
 		r.GetRelease().Rating = mp[r.GetRelease().GetInstanceId()].Rating
+		r.GetMetadata().Notes = mp[r.GetRelease().GetInstanceId()].Notes
 
 		if mp[r.GetRelease().GetInstanceId()].LastListenTime > r.GetMetadata().LastListenTime {
 			r.GetMetadata().LastListenTime = mp[r.GetRelease().GetInstanceId()].LastListenTime
