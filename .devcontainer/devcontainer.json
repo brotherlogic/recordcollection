@@ -7,9 +7,9 @@
     "features": {
         "ghcr.io/devcontainers/features/go:1": {},
         "ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
-        "ghcr.io/devcontainers/features/docker-in-docker:2": {
-            "moby": false
-        },
+        // "ghcr.io/devcontainers/features/docker-in-docker:2": {
+        //     "moby": false
+        // },
         "ghcr.io/siri404/devcontainer-ai-features/gemini-cli:1": {},
         "ghcr.io/devcontainers/features/common-utils": "2",
         "ghcr.io/devcontainers-extra/features/protoc:1": {}
