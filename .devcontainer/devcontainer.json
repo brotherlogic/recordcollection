@@ -7,9 +7,9 @@
     "features": {
         "ghcr.io/devcontainers/features/go:1": {},
         "ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
-        // "ghcr.io/devcontainers/features/docker-in-docker:2": {
-        //     "moby": false
-        // },
+        //"ghcr.io/devcontainers/features/docker-in-docker:2": {
+        //    "moby": false
+        //},
         "ghcr.io/siri404/devcontainer-ai-features/gemini-cli:1": {},
         "ghcr.io/devcontainers/features/common-utils": "2",
         "ghcr.io/devcontainers-extra/features/protoc:1": {}
@@ -20,25 +20,25 @@
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
     // Ensure dependencies are installed here
-    //"postCreateCommand": "/usr/local/go/bin/go version && pwd && ./postCreate.sh",
+    "postCreateCommand": "/usr/local/go/bin/go version && pwd && ./postCreate.sh",
     // "customizations": {},
     // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
     // "remoteUser": "root"
-    // "containerEnv": {
-    //    "GH_GIT_PROTOCOL": "ssh"
-    // },
-    // "remoteOTEL.enabled": true,
-    //"forwardPorts": [],
-    //"runArgs": [
-    //   "--security-opt",
-    //   "label=disable",
-    //],
-    //"mounts": [
-    //    {
-    //       "source": "${localEnv:HOME}/.ssh",
-    //       "target": "/home/vscode/.ssh", // Adjust "vscode" to your container's non-root user (e.g., "node", "user")
-    //       "type": "bind",
-    //       "options": "readonly" // Optional: makes keys read-only in container
-    //   }
-    // ]
+    "containerEnv": {
+        "GH_GIT_PROTOCOL": "ssh"
+    },
+    "remoteOTEL.enabled": true,
+    "forwardPorts": [],
+    "runArgs": [
+        "--security-opt",
+        "label=disable",
+    ],
+    "mounts": [
+        {
+            "source": "${localEnv:HOME}/.ssh",
+            "target": "/home/vscode/.ssh", // Adjust "vscode" to your container's non-root user (e.g., "node", "user")
+            "type": "bind",
+            "options": "readonly" // Optional: makes keys read-only in container
+        }
+    ]
 }
