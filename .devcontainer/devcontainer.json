@@ -20,7 +20,7 @@
     // "forwardPorts": [],
     // Use 'postCreateCommand' to run commands after the container is created.
     // Ensure dependencies are installed here
-    "postCreateCommand": "go version && pwd && ./postCreate.sh",
+    "postCreateCommand": "/usr/local/go/bin/go version && pwd && ./postCreate.sh",
     // "customizations": {},
     // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
     // "remoteUser": "root"
