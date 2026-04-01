@@ -27,6 +27,8 @@
     "containerEnv": {
         "GH_GIT_PROTOCOL": "ssh"
     },
+    "remoteOTEL.enabled": true,
+    "forwardPorts": [],
     "runArgs": [
         "--security-opt",
         "label=disable",
