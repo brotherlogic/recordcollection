@@ -1374,6 +1374,7 @@ type ReleaseMetadata struct {
 	SkipRefresh         bool                                `protobuf:"varint,74,opt,name=skip_refresh,json=skipRefresh,proto3" json:"skip_refresh,omitempty"`
 	LastRipDate         int64                               `protobuf:"varint,75,opt,name=last_rip_date,json=lastRipDate,proto3" json:"last_rip_date,omitempty"`
 	Notes               string                              `protobuf:"bytes,76,opt,name=notes,proto3" json:"notes,omitempty"`
+	SaleDescription     string                              `protobuf:"bytes,77,opt,name=sale_description,json=saleDescription,proto3" json:"sale_description,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -1936,6 +1937,13 @@ func (x *ReleaseMetadata) GetLastRipDate() int64 {
 func (x *ReleaseMetadata) GetNotes() string {
 	if x != nil {
 		return x.Notes
+	}
+	return ""
+}
+
+func (x *ReleaseMetadata) GetSaleDescription() string {
+	if x != nil {
+		return x.SaleDescription
 	}
 	return ""
 }
@@ -3776,7 +3784,7 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\n" +
 	"clear_want\x18\x02 \x01(\bR\tclearWant\"\x1d\n" +
 	"\x05Token\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"\x9e$\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\xc9$\n" +
 	"\x0fReleaseMetadata\x12\x1d\n" +
 	"\n" +
 	"date_added\x18\x01 \x01(\x03R\tdateAdded\x12!\n" +
@@ -3871,7 +3879,8 @@ const file_recordcollection_proto_rawDesc = "" +
 	"high_price\x18I \x01(\x05R\thighPrice\x12!\n" +
 	"\fskip_refresh\x18J \x01(\bR\vskipRefresh\x12\"\n" +
 	"\rlast_rip_date\x18K \x01(\x03R\vlastRipDate\x12\x14\n" +
-	"\x05notes\x18L \x01(\tR\x05notes\"\xbb\x05\n" +
+	"\x05notes\x18L \x01(\tR\x05notes\x12)\n" +
+	"\x10sale_description\x18M \x01(\tR\x0fsaleDescription\"\xbb\x05\n" +
 	"\bCategory\x12\v\n" +
 	"\aUNKNOWN\x10\x00\x12\r\n" +
 	"\tPURCHASED\x10\x01\x12\x0e\n" +

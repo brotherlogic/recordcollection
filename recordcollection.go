@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/brotherlogic/goserver"
@@ -26,6 +27,7 @@ import (
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbrs "github.com/brotherlogic/recordscores/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
+	v1 "github.com/brotherlogic/recordcollection/proto/v1"
 
 	_ "net/http/pprof"
 )
@@ -106,7 +108,7 @@ type saver interface {
 	SetRating(ctx context.Context, releaseID int, rating int) error
 	MoveToFolder(ctx context.Context, folderID, releaseID, instanceID, newFolderID int) (string, error)
 	DeleteInstance(ctx context.Context, folderID, releaseID, instanceID int) error
-	SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) (int64, error)
+	SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int, notes string) (int64, error)
 	GetSalePrice(ctx context.Context, releaseID int) (float32, error)
 	RemoveFromWantlist(ctx context.Context, releaseID int) error
 	AddToWantlist(ctx context.Context, releaseID int) error
@@ -143,6 +145,64 @@ func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, e
 	return res.GetComputedScore().GetOverall(), nil
 }
 
+type descriptionGenerator interface {
+	generate(ctx context.Context, address string, rec *pb.Record) (string, error)
+}
+
+type prodGenerator struct{}
+
+func getGrading(cond string) v1.Grading {
+	switch strings.ToLower(cond) {
+	case "mint (m)":
+		return v1.Grading_GRADING_MINT
+	case "near mint (nm or m-)":
+		return v1.Grading_GRADING_NEAR_MINT
+	case "very good plus (vg+)":
+		return v1.Grading_GRADING_VERY_GOOD_PLUS
+	case "very good (vg)":
+		return v1.Grading_GRADING_VERY_GOOD
+	case "good plus (g+)":
+		return v1.Grading_GRADING_GOOD_PLUS
+	case "good (g)":
+		return v1.Grading_GRADING_GOOD
+	case "fair (f)":
+		return v1.Grading_GRADING_FAIR
+	case "poor (p)":
+		return v1.Grading_GRADING_POOR
+	}
+	return v1.Grading_GRADING_UNSPECIFIED
+}
+
+func (p *prodGenerator) generate(ctx context.Context, address string, rec *pb.Record) (string, error) {
+	conn, err := grpc.Dial(address, grpc.WithInsecure())
+	if err != nil {
+		return "", err
+	}
+	defer conn.Close()
+
+	client := v1.NewSaleDescriptionServiceClient(conn)
+
+	// Combine artists
+	var artists []string
+	for _, artist := range rec.GetRelease().GetArtists() {
+		artists = append(artists, artist.GetName())
+	}
+
+	resp, err := client.GenerateDescription(ctx, &v1.GenerateDescriptionRequest{
+		RecordTitle:     rec.GetRelease().GetTitle(),
+		Artist:          strings.Join(artists, ", "),
+		MediaCondition:  getGrading(rec.GetRelease().GetRecordCondition()),
+		SleeveCondition: getGrading(rec.GetRelease().GetSleeveCondition()),
+		UserNotes:       rec.GetMetadata().GetNotes(),
+	})
+
+	if err != nil {
+		return "", err
+	}
+
+	return resp.GetDescription(), nil
+}
+
 type fo struct {
 	iid    int32
 	origin string
@@ -161,7 +221,9 @@ type Server struct {
 	fanoutServers []string
 	repeatCount   map[int32]int
 	repeatError   map[int32]error
-	queueClient   *qpb.QueueClient
+	queueClient      *qpb.QueueClient
+	generatorAddress string
+	generator        descriptionGenerator
 }
 
 const (
@@ -534,6 +596,7 @@ func Init() *Server {
 	s.quota = &prodQuotaChecker{s.FDialServer}
 	s.mover = &prodMoveRecorder{s.FDialServer}
 	s.queueClient = &qpb.QueueClient{Gs: s.GoServer}
+	s.generator = &prodGenerator{}
 	return s
 }
 
@@ -588,6 +651,7 @@ func (s *Server) updateRecordSalePrice(ctx context.Context, r *pb.Record) error 
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
+	var generator = flag.String("generator_address", "192.168.68.157:30050", "The address of the sale description generator")
 	flag.Parse()
 
 	//Turn off logging
@@ -603,6 +667,8 @@ func main() {
 		server.KSclient.Save(context.Background(), TOKEN, &pb.Token{Token: *token})
 		log.Fatalf("Written TOKEN")
 	}
+
+	server.generatorAddress = *generator
 
 	server.Register = server
 

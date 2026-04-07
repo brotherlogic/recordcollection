@@ -11,6 +11,8 @@ import (
 	keystoreclient "github.com/brotherlogic/keystore/client"
 	qpb "github.com/brotherlogic/queue/queue_client"
 	pb "github.com/brotherlogic/recordcollection/proto"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func InitTestServer(folder string) *Server {
@@ -27,6 +29,7 @@ func InitTestServer(folder string) *Server {
 	s.SkipIssue = true
 	s.SkipElect = true
 	s.queueClient = &qpb.QueueClient{Test: true}
+	s.generator = &testGenerator{}
 
 	return s
 }
@@ -185,16 +188,6 @@ func TestUpdateRecordsWithBigPriceJump(t *testing.T) {
 	}
 }
 
-func TestUpdateRecordsNoCondition(t *testing.T) {
-	s := InitTestServer(".testUpdateRecords")
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
-
-	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}, Images: []*pbd.Image{&pbd.Image{Uri: "blah"}}, Artists: []*pbd.Artist{&pbd.Artist{Name: "Dave"}}, Labels: []*pbd.Label{&pbd.Label{Name: "Daves Label"}}, Tracklist: []*pbd.Track{&pbd.Track{Title: "blah"}}}}})
-
-	if err == nil {
-		t.Errorf("Should have triggered condition issue")
-	}
-}
 
 func TestUpdateRecordWithSalePrice(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
@@ -314,7 +307,7 @@ func TestUpdateRecordNullFolder(t *testing.T) {
 
 func TestDoUpdateRecordsForSale(t *testing.T) {
 	s := InitTestServer(".testUpdateRecords")
-	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, HighPrice: 100, LastCache: time.Now().Unix()}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, RecordCondition: "Blah", SleeveCondition: "Blah"}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, HighPrice: 100, LastCache: time.Now().Unix(), Notes: "Notes"}}})
 
 	s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{Title: "madeup2", InstanceId: 1, Formats: []*pbd.Format{&pbd.Format{Name: "12"}}}}})
 
@@ -577,7 +570,68 @@ func TestLabelAlert(t *testing.T) {
 	s.testForLabels(context.Background(), &pb.Record{Metadata: &pb.ReleaseMetadata{}}, &pb.UpdateRecordRequest{}, true)
 }
 
-func TestRunSync(t *testing.T) {
-	s := InitTestServer(".testing")
-	s.Trigger(context.Background(), &pb.TriggerRequest{})
+func TestUpdateRecordSold_MissingSleeveCondition(t *testing.T) {
+	s := InitTestServer(".testsoldvalidation")
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 1, Title: "Title", RecordCondition: "VG+", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Notes: "Notes"}}})
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "Sell it", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{InstanceId: 1}}})
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("Should have failed with FailedPrecondition: %v", err)
+	}
+}
+
+func TestUpdateRecordSold_MissingMediaCondition(t *testing.T) {
+	s := InitTestServer(".testsoldvalidation")
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 1, Title: "Title", SleeveCondition: "VG+", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Notes: "Notes"}}})
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "Sell it", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{InstanceId: 1}}})
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("Should have failed with FailedPrecondition: %v", err)
+	}
+}
+
+func TestUpdateRecordSold_MissingNotes(t *testing.T) {
+	s := InitTestServer(".testsoldvalidation")
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 1, Title: "Title", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100}}})
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "Sell it", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{InstanceId: 1}}})
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("Should have failed with FailedPrecondition: %v", err)
+	}
+}
+
+func TestUpdateRecordSold_GeneratorFailure(t *testing.T) {
+	s := InitTestServer(".testsoldvalidation")
+	s.generator = &testGenerator{fail: true}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 1, Title: "Title", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Notes: "Notes", HighPrice: 100}}})
+
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "Sell it", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{InstanceId: 1}}})
+	if err == nil {
+		t.Errorf("Should have failed because generator failed")
+	}
+}
+
+func TestUpdateRecordSold_Success(t *testing.T) {
+	s := InitTestServer(".testsoldvalidation")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Custom Generated Description"}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 1, Title: "Title", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Notes: "Notes", HighPrice: 100}}})
+
+	r, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "Sell it", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{InstanceId: 1}}})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+
+	if r.GetUpdated().GetMetadata().GetSaleDescription() != "Custom Generated Description" {
+		t.Errorf("SaleDescription not saved in metadata: %v", r.GetUpdated().GetMetadata().GetSaleDescription())
+	}
+
+	if ts.lastSaleNotes != "Custom Generated Description" {
+		t.Errorf("Sale description not passed to SellRecord notes: %v", ts.lastSaleNotes)
+	}
+
+	if r.GetUpdated().GetMetadata().GetNotes() != "Notes" {
+		t.Errorf("Internal notes were modified: %v", r.GetUpdated().GetMetadata().GetNotes())
+	}
 }

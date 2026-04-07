@@ -371,6 +371,7 @@ message ReleaseMetadata {
   int64 last_rip_date = 75;
 
   string notes = 76;
+  string sale_description = 77;
 }
 
 // A request to get some records

@@ -495,13 +495,20 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		if !request.NoSell {
 			s.CtxLog(ctx, fmt.Sprintf("Running sale path"))
 			time.Sleep(time.Second * 2)
-			if len(rec.GetRelease().SleeveCondition) == 0 {
-				s.cacheRecord(ctx, rec, true)
-				if len(rec.GetRelease().SleeveCondition) == 0 {
-					s.RaiseIssue(fmt.Sprintf("%v needs condition", rec.GetRelease().GetInstanceId()), "Yes")
-					return nil, status.Errorf(codes.FailedPrecondition, "No Condition info")
-				}
+
+			// Tighten validation
+			if len(rec.GetRelease().SleeveCondition) == 0 || len(rec.GetRelease().RecordCondition) == 0 || len(rec.GetMetadata().GetNotes()) == 0 {
+				s.CtxLog(ctx, fmt.Sprintf("Validation failed: sleeve=%v, record=%v, notes=%v", len(rec.GetRelease().SleeveCondition), len(rec.GetRelease().RecordCondition), len(rec.GetMetadata().GetNotes())))
+				s.RaiseIssue(fmt.Sprintf("%v needs condition and notes", rec.GetRelease().GetInstanceId()), "Yes")
+				return nil, status.Errorf(codes.FailedPrecondition, "Sleeve condition, record condition, and notes must not be empty for sale")
 			}
+
+			// Generate sale description
+			desc, err := s.generator.generate(ctx, s.generatorAddress, rec)
+			if err != nil {
+				return nil, err
+			}
+			rec.GetMetadata().SaleDescription = desc
 			if s.disableSales {
 				return nil, fmt.Errorf("Sales are disabled")
 			}
@@ -524,7 +531,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			}
 
 			//230 is approx weight of packaging
-			saleid, err := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230)
+			saleid, err := s.retr.SellRecord(ctx, int(rec.GetRelease().Id), price, "For Sale", rec.GetRelease().RecordCondition, rec.GetRelease().SleeveCondition, int(rec.GetMetadata().GetWeightInGrams())+230, rec.GetMetadata().GetSaleDescription())
 			s.CtxLog(ctx, fmt.Sprintf("Sale return %v and %v => %v", saleid, err, status.Code(err)))
 			if err != nil {
 				if status.Code(err) == codes.FailedPrecondition {
