@@ -1,11 +1,11 @@
 module github.com/brotherlogic/recordcollection
 
-go 1.24.5
+go 1.26.1
 
 require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/brotherlogic/dstore v0.0.0-20250613140516-5b29ccb83705
-	github.com/brotherlogic/godiscogs v0.0.0-20260330235557-f7073496fb1b
+	github.com/brotherlogic/godiscogs v0.0.0-20260407003220-c18ffec633ea
 	github.com/brotherlogic/goserver v0.0.0-20260125051706-82df7bec125f
 	github.com/brotherlogic/gramophile v0.1337.0
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126
@@ -19,7 +19,7 @@ require (
 	github.com/golang/protobuf v1.5.4
 	github.com/prometheus/client_golang v1.23.2
 	golang.org/x/net v0.49.0
-	google.golang.org/grpc v1.78.0
+	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 )
 

@@ -55,6 +55,21 @@ func (t *testQuota) hasQuota(ctx context.Context, folder int32) (*pbro.QuotaResp
 	return &pbro.QuotaResponse{OverQuota: true, SpillFolder: t.spill}, nil
 }
 
+type testGenerator struct {
+	fail bool
+	desc string
+}
+
+func (t *testGenerator) generate(ctx context.Context, address string, rec *pb.Record) (string, error) {
+	if t.fail {
+		return "", errors.New("Built to fail")
+	}
+	if t.desc != "" {
+		return t.desc, nil
+	}
+	return "Generated Description", nil
+}
+
 type testSyncer struct {
 	setRatingCount  int
 	moveRecordCount int
@@ -64,6 +79,7 @@ type testSyncer struct {
 	badLoad         bool
 	badInventory    bool
 	count           int
+	lastSaleNotes   string
 }
 
 func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error) {
@@ -137,7 +153,8 @@ func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID, in
 	return fmt.Errorf("ALL GOOD!")
 }
 
-func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int) (int64, error) {
+func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int, notes string) (int64, error) {
+	t.lastSaleNotes = notes
 	return 0, nil
 }
 func (t *testSyncer) GetSalePrice(ctx context.Context, releaseID int) (float32, error) {
@@ -479,6 +496,7 @@ func TestBasic(t *testing.T) {
 	s := InitTestServer(".madeup")
 	s.updateWant(context.Background(), &pb.Want{ReleaseId: 766489})
 }
+
 
 func TestPushSaleWithFail(t *testing.T) {
 	s := InitTestServer(".saleadjust")

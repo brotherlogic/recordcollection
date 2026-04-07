@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package sale_description.v1;
+
+option go_package = "github.com/brotherlogic/sale-description-generator/api/gen/v1;v1";
+
+service SaleDescriptionService {
+  rpc GenerateDescription(GenerateDescriptionRequest) returns (GenerateDescriptionResponse);
+}
+
+enum Grading {
+  GRADING_UNSPECIFIED = 0;
+  GRADING_MINT = 1;
+  GRADING_NEAR_MINT = 2;
+  GRADING_VERY_GOOD_PLUS = 3;
+  GRADING_VERY_GOOD = 4;
+  GRADING_GOOD_PLUS = 5;
+  GRADING_GOOD = 6;
+  GRADING_FAIR = 7;
+  GRADING_POOR = 8;
+}
+
+message GenerateDescriptionRequest {
+  string record_title = 1;
+  string artist = 2;
+  Grading media_condition = 3;
+  Grading sleeve_condition = 4;
+  string user_notes = 5;
+}
+
+message GenerateDescriptionResponse {
+  string description = 1;
+}
