@@ -40,5 +40,6 @@
             "type": "bind",
             "options": "readonly" // Optional: makes keys read-only in container
         }
-    ]
+    ],
+    "workspaceFolder": "/workspaces/recordcollection"
 }
