@@ -108,6 +108,20 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		updated = true
 	}
 
+	if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && record.GetRelease().GetBlockedFromSale() {
+		if record.GetMetadata().GetSaleId() > 0 {
+			err := s.retr.RemoveFromSale(ctx, int(record.GetMetadata().GetSaleId()), int(record.GetRelease().GetId()))
+			if err != nil {
+				return nil, err
+			}
+		}
+		record.GetMetadata().SoldPrice = 1
+		record.GetMetadata().SoldDate = time.Now().Unix()
+
+		updateReason += " BLOCKED_FROM_SALE"
+		updated = true
+	}
+
 	// Update the sale state
 	if record.GetMetadata().GetSaleId() > 100 && (record.GetMetadata().GetSaleState() == pbgd.SaleState_NOT_FOR_SALE) {
 		record.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE

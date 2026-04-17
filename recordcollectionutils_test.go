@@ -80,6 +80,7 @@ type testSyncer struct {
 	badInventory    bool
 	count           int
 	lastSaleNotes   string
+	removedSaleID   int
 }
 
 func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error) {
@@ -105,6 +106,7 @@ func (t *testSyncer) UpdateSalePrice(ctx context.Context, saleID int, releaseID 
 }
 
 func (t *testSyncer) RemoveFromSale(ctx context.Context, saleID int, releaseID int) error {
+	t.removedSaleID = saleID
 	return nil
 }
 

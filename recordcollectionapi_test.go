@@ -635,3 +635,31 @@ func TestUpdateRecordSold_Success(t *testing.T) {
 		t.Errorf("Internal notes were modified: %v", r.GetUpdated().GetMetadata().GetNotes())
 	}
 }
+
+func TestCommitRecordBlockedFromSale(t *testing.T) {
+	s := InitTestServer(".testblockedfromsale")
+	ts := &testSyncer{}
+	s.retr = ts
+
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1, BlockedFromSale: true},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Category: pb.ReleaseMetadata_LISTED_TO_SELL, SaleId: 1234},
+	}})
+
+	_, err := s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: 1})
+	if err != nil {
+		t.Fatalf("CommitRecord failed: %v", err)
+	}
+
+	rec, _ := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1})
+
+	if rec.GetRecord().GetMetadata().GetSoldPrice() != 1 {
+		t.Errorf("Sold price was not set to 1, got %v", rec.GetRecord().GetMetadata().GetSoldPrice())
+	}
+	if rec.GetRecord().GetMetadata().GetSoldDate() == 0 {
+		t.Errorf("Sold date was not set")
+	}
+	if ts.removedSaleID != 1234 {
+		t.Errorf("RemoveFromSale was not called with correct sale ID, got %v", ts.removedSaleID)
+	}
+}
