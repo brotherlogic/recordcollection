@@ -5,7 +5,7 @@ go 1.26.1
 require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/brotherlogic/dstore v0.0.0-20250613140516-5b29ccb83705
-	github.com/brotherlogic/godiscogs v0.0.0-20260407003220-c18ffec633ea
+	github.com/brotherlogic/godiscogs v0.0.0-20260417143116-b7c20aa47dad
 	github.com/brotherlogic/goserver v0.0.0-20260125051706-82df7bec125f
 	github.com/brotherlogic/gramophile v0.1337.0
 	github.com/brotherlogic/keystore v0.0.0-20240508161349-814b3200b126

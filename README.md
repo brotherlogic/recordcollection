@@ -14,6 +14,7 @@
 - **Automated Sale Management**:
     - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes.
     - **Dynamic Pricing**: Tracks and updates sale prices based on market data.
+    - **Blocked Records**: Automatically removes records from sale and updates their properties if they are marked as blocked from sale on Discogs.
     - **Inventory Control**: View and manage current Discogs inventory directly through the service.
 - **Microservice Orchestration**: Coordinates with other services in the ecosystem:
     - `recordmover`: Physical relocation of records between folders.
