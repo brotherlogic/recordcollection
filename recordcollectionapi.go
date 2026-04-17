@@ -109,7 +109,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	}
 
 	if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL && record.GetRelease().GetBlockedFromSale() {
-		if record.GetMetadata().GetSaleId() > 0 {
+		if record.GetMetadata().GetSaleId() > 1 {
 			err := s.retr.RemoveFromSale(ctx, int(record.GetMetadata().GetSaleId()), int(record.GetRelease().GetId()))
 			if err != nil {
 				return nil, err
