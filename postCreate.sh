@@ -14,5 +14,5 @@ tic -x ghostty.terminfo
 # Install tmux and emacs
 sudo apt-get update && sudo apt-get install -y tmux emacs
 
-# Install dependencies
-go get github.com/brotherlogic/godiscogs@latest
+git config --global user.email 'brotherlogic-automation@gmail.com'
+git config --global user.name 'Brotherlogic Automation'
