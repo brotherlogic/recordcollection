@@ -8,4 +8,4 @@ Follow a standard TDD development process - i.e. write a failing test before add
 
 ## Feature completion
 
-Once you've finished a feature run the finish.md workflow
+Once you've finished a change or feature, run the finish.md workflow
