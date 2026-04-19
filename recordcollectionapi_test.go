@@ -663,3 +663,28 @@ func TestCommitRecordBlockedFromSale(t *testing.T) {
 		t.Errorf("RemoveFromSale was not called with correct sale ID, got %v", ts.removedSaleID)
 	}
 }
+
+func TestQueryRecordsWithListenTime(t *testing.T) {
+	s := InitTestServer(".testqueryrecords")
+	now := time.Now().Unix()
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{InstanceId: 100, Id: 100},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastListenTime: now - 100, LastUpdateTime: now}}})
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{
+		Release:  &pbd.Release{InstanceId: 101, Id: 101},
+		Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastListenTime: now - 1000000, LastUpdateTime: now}}})
+
+	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_ListenTime{now - 1000}})
+
+	if err != nil {
+		t.Errorf("Error on query: %v", err)
+	}
+
+	if len(q.GetInstanceIds()) != 1 {
+		t.Errorf("Wrong number of results: %v", q)
+	}
+
+	if q.GetInstanceIds()[0] != 100 {
+		t.Errorf("Wrong record returned: %v", q.GetInstanceIds()[0])
+	}
+}

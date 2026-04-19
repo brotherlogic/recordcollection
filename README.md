@@ -64,9 +64,15 @@ Start the service by providing your Discogs token:
 go run recordcollection.go --token <your_discogs_token>
 ```
 
-Optional flags:
-- `--quiet`: Disables verbose logging.
-- `--generator_address`: Address of the sale description generator service (default: `192.168.68.157:30050`).
+### CLI
+The service includes a CLI for common management tasks:
+```bash
+go run recordcollection_cli/cli.go <command>
+```
+Key commands:
+- `last_week_listens`: Lists 12-inch records listened to in the last week, ordered by score.
+- `listsales`: Lists all records currently listed for sale.
+- `bad_sales`: Lists records for sale that are blocked from sale on Discogs.
 
 ## Development
 

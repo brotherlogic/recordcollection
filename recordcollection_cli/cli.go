@@ -1157,6 +1157,29 @@ func main() {
 			}
 			fmt.Printf("%v %v [%v]\n", id, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetMetadata().GetFiledUnder())
 		}
+	case "last_week_listens":
+		oneWeekAgo := time.Now().Add(-time.Hour * 24 * 7).Unix()
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_ListenTime{ListenTime: oneWeekAgo}})
+		if err != nil {
+			log.Fatalf("Error querying records: %v", err)
+		}
+		var records []*pbrc.Record
+		for _, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error getting record %v: %v\n", id, err)
+				continue
+			}
+			if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
+				records = append(records, r.GetRecord())
+			}
+		}
+		sort.SliceStable(records, func(i, j int) bool {
+			return records[i].GetMetadata().GetOverallScore() > records[j].GetMetadata().GetOverallScore()
+		})
+		for i, r := range records {
+			fmt.Printf("%v. %v [%v] - Score: %v\n", i+1, r.GetRelease().GetTitle(), r.GetRelease().GetInstanceId(), r.GetMetadata().GetOverallScore())
+		}
 	case "problems":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_SOLD}})
 		if err != nil {
