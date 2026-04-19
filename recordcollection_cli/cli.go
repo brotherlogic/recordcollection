@@ -832,6 +832,20 @@ func main() {
 			width += (r.GetRecord().GetMetadata().GetRecordWidth())
 		}
 		fmt.Printf("Width = %v -> %v\n", width, width*1.25)
+	case "bad_sales":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_STAGED_TO_SELL}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.GetRecord().GetRelease().GetBlockedFromSale() {
+				fmt.Printf("%v %v [%v] BLOCKED\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+			}
+		}
 	case "run_full_update":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
