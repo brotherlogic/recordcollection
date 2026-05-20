@@ -141,6 +141,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 				time.Sleep(time.Minute)
 				continue
 			}
+			cancel2()
 		}
 		cancel()
 
@@ -187,34 +188,36 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 
 		failed := false
 		for _, server := range s.fanoutServers {
-			t = time.Now()
-			ctx, cancel := utils.ManualContext("rcfo", time.Minute*30)
-			conn, err := s.FDialServer(ctx, server)
+			failed = func() bool {
+				t := time.Now()
+				ctx, cancel := utils.ManualContext("rcfo", time.Minute*30)
+				defer cancel()
 
-			if err != nil {
-				s.repeatError[id] = err
-				s.CtxLog(ctx, fmt.Sprintf("Bad dial of %v -> %v", server, err))
-				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
-				s.updateFanout <- fid
-				failed = true
+				conn, err := s.FDialServer(ctx, server)
+				if err != nil {
+					s.repeatError[id] = err
+					s.CtxLog(ctx, fmt.Sprintf("Bad dial of %v -> %v", server, err))
+					updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
+					s.updateFanout <- fid
+					return true
+				}
+				defer conn.Close()
+
+				client := pb.NewClientUpdateServiceClient(conn)
+				_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
+				loopLatency.With(prometheus.Labels{"method": "update-" + server}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
+				if err != nil {
+					s.repeatError[id] = err
+					s.CtxLog(ctx, fmt.Sprintf("Bad update of (%v) %v -> %v", id, server, err))
+					updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
+					s.updateFanout <- fid
+					return true
+				}
+				return false
+			}()
+			if failed {
 				break
 			}
-
-			client := pb.NewClientUpdateServiceClient(conn)
-			_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
-			loopLatency.With(prometheus.Labels{"method": "update-" + server}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
-			if err != nil {
-				s.repeatError[id] = err
-				s.CtxLog(ctx, fmt.Sprintf("Bad update of (%v) %v -> %v", id, server, err))
-				updateFanoutFailure.With(prometheus.Labels{"server": server, "error": fmt.Sprintf("%v", err)}).Inc()
-				s.updateFanout <- fid
-				conn.Close()
-				failed = true
-				break
-			}
-
-			conn.Close()
-			cancel()
 		}
 
 		if !failed {
@@ -228,6 +231,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 				s.saveRecord(ctx, record)
 			}
 			s.CtxLog(ctx, fmt.Sprintf("Ran fanout for %v at %v with %v", id, time.Now(), err))
+			cancel()
 
 			updateFanout.Set(float64(len(s.updateFanout)))
 			updateFanoutFailure.With(prometheus.Labels{"server": "none", "error": "nil"}).Inc()
@@ -510,6 +514,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			defer func() {
 				conn, err := s.FDialServer(ctx, "recordsorganiser")
 				if err == nil {
+					defer conn.Close()
 					oclient := pbro.NewOrganiserServiceClient(conn)
 					oclient.GetOrganisation(ctx, &pbro.GetOrganisationRequest{
 						Locations:  []*pbro.Location{&pbro.Location{Name: "12 Inches"}},
@@ -525,6 +530,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			defer func() {
 				conn, err := s.FDialServer(ctx, "recordsorganiser")
 				if err == nil {
+					defer conn.Close()
 					oclient := pbro.NewOrganiserServiceClient(conn)
 					oclient.GetOrganisation(ctx, &pbro.GetOrganisationRequest{
 						Locations:  []*pbro.Location{&pbro.Location{Name: "7 Inches"}},
