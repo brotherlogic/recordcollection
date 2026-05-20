@@ -16,3 +16,6 @@ sudo apt-get update && sudo apt-get install -y tmux emacs
 
 git config --global user.email 'brotherlogic-automation@gmail.com'
 git config --global user.name 'Brotherlogic Automation'
+
+# Install ACLI
+curl -fsSL https://antigravity.google/cli/install.sh | bash
