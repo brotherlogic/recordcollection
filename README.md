@@ -76,6 +76,9 @@ Key commands:
 
 ## Development
 
+### Resource Management
+The background processing loops and gRPC integrations have been fully optimized to ensure strict context cancellation and gRPC client connection hygiene, preventing resource and memory leaks during high-frequency update runs.
+
 ### TDD Workflow
 We follow a strict Test-Driven Development (TDD) process. Always write a failing test before adding a new feature or fixing a bug.
 - Run tests: `go test ./...`
