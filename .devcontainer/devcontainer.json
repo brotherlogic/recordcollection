@@ -26,6 +26,8 @@
     // "remoteUser": "root"
     "containerEnv": {
         "GH_GIT_PROTOCOL": "ssh"
+			"DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus",
+		"TZ": "America/Los_Angeles"
     },
     "remoteOTEL.enabled": true,
     "forwardPorts": [],
@@ -39,7 +41,10 @@
             "target": "/home/vscode/.ssh", // Adjust "vscode" to your container's non-root user (e.g., "node", "user")
             "type": "bind",
             "options": "readonly" // Optional: makes keys read-only in container
-        }
+        },
+		    		"source=/var/run/dbus,target=/var/run/dbus,type=bind",
+		"source=/run/user,target=/run/user,type=bind"
+	
     ],
     "workspaceFolder": "/workspaces/recordcollection"
 }
