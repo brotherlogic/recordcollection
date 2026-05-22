@@ -73,7 +73,7 @@ Key commands:
 - `last_week_listens`: Lists 12-inch records listened to in the last week, ordered by score.
 - `listsales`: Lists all records currently listed for sale.
 - `bad_sales`: Lists records for sale that are blocked from sale on Discogs.
-- `pull_blocked`: Lists sold records that were physically removed from active sale due to being blocked.
+- `pull_blocked`: Lists sold 12-inch records that were physically removed from active sale due to being blocked.
 
 ## Development
 

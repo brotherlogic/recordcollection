@@ -864,7 +864,7 @@ func main() {
 				fmt.Printf("Error: %v\n", err)
 				continue
 			}
-			if r.GetRecord().GetRelease().GetBlockedFromSale() {
+			if r.GetRecord().GetRelease().GetBlockedFromSale() && r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
 				fmt.Printf("%v %v [%v] BLOCKED\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
 			}
 		}
