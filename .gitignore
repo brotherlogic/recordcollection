@@ -13,3 +13,4 @@ recordcollection_cli/recordcollection_cli
 scripts/scripts
 *.txt
 vendor/
+.antigravitycli
