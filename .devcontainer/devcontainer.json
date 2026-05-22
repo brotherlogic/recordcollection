@@ -25,7 +25,7 @@
     // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
     // "remoteUser": "root"
     "containerEnv": {
-        "GH_GIT_PROTOCOL": "ssh"
+        "GH_GIT_PROTOCOL": "ssh",
 			"DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus",
 		"TZ": "America/Los_Angeles"
     },
