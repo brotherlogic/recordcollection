@@ -846,6 +846,28 @@ func main() {
 				fmt.Printf("%v %v [%v] BLOCKED\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
 			}
 		}
+	case "pull_blocked":
+		var totalIds []int32
+		
+		for _, cat := range []pbrc.ReleaseMetadata_Category{pbrc.ReleaseMetadata_SOLD_OFFLINE, pbrc.ReleaseMetadata_SOLD, pbrc.ReleaseMetadata_SOLD_ARCHIVE} {
+			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{cat}})
+			if err != nil {
+				fmt.Printf("Error %v\n", err)
+				continue
+			}
+			totalIds = append(totalIds, ids.GetInstanceIds()...)
+		}
+
+		for i, id := range totalIds {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				continue
+			}
+			if r.GetRecord().GetRelease().GetBlockedFromSale() {
+				fmt.Printf("%v %v [%v] BLOCKED\n", i, r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetRelease().GetTitle())
+			}
+		}
 	case "run_full_update":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
