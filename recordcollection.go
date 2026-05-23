@@ -500,8 +500,8 @@ func (s *Server) loadRecord(ctx context.Context, id int64, validate bool) (*pb.R
 
 	recordToReturn := data.(*pb.Record)
 	
-	// Fix negative ID in storage
-	if readId < 0 && id > 0 {
+	// Fix negative ID in storage or internal negative ID
+	if (readId < 0 && id > 0) || (recordToReturn.GetRelease().GetInstanceId() < 0 && id > 0) || (recordToReturn.GetMetadata() != nil && recordToReturn.GetMetadata().GetInstanceId() < 0 && id > 0) {
 		s.CtxLog(ctx, fmt.Sprintf("Fixing negative instance id %v to %v", readId, id))
 		recordToReturn.GetRelease().InstanceId = id
 		if recordToReturn.GetMetadata() != nil {
@@ -509,8 +509,10 @@ func (s *Server) loadRecord(ctx context.Context, id int64, validate bool) (*pb.R
 		}
 		// Save the record with the new positive ID
 		s.saveRecord(ctx, recordToReturn)
-		// Delete the old negative ID record
-		s.deleteRecord(ctx, readId)
+		// Delete the old negative ID record if it was loaded from a different key
+		if readId != id {
+			s.deleteRecord(ctx, readId)
+		}
 	}
 
 	if id == 365221500 {
