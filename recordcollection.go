@@ -504,6 +504,9 @@ func (s *Server) loadRecord(ctx context.Context, id int64, validate bool) (*pb.R
 	if readId < 0 && id > 0 {
 		s.CtxLog(ctx, fmt.Sprintf("Fixing negative instance id %v to %v", readId, id))
 		recordToReturn.GetRelease().InstanceId = id
+		if recordToReturn.GetMetadata() != nil {
+			recordToReturn.GetMetadata().InstanceId = id
+		}
 		// Save the record with the new positive ID
 		s.saveRecord(ctx, recordToReturn)
 		// Delete the old negative ID record

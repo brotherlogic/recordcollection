@@ -204,7 +204,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 				defer conn.Close()
 
 				client := pb.NewClientUpdateServiceClient(conn)
-				_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: int32(id)})
+				_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
 				loopLatency.With(prometheus.Labels{"method": "update-" + server}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 				if err != nil {
 					s.repeatError[id] = err
