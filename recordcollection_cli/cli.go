@@ -208,7 +208,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad read: %v", err)
 			}
-			location, err := client.Locate(ctx, &pbro.LocateRequest{InstanceId: id})
+			location, err := client.Locate(ctx, &pbro.LocateRequest{InstanceId: int32(id)})
 			if err != nil {
 				if status.Code(err) == codes.NotFound {
 					fmt.Printf("%v [UNKNOWN]\n", rec.GetRecord().GetRelease().GetTitle())
@@ -229,7 +229,7 @@ func main() {
 		ni, _ := strconv.ParseInt(os.Args[3], 10, 32)
 		ids, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "transfer",
 			Update: &pbrc.Record{
-				Release:  &pbgd.Release{InstanceId: int32(i)},
+				Release:  &pbgd.Release{InstanceId: int64(int32(i))},
 				Metadata: &pbrc.ReleaseMetadata{TransferTo: int32(ni)},
 			}})
 		fmt.Printf("Transfer: %v, %v", ids, err)
@@ -241,7 +241,7 @@ func main() {
 		checkFlags := flag.NewFlagSet("Check", flag.ExitOnError)
 		var id = checkFlags.Int("id", -1, "Id of the record to check")
 		if err := checkFlags.Parse(os.Args[2:]); err == nil {
-			record, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(*id)})
+			record, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(*id))})
 			if err != nil {
 				log.Fatalf("Error getting record: %v", err)
 			}
@@ -283,7 +283,7 @@ func main() {
 		for _, id := range ids.GetInstanceIds() {
 			ctx, cancel2 := utils.ManualContext("recordcollectioncli-"+os.Args[1], time.Second*10)
 			defer cancel2()
-			srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(id)})
+			srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(id))})
 			if err != nil {
 				log.Fatalf("Unable to get record: %v", err)
 			}
@@ -315,7 +315,7 @@ func main() {
 
 	case "updates":
 		i, _ := strconv.Atoi(os.Args[2])
-		res, err := registry.GetUpdates(ctx, &pbrc.GetUpdatesRequest{InstanceId: int32(i)})
+		res, err := registry.GetUpdates(ctx, &pbrc.GetUpdatesRequest{InstanceId: int64(int32(i))})
 		if err != nil {
 			log.Fatalf("Bad updates: %v", err)
 		}
@@ -333,7 +333,7 @@ func main() {
 		fmt.Printf("%v,%v\n", res, err)
 	case "stock":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -347,7 +347,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "box45":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -365,7 +365,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "box":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -383,7 +383,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "boxbox":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -401,7 +401,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "unbox":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -419,7 +419,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "skip_refresh":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -437,7 +437,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "wp":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -458,7 +458,7 @@ func main() {
 		i, _ := strconv.Atoi(os.Args[2])
 		date, _ := strconv.Atoi(os.Args[3])
 		price, _ := strconv.Atoi(os.Args[4])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -494,7 +494,7 @@ func main() {
 		}
 	case "validate":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -508,7 +508,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "listen":
 		i, _ := strconv.Atoi(os.Args[2])
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 
 		if err != nil {
 			log.Fatalf("Error getting record: %v", err)
@@ -633,7 +633,7 @@ func main() {
 			}
 			if r.Record.GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL {
 				_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
-					Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+					Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(id))},
 						Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}})
 				fmt.Printf("%v. %v, %v\n", i, id, err)
 			}
@@ -654,7 +654,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: id})
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int32(id)})
 			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 
 		}
@@ -676,7 +676,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: id})
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int32(id)})
 			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 		}
 		ids, err = registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_STAGED}})
@@ -689,7 +689,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: id})
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int32(id)})
 			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 		}
 	case "next":
@@ -847,7 +847,7 @@ func main() {
 			}
 		}
 	case "pull_blocked":
-		var totalIds []int32
+		var totalIds []int64
 		
 		for _, cat := range []pbrc.ReleaseMetadata_Category{pbrc.ReleaseMetadata_SOLD_OFFLINE, pbrc.ReleaseMetadata_SOLD, pbrc.ReleaseMetadata_SOLD_ARCHIVE} {
 			ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{cat}})
@@ -859,7 +859,7 @@ func main() {
 		}
 
 		for i, id := range totalIds {
-			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(id)})
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 				continue
@@ -1033,7 +1033,7 @@ func main() {
 				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL || r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_CD {
 					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
-						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(id))},
 							Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}})
 					fmt.Printf("%v\n", err)
 				}
@@ -1054,7 +1054,7 @@ func main() {
 				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL || r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_CD {
 					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
-						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(id))},
 							Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}})
 					fmt.Printf("%v\n", err)
 				}
@@ -1075,7 +1075,7 @@ func main() {
 				fmt.Printf("%v %v. %v [%v] %v\n", r.GetRecord().GetRelease().GetRating(), i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder())
 				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_DIGITAL {
 					_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
-						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(id))},
 							Metadata: &pbrc.ReleaseMetadata{SetRating: int32(5)}}})
 					fmt.Printf("%v\n", err)
 				}
@@ -1151,7 +1151,7 @@ func main() {
 			log.Fatalf("Hmm %v", f)
 		}
 		u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
-			Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+			Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))},
 				Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_IN_COLLECTION}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1165,14 +1165,14 @@ func main() {
 		bid := int32(math.MaxInt32)
 		var rec *pbrc.Record
 		for _, id := range ids.GetInstanceIds() {
-			if id < bid {
+			if id < int64(bid) {
 				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 				if err != nil {
 					fmt.Printf("Error: %v\n", err)
 				}
 				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH {
 					rec = r.GetRecord()
-					bid = id
+					bid = int32(id)
 				}
 			}
 		}
@@ -1237,14 +1237,14 @@ func main() {
 		bid := int32(math.MaxInt32)
 		var rec *pbrc.Record
 		for _, id := range ids.GetInstanceIds() {
-			if id < bid {
+			if id < int64(bid) {
 				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 				if err != nil {
 					fmt.Printf("Error: %v\n", err)
 				}
 				if r.GetRecord().GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_7_INCH {
 					rec = r.GetRecord()
-					bid = id
+					bid = int32(id)
 				}
 			}
 		}
@@ -1315,12 +1315,12 @@ func main() {
 		if f != nil {
 			log.Fatalf("Hmm %v", f)
 		}
-		r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 		if err != nil {
 			log.Fatalf("Error: %v -> %v,%v,%v\n", err, int32(i), i, os.Args[2])
 		}
 		r.GetRecord().GetMetadata().SalePrice = r.GetRecord().GetMetadata().CurrentSalePrice
-		u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset-sale-price", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SalePrice: r.GetRecord().GetMetadata().CurrentSalePrice, SaleDirty: true}}})
+		u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset-sale-price", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{SalePrice: r.GetRecord().GetMetadata().CurrentSalePrice, SaleDirty: true}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -1334,7 +1334,7 @@ func main() {
 			log.Fatalf("Hmm %v", f)
 		}
 		u, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
-			Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+			Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))},
 				Metadata: &pbrc.ReleaseMetadata{SetRating: int32(ns)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1348,7 +1348,7 @@ func main() {
 			force = int32(i2)
 		}
 
-		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i), Force: force})
+		srec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i)), Force: force})
 
 		if err == nil {
 			fmt.Printf("Release: %v\n", srec.GetRecord().GetRelease())
@@ -1360,14 +1360,14 @@ func main() {
 
 	case "force":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "forcing sync from cli", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{LastCache: 1, LastSyncTime: 1, LastSalePriceUpdate: 1}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "forcing sync from cli", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{LastCache: 1, LastSyncTime: 1, LastSalePriceUpdate: 1}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "expire":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{ExpireSale: true}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{ExpireSale: true}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -1375,7 +1375,7 @@ func main() {
 	case "spfolder":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.Atoi(os.Args[3])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f)}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -1383,7 +1383,7 @@ func main() {
 	case "width":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.ParseFloat(os.Args[3], 32)
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))},
 			Metadata: &pbrc.ReleaseMetadata{
 				RecordWidth: float32(f),
 				//Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
@@ -1394,7 +1394,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "budget":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))},
 			Metadata: &pbrc.ReleaseMetadata{
 				PurchaseBudget: os.Args[3],
 				//Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
@@ -1405,7 +1405,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "salebudget":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))},
 			Metadata: &pbrc.ReleaseMetadata{
 				SaleBudget: os.Args[3],
 				//Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
@@ -1416,7 +1416,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "fwidth":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))},
 			Metadata: &pbrc.ReleaseMetadata{
 				Sleeve: pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP,
 			}}})
@@ -1427,7 +1427,7 @@ func main() {
 	case "cwidth":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.ParseFloat(os.Args[3], 32)
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)},
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))},
 			Metadata: &pbrc.ReleaseMetadata{
 				RecordWidth: float32(f),
 				Sleeve:      pbrc.ReleaseMetadata_VINYL_STORAGE_NO_INNER,
@@ -1438,63 +1438,63 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "is_twelve":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, GoalFolder: 242017, FiledUnder: pbrc.ReleaseMetadata_FILE_12_INCH}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, GoalFolder: 242017, FiledUnder: pbrc.ReleaseMetadata_FILE_12_INCH}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "is_outsize":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, GoalFolder: 242017, FiledUnder: pbrc.ReleaseMetadata_FILE_OUTSIZE}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, GoalFolder: 242017, FiledUnder: pbrc.ReleaseMetadata_FILE_OUTSIZE}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "is_seven":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, FiledUnder: pbrc.ReleaseMetadata_FILE_7_INCH}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{RecordWidth: -1, FiledUnder: pbrc.ReleaseMetadata_FILE_7_INCH}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "is_cd":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_CD}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_CD}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "is_tape":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_TAPE}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_TAPE}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "is_box":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_BOXSET}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_BOXSET}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "is_digital":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_DIGITAL}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: pbrc.ReleaseMetadata_FILE_DIGITAL}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "is_unknown":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: -1}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{FiledUnder: -1}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "cleaned":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{LastCleanDate: time.Now().Unix()}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{LastCleanDate: time.Now().Unix()}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -1502,7 +1502,7 @@ func main() {
 	case "weight":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.ParseFloat(os.Args[3], 32)
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{WeightInGrams: int32(f)}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{WeightInGrams: int32(f)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -1510,14 +1510,14 @@ func main() {
 	case "gupdate":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.Atoi(os.Args[3])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "ping_from_gramophile", Update: &pbrc.Record{Release: &pbgd.Release{Id: int32(i2), InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{NeedsGramUpdate: true}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "ping_from_gramophile", Update: &pbrc.Record{Release: &pbgd.Release{Id: int32(i2), InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{NeedsGramUpdate: true}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "mark_for_remove_sale":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Marking for sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{DeleteSaleState: pbrc.ReleaseMetadata_DELETE}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Marking for sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{DeleteSaleState: pbrc.ReleaseMetadata_DELETE}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -1525,7 +1525,7 @@ func main() {
 	case "fixfolder":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
 		f, _ := strconv.ParseInt(os.Args[3], 10, 32)
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i), FolderId: int32(f)}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "CLI-spfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i)), FolderId: int32(f)}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -1533,7 +1533,7 @@ func main() {
 	case "rfolder":
 		i, _ := strconv.Atoi(os.Args[2])
 		f, _ := strconv.Atoi(os.Args[3])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f), SetRating: -1}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{GoalFolder: int32(f), SetRating: -1}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -1541,14 +1541,14 @@ func main() {
 
 	case "force_sale":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "force_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_FOR_SALE}}})
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "force_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_FOR_SALE}}})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
 	case "remove_sale":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Dirty: true, SaleId: -1, SaleState: pbgd.SaleState_EXPIRED}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Dirty: true, SaleId: -1, SaleState: pbgd.SaleState_EXPIRED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1556,7 +1556,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "reset_sale":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PREPARE_TO_SELL, SaleId: -1, SaleState: pbgd.SaleState_EXPIRED}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PREPARE_TO_SELL, SaleId: -1, SaleState: pbgd.SaleState_EXPIRED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1564,7 +1564,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "reset_sale_state":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_EXPIRED, Category: pbrc.ReleaseMetadata_LISTED_TO_SELL}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_EXPIRED, Category: pbrc.ReleaseMetadata_LISTED_TO_SELL}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1572,7 +1572,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "mark_sold":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_SOLD}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_SOLD}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1580,7 +1580,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "mark_parents":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{WasParents: true}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "CLI-reset_sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{WasParents: true}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1588,7 +1588,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "direct_sale":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_LISTED_TO_SELL}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_LISTED_TO_SELL}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1600,7 +1600,7 @@ func main() {
 
 		if err == nil && len(ids.GetInstanceIds()) == 1 {
 
-			up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(ids.GetInstanceIds()[0])}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, GoalFolder: 267116, MoveFolder: 673768, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}}}
+			up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(ids.GetInstanceIds()[0]))}, Metadata: &pbrc.ReleaseMetadata{SetRating: -1, GoalFolder: 267116, MoveFolder: 673768, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}}}
 			rec, err := registry.UpdateRecord(ctx, up)
 			if err != nil {
 				log.Fatalf("Error: %v", err)
@@ -1610,7 +1610,7 @@ func main() {
 
 	case "sell":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-sellrequest", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_FOR_SALE, SetRating: -1, MoveFolder: 673768, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-sellrequest", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_FOR_SALE, SetRating: -1, MoveFolder: 673768, Category: pbrc.ReleaseMetadata_STAGED_TO_SELL}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1800,7 +1800,7 @@ func main() {
 			if rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_45S_BOX {
 				if rec.GetRecord().GetMetadata().GetDateArrived() == 0 {
 					up := &pbrc.UpdateRecordRequest{Reason: "cli-updatearrived",
-						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+						Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(id))},
 							Metadata: &pbrc.ReleaseMetadata{DateArrived: rec.GetRecord().GetMetadata().GetDateAdded()}}}
 					_, err := registry.UpdateRecord(ctx, up)
 					if err != nil {
@@ -1894,7 +1894,7 @@ func main() {
 			if !found {
 				fmt.Printf("Not found: %v\n", rec)
 				upup := &rfpb.FanoutRequest{
-					InstanceId: rec,
+					InstanceId: int32(rec),
 				}
 				data, _ := proto.Marshal(upup)
 				client2.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -1928,7 +1928,7 @@ func main() {
 
 	case "sold_offline":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-sellrequest", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_SOLD_OFFLINE, SoldDate: time.Now().Unix(), SoldPrice: 1}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-sellrequest", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{SaleState: pbgd.SaleState_SOLD_OFFLINE, SoldDate: time.Now().Unix(), SoldPrice: 1}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1945,7 +1945,7 @@ func main() {
 	case "price":
 		i, _ := strconv.Atoi(os.Args[2])
 		p, _ := strconv.Atoi(os.Args[3])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{NewSalePrice: int32(p)}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{NewSalePrice: int32(p)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1953,7 +1953,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "sold":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PREPARE_TO_SELL}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PREPARE_TO_SELL}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1961,7 +1961,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "prev":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "prev", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PRE_VALIDATE}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "prev", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PRE_VALIDATE}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1969,7 +1969,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "setp":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "setting parents", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{LastListenTime: -1, WasParents: true, Category: pbrc.ReleaseMetadata_IN_COLLECTION}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "setting parents", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{LastListenTime: -1, WasParents: true, Category: pbrc.ReleaseMetadata_IN_COLLECTION}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1977,7 +1977,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "fsold":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{NoSell: true, Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_SOLD}}}
+		up := &pbrc.UpdateRecordRequest{NoSell: true, Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_SOLD}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1985,7 +1985,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "boxset":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "Setting box", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Sleeve: pbrc.ReleaseMetadata_BOX_SET}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "Setting box", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Sleeve: pbrc.ReleaseMetadata_BOX_SET}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -1993,7 +1993,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "fixed":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "Setting box", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Sleeve: pbrc.ReleaseMetadata_FIXED}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "Setting box", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Sleeve: pbrc.ReleaseMetadata_FIXED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2001,7 +2001,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "assess":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_ASSESS}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_ASSESS}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2009,7 +2009,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "delete":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.DeleteRecordRequest{InstanceId: int32(i)}
+		up := &pbrc.DeleteRecordRequest{InstanceId: int64(int32(i))}
 		rec, err := registry.DeleteRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2017,7 +2017,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "delete_sale":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 64)
-		rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(int32(i))})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -2029,7 +2029,7 @@ func main() {
 	case "addsale":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.ParseInt(os.Args[3], 10, 64)
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-addsale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SaleId: int64(i2)}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-addsale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{SaleId: int64(i2)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2038,7 +2038,7 @@ func main() {
 	case "saleprice":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.Atoi(os.Args[3])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{NewSalePrice: int32(i2)}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(i))}, Metadata: &pbrc.ReleaseMetadata{NewSalePrice: int32(i2)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2046,7 +2046,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "soldoffline":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-soldoffline", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_SOLD_OFFLINE}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-soldoffline", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_SOLD_OFFLINE}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2054,7 +2054,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "parents":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-parents", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PARENTS}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-parents", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PARENTS}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2063,7 +2063,7 @@ func main() {
 	case "cost":
 		i, _ := strconv.Atoi(os.Args[2])
 		c, _ := strconv.Atoi(os.Args[3])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-cost", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Cost: int32(c)}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-cost", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Cost: int32(c)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2071,7 +2071,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "unlisten":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-unlisten", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-unlisten", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2079,7 +2079,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "hard_reset":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-hard-teset", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PURCHASED}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-hard-teset", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PURCHASED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2087,7 +2087,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "keep":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_KEEPER}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_KEEPER}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2095,7 +2095,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "no_keep":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_NOT_KEEPER}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_NOT_KEEPER}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2103,7 +2103,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "no_digital":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{DigitalAvailability: pbrc.ReleaseMetadata_NO_DIGITAL}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{DigitalAvailability: pbrc.ReleaseMetadata_NO_DIGITAL}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2111,7 +2111,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "has_digital":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{DigitalAvailability: pbrc.ReleaseMetadata_DIGITAL_AVAILABLE}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{DigitalAvailability: pbrc.ReleaseMetadata_DIGITAL_AVAILABLE}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2119,7 +2119,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "digital_keep":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_DIGITAL_KEEPER}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "rccli-keep", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Keep: pbrc.ReleaseMetadata_DIGITAL_KEEPER}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2127,7 +2127,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "reset_cd":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{}}}
+		up := &pbrc.UpdateRecordRequest{Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2135,7 +2135,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "arrived":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{DateArrived: time.Now().Unix()}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{DateArrived: time.Now().Unix()}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2143,7 +2143,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "sell_offline":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{SellOffline: true}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{SellOffline: true}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2152,7 +2152,7 @@ func main() {
 
 	case "farrived":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Dirty: true, Category: pbrc.ReleaseMetadata_ARRIVED,
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Dirty: true, Category: pbrc.ReleaseMetadata_ARRIVED,
 
 			DateArrived: -1}}}
 		rec, err := registry.UpdateRecord(ctx, up)
@@ -2162,7 +2162,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "ready_to_listen":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-ready_toListne", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-ready_toListne", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2170,7 +2170,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "unarrived":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PURCHASED, DateArrived: -1}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_PURCHASED, DateArrived: -1}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2179,7 +2179,7 @@ func main() {
 	case "adjust_id":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.Atoi(os.Args[3])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{Id: int32(i2), InstanceId: int32(i)}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-arrived", Update: &pbrc.Record{Release: &pbgd.Release{Id: int32(i2), InstanceId: int64(i)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2195,7 +2195,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "ready":
 		i, _ := strconv.Atoi(os.Args[2])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-ready", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-ready", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2203,7 +2203,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "old":
 		i, _ := strconv.ParseInt(os.Args[2], 10, 32)
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-ready", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{AccountingYear: 2022}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-ready", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{AccountingYear: 2022}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)
@@ -2211,7 +2211,7 @@ func main() {
 		fmt.Printf("Updated: %v", rec)
 	case "save":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int32(i)})
+		rec, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(i)})
 		if err != nil {
 			log.Fatalf("Error: %v", err)
 		}
@@ -2219,7 +2219,7 @@ func main() {
 		ioutil.WriteFile(fmt.Sprintf("%v.data", rec.GetRecord().GetRelease().Id), data, 0644)
 	case "commit":
 		i, _ := strconv.Atoi(os.Args[2])
-		rec, err := registry.CommitRecord(ctx, &pbrc.CommitRecordRequest{InstanceId: int32(i)})
+		rec, err := registry.CommitRecord(ctx, &pbrc.CommitRecordRequest{InstanceId: int64(i)})
 		fmt.Printf("Got %v and %v", rec, err)
 	case "add":
 		i, _ := strconv.Atoi(os.Args[2])
@@ -2228,7 +2228,7 @@ func main() {
 		iid, _ := strconv.Atoi(os.Args[5])
 		rec, err := registry.AddRecord(ctx, &pbrc.AddRecordRequest{
 			ToAdd: &pbrc.Record{
-				Release:  &pbgd.Release{Id: int32(i), InstanceId: int32(iid)},
+				Release:  &pbgd.Release{Id: int32(i), InstanceId: int64(iid)},
 				Metadata: &pbrc.ReleaseMetadata{Cost: int32(c), GoalFolder: int32(f), AccountingYear: 2021},
 			},
 		})
@@ -2239,7 +2239,7 @@ func main() {
 	case "newfolder":
 		i, _ := strconv.Atoi(os.Args[2])
 		i2, _ := strconv.Atoi(os.Args[3])
-		up := &pbrc.UpdateRecordRequest{Reason: "cli-newfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(i)}, Metadata: &pbrc.ReleaseMetadata{MoveFolder: int32(i2)}}}
+		up := &pbrc.UpdateRecordRequest{Reason: "cli-newfolder", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{MoveFolder: int32(i2)}}}
 		rec, err := registry.UpdateRecord(ctx, up)
 		if err != nil {
 			log.Fatalf("Error: %v", err)

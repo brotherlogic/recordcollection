@@ -300,7 +300,7 @@ func main() {
 		}
 		for _, og := range org.GetLocations() {
 			for _, entry := range og.GetReleasesLocation() {
-				record, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: entry.GetInstanceId()})
+				record, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(entry.GetInstanceId())})
 				if err != nil {
 					log.Fatalf("Cannot get record: %v", err)
 				}
@@ -558,8 +558,8 @@ func main() {
 
 			if rec.Record.GetMetadata().GetFiledUnder() == pbrc.ReleaseMetadata_FILE_12_INCH ||
 				rec.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_IN_THE_BOX {
-				mapper[id] = rec.Record.Metadata.GetRecordWidth()
-				scoremap[id] = rec.Record.Metadata.GetOverallScore()
+				mapper[int32(id)] = rec.Record.Metadata.GetRecordWidth()
+				scoremap[int32(id)] = rec.Record.Metadata.GetOverallScore()
 			}
 		}
 
@@ -1175,7 +1175,7 @@ func main() {
 					}
 					defer conn2.Close()
 					client2 := pbrs.NewRecordScoreServiceClient(conn2)
-					scores, err := client2.GetScore(ctx2, &pbrs.GetScoreRequest{InstanceId: id})
+					scores, err := client2.GetScore(ctx2, &pbrs.GetScoreRequest{InstanceId: int32(id)})
 					if err != nil {
 						log.Fatalf("Bad score get: %v", err)
 					}
@@ -1190,7 +1190,7 @@ func main() {
 
 					if bestTime > 0 {
 						_, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "recordcollection-cli_reset_score",
-							Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int32(id)},
+							Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(int32(id))},
 								Metadata: &pbrc.ReleaseMetadata{SetRating: int32(bestScore)}}})
 						if err != nil {
 							log.Fatalf("Error: %v", err)
@@ -1332,11 +1332,11 @@ func main() {
 				profit := rec.GetRecord().GetMetadata().GetSoldPrice() - rec.GetRecord().GetMetadata().GetCost()
 				if profit > maxProfit {
 					maxProfit = profit
-					maxProfR = rec.GetRecord().GetRelease().GetInstanceId()
+					maxProfR = int32(rec.GetRecord().GetRelease().GetInstanceId())
 				}
 				if profit < minProfit {
 					minProfit = profit
-					minProfitR = rec.GetRecord().GetRelease().GetInstanceId()
+					minProfitR = int32(rec.GetRecord().GetRelease().GetInstanceId())
 				}
 				avgProfit += profit
 				count++
@@ -1393,7 +1393,7 @@ func main() {
 
 			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
 				valid := false
-				scores, err := registry2.GetScore(ctx, &pbrs.GetScoreRequest{InstanceId: id})
+				scores, err := registry2.GetScore(ctx, &pbrs.GetScoreRequest{InstanceId: int32(id)})
 				if err != nil {
 					log.Fatalf("Err: %v", err)
 				}

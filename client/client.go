@@ -12,14 +12,14 @@ import (
 
 type RecordCollectionClient struct {
 	Gs        *pbgs.GoServer
-	getMap    map[int32]*pb.Record
+	getMap    map[int64]*pb.Record
 	Test      bool
 	ErrorCode codes.Code
 }
 
 func (c *RecordCollectionClient) AddRecord(r *pb.Record) {
 	if c.getMap == nil {
-		c.getMap = make(map[int32]*pb.Record)
+		c.getMap = make(map[int64]*pb.Record)
 	}
 	c.getMap[r.GetRelease().GetInstanceId()] = r
 }
@@ -62,7 +62,7 @@ func (c *RecordCollectionClient) GetInventory(ctx context.Context, req *pb.GetIn
 
 func (c *RecordCollectionClient) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) (*pb.QueryRecordsResponse, error) {
 	if c.Test {
-		var keys []int32
+		var keys []int64
 		for k, r := range c.getMap {
 			if req.GetReleaseId() > 0 && r.GetRelease().GetId() == req.GetReleaseId() {
 				keys = append(keys, k)

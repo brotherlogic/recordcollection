@@ -11,7 +11,7 @@ message StoredMetadata {
 }
 
 message Updates {
-  int32 instance_id = 1;
+  int64 instance_id = 1;
   repeated RecordUpdate updates = 2;
 }
 
@@ -27,14 +27,14 @@ message RecordCollection {
   repeated Want new_wants = 3;
   repeated int32 instances = 4; // DEPRECATED
   int64 collection_number = 5;
-  map<int32, int32> instance_to_folder = 6;
-  map<int32, int64> instance_to_update = 7;
-  map<int32, int64> instance_to_update_in = 18;
-  map<int32, ReleaseMetadata.Category> instance_to_category = 8;
-  map<int32, int32> instance_to_master = 9;
-  map<int32, int32> instance_to_id = 10;
-  map<int32, int64> instance_to_recache = 13;
-  map<int32, int64> instance_to_last_sale_price_update = 14;
+  map<int64, int32> instance_to_folder = 6;
+  map<int64, int64> instance_to_update = 7;
+  map<int64, int64> instance_to_update_in = 18;
+  map<int64, ReleaseMetadata.Category> instance_to_category = 8;
+  map<int64, int32> instance_to_master = 9;
+  map<int64, int32> instance_to_id = 10;
+  map<int64, int64> instance_to_recache = 13;
+  map<int64, int64> instance_to_last_sale_price_update = 14;
   repeated int32 sale_updates = 11;
   repeated int32 needs_push = 12; // DEPRECATED
 
@@ -47,7 +47,7 @@ message RecordCollection {
   // The last time we did a full update
   int64 last_full_update = 19;
 
-  map<int32, int32> transfer_map = 20;
+  map<int64, int32> transfer_map = 20;
 }
 
 message AllRecords {
@@ -240,7 +240,7 @@ message ReleaseMetadata {
   int64 last_move_time = 26;
 
   // Ref to the release instance id
-  int32 instance_id = 27;
+  int64 instance_id = 27;
 
   // If we need to stock check this record
   bool needs_stock_check = 28;
@@ -442,11 +442,11 @@ message GetRecordCollectionRequest {
 }
 
 message GetRecordCollectionResponse {
-  repeated int32 instance_ids = 1;
+  repeated int64 instance_ids = 1;
 }
 
 message DeleteRecordRequest {
-  int32 instance_id = 1;
+  int64 instance_id = 1;
 }
 
 message DeleteRecordResponse {}
@@ -466,11 +466,11 @@ message QueryRecordsRequest {
 }
 
 message QueryRecordsResponse {
-  repeated int32 instance_ids = 1;
+  repeated int64 instance_ids = 1;
 }
 
 message GetRecordRequest {
-  int32 instance_id = 1;
+  int64 instance_id = 1;
   int32 force = 2;
   bool validate = 3;
 
@@ -489,7 +489,7 @@ message TriggerResponse{
 }
 
 message GetUpdatesRequest{
-  int32 instance_id = 1;
+  int64 instance_id = 1;
 }
 
 message GetUpdatesResponse{
@@ -506,7 +506,7 @@ message GetOrderResponse{
 }
 
 message CommitRecordRequest {
-  int32 instance_id = 1;
+  int64 instance_id = 1;
 }
 
 message CommitRecordResponse {}

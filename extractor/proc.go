@@ -21,7 +21,7 @@ import (
 func main() {
 	f := os.Args[1]
 
-	set := make(map[int32]int64)
+	set := make(map[int64]int64)
 
 	file, err := os.Open(f)
 	if err != nil {
@@ -40,16 +40,16 @@ func main() {
 	}
 
 	scanner := bufio.NewScanner(file)
-	id := int32(0)
+	id := int64(0)
 	datestr := ""
 	for scanner.Scan() {
 		str := idMatcher.FindStringSubmatch(scanner.Text())
 		if len(str) > 0 {
-			val, err := strconv.Atoi(str[1])
+			val, err := strconv.ParseInt(str[1], 10, 64)
 			if err != nil {
 				log.Fatalf("Errr %v", err)
 			}
-			id = int32(val)
+			id = val
 		}
 
 		dstr := dateMatcher.FindStringSubmatch(scanner.Text())

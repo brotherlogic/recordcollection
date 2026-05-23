@@ -408,7 +408,7 @@ func TestTransfer(t *testing.T) {
 		t.Fatalf("Record has not transferred (id not updated): %v", rec.GetRecord())
 	}
 
-	if rec.GetRecord().GetMetadata().GetTransferFrom() != iid {
+	if int64(rec.GetRecord().GetMetadata().GetTransferFrom()) != iid {
 		t.Errorf("Did not record transfer from: (%v) -> %v", iid, rec)
 	}
 

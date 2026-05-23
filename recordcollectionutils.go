@@ -63,7 +63,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 		ctx, cancel := utils.ManualContext("rciu", time.Minute)
 
 		t = time.Now()
-		record, err := s.loadRecord(ctx, id, false)
+		record, err := s.loadRecord(ctx, int64(id), false)
 		loopLatency.With(prometheus.Labels{"method": "load"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 
 		if err != nil {
@@ -149,10 +149,10 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 		if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
 			ctx, cancel := utils.ManualContext("rcu", time.Minute)
 			t = time.Now()
-			err := s.updateSale(ctx, record.GetRelease().GetInstanceId())
+			err := s.updateSale(ctx, int32(record.GetRelease().GetInstanceId()))
 			loopLatency.With(prometheus.Labels{"method": "updatesale"}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 			if err == nil {
-				record, err = s.loadRecord(ctx, id, false)
+				record, err = s.loadRecord(ctx, int64(id), false)
 			}
 			cancel()
 
@@ -204,7 +204,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 				defer conn.Close()
 
 				client := pb.NewClientUpdateServiceClient(conn)
-				_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: id})
+				_, err = client.ClientUpdate(ctx, &pb.ClientUpdateRequest{InstanceId: int32(id)})
 				loopLatency.With(prometheus.Labels{"method": "update-" + server}).Observe(float64(time.Now().Sub(t).Nanoseconds() / 1000000))
 				if err != nil {
 					s.repeatError[id] = err
@@ -225,7 +225,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 
 			//Attemp to update the record
 			ctx, cancel = utils.ManualContext("rc-fw", time.Minute)
-			record, err = s.loadRecord(ctx, id, false)
+			record, err = s.loadRecord(ctx, int64(id), false)
 			if err == nil {
 				record.GetMetadata().LastUpdateTime = time.Now().Unix()
 				s.saveRecord(ctx, record)
@@ -258,7 +258,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 		s.CtxLog(ctx, fmt.Sprintf("Found %v results (%v)", len(recs.GetInstanceIds()), sale.GetId()))
 
 		for _, id := range recs.GetInstanceIds() {
-			rec, err := s.getRecord(ctx, id)
+			rec, err := s.getRecord(ctx, int32(id))
 			if err != nil {
 				s.CtxLog(ctx, fmt.Sprintf("Err: %v", err))
 				return err
@@ -282,7 +282,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 	for _, folder := range []int32{488127, 1708299} {
 		recs, _ := s.QueryRecords(ctx, &pb.QueryRecordsRequest{Query: &pb.QueryRecordsRequest_FolderId{folder}})
 		for _, id := range recs.GetInstanceIds() {
-			rec, err := s.getRecord(ctx, id)
+			rec, err := s.getRecord(ctx, int32(id))
 			if err != nil {
 				return err
 			}
@@ -465,7 +465,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 	if r.GetRelease().InstanceId == 0 {
 		inst, err := s.retr.AddToFolder(ctx, r.GetRelease().FolderId, r.GetRelease().Id)
 		if err == nil {
-			r.GetRelease().InstanceId = int32(inst)
+			r.GetRelease().InstanceId = int64(int32(inst))
 		} else {
 			return err
 		}
@@ -506,10 +506,10 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 	// Re pull the date_added
 	mp, err := s.retr.GetInstanceInfo(ctx, r.GetRelease().GetId())
 	s.CtxLog(ctx, fmt.Sprintf("Got %v -> %+v", err, mp))
-	if err == nil && mp[r.GetRelease().GetInstanceId()] != nil {
+	if err == nil && mp[int32(r.GetRelease().GetInstanceId())] != nil {
 
 		// Are we moving out of the 12 Inch collection
-		if r.GetRelease().GetFolderId() == 242017 && mp[r.GetRelease().GetInstanceId()].FolderId != 242017 {
+		if r.GetRelease().GetFolderId() == 242017 && mp[int32(r.GetRelease().GetInstanceId())].FolderId != 242017 {
 			// Run an update - but do it at the end of the request
 			defer func() {
 				conn, err := s.FDialServer(ctx, "recordsorganiser")
@@ -525,7 +525,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		}
 
 		// Are we moving out of the 7 Inch collection
-		if r.GetRelease().GetFolderId() == 267116 && mp[r.GetRelease().GetInstanceId()].FolderId != 267116 {
+		if r.GetRelease().GetFolderId() == 267116 && mp[int32(r.GetRelease().GetInstanceId())].FolderId != 267116 {
 			// Run an update - but do it at the end of the request
 			defer func() {
 				conn, err := s.FDialServer(ctx, "recordsorganiser")
@@ -541,37 +541,37 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 
 		}
 
-		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", r.GetRelease().GetInstanceId(), mp[r.GetRelease().GetInstanceId()]))
-		r.GetMetadata().DateAdded = mp[r.GetRelease().GetInstanceId()].DateAdded
-		r.GetRelease().RecordCondition = mp[r.GetRelease().GetInstanceId()].RecordCondition
-		r.GetRelease().SleeveCondition = mp[r.GetRelease().GetInstanceId()].SleeveCondition
+		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", int32(r.GetRelease().GetInstanceId()), mp[int32(r.GetRelease().GetInstanceId())]))
+		r.GetMetadata().DateAdded = mp[int32(r.GetRelease().GetInstanceId())].DateAdded
+		r.GetRelease().RecordCondition = mp[int32(r.GetRelease().GetInstanceId())].RecordCondition
+		r.GetRelease().SleeveCondition = mp[int32(r.GetRelease().GetInstanceId())].SleeveCondition
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
-		r.GetRelease().FolderId = mp[r.GetRelease().GetInstanceId()].FolderId
-		r.GetRelease().Rating = mp[r.GetRelease().GetInstanceId()].Rating
-		r.GetMetadata().Notes = mp[r.GetRelease().GetInstanceId()].Notes
+		r.GetRelease().FolderId = mp[int32(r.GetRelease().GetInstanceId())].FolderId
+		r.GetRelease().Rating = mp[int32(r.GetRelease().GetInstanceId())].Rating
+		r.GetMetadata().Notes = mp[int32(r.GetRelease().GetInstanceId())].Notes
 
-		if mp[r.GetRelease().GetInstanceId()].LastListenTime > r.GetMetadata().LastListenTime {
-			r.GetMetadata().LastListenTime = mp[r.GetRelease().GetInstanceId()].LastListenTime
+		if mp[int32(r.GetRelease().GetInstanceId())].LastListenTime > r.GetMetadata().LastListenTime {
+			r.GetMetadata().LastListenTime = mp[int32(r.GetRelease().GetInstanceId())].LastListenTime
 		}
 
 		// Don't overwrite an existing clean time
-		if r.GetMetadata().LastCleanDate == 0 || mp[r.GetRelease().GetInstanceId()].LastCleanDate != "" {
-			p, err := time.ParseInLocation("2006-01-02", mp[r.GetRelease().GetInstanceId()].LastCleanDate, time.Now().Location())
+		if r.GetMetadata().LastCleanDate == 0 || mp[int32(r.GetRelease().GetInstanceId())].LastCleanDate != "" {
+			p, err := time.ParseInLocation("2006-01-02", mp[int32(r.GetRelease().GetInstanceId())].LastCleanDate, time.Now().Location())
 			if err == nil {
 				r.GetMetadata().LastCleanDate = p.Unix()
 			} else {
-				s.CtxLog(ctx, fmt.Sprintf("Cannot parse: %v -> %v", mp[r.GetRelease().GetInstanceId()].LastCleanDate, err))
+				s.CtxLog(ctx, fmt.Sprintf("Cannot parse: %v -> %v", mp[int32(r.GetRelease().GetInstanceId())].LastCleanDate, err))
 			}
 		}
 
-		val, err := strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Width, 32)
+		val, err := strconv.ParseFloat(mp[int32(r.GetRelease().GetInstanceId())].Width, 32)
 
 		if err == nil && val > 0 {
 			r.GetMetadata().RecordWidth = float32(val)
 		}
 
 		if r.GetMetadata().GetSleeve() == pb.ReleaseMetadata_SLEEVE_UNKNOWN {
-			switch mp[r.GetRelease().GetInstanceId()].Sleeve {
+			switch mp[int32(r.GetRelease().GetInstanceId())].Sleeve {
 			case "VinylStorageDoubleFlap":
 				r.GetMetadata().Sleeve = pb.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP
 			case "Boxset":
@@ -580,7 +580,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		}
 
 		if r.GetMetadata().GetPurchaseLocation() == pb.PurchaseLocation_LOCATION_UNKNOWN {
-			switch mp[r.GetRelease().GetInstanceId()].PurchaseLocation {
+			switch mp[int32(r.GetRelease().GetInstanceId())].PurchaseLocation {
 			case "Amoeba":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_AMOEBA
 			case "Hercules":
@@ -598,17 +598,17 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			case "Direct":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_DIRECT
 			default:
-				if mp[r.GetRelease().GetInstanceId()].PurchaseLocation != "" {
-					s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[r.GetRelease().GetInstanceId()].PurchaseLocation))
+				if mp[int32(r.GetRelease().GetInstanceId())].PurchaseLocation != "" {
+					s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[int32(r.GetRelease().GetInstanceId())].PurchaseLocation))
 				}
 			}
 		}
 
 		if r.GetMetadata().GetCost() == 0 {
-			r.GetMetadata().Cost = mp[r.GetRelease().GetInstanceId()].PurchasePrice
+			r.GetMetadata().Cost = mp[int32(r.GetRelease().GetInstanceId())].PurchasePrice
 		}
 
-		switch mp[r.GetRelease().GetInstanceId()].Keep {
+		switch mp[int32(r.GetRelease().GetInstanceId())].Keep {
 		case "none", "NO_KEEP":
 			r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
 		case "digital", "DIGITAL_KEEP":
@@ -620,21 +620,21 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		case "":
 			r.GetMetadata().Keep = pb.ReleaseMetadata_KEEP_UNKNOWN
 		default:
-			panic(fmt.Sprintf("UNKNOWN KEEP STATE: %v", mp[r.GetRelease().GetInstanceId()].Keep))
+			panic(fmt.Sprintf("UNKNOWN KEEP STATE: %v", mp[int32(r.GetRelease().GetInstanceId())].Keep))
 		}
 
-		if r.GetMetadata().GetDateArrived() == 0 && mp[r.GetRelease().GetInstanceId()].Arrived > 0 {
-			r.GetMetadata().DateArrived = mp[r.GetRelease().GetInstanceId()].Arrived
+		if r.GetMetadata().GetDateArrived() == 0 && mp[int32(r.GetRelease().GetInstanceId())].Arrived > 0 {
+			r.GetMetadata().DateArrived = mp[int32(r.GetRelease().GetInstanceId())].Arrived
 
 		}
 
-		val, err = strconv.ParseFloat(mp[r.GetRelease().GetInstanceId()].Weight, 32)
+		val, err = strconv.ParseFloat(mp[int32(r.GetRelease().GetInstanceId())].Weight, 32)
 		if err == nil {
 			r.GetMetadata().WeightInGrams = int32(val)
 		}
 
-		if mp[r.GetRelease().GetInstanceId()].Arrived > 0 && r.GetMetadata().GetDateArrived() == 0 {
-			r.GetMetadata().DateArrived = mp[r.GetRelease().GetInstanceId()].Arrived
+		if mp[int32(r.GetRelease().GetInstanceId())].Arrived > 0 && r.GetMetadata().GetDateArrived() == 0 {
+			r.GetMetadata().DateArrived = mp[int32(r.GetRelease().GetInstanceId())].Arrived
 		}
 
 	} else {
@@ -690,7 +690,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 		for iid := range collection.InstanceToFolder {
 			if iid == record.InstanceId {
 				foundInList = true
-				r, err := s.loadRecord(ctx, record.InstanceId, false)
+				r, err := s.loadRecord(ctx, int64(record.InstanceId), false)
 				if err == nil {
 					s.syncRecords(ctx, r, record, colNumber)
 				} else {
@@ -715,7 +715,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 }
 
 func (s *Server) updateSale(ctx context.Context, iid int32) error {
-	r, err := s.loadRecord(ctx, iid, false)
+	r, err := s.loadRecord(ctx, int64(iid), false)
 	if err == nil {
 		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
 			if r.GetMetadata().SaleId > 1 && !r.GetMetadata().SaleDirty {
@@ -809,7 +809,7 @@ func (s *Server) recache(ctx context.Context, r *pb.Record) error {
 	}
 
 	// Update the score of the record
-	sc, err := s.scorer.GetScore(ctx, r.GetRelease().InstanceId)
+	sc, err := s.scorer.GetScore(ctx, int32(r.GetRelease().InstanceId))
 	if err == nil {
 		r.GetMetadata().OverallScore = sc
 	}
