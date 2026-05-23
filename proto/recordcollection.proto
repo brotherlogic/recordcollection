@@ -556,7 +556,7 @@ message GetInventoryResponse {
 }
 
 message ClientUpdateRequest{
-  int32 instanceId = 1;
+  int64 instanceId = 1;
 }
 
 message ClientUpdateResponse {}

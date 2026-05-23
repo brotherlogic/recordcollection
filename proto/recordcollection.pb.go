@@ -3629,7 +3629,7 @@ func (x *GetInventoryResponse) GetItems() []*proto.ForSale {
 
 type ClientUpdateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId    int32                  `protobuf:"varint,1,opt,name=instanceId,proto3" json:"instanceId,omitempty"`
+	InstanceId    int64                  `protobuf:"varint,1,opt,name=instanceId,proto3" json:"instanceId,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3664,7 +3664,7 @@ func (*ClientUpdateRequest) Descriptor() ([]byte, []int) {
 	return file_recordcollection_proto_rawDescGZIP(), []int{43}
 }
 
-func (x *ClientUpdateRequest) GetInstanceId() int32 {
+func (x *ClientUpdateRequest) GetInstanceId() int64 {
 	if x != nil {
 		return x.InstanceId
 	}
@@ -4081,7 +4081,7 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x05items\x18\x01 \x03(\v2\x12.godiscogs.ForSaleR\x05items\"5\n" +
 	"\x13ClientUpdateRequest\x12\x1e\n" +
 	"\n" +
-	"instanceId\x18\x01 \x01(\x05R\n" +
+	"instanceId\x18\x01 \x01(\x03R\n" +
 	"instanceId\"\x16\n" +
 	"\x14ClientUpdateResponse*r\n" +
 	"\tPurgatory\x12\v\n" +
