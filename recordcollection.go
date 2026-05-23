@@ -466,17 +466,29 @@ func (s *Server) loadRecord(ctx context.Context, id int64, validate bool) (*pb.R
 	}
 
 	readId := id
-	if id < 0 {
-		// Attempt to load from the negative ID key first
-		readId = id
-		id = int64(uint32(id))
-	} else if int32(id) < 0 {
-		// If they query for the positive ID, but the storage has the negative ID
-		readId = int64(int32(id))
-	}
-
 	record := &pb.Record{}
 	data, _, err := s.KSclient.Read(ctx, fmt.Sprintf("%v%v", SAVEKEY, readId), record)
+
+	if err != nil {
+		if id < 0 {
+			altId := int64(uint32(id))
+			data, _, err = s.KSclient.Read(ctx, fmt.Sprintf("%v%v", SAVEKEY, altId), record)
+			if err == nil {
+				id = altId
+				readId = altId
+			}
+		} else if int32(id) < 0 {
+			altId := int64(int32(id))
+			data, _, err = s.KSclient.Read(ctx, fmt.Sprintf("%v%v", SAVEKEY, altId), record)
+			if err == nil {
+				readId = altId
+			}
+		}
+	} else {
+		if id < 0 {
+			id = int64(uint32(id))
+		}
+	}
 
 	if err != nil {
 		return nil, err
