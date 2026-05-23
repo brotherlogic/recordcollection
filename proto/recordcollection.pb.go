@@ -769,7 +769,7 @@ func (x *StoredMetadata) GetWidth() int32 {
 
 type Updates struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId    int32                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	InstanceId    int64                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	Updates       []*RecordUpdate        `protobuf:"bytes,2,rep,name=updates,proto3" json:"updates,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -805,7 +805,7 @@ func (*Updates) Descriptor() ([]byte, []int) {
 	return file_recordcollection_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *Updates) GetInstanceId() int32 {
+func (x *Updates) GetInstanceId() int64 {
 	if x != nil {
 		return x.InstanceId
 	}
@@ -886,14 +886,14 @@ type RecordCollection struct {
 	NewWants                      []*Want                            `protobuf:"bytes,3,rep,name=new_wants,json=newWants,proto3" json:"new_wants,omitempty"`
 	Instances                     []int32                            `protobuf:"varint,4,rep,packed,name=instances,proto3" json:"instances,omitempty"` // DEPRECATED
 	CollectionNumber              int64                              `protobuf:"varint,5,opt,name=collection_number,json=collectionNumber,proto3" json:"collection_number,omitempty"`
-	InstanceToFolder              map[int32]int32                    `protobuf:"bytes,6,rep,name=instance_to_folder,json=instanceToFolder,proto3" json:"instance_to_folder,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	InstanceToUpdate              map[int32]int64                    `protobuf:"bytes,7,rep,name=instance_to_update,json=instanceToUpdate,proto3" json:"instance_to_update,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	InstanceToUpdateIn            map[int32]int64                    `protobuf:"bytes,18,rep,name=instance_to_update_in,json=instanceToUpdateIn,proto3" json:"instance_to_update_in,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	InstanceToCategory            map[int32]ReleaseMetadata_Category `protobuf:"bytes,8,rep,name=instance_to_category,json=instanceToCategory,proto3" json:"instance_to_category,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value,enum=recordcollection.ReleaseMetadata_Category"`
-	InstanceToMaster              map[int32]int32                    `protobuf:"bytes,9,rep,name=instance_to_master,json=instanceToMaster,proto3" json:"instance_to_master,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	InstanceToId                  map[int32]int32                    `protobuf:"bytes,10,rep,name=instance_to_id,json=instanceToId,proto3" json:"instance_to_id,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	InstanceToRecache             map[int32]int64                    `protobuf:"bytes,13,rep,name=instance_to_recache,json=instanceToRecache,proto3" json:"instance_to_recache,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	InstanceToLastSalePriceUpdate map[int32]int64                    `protobuf:"bytes,14,rep,name=instance_to_last_sale_price_update,json=instanceToLastSalePriceUpdate,proto3" json:"instance_to_last_sale_price_update,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	InstanceToFolder              map[int64]int32                    `protobuf:"bytes,6,rep,name=instance_to_folder,json=instanceToFolder,proto3" json:"instance_to_folder,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	InstanceToUpdate              map[int64]int64                    `protobuf:"bytes,7,rep,name=instance_to_update,json=instanceToUpdate,proto3" json:"instance_to_update,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	InstanceToUpdateIn            map[int64]int64                    `protobuf:"bytes,18,rep,name=instance_to_update_in,json=instanceToUpdateIn,proto3" json:"instance_to_update_in,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	InstanceToCategory            map[int64]ReleaseMetadata_Category `protobuf:"bytes,8,rep,name=instance_to_category,json=instanceToCategory,proto3" json:"instance_to_category,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value,enum=recordcollection.ReleaseMetadata_Category"`
+	InstanceToMaster              map[int64]int32                    `protobuf:"bytes,9,rep,name=instance_to_master,json=instanceToMaster,proto3" json:"instance_to_master,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	InstanceToId                  map[int64]int32                    `protobuf:"bytes,10,rep,name=instance_to_id,json=instanceToId,proto3" json:"instance_to_id,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	InstanceToRecache             map[int64]int64                    `protobuf:"bytes,13,rep,name=instance_to_recache,json=instanceToRecache,proto3" json:"instance_to_recache,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	InstanceToLastSalePriceUpdate map[int64]int64                    `protobuf:"bytes,14,rep,name=instance_to_last_sale_price_update,json=instanceToLastSalePriceUpdate,proto3" json:"instance_to_last_sale_price_update,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	SaleUpdates                   []int32                            `protobuf:"varint,11,rep,packed,name=sale_updates,json=saleUpdates,proto3" json:"sale_updates,omitempty"`
 	NeedsPush                     []int32                            `protobuf:"varint,12,rep,packed,name=needs_push,json=needsPush,proto3" json:"needs_push,omitempty"` // DEPRECATED
 	// The record we haven't listened to
@@ -902,7 +902,7 @@ type RecordCollection struct {
 	UpdateQueue    []int32 `protobuf:"varint,17,rep,packed,name=update_queue,json=updateQueue,proto3" json:"update_queue,omitempty"`
 	// The last time we did a full update
 	LastFullUpdate int64           `protobuf:"varint,19,opt,name=last_full_update,json=lastFullUpdate,proto3" json:"last_full_update,omitempty"`
-	TransferMap    map[int32]int32 `protobuf:"bytes,20,rep,name=transfer_map,json=transferMap,proto3" json:"transfer_map,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	TransferMap    map[int64]int32 `protobuf:"bytes,20,rep,name=transfer_map,json=transferMap,proto3" json:"transfer_map,omitempty" protobuf_key:"varint,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -972,56 +972,56 @@ func (x *RecordCollection) GetCollectionNumber() int64 {
 	return 0
 }
 
-func (x *RecordCollection) GetInstanceToFolder() map[int32]int32 {
+func (x *RecordCollection) GetInstanceToFolder() map[int64]int32 {
 	if x != nil {
 		return x.InstanceToFolder
 	}
 	return nil
 }
 
-func (x *RecordCollection) GetInstanceToUpdate() map[int32]int64 {
+func (x *RecordCollection) GetInstanceToUpdate() map[int64]int64 {
 	if x != nil {
 		return x.InstanceToUpdate
 	}
 	return nil
 }
 
-func (x *RecordCollection) GetInstanceToUpdateIn() map[int32]int64 {
+func (x *RecordCollection) GetInstanceToUpdateIn() map[int64]int64 {
 	if x != nil {
 		return x.InstanceToUpdateIn
 	}
 	return nil
 }
 
-func (x *RecordCollection) GetInstanceToCategory() map[int32]ReleaseMetadata_Category {
+func (x *RecordCollection) GetInstanceToCategory() map[int64]ReleaseMetadata_Category {
 	if x != nil {
 		return x.InstanceToCategory
 	}
 	return nil
 }
 
-func (x *RecordCollection) GetInstanceToMaster() map[int32]int32 {
+func (x *RecordCollection) GetInstanceToMaster() map[int64]int32 {
 	if x != nil {
 		return x.InstanceToMaster
 	}
 	return nil
 }
 
-func (x *RecordCollection) GetInstanceToId() map[int32]int32 {
+func (x *RecordCollection) GetInstanceToId() map[int64]int32 {
 	if x != nil {
 		return x.InstanceToId
 	}
 	return nil
 }
 
-func (x *RecordCollection) GetInstanceToRecache() map[int32]int64 {
+func (x *RecordCollection) GetInstanceToRecache() map[int64]int64 {
 	if x != nil {
 		return x.InstanceToRecache
 	}
 	return nil
 }
 
-func (x *RecordCollection) GetInstanceToLastSalePriceUpdate() map[int32]int64 {
+func (x *RecordCollection) GetInstanceToLastSalePriceUpdate() map[int64]int64 {
 	if x != nil {
 		return x.InstanceToLastSalePriceUpdate
 	}
@@ -1070,7 +1070,7 @@ func (x *RecordCollection) GetLastFullUpdate() int64 {
 	return 0
 }
 
-func (x *RecordCollection) GetTransferMap() map[int32]int32 {
+func (x *RecordCollection) GetTransferMap() map[int64]int32 {
 	if x != nil {
 		return x.TransferMap
 	}
@@ -1328,7 +1328,7 @@ type ReleaseMetadata struct {
 	// The time we last moved this record
 	LastMoveTime int64 `protobuf:"varint,26,opt,name=last_move_time,json=lastMoveTime,proto3" json:"last_move_time,omitempty"`
 	// Ref to the release instance id
-	InstanceId int32 `protobuf:"varint,27,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	InstanceId int64 `protobuf:"varint,27,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	// If we need to stock check this record
 	NeedsStockCheck     bool                                `protobuf:"varint,28,opt,name=needs_stock_check,json=needsStockCheck,proto3" json:"needs_stock_check,omitempty"`
 	Keep                ReleaseMetadata_KeepState           `protobuf:"varint,29,opt,name=keep,proto3,enum=recordcollection.ReleaseMetadata_KeepState" json:"keep,omitempty"`
@@ -1626,7 +1626,7 @@ func (x *ReleaseMetadata) GetLastMoveTime() int64 {
 	return 0
 }
 
-func (x *ReleaseMetadata) GetInstanceId() int32 {
+func (x *ReleaseMetadata) GetInstanceId() int64 {
 	if x != nil {
 		return x.InstanceId
 	}
@@ -2506,7 +2506,7 @@ func (*GetRecordCollectionRequest) Descriptor() ([]byte, []int) {
 
 type GetRecordCollectionResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceIds   []int32                `protobuf:"varint,1,rep,packed,name=instance_ids,json=instanceIds,proto3" json:"instance_ids,omitempty"`
+	InstanceIds   []int64                `protobuf:"varint,1,rep,packed,name=instance_ids,json=instanceIds,proto3" json:"instance_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2541,7 +2541,7 @@ func (*GetRecordCollectionResponse) Descriptor() ([]byte, []int) {
 	return file_recordcollection_proto_rawDescGZIP(), []int{20}
 }
 
-func (x *GetRecordCollectionResponse) GetInstanceIds() []int32 {
+func (x *GetRecordCollectionResponse) GetInstanceIds() []int64 {
 	if x != nil {
 		return x.InstanceIds
 	}
@@ -2550,7 +2550,7 @@ func (x *GetRecordCollectionResponse) GetInstanceIds() []int32 {
 
 type DeleteRecordRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId    int32                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	InstanceId    int64                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2585,7 +2585,7 @@ func (*DeleteRecordRequest) Descriptor() ([]byte, []int) {
 	return file_recordcollection_proto_rawDescGZIP(), []int{21}
 }
 
-func (x *DeleteRecordRequest) GetInstanceId() int32 {
+func (x *DeleteRecordRequest) GetInstanceId() int64 {
 	if x != nil {
 		return x.InstanceId
 	}
@@ -2800,7 +2800,7 @@ func (*QueryRecordsRequest_ListenTime) isQueryRecordsRequest_Query() {}
 
 type QueryRecordsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceIds   []int32                `protobuf:"varint,1,rep,packed,name=instance_ids,json=instanceIds,proto3" json:"instance_ids,omitempty"`
+	InstanceIds   []int64                `protobuf:"varint,1,rep,packed,name=instance_ids,json=instanceIds,proto3" json:"instance_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2835,7 +2835,7 @@ func (*QueryRecordsResponse) Descriptor() ([]byte, []int) {
 	return file_recordcollection_proto_rawDescGZIP(), []int{24}
 }
 
-func (x *QueryRecordsResponse) GetInstanceIds() []int32 {
+func (x *QueryRecordsResponse) GetInstanceIds() []int64 {
 	if x != nil {
 		return x.InstanceIds
 	}
@@ -2844,7 +2844,7 @@ func (x *QueryRecordsResponse) GetInstanceIds() []int32 {
 
 type GetRecordRequest struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId int32                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	InstanceId int64                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	Force      int32                  `protobuf:"varint,2,opt,name=force,proto3" json:"force,omitempty"`
 	Validate   bool                   `protobuf:"varint,3,opt,name=validate,proto3" json:"validate,omitempty"`
 	// Shortcut if this is available, returns a release only version
@@ -2883,7 +2883,7 @@ func (*GetRecordRequest) Descriptor() ([]byte, []int) {
 	return file_recordcollection_proto_rawDescGZIP(), []int{25}
 }
 
-func (x *GetRecordRequest) GetInstanceId() int32 {
+func (x *GetRecordRequest) GetInstanceId() int64 {
 	if x != nil {
 		return x.InstanceId
 	}
@@ -3029,7 +3029,7 @@ func (*TriggerResponse) Descriptor() ([]byte, []int) {
 
 type GetUpdatesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId    int32                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	InstanceId    int64                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3064,7 +3064,7 @@ func (*GetUpdatesRequest) Descriptor() ([]byte, []int) {
 	return file_recordcollection_proto_rawDescGZIP(), []int{29}
 }
 
-func (x *GetUpdatesRequest) GetInstanceId() int32 {
+func (x *GetUpdatesRequest) GetInstanceId() int64 {
 	if x != nil {
 		return x.InstanceId
 	}
@@ -3213,7 +3213,7 @@ func (x *GetOrderResponse) GetSaleDate() int64 {
 
 type CommitRecordRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	InstanceId    int32                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
+	InstanceId    int64                  `protobuf:"varint,1,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3248,7 +3248,7 @@ func (*CommitRecordRequest) Descriptor() ([]byte, []int) {
 	return file_recordcollection_proto_rawDescGZIP(), []int{33}
 }
 
-func (x *CommitRecordRequest) GetInstanceId() int32 {
+func (x *CommitRecordRequest) GetInstanceId() int64 {
 	if x != nil {
 		return x.InstanceId
 	}
@@ -3715,7 +3715,7 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x0eStoredMetadata\x12\x14\n" +
 	"\x05width\x18\x01 \x01(\x05R\x05width\"d\n" +
 	"\aUpdates\x12\x1f\n" +
-	"\vinstance_id\x18\x01 \x01(\x05R\n" +
+	"\vinstance_id\x18\x01 \x01(\x03R\n" +
 	"instanceId\x128\n" +
 	"\aupdates\x18\x02 \x03(\v2\x1e.recordcollection.RecordUpdateR\aupdates\"l\n" +
 	"\fRecordUpdate\x120\n" +
@@ -3746,31 +3746,31 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x10last_full_update\x18\x13 \x01(\x03R\x0elastFullUpdate\x12V\n" +
 	"\ftransfer_map\x18\x14 \x03(\v23.recordcollection.RecordCollection.TransferMapEntryR\vtransferMap\x1aC\n" +
 	"\x15InstanceToFolderEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aC\n" +
 	"\x15InstanceToUpdateEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\x1aE\n" +
 	"\x17InstanceToUpdateInEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\x1aq\n" +
 	"\x17InstanceToCategoryEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12@\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12@\n" +
 	"\x05value\x18\x02 \x01(\x0e2*.recordcollection.ReleaseMetadata.CategoryR\x05value:\x028\x01\x1aC\n" +
 	"\x15InstanceToMasterEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1a?\n" +
 	"\x11InstanceToIdEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\x1aD\n" +
 	"\x16InstanceToRecacheEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\x1aP\n" +
 	"\"InstanceToLastSalePriceUpdateEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01\x1a>\n" +
 	"\x10TransferMapEntry\x12\x10\n" +
-	"\x03key\x18\x01 \x01(\x05R\x03key\x12\x14\n" +
+	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"@\n" +
 	"\n" +
 	"AllRecords\x122\n" +
@@ -3827,7 +3827,7 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x10last_listen_time\x18\x18 \x01(\x03R\x0elastListenTime\x12\x17\n" +
 	"\acd_path\x18\x19 \x01(\tR\x06cdPath\x12$\n" +
 	"\x0elast_move_time\x18\x1a \x01(\x03R\flastMoveTime\x12\x1f\n" +
-	"\vinstance_id\x18\x1b \x01(\x05R\n" +
+	"\vinstance_id\x18\x1b \x01(\x03R\n" +
 	"instanceId\x12*\n" +
 	"\x11needs_stock_check\x18\x1c \x01(\bR\x0fneedsStockCheck\x12?\n" +
 	"\x04keep\x18\x1d \x01(\x0e2+.recordcollection.ReleaseMetadata.KeepStateR\x04keep\x12B\n" +
@@ -4017,9 +4017,9 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x05added\x18\x02 \x01(\v2\x18.recordcollection.RecordR\x05added\"\x1c\n" +
 	"\x1aGetRecordCollectionRequest\"@\n" +
 	"\x1bGetRecordCollectionResponse\x12!\n" +
-	"\finstance_ids\x18\x01 \x03(\x05R\vinstanceIds\"6\n" +
+	"\finstance_ids\x18\x01 \x03(\x03R\vinstanceIds\"6\n" +
 	"\x13DeleteRecordRequest\x12\x1f\n" +
-	"\vinstance_id\x18\x01 \x01(\x05R\n" +
+	"\vinstance_id\x18\x01 \x01(\x03R\n" +
 	"instanceId\"\x16\n" +
 	"\x14DeleteRecordResponse\"\xb9\x02\n" +
 	"\x13QueryRecordsRequest\x12\x1d\n" +
@@ -4036,9 +4036,9 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x06origin\x18\x06 \x01(\tR\x06originB\a\n" +
 	"\x05query\"9\n" +
 	"\x14QueryRecordsResponse\x12!\n" +
-	"\finstance_ids\x18\x01 \x03(\x05R\vinstanceIds\"\x84\x01\n" +
+	"\finstance_ids\x18\x01 \x03(\x03R\vinstanceIds\"\x84\x01\n" +
 	"\x10GetRecordRequest\x12\x1f\n" +
-	"\vinstance_id\x18\x01 \x01(\x05R\n" +
+	"\vinstance_id\x18\x01 \x01(\x03R\n" +
 	"instanceId\x12\x14\n" +
 	"\x05force\x18\x02 \x01(\x05R\x05force\x12\x1a\n" +
 	"\bvalidate\x18\x03 \x01(\bR\bvalidate\x12\x1d\n" +
@@ -4049,7 +4049,7 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x0eTriggerRequest\"\x11\n" +
 	"\x0fTriggerResponse\"4\n" +
 	"\x11GetUpdatesRequest\x12\x1f\n" +
-	"\vinstance_id\x18\x01 \x01(\x05R\n" +
+	"\vinstance_id\x18\x01 \x01(\x03R\n" +
 	"instanceId\"I\n" +
 	"\x12GetUpdatesResponse\x123\n" +
 	"\aupdates\x18\x01 \x01(\v2\x19.recordcollection.UpdatesR\aupdates\"!\n" +
@@ -4062,7 +4062,7 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x03key\x18\x01 \x01(\x03R\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x05R\x05value:\x028\x01\"6\n" +
 	"\x13CommitRecordRequest\x12\x1f\n" +
-	"\vinstance_id\x18\x01 \x01(\x05R\n" +
+	"\vinstance_id\x18\x01 \x01(\x03R\n" +
 	"instanceId\"\x16\n" +
 	"\x14CommitRecordResponse\"!\n" +
 	"\x0fGetPriceRequest\x12\x0e\n" +

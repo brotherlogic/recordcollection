@@ -76,7 +76,7 @@ func (p *prodMoveRecorder) moveRecord(ctx context.Context, record *pb.Record, ol
 
 	rmclient := pbrm.NewMoveServiceClient(conn)
 	_, err = rmclient.RecordMove(ctx, &pbrm.MoveRequest{Move: &pbrm.RecordMove{
-		InstanceId: record.GetRelease().InstanceId,
+		InstanceId: int32(record.GetRelease().InstanceId),
 		FromFolder: oldFolder,
 		ToFolder:   newFolder,
 		Record:     record,
@@ -204,7 +204,7 @@ func (p *prodGenerator) generate(ctx context.Context, address string, rec *pb.Re
 }
 
 type fo struct {
-	iid    int32
+	iid    int64
 	origin string
 }
 
@@ -219,8 +219,8 @@ type Server struct {
 	disableSales  bool
 	updateFanout  chan *fo
 	fanoutServers []string
-	repeatCount   map[int32]int
-	repeatError   map[int32]error
+	repeatCount   map[int64]int
+	repeatError   map[int64]error
 	queueClient      *qpb.QueueClient
 	generatorAddress string
 	generator        descriptionGenerator
@@ -264,40 +264,40 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 
 	// Create the instance to recahe map
 	if collection.InstanceToRecache == nil {
-		collection.InstanceToRecache = make(map[int32]int64)
+		collection.InstanceToRecache = make(map[int64]int64)
 	}
 
 	if collection.TransferMap == nil {
-		collection.TransferMap = make(map[int32]int32)
+		collection.TransferMap = make(map[int64]int32)
 	}
 
 	if collection.InstanceToLastSalePriceUpdate == nil {
-		collection.InstanceToLastSalePriceUpdate = make(map[int32]int64)
+		collection.InstanceToLastSalePriceUpdate = make(map[int64]int64)
 	}
 
 	if collection.InstanceToFolder == nil {
-		collection.InstanceToFolder = make(map[int32]int32)
+		collection.InstanceToFolder = make(map[int64]int32)
 	}
 
 	if collection.InstanceToId == nil {
-		collection.InstanceToId = make(map[int32]int32)
+		collection.InstanceToId = make(map[int64]int32)
 	}
 
 	if collection.InstanceToUpdate == nil {
-		collection.InstanceToUpdate = make(map[int32]int64)
+		collection.InstanceToUpdate = make(map[int64]int64)
 	}
 
 	if collection.InstanceToUpdateIn == nil {
 		s.RaiseIssue("Build reset", fmt.Sprintf("Reset on build for update in: %v", len(collection.InstanceToUpdate)))
-		collection.InstanceToUpdateIn = make(map[int32]int64)
+		collection.InstanceToUpdateIn = make(map[int64]int64)
 	}
 
 	if collection.InstanceToCategory == nil {
-		collection.InstanceToCategory = make(map[int32]pb.ReleaseMetadata_Category)
+		collection.InstanceToCategory = make(map[int64]pb.ReleaseMetadata_Category)
 	}
 
 	if collection.InstanceToMaster == nil {
-		collection.InstanceToMaster = make(map[int32]int32)
+		collection.InstanceToMaster = make(map[int64]int32)
 	}
 
 	if collection.GetOldestRecord() == 0 {
@@ -345,7 +345,7 @@ func (s *Server) saveRecordCollection(ctx context.Context, collection *pb.Record
 	return s.KSclient.Save(ctx, KEY, collection)
 }
 
-func (s *Server) deleteRecord(ctx context.Context, i int32) error {
+func (s *Server) deleteRecord(ctx context.Context, i int64) error {
 	if !s.SkipLog {
 		conn, err := s.FDialServer(ctx, "keystore")
 		if err != nil {
@@ -421,7 +421,7 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	if r.GetMetadata().SaleDirty {
-		collection.SaleUpdates = append(collection.SaleUpdates, r.GetRelease().GetInstanceId())
+		collection.SaleUpdates = append(collection.SaleUpdates, int32(r.GetRelease().GetInstanceId()))
 	}
 
 	if r.GetMetadata().LastCache == 0 || r.GetMetadata().LastCache == 1 {
@@ -434,9 +434,9 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 		s.saveRecordCollection(ctx, collection)
 	}
 
-	counts := make(map[int32]int)
+	counts := make(map[int64]int)
 	for _, folder := range collection.GetInstanceToFolder() {
-		counts[folder]++
+		counts[int64(folder)]++
 	}
 	for folder, count := range counts {
 		folderCount.With(prometheus.Labels{"folder": fmt.Sprintf("%v", folder)}).Set(float64(count))
@@ -460,23 +460,44 @@ var (
 	})
 )
 
-func (s *Server) loadRecord(ctx context.Context, id int32, validate bool) (*pb.Record, error) {
+func (s *Server) loadRecord(ctx context.Context, id int64, validate bool) (*pb.Record, error) {
 	if s.TimeoutLoad {
 		return nil, status.Error(codes.DeadlineExceeded, "Force DE")
 	}
 
+	readId := id
+	if id < 0 {
+		// Attempt to load from the negative ID key first
+		readId = id
+		id = int64(uint32(id))
+	} else if int32(id) < 0 {
+		// If they query for the positive ID, but the storage has the negative ID
+		readId = int64(int32(id))
+	}
+
 	record := &pb.Record{}
-	data, _, err := s.KSclient.Read(ctx, fmt.Sprintf("%v%v", SAVEKEY, id), record)
+	data, _, err := s.KSclient.Read(ctx, fmt.Sprintf("%v%v", SAVEKEY, readId), record)
 
 	if err != nil {
 		return nil, err
 	}
 
 	if proto.Size(data) == 0 {
-		return nil, fmt.Errorf("Error on read for %v", id)
+		return nil, fmt.Errorf("Error on read for %v", readId)
 	}
 
 	recordToReturn := data.(*pb.Record)
+	
+	// Fix negative ID in storage
+	if readId < 0 && id > 0 {
+		s.CtxLog(ctx, fmt.Sprintf("Fixing negative instance id %v to %v", readId, id))
+		recordToReturn.GetRelease().InstanceId = id
+		// Save the record with the new positive ID
+		s.saveRecord(ctx, recordToReturn)
+		// Delete the old negative ID record
+		s.deleteRecord(ctx, readId)
+	}
+
 	if id == 365221500 {
 		s.CtxLog(ctx, fmt.Sprintf("RAW %v", recordToReturn))
 	}
@@ -520,7 +541,7 @@ func (s *Server) saveUpdates(ctx context.Context, id int32, updates *pb.Updates)
 }
 
 func (s *Server) getRecord(ctx context.Context, id int32) (*pb.Record, error) {
-	r, err := s.loadRecord(ctx, id, false)
+	r, err := s.loadRecord(ctx, int64(id), false)
 
 	if err != nil {
 		return nil, err
@@ -589,8 +610,8 @@ func Init() *Server {
 			"recordvalidator",
 			"recordalerting",
 			"stobridge"},
-		repeatCount: make(map[int32]int),
-		repeatError: make(map[int32]error),
+		repeatCount: make(map[int64]int),
+		repeatError: make(map[int64]error),
 	}
 	s.scorer = &prodScorer{s.FDialServer}
 	s.quota = &prodQuotaChecker{s.FDialServer}
@@ -608,7 +629,7 @@ func (s *Server) updateSalePrice(ctx context.Context) error {
 
 	for id, val := range collection.GetInstanceToLastSalePriceUpdate() {
 		if time.Now().Sub(time.Unix(val, 0)) > time.Hour*24*2 {
-			r, err := s.loadRecord(ctx, id, false)
+			r, err := s.loadRecord(ctx, int64(id), false)
 			if err != nil {
 				return err
 			}
