@@ -20,7 +20,9 @@ func TestNegativeIdMigration(t *testing.T) {
 		Release: &pbgd.Release{
 			InstanceId: originalPositiveId, // The struct had int64 or int32, but let's assume it had the negative one
 		},
-		Metadata: &pb.ReleaseMetadata{},
+		Metadata: &pb.ReleaseMetadata{
+			InstanceId: int64(int32(originalPositiveId)), // set to negative initially
+		},
 	}
 	// We must use int64(int32(originalPositiveId)) which evaluates to -2147029646 to save it under the old key
 	s.KSclient.Save(context.Background(), "/github.com/brotherlogic/recordcollection/records/-2147029646", oldRecord)
@@ -38,6 +40,10 @@ func TestNegativeIdMigration(t *testing.T) {
 
 	if res.GetRecord().GetRelease().GetInstanceId() != originalPositiveId {
 		t.Errorf("Expected instance ID %v, got %v", originalPositiveId, res.GetRecord().GetRelease().GetInstanceId())
+	}
+
+	if res.GetRecord().GetMetadata().GetInstanceId() != originalPositiveId {
+		t.Errorf("Expected metadata instance ID %v, got %v", originalPositiveId, res.GetRecord().GetMetadata().GetInstanceId())
 	}
 
 	// Verify the new positive ID exists in keystore
