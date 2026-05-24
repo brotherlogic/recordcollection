@@ -208,7 +208,7 @@ func main() {
 			if err != nil {
 				log.Fatalf("Bad read: %v", err)
 			}
-			location, err := client.Locate(ctx, &pbro.LocateRequest{InstanceId: int32(id)})
+			location, err := client.Locate(ctx, &pbro.LocateRequest{InstanceId: int64(id)})
 			if err != nil {
 				if status.Code(err) == codes.NotFound {
 					fmt.Printf("%v [UNKNOWN]\n", rec.GetRecord().GetRelease().GetTitle())
@@ -654,7 +654,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int32(id)})
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int64(id)})
 			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 
 		}
@@ -676,7 +676,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int32(id)})
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int64(id)})
 			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 		}
 		ids, err = registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_STAGED}})
@@ -689,7 +689,7 @@ func main() {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int32(id)})
+			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int64(id)})
 			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 		}
 	case "next":
@@ -1894,7 +1894,7 @@ func main() {
 			if !found {
 				fmt.Printf("Not found: %v\n", rec)
 				upup := &rfpb.FanoutRequest{
-					InstanceId: int32(rec),
+					InstanceId: int64(rec),
 				}
 				data, _ := proto.Marshal(upup)
 				client2.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -1906,8 +1906,8 @@ func main() {
 			}
 		}
 	case "enqueue":
-		iv, _ := strconv.ParseInt(os.Args[2], 10, 32)
-		i := int32(iv)
+		iv, _ := strconv.ParseInt(os.Args[2], 10, 64)
+		i := int64(iv)
 		conn2, err := utils.LFDialServer(ctx, "queue")
 		if err != nil {
 			log.Fatalf("Bad dial: %v", err)

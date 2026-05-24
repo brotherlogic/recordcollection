@@ -83,8 +83,8 @@ type testSyncer struct {
 	removedSaleID   int
 }
 
-func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error) {
-	return make(map[int32]*godiscogs.InstanceInfo), nil
+func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int64]*godiscogs.InstanceInfo, error) {
+	return make(map[int64]*godiscogs.InstanceInfo), nil
 }
 
 func (t *testSyncer) GetInventory(ctx context.Context) ([]*pbgd.ForSale, error) {
