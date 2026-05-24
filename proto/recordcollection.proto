@@ -345,8 +345,8 @@ message ReleaseMetadata {
   DigitalAvailability digital_availability = 63;
 
   int32 transfer_to = 64;
-  int32 transfer_iid = 65;
-  int32 transfer_from = 66;
+  int64 transfer_iid = 65;
+  int64 transfer_from = 66;
 
   string sale_budget = 67;
 

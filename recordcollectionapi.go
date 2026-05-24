@@ -144,7 +144,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	if (record.GetMetadata().GetSaleState() == pbgd.SaleState_EXPIRED || record.GetMetadata().GetSaleState() == pbgd.SaleState_FOR_SALE) && !gUpdate {
 		// Queue up an update for a month from now
 		upup := &rfpb.FanoutRequest{
-			InstanceId: int32(record.GetRelease().GetInstanceId()),
+			InstanceId: int64(record.GetRelease().GetInstanceId()),
 		}
 		data, _ := proto.Marshal(upup)
 		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -211,7 +211,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if err != nil {
 			return nil, err
 		}
-		record.GetMetadata().TransferIid = int32(trecord.GetRelease().GetInstanceId())
+		record.GetMetadata().TransferIid = int64(trecord.GetRelease().GetInstanceId())
 		updateReason += " TRANSFER"
 		updated = true
 
@@ -222,7 +222,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 
 		// Run updates on the transferred record too
 		upup := &rfpb.FanoutRequest{
-			InstanceId: int32(trecord.GetRelease().GetInstanceId()),
+			InstanceId: int64(trecord.GetRelease().GetInstanceId()),
 		}
 		data, _ := proto.Marshal(upup)
 		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -281,7 +281,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		if !gUpdate {
 
 			upup := &rfpb.FanoutRequest{
-				InstanceId: int32(record.GetRelease().GetInstanceId()),
+				InstanceId: int64(record.GetRelease().GetInstanceId()),
 			}
 			data, _ := proto.Marshal(upup)
 			_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -296,7 +296,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 	} else {
 		if !gUpdate && !added {
 			upup := &rfpb.FanoutRequest{
-				InstanceId: int32(record.GetRelease().GetInstanceId()),
+				InstanceId: int64(record.GetRelease().GetInstanceId()),
 			}
 			data, _ := proto.Marshal(upup)
 			_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -414,7 +414,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				}
 				if r.GetMetadata().GetSaleId() == request.GetUpdate().GetMetadata().GetSaleId() {
 					upup := &rfpb.FanoutRequest{
-						InstanceId: int32(r.GetRelease().GetInstanceId()),
+						InstanceId: int64(r.GetRelease().GetInstanceId()),
 					}
 					data, _ := proto.Marshal(upup)
 					_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -483,7 +483,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 
 	// If we've loaded the record correctly we're probably fine
-	updates, err := s.loadUpdates(ctx, int32(request.GetUpdate().GetRelease().InstanceId))
+	updates, err := s.loadUpdates(ctx, int64(request.GetUpdate().GetRelease().InstanceId))
 	code := status.Convert(err).Code()
 	if code != codes.OK && code != codes.InvalidArgument {
 		return nil, err
@@ -492,7 +492,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		updates = &pb.Updates{Updates: []*pb.RecordUpdate{}}
 	}
 	updates.Updates = append(updates.Updates, &pb.RecordUpdate{Update: request.GetUpdate(), Reason: request.GetReason(), Time: time.Now().Unix()})
-	err = s.saveUpdates(ctx, int32(request.GetUpdate().GetRelease().InstanceId), updates)
+	err = s.saveUpdates(ctx, int64(request.GetUpdate().GetRelease().InstanceId), updates)
 	if err != nil {
 		return nil, err
 	}
@@ -642,7 +642,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	if request.GetReason() != "Tripping gram update" && request.GetReason() != "updating from grambridge" {
 		upup := &rfpb.FanoutRequest{
-			InstanceId: int32(rec.GetRelease().GetInstanceId()),
+			InstanceId: int64(rec.GetRelease().GetInstanceId()),
 		}
 		data, _ := proto.Marshal(upup)
 		_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -680,7 +680,7 @@ func (s *Server) transfer(ctx context.Context, rec *pb.Record) (*pb.Record, erro
 
 	// Remove the transfer bit from the trecord
 	trecord.GetAdded().GetMetadata().TransferTo = 0
-	trecord.GetAdded().GetMetadata().TransferFrom = int32(rec.GetRelease().GetInstanceId())
+	trecord.GetAdded().GetMetadata().TransferFrom = int64(rec.GetRelease().GetInstanceId())
 
 	s.CtxLog(ctx, fmt.Sprintf("TRANSFER: %v", trecord))
 
@@ -706,7 +706,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		instanceID, err = s.retr.AddToFolder(ctx, 3380098, request.GetToAdd().GetRelease().Id)
 	}
 	if err == nil {
-		request.GetToAdd().Release.InstanceId = int64(int32(instanceID))
+		request.GetToAdd().Release.InstanceId = int64(int64(instanceID))
 		if request.GetToAdd().GetRelease().GetFolderId() == 0 {
 			request.GetToAdd().GetRelease().FolderId = int32(3380098)
 		}
@@ -719,7 +719,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	}
 
 	upup := &rfpb.FanoutRequest{
-		InstanceId: int32(instanceID),
+		InstanceId: int64(instanceID),
 	}
 	data, _ := proto.Marshal(upup)
 	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
@@ -876,7 +876,7 @@ func (s *Server) Trigger(ctx context.Context, req *pb.TriggerRequest) (*pb.Trigg
 
 // GetUpdates to a record
 func (s *Server) GetUpdates(ctx context.Context, req *pb.GetUpdatesRequest) (*pb.GetUpdatesResponse, error) {
-	updates, err := s.loadUpdates(ctx, int32(req.GetInstanceId()))
+	updates, err := s.loadUpdates(ctx, int64(req.GetInstanceId()))
 	return &pb.GetUpdatesResponse{Updates: updates}, err
 }
 

@@ -506,10 +506,10 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 	// Re pull the date_added
 	mp, err := s.retr.GetInstanceInfo(ctx, r.GetRelease().GetId())
 	s.CtxLog(ctx, fmt.Sprintf("Got %v -> %+v", err, mp))
-	if err == nil && mp[int32(r.GetRelease().GetInstanceId())] != nil {
+	if err == nil && mp[int64(r.GetRelease().GetInstanceId())] != nil {
 
 		// Are we moving out of the 12 Inch collection
-		if r.GetRelease().GetFolderId() == 242017 && mp[int32(r.GetRelease().GetInstanceId())].FolderId != 242017 {
+		if r.GetRelease().GetFolderId() == 242017 && mp[int64(r.GetRelease().GetInstanceId())].FolderId != 242017 {
 			// Run an update - but do it at the end of the request
 			defer func() {
 				conn, err := s.FDialServer(ctx, "recordsorganiser")
@@ -525,7 +525,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		}
 
 		// Are we moving out of the 7 Inch collection
-		if r.GetRelease().GetFolderId() == 267116 && mp[int32(r.GetRelease().GetInstanceId())].FolderId != 267116 {
+		if r.GetRelease().GetFolderId() == 267116 && mp[int64(r.GetRelease().GetInstanceId())].FolderId != 267116 {
 			// Run an update - but do it at the end of the request
 			defer func() {
 				conn, err := s.FDialServer(ctx, "recordsorganiser")
@@ -541,37 +541,37 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 
 		}
 
-		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", int32(r.GetRelease().GetInstanceId()), mp[int32(r.GetRelease().GetInstanceId())]))
-		r.GetMetadata().DateAdded = mp[int32(r.GetRelease().GetInstanceId())].DateAdded
-		r.GetRelease().RecordCondition = mp[int32(r.GetRelease().GetInstanceId())].RecordCondition
-		r.GetRelease().SleeveCondition = mp[int32(r.GetRelease().GetInstanceId())].SleeveCondition
+		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", int64(r.GetRelease().GetInstanceId()), mp[int64(r.GetRelease().GetInstanceId())]))
+		r.GetMetadata().DateAdded = mp[int64(r.GetRelease().GetInstanceId())].DateAdded
+		r.GetRelease().RecordCondition = mp[int64(r.GetRelease().GetInstanceId())].RecordCondition
+		r.GetRelease().SleeveCondition = mp[int64(r.GetRelease().GetInstanceId())].SleeveCondition
 		r.GetMetadata().LastInfoUpdate = time.Now().Unix()
-		r.GetRelease().FolderId = mp[int32(r.GetRelease().GetInstanceId())].FolderId
-		r.GetRelease().Rating = mp[int32(r.GetRelease().GetInstanceId())].Rating
-		r.GetMetadata().Notes = mp[int32(r.GetRelease().GetInstanceId())].Notes
+		r.GetRelease().FolderId = mp[int64(r.GetRelease().GetInstanceId())].FolderId
+		r.GetRelease().Rating = mp[int64(r.GetRelease().GetInstanceId())].Rating
+		r.GetMetadata().Notes = mp[int64(r.GetRelease().GetInstanceId())].Notes
 
-		if mp[int32(r.GetRelease().GetInstanceId())].LastListenTime > r.GetMetadata().LastListenTime {
-			r.GetMetadata().LastListenTime = mp[int32(r.GetRelease().GetInstanceId())].LastListenTime
+		if mp[int64(r.GetRelease().GetInstanceId())].LastListenTime > r.GetMetadata().LastListenTime {
+			r.GetMetadata().LastListenTime = mp[int64(r.GetRelease().GetInstanceId())].LastListenTime
 		}
 
 		// Don't overwrite an existing clean time
-		if r.GetMetadata().LastCleanDate == 0 || mp[int32(r.GetRelease().GetInstanceId())].LastCleanDate != "" {
-			p, err := time.ParseInLocation("2006-01-02", mp[int32(r.GetRelease().GetInstanceId())].LastCleanDate, time.Now().Location())
+		if r.GetMetadata().LastCleanDate == 0 || mp[int64(r.GetRelease().GetInstanceId())].LastCleanDate != "" {
+			p, err := time.ParseInLocation("2006-01-02", mp[int64(r.GetRelease().GetInstanceId())].LastCleanDate, time.Now().Location())
 			if err == nil {
 				r.GetMetadata().LastCleanDate = p.Unix()
 			} else {
-				s.CtxLog(ctx, fmt.Sprintf("Cannot parse: %v -> %v", mp[int32(r.GetRelease().GetInstanceId())].LastCleanDate, err))
+				s.CtxLog(ctx, fmt.Sprintf("Cannot parse: %v -> %v", mp[int64(r.GetRelease().GetInstanceId())].LastCleanDate, err))
 			}
 		}
 
-		val, err := strconv.ParseFloat(mp[int32(r.GetRelease().GetInstanceId())].Width, 32)
+		val, err := strconv.ParseFloat(mp[int64(r.GetRelease().GetInstanceId())].Width, 32)
 
 		if err == nil && val > 0 {
 			r.GetMetadata().RecordWidth = float32(val)
 		}
 
 		if r.GetMetadata().GetSleeve() == pb.ReleaseMetadata_SLEEVE_UNKNOWN {
-			switch mp[int32(r.GetRelease().GetInstanceId())].Sleeve {
+			switch mp[int64(r.GetRelease().GetInstanceId())].Sleeve {
 			case "VinylStorageDoubleFlap":
 				r.GetMetadata().Sleeve = pb.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP
 			case "Boxset":
@@ -580,7 +580,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		}
 
 		if r.GetMetadata().GetPurchaseLocation() == pb.PurchaseLocation_LOCATION_UNKNOWN {
-			switch mp[int32(r.GetRelease().GetInstanceId())].PurchaseLocation {
+			switch mp[int64(r.GetRelease().GetInstanceId())].PurchaseLocation {
 			case "Amoeba":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_AMOEBA
 			case "Hercules":
@@ -598,17 +598,17 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			case "Direct":
 				r.GetMetadata().PurchaseLocation = pb.PurchaseLocation_DIRECT
 			default:
-				if mp[int32(r.GetRelease().GetInstanceId())].PurchaseLocation != "" {
-					s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[int32(r.GetRelease().GetInstanceId())].PurchaseLocation))
+				if mp[int64(r.GetRelease().GetInstanceId())].PurchaseLocation != "" {
+					s.RaiseIssue("Unknown Purchase Location", fmt.Sprintf("%v cannot be mapped to a location", mp[int64(r.GetRelease().GetInstanceId())].PurchaseLocation))
 				}
 			}
 		}
 
 		if r.GetMetadata().GetCost() == 0 {
-			r.GetMetadata().Cost = mp[int32(r.GetRelease().GetInstanceId())].PurchasePrice
+			r.GetMetadata().Cost = mp[int64(r.GetRelease().GetInstanceId())].PurchasePrice
 		}
 
-		switch mp[int32(r.GetRelease().GetInstanceId())].Keep {
+		switch mp[int64(r.GetRelease().GetInstanceId())].Keep {
 		case "none", "NO_KEEP":
 			r.GetMetadata().Keep = pb.ReleaseMetadata_NOT_KEEPER
 		case "digital", "DIGITAL_KEEP":
@@ -620,21 +620,21 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		case "":
 			r.GetMetadata().Keep = pb.ReleaseMetadata_KEEP_UNKNOWN
 		default:
-			panic(fmt.Sprintf("UNKNOWN KEEP STATE: %v", mp[int32(r.GetRelease().GetInstanceId())].Keep))
+			panic(fmt.Sprintf("UNKNOWN KEEP STATE: %v", mp[int64(r.GetRelease().GetInstanceId())].Keep))
 		}
 
-		if r.GetMetadata().GetDateArrived() == 0 && mp[int32(r.GetRelease().GetInstanceId())].Arrived > 0 {
-			r.GetMetadata().DateArrived = mp[int32(r.GetRelease().GetInstanceId())].Arrived
+		if r.GetMetadata().GetDateArrived() == 0 && mp[int64(r.GetRelease().GetInstanceId())].Arrived > 0 {
+			r.GetMetadata().DateArrived = mp[int64(r.GetRelease().GetInstanceId())].Arrived
 
 		}
 
-		val, err = strconv.ParseFloat(mp[int32(r.GetRelease().GetInstanceId())].Weight, 32)
+		val, err = strconv.ParseFloat(mp[int64(r.GetRelease().GetInstanceId())].Weight, 32)
 		if err == nil {
 			r.GetMetadata().WeightInGrams = int32(val)
 		}
 
-		if mp[int32(r.GetRelease().GetInstanceId())].Arrived > 0 && r.GetMetadata().GetDateArrived() == 0 {
-			r.GetMetadata().DateArrived = mp[int32(r.GetRelease().GetInstanceId())].Arrived
+		if mp[int64(r.GetRelease().GetInstanceId())].Arrived > 0 && r.GetMetadata().GetDateArrived() == 0 {
+			r.GetMetadata().DateArrived = mp[int64(r.GetRelease().GetInstanceId())].Arrived
 		}
 
 	} else {

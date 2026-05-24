@@ -118,7 +118,7 @@ type saver interface {
 	RemoveFromSale(ctx context.Context, saleID int, releaseID int) error
 	ExpireSale(ctx context.Context, saleID int64, releaseID int, price float32) error
 	GetInventory(ctx context.Context) ([]*pbgd.ForSale, error)
-	GetInstanceInfo(ctx context.Context, ID int32) (map[int32]*godiscogs.InstanceInfo, error)
+	GetInstanceInfo(ctx context.Context, ID int32) (map[int64]*godiscogs.InstanceInfo, error)
 	GetOrder(ctx context.Context, ID string) (map[int64]int32, time.Time, error)
 }
 
@@ -537,7 +537,7 @@ func (s *Server) loadRecord(ctx context.Context, id int64, validate bool) (*pb.R
 	return recordToReturn, nil
 }
 
-func (s *Server) loadUpdates(ctx context.Context, id int32) (*pb.Updates, error) {
+func (s *Server) loadUpdates(ctx context.Context, id int64) (*pb.Updates, error) {
 	data, _, err := s.KSclient.Read(ctx, fmt.Sprintf("%v%v.updates", SAVEKEY, id), &pb.Updates{})
 
 	if err != nil {
@@ -553,7 +553,7 @@ func (s *Server) loadUpdates(ctx context.Context, id int32) (*pb.Updates, error)
 	return updates, nil
 }
 
-func (s *Server) saveUpdates(ctx context.Context, id int32, updates *pb.Updates) error {
+func (s *Server) saveUpdates(ctx context.Context, id int64, updates *pb.Updates) error {
 	return s.KSclient.Save(ctx, fmt.Sprintf("%v%v.updates", SAVEKEY, id), updates)
 }
 
