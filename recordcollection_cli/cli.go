@@ -1892,17 +1892,25 @@ func main() {
 			}
 
 			if !found {
-				fmt.Printf("Not found: %v\n", rec)
-				upup := &rfpb.FanoutRequest{
-					InstanceId: int64(rec),
+				r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: int64(rec)})
+				if err != nil {
+					log.Printf("Unable to get record %v: %v", rec, err)
+					continue
 				}
-				data, _ := proto.Marshal(upup)
-				client2.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
-					Key:       fmt.Sprintf("%v", rec),
-					QueueName: "record_fanout",
-					RunTime:   time.Now().Unix(),
-					Payload:   &google_protobuf.Any{Value: data},
-				})
+
+				if r.GetRecord().GetMetadata().GetCategory() != pbrc.ReleaseMetadata_SOLD_ARCHIVE {
+					fmt.Printf("Not found: %v\n", rec)
+					upup := &rfpb.FanoutRequest{
+						InstanceId: int64(rec),
+					}
+					data, _ := proto.Marshal(upup)
+					client2.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+						Key:       fmt.Sprintf("%v", rec),
+						QueueName: "record_fanout",
+						RunTime:   time.Now().Unix(),
+						Payload:   &google_protobuf.Any{Value: data},
+					})
+				}
 			}
 		}
 	case "enqueue":
