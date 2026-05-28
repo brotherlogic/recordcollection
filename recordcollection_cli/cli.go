@@ -1852,7 +1852,7 @@ func main() {
 			}
 		}
 	case "adjust":
-		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
+		recs, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_All{All: true}})
 		if err != nil {
 			log.Fatalf("Bad read: %v", err)
 		}
