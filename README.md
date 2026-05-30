@@ -11,6 +11,8 @@
     - Physical dimensions (spine width, weight).
     - Condition tracking (media and sleeve).
     - Custom categories and "purgatory" states (needs labels, needs rip, etc.).
+    - **IID Validation & Cleaning**: Private helper to clean and validate internal instance IDs (IIDs), converting negative values to their positive representations and filtering out invalid IDs.
+
 - **Automated Sale Management**:
     - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes.
     - **Dynamic Pricing**: Tracks and updates sale prices based on market data.

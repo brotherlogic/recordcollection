@@ -688,3 +688,21 @@ func TestQueryRecordsWithListenTime(t *testing.T) {
 		t.Errorf("Wrong record returned: %v", q.GetInstanceIds()[0])
 	}
 }
+
+func TestCleanAndValidateIids(t *testing.T) {
+	input := []int64{123, -1, 456, -456, 0}
+	expected := []int64{123, 4294967295, 456, 4294966840, 0}
+
+	output := cleanAndValidateIids(input)
+
+	if len(output) != len(expected) {
+		t.Fatalf("Expected slice length %v, got %v", len(expected), len(output))
+	}
+
+	for i, v := range output {
+		if v != expected[i] {
+			t.Errorf("At index %d: expected %v, got %v", i, expected[i], v)
+		}
+	}
+}
+
