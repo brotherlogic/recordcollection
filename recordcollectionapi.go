@@ -747,66 +747,61 @@ func (s *Server) QueryRecords(ctx context.Context, req *pb.QueryRecordsRequest) 
 
 	case *pb.QueryRecordsRequest_ListenTime:
 		for id, _ := range collection.InstanceToUpdate {
-			record, err := s.loadRecord(ctx, int64(id), false)
+			record, err := s.loadRecord(ctx, id, false)
 			if err != nil {
 				return nil, err
 			}
 			if record.GetMetadata().GetLastListenTime() >= x.ListenTime {
-				ids = append(ids, int64(int32(id)))
+				ids = append(ids, id)
 			}
 		}
-		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_FolderId:
 		for id, folder := range collection.GetInstanceToFolder() {
 			if folder == x.FolderId {
-				ids = append(ids, int64(int32(id)))
+				ids = append(ids, id)
 			}
 		}
-
-		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_UpdateTime:
 		for id, updateTime := range collection.InstanceToUpdate {
 			if updateTime >= x.UpdateTime {
-				ids = append(ids, int64(int32(id)))
+				ids = append(ids, id)
 			}
 		}
-		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_Category:
 		for id, category := range collection.GetInstanceToCategory() {
 			if category == x.Category {
-				ids = append(ids, int64(int32(id)))
+				ids = append(ids, id)
 			}
 		}
-		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_MasterId:
 		for id, masterID := range collection.InstanceToMaster {
 			if masterID == x.MasterId {
-				ids = append(ids, int64(int32(id)))
+				ids = append(ids, id)
 			}
 		}
-		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_ReleaseId:
 		for id, releaseID := range collection.GetInstanceToId() {
 			if releaseID == x.ReleaseId {
-				ids = append(ids, int64(int32(id)))
+				ids = append(ids, id)
 			}
 		}
-		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
 
 	case *pb.QueryRecordsRequest_All:
 		coll := s.retr.GetCollection(ctx)
 		for _, rel := range coll {
 			ids = append(ids, rel.GetInstanceId())
 		}
-		return &pb.QueryRecordsResponse{InstanceIds: ids}, nil
+
+	default:
+		return nil, fmt.Errorf("Bad request: %v", req)
 	}
 
-	return nil, fmt.Errorf("Bad request: %v", req)
+	return &pb.QueryRecordsResponse{InstanceIds: cleanAndValidateIids(ids)}, nil
 }
 
 // GetRecord gets a sigle record
