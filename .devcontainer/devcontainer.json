@@ -12,7 +12,11 @@
         //},
         "ghcr.io/siri404/devcontainer-ai-features/gemini-cli:1": {},
         "ghcr.io/devcontainers/features/common-utils": "2",
-        "ghcr.io/devcontainers-extra/features/protoc:1": {}
+        "ghcr.io/devcontainers-extra/features/protoc:1": {},
+			"ghcr.io/devcontainers/features/github-cli:1": {
+			"version": "latest",
+			"installDirectlyFromGitHubRelease": true
+		},
     },
     // Features to add to the dev container. More info: https://containers.dev/features.
     // "features": {},
@@ -21,6 +25,7 @@
     // Use 'postCreateCommand' to run commands after the container is created.
     // Ensure dependencies are installed here
     "postCreateCommand": "/usr/local/go/bin/go version && pwd && ./postCreate.sh",
+    "initializeCommand": "echo \"GH_TOKEN=$(gh auth token)\" > .devcontainer/.env.auth",
     // "customizations": {},
     // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
     // "remoteUser": "root"
@@ -34,6 +39,8 @@
     "runArgs": [
         "--security-opt",
         "label=disable",
+		    		"--env-file",
+		"${localWorkspaceFolder}/.devcontainer/.env.auth"
     ],
     "mounts": [
         {
