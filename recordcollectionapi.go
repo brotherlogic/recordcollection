@@ -902,3 +902,17 @@ func (s *Server) GetPrice(ctx context.Context, req *pb.GetPriceRequest) (*pb.Get
 	price, err := s.retr.GetSalePrice(ctx, int(req.GetId()))
 	return &pb.GetPriceResponse{Price: price}, err
 }
+
+func cleanAndValidateIids(ids []int64) []int64 {
+	cleaned := make([]int64, 0, len(ids))
+	for _, id := range ids {
+		if id < 0 {
+			id = int64(uint32(id))
+		}
+		if id >= 0 {
+			cleaned = append(cleaned, id)
+		}
+	}
+	return cleaned
+}
+
