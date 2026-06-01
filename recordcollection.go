@@ -252,6 +252,8 @@ var (
 	}, []string{"active"})
 )
 
+
+
 func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection, error) {
 	collection := &pb.RecordCollection{}
 	data, _, err := s.KSclient.Read(ctx, KEY, collection)
@@ -295,6 +297,15 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	if collection.InstanceToCategory == nil {
 		collection.InstanceToCategory = make(map[int64]pb.ReleaseMetadata_Category)
 	}
+	var tdelete []int64
+	for id := range collection.InstanceToCategory {
+	    if id < 0 {
+	      tdelete = append(tdelete, id)
+	      }
+	      }
+	      for _, id := range tdelete {
+	      	  delete(collection.InstanceToCategory, id)
+		  }
 
 	if collection.InstanceToMaster == nil {
 		collection.InstanceToMaster = make(map[int64]int32)
