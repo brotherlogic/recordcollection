@@ -648,13 +648,13 @@ func main() {
 			log.Fatalf("Bad: %v", err)
 		}
 		defer conn.Close()
-		client := rfpb.NewRecordFanoutServiceClient(conn)
+		//client := rfpb.NewRecordFanoutServiceClient(conn)
 		for i, id := range ids.GetInstanceIds() {
 			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			}
-			_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int64(id)})
+			//_, err = client.Fanout(ctx, &rfpb.FanoutRequest{InstanceId: int64(id)})
 			fmt.Printf("%v. %v [%v] %v = %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), err)
 
 		}
@@ -930,6 +930,21 @@ func main() {
 				}
 			}
 		}
+	case "uk":
+		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_UNKNOWN}})
+		if err != nil {
+			fmt.Printf("Error %v\n", err)
+		}
+		for i, id := range ids.GetInstanceIds() {
+			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+			}
+			if r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_BOX_UNKNOWN ||
+				r.Record.GetMetadata().GetBoxState() == pbrc.ReleaseMetadata_OUT_OF_BOX {
+				fmt.Printf("%v. %v [%v] %v %v %v\n", i, r.GetRecord().GetRelease().GetTitle(), r.GetRecord().GetRelease().GetInstanceId(), r.GetRecord().GetMetadata().GetFiledUnder(), r.GetRecord().GetRelease().GetRating(), r.GetRecord().GetMetadata().GetNeedsGramUpdate())
+			}
+		}
 	case "pic":
 		ids, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_Category{pbrc.ReleaseMetadata_PRE_IN_COLLECTION}})
 		if err != nil {
@@ -1199,6 +1214,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Error querying records: %v", err)
 		}
+		fmt.Printf("Found %v records\n", len(ids.GetInstanceIds()))
 		var records []*pbrc.Record
 		for _, id := range ids.GetInstanceIds() {
 			r, err := registry.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
@@ -1515,6 +1531,14 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "gupdates":
+		i, _ := strconv.Atoi(os.Args[2])
+		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "ping_from_gramophile", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{NeedsGramUpdate: true}}})
+		if err != nil {
+			log.Fatalf("Error: %v", err)
+		}
+		fmt.Printf("Updated: %v", rec)
+
 	case "mark_for_remove_sale":
 		i, _ := strconv.Atoi(os.Args[2])
 		rec, err := registry.UpdateRecord(ctx, &pbrc.UpdateRecordRequest{Reason: "Marking for sale", Update: &pbrc.Record{Release: &pbgd.Release{InstanceId: int64(i)}, Metadata: &pbrc.ReleaseMetadata{DeleteSaleState: pbrc.ReleaseMetadata_DELETE}}})
