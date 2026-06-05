@@ -11,7 +11,7 @@
     - Physical dimensions (spine width, weight).
     - Condition tracking (media and sleeve).
     - Custom categories and "purgatory" states (needs labels, needs rip, etc.).
-    - **IID Validation & Cleaning**: Private helper to clean and validate internal instance IDs (IIDs), converting negative values to their positive representations and filtering out invalid IDs.
+    - **IID Validation & Cleaning**: On every startup, all eight internal cache maps (`InstanceToFolder`, `InstanceToCategory`, `InstanceToUpdate`, `InstanceToUpdateIn`, `InstanceToMaster`, `InstanceToId`, `InstanceToRecache`, `InstanceToLastSalePriceUpdate`) are scrubbed of any negative instance IDs — legacy artifacts of historical int32 overflow. Cleaned data is persisted back to the keystore so the stale entries do not reappear on the next restart.
 
 - **Automated Sale Management**:
     - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes.

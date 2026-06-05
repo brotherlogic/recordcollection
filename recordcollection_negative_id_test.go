@@ -54,3 +54,72 @@ func TestNegativeIdMigration(t *testing.T) {
 	}
 
 }
+
+func TestNegativeIdNotInCacheAfterRead(t *testing.T) {
+	s := InitTestServer(".test_negative_id_cache")
+
+	// Build a RecordCollection with negative instance IDs in all cache maps
+	dirty := &pb.RecordCollection{
+		InstanceToFolder:              map[int64]int32{-1: 10, 100: 10},
+		InstanceToCategory:            map[int64]pb.ReleaseMetadata_Category{-2: pb.ReleaseMetadata_UNLISTENED, 200: pb.ReleaseMetadata_UNLISTENED},
+		InstanceToUpdate:              map[int64]int64{-3: 999, 300: 999},
+		InstanceToUpdateIn:            map[int64]int64{-4: 888, 400: 888},
+		InstanceToMaster:              map[int64]int32{-5: 50, 500: 50},
+		InstanceToId:                  map[int64]int32{-6: 60, 600: 60},
+		InstanceToRecache:             map[int64]int64{-7: 777, 700: 777},
+		InstanceToLastSalePriceUpdate: map[int64]int64{-8: 666, 800: 666},
+	}
+	s.KSclient.Save(context.Background(), KEY, dirty)
+
+	collection, err := s.readRecordCollection(context.Background())
+	if err != nil {
+		t.Fatalf("readRecordCollection failed: %v", err)
+	}
+
+	// Check every map – no key should be negative
+	for k := range collection.GetInstanceToFolder() {
+		if k < 0 {
+			t.Errorf("InstanceToFolder still has negative key %v", k)
+		}
+	}
+	for k := range collection.GetInstanceToCategory() {
+		if k < 0 {
+			t.Errorf("InstanceToCategory still has negative key %v", k)
+		}
+	}
+	for k := range collection.GetInstanceToUpdate() {
+		if k < 0 {
+			t.Errorf("InstanceToUpdate still has negative key %v", k)
+		}
+	}
+	for k := range collection.GetInstanceToUpdateIn() {
+		if k < 0 {
+			t.Errorf("InstanceToUpdateIn still has negative key %v", k)
+		}
+	}
+	for k := range collection.GetInstanceToMaster() {
+		if k < 0 {
+			t.Errorf("InstanceToMaster still has negative key %v", k)
+		}
+	}
+	for k := range collection.GetInstanceToId() {
+		if k < 0 {
+			t.Errorf("InstanceToId still has negative key %v", k)
+		}
+	}
+	for k := range collection.GetInstanceToRecache() {
+		if k < 0 {
+			t.Errorf("InstanceToRecache still has negative key %v", k)
+		}
+	}
+	for k := range collection.GetInstanceToLastSalePriceUpdate() {
+		if k < 0 {
+			t.Errorf("InstanceToLastSalePriceUpdate still has negative key %v", k)
+		}
+	}
+
+	// Positive keys must be preserved
+	if _, ok := collection.GetInstanceToFolder()[100]; !ok {
+		t.Errorf("InstanceToFolder lost its positive key 100")
+	}
+}
