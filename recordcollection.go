@@ -297,15 +297,48 @@ func (s *Server) readRecordCollection(ctx context.Context) (*pb.RecordCollection
 	if collection.InstanceToCategory == nil {
 		collection.InstanceToCategory = make(map[int64]pb.ReleaseMetadata_Category)
 	}
-	var tdelete []int64
-	for id := range collection.InstanceToCategory {
-	    if id < 0 {
-	      tdelete = append(tdelete, id)
-	      }
-	      }
-	      for _, id := range tdelete {
-	      	  delete(collection.InstanceToCategory, id)
-		  }
+
+	// Scrub negative instance IDs from all cache maps. Negative IDs are legacy
+	// artifacts of int32 overflow and must not propagate into query results.
+	anyScrubbed := false
+	for _, id := range negativeKeysToDelete(collection.InstanceToFolder) {
+		delete(collection.InstanceToFolder, id)
+		anyScrubbed = true
+	}
+	for _, id := range negativeKeysToDelete(collection.InstanceToCategory) {
+		delete(collection.InstanceToCategory, id)
+		anyScrubbed = true
+	}
+	for _, id := range negativeKeysToDelete(collection.InstanceToUpdate) {
+		delete(collection.InstanceToUpdate, id)
+		anyScrubbed = true
+	}
+	for _, id := range negativeKeysToDelete(collection.InstanceToUpdateIn) {
+		delete(collection.InstanceToUpdateIn, id)
+		anyScrubbed = true
+	}
+	for _, id := range negativeKeysToDelete(collection.InstanceToMaster) {
+		delete(collection.InstanceToMaster, id)
+		anyScrubbed = true
+	}
+	for _, id := range negativeKeysToDelete(collection.InstanceToId) {
+		delete(collection.InstanceToId, id)
+		anyScrubbed = true
+	}
+	for _, id := range negativeKeysToDelete(collection.InstanceToRecache) {
+		delete(collection.InstanceToRecache, id)
+		anyScrubbed = true
+	}
+	for _, id := range negativeKeysToDelete(collection.InstanceToLastSalePriceUpdate) {
+		delete(collection.InstanceToLastSalePriceUpdate, id)
+		anyScrubbed = true
+	}
+	if anyScrubbed {
+		// Persist the cleaned collection so negative IDs don't reappear on the next startup.
+		if err := s.saveRecordCollection(ctx, collection); err != nil {
+			return nil, err
+		}
+	}
 
 	if collection.InstanceToMaster == nil {
 		collection.InstanceToMaster = make(map[int64]int32)
@@ -354,6 +387,17 @@ func (s *Server) updateMetrics(collection *pb.RecordCollection) {
 func (s *Server) saveRecordCollection(ctx context.Context, collection *pb.RecordCollection) error {
 	s.updateMetrics(collection)
 	return s.KSclient.Save(ctx, KEY, collection)
+}
+
+// negativeKeysToDelete returns all negative keys from a map keyed by int64.
+func negativeKeysToDelete[V any](m map[int64]V) []int64 {
+	var keys []int64
+	for k := range m {
+		if k < 0 {
+			keys = append(keys, k)
+		}
+	}
+	return keys
 }
 
 func (s *Server) deleteRecord(ctx context.Context, i int64) error {

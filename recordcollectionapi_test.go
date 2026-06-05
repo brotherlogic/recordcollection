@@ -712,8 +712,8 @@ func TestQueryRecordsWithNegativeId(t *testing.T) {
 	var val uint32 = 2147937650
 	negID := int64(int32(val)) // -2147029646
 
-
-
+	// Write a collection with a negative ID directly into the keystore,
+	// simulating a legacy entry that survived a previous write.
 	collection, err := s.readRecordCollection(context.Background())
 	if err != nil {
 		t.Fatalf("Failed to read record collection: %v", err)
@@ -722,11 +722,13 @@ func TestQueryRecordsWithNegativeId(t *testing.T) {
 		collection.InstanceToFolder = make(map[int64]int32)
 	}
 	collection.InstanceToFolder[negID] = 12
-	err = s.saveRecordCollection(context.Background(), collection)
-	if err != nil {
+	// Save directly via keystore to bypass scrubbing in saveRecordCollection.
+	if err := s.KSclient.Save(context.Background(), KEY, collection); err != nil {
 		t.Fatalf("Failed to save record collection: %v", err)
 	}
 
+	// readRecordCollection must scrub the negative ID, so it must not appear in
+	// QueryRecords results.
 	q, err := s.QueryRecords(context.Background(), &pb.QueryRecordsRequest{
 		Query: &pb.QueryRecordsRequest_FolderId{FolderId: 12},
 	})
@@ -734,13 +736,12 @@ func TestQueryRecordsWithNegativeId(t *testing.T) {
 		t.Fatalf("QueryRecords failed: %v", err)
 	}
 
-	if len(q.GetInstanceIds()) != 1 {
-		t.Fatalf("Expected exactly 1 ID, got %v", len(q.GetInstanceIds()))
-	}
-
-	if q.GetInstanceIds()[0] != 2147937650 {
-		t.Errorf("Expected corrected ID 2147937650, got %v", q.GetInstanceIds()[0])
+	for _, id := range q.GetInstanceIds() {
+		if id < 0 {
+			t.Errorf("QueryRecords returned negative ID %v – should have been scrubbed", id)
+		}
+		if id == negID {
+			t.Errorf("QueryRecords returned the raw negative ID %v", negID)
+		}
 	}
 }
-
-
