@@ -89,7 +89,10 @@ We follow a strict Test-Driven Development (TDD) process. Always write a failing
 - Mock external services to support unit tests and avoid side effects.
 
 ### Feature Completion
-Once a feature is finished, ensure all tests pass and follow the project's standard workflow for branch cleanup and finalization.
+
+Refer to [ISSUES.md](file:///workspaces/recordcollection/ISSUES.md) for details on the issue processing workflow lifecycle and label transitions.
+Once you've finished a change or feature, run the `finish.md` workflow.
+
 
 ### Protobuf Updates
 If you modify the API, update `proto/recordcollection.proto` and run `./build.sh` to regenerate the Go bindings.
