@@ -744,7 +744,7 @@ func (s *Server) updateRecordSalePrice(ctx context.Context, r *pb.Record) error 
 func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
-	var generator = flag.String("generator_address", "192.168.68.12:30050", "The address of the sale description generator")
+	var generator = flag.String("generator_address", "192.168.68.88:30050", "The address of the sale description generator")
 	flag.Parse()
 
 	//Turn off logging
