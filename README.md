@@ -102,3 +102,4 @@ Metrics are available via Prometheus. Key metrics include:
 - `recordcollection_recordstate`: Number of records in each category.
 - `recordcollection_recordfolder`: Size of each physical folder.
 - `recordcollection_loop_latency`: Performance tracking for internal processing loops.
+- `recordcollection_sale_descriptor_result`: Counter tracking the gRPC response status codes for calls made to the outbound sale descriptor service.

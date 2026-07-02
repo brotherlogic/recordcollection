@@ -25,6 +25,10 @@ var (
 		Name: "recordcollection_update",
 		Help: "Push Size",
 	}, []string{"reason"})
+	saleDescriptorResults = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "recordcollection_sale_descriptor_result",
+		Help: "Outbound calls to the sale description generator service",
+	}, []string{"status_code"})
 )
 
 func (s *Server) DeleteSale(ctx context.Context, req *pb.DeleteSaleRequest) (*pb.DeleteSaleResponse, error) {
@@ -519,6 +523,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 			// Generate sale description
 			desc, err := s.generator.generate(ctx, s.generatorAddress, rec)
+			saleDescriptorResults.With(prometheus.Labels{"status_code": status.Code(err).String()}).Inc()
 			if err != nil {
 				return nil, err
 			}

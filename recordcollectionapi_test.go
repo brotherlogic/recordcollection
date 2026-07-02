@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/testutil"
+
 	pbd "github.com/brotherlogic/godiscogs/proto"
 	keystoreclient "github.com/brotherlogic/keystore/client"
 	qpb "github.com/brotherlogic/queue/queue_client"
@@ -743,5 +746,41 @@ func TestQueryRecordsWithNegativeId(t *testing.T) {
 		if id == negID {
 			t.Errorf("QueryRecords returned the raw negative ID %v", negID)
 		}
+	}
+}
+
+func TestUpdateRecordSold_Metrics(t *testing.T) {
+	s := InitTestServer(".testsoldvalidation_metrics")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Custom Generated Description"}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 1, Title: "Title", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Notes: "Notes", HighPrice: 100}}})
+
+	// Get initial metrics count
+	initialOK := testutil.ToFloat64(saleDescriptorResults.With(prometheus.Labels{"status_code": "OK"}))
+	initialUnknown := testutil.ToFloat64(saleDescriptorResults.With(prometheus.Labels{"status_code": "Unknown"}))
+
+	// Success case
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "Sell it", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{InstanceId: 1}}})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+
+	afterOK := testutil.ToFloat64(saleDescriptorResults.With(prometheus.Labels{"status_code": "OK"}))
+	if afterOK != initialOK+1 {
+		t.Errorf("Expected OK metric count to increase by 1, got initial %v, after %v", initialOK, afterOK)
+	}
+
+	// Failure case
+	s.generator = &testGenerator{fail: true}
+	s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 2, Title: "Title 2", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 2}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, Notes: "Notes", HighPrice: 100}}})
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "Sell it", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD}, Release: &pbd.Release{InstanceId: 2}}})
+	if err == nil {
+		t.Fatalf("Expected UpdateRecord to fail")
+	}
+
+	afterUnknown := testutil.ToFloat64(saleDescriptorResults.With(prometheus.Labels{"status_code": "Unknown"}))
+	if afterUnknown != initialUnknown+1 {
+		t.Errorf("Expected Unknown metric count to increase by 1, got initial %v, after %v", initialUnknown, afterUnknown)
 	}
 }
