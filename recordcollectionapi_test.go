@@ -784,3 +784,108 @@ func TestUpdateRecordSold_Metrics(t *testing.T) {
 		t.Errorf("Expected Unknown metric count to increase by 1, got initial %v, after %v", initialUnknown, afterUnknown)
 	}
 }
+
+func TestUpdateRecordValidateCategory(t *testing.T) {
+	s := InitTestServer(".testupdaterecordvalidatecategory")
+	ctx := context.Background()
+
+	// 1. Add a record in category PRE_VALIDATE (so not VALIDATE yet)
+	_, err := s.AddRecord(ctx, &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 101, Title: "Title 101", InstanceId: 101},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:       100,
+				GoalFolder: 100,
+				Category:   pb.ReleaseMetadata_PRE_VALIDATE,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	// Verify initially last_validate is 0 and dirty is false
+	rec, err := s.loadRecord(ctx, 101, false)
+	if err != nil {
+		t.Fatalf("loadRecord failed: %v", err)
+	}
+	if rec.GetMetadata().GetLastValidate() != 0 {
+		t.Errorf("Expected LastValidate to be 0, got %v", rec.GetMetadata().GetLastValidate())
+	}
+	if rec.GetMetadata().GetDirty() {
+		t.Errorf("Expected Dirty to be false")
+	}
+
+	// 2. Transition category to VALIDATE
+	_, err = s.UpdateRecord(ctx, &pb.UpdateRecordRequest{
+		Reason: "Transition to VALIDATE",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 101},
+			Metadata: &pb.ReleaseMetadata{
+				Category: pb.ReleaseMetadata_VALIDATE,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+
+	// Verify last_validate is set and dirty is true
+	rec, err = s.loadRecord(ctx, 101, false)
+	if err != nil {
+		t.Fatalf("loadRecord failed: %v", err)
+	}
+	lastValidate := rec.GetMetadata().GetLastValidate()
+	if lastValidate == 0 {
+		t.Errorf("Expected LastValidate to be set to current time, got 0")
+	}
+	if !rec.GetMetadata().GetDirty() {
+		t.Errorf("Expected Dirty to be true after transitioning to VALIDATE")
+	}
+
+	// 3. Run CommitRecord to clear the dirty flag
+	_, err = s.CommitRecord(ctx, &pb.CommitRecordRequest{InstanceId: 101})
+	if err != nil {
+		t.Fatalf("CommitRecord failed: %v", err)
+	}
+
+	// Verify dirty is now false and last_validate is unchanged
+	rec, err = s.loadRecord(ctx, 101, false)
+	if err != nil {
+		t.Fatalf("loadRecord failed: %v", err)
+	}
+	if rec.GetMetadata().GetDirty() {
+		t.Errorf("Expected Dirty to be false after CommitRecord")
+	}
+	if rec.GetMetadata().GetLastValidate() != lastValidate {
+		t.Errorf("Expected LastValidate to be unchanged, got %v (expected %v)", rec.GetMetadata().GetLastValidate(), lastValidate)
+	}
+
+	// 4. Update another unrelated field, keeping category as VALIDATE
+	time.Sleep(2 * time.Second)
+	_, err = s.UpdateRecord(ctx, &pb.UpdateRecordRequest{
+		Reason: "Update notes",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 101},
+			Metadata: &pb.ReleaseMetadata{
+				Notes: "Some new notes",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+
+	// Verify that LastValidate is NOT updated (unchanged) and Dirty remains false!
+	rec, err = s.loadRecord(ctx, 101, false)
+	if err != nil {
+		t.Fatalf("loadRecord failed: %v", err)
+	}
+	if rec.GetMetadata().GetLastValidate() != lastValidate {
+		t.Errorf("Expected LastValidate to remain %v, but got updated to %v", lastValidate, rec.GetMetadata().GetLastValidate())
+	}
+	if rec.GetMetadata().GetDirty() {
+		t.Errorf("Expected Dirty to remain false, but it got marked dirty again!")
+	}
+}
+

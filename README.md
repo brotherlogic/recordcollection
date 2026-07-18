@@ -12,6 +12,7 @@
     - Condition tracking (media and sleeve).
     - Custom categories and "purgatory" states (needs labels, needs rip, etc.).
     - **IID Validation & Cleaning**: On every startup, all eight internal cache maps (`InstanceToFolder`, `InstanceToCategory`, `InstanceToUpdate`, `InstanceToUpdateIn`, `InstanceToMaster`, `InstanceToId`, `InstanceToRecache`, `InstanceToLastSalePriceUpdate`) are scrubbed of any negative instance IDs — legacy artifacts of historical int32 overflow. Cleaned data is persisted back to the keystore so the stale entries do not reappear on the next restart.
+    - **Validation Dirty Flag Logic**: Corrected the validation dirty flag behavior. Now, `VALIDATE` category records are only marked as dirty and their `LastValidate` timestamp set when explicitly transitioning into the `VALIDATE` category. This prevents subsequent updates (like background syncs) from re-marking them as dirty and resetting `LastValidate`.
 
 - **Automated Sale Management**:
     - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes.
