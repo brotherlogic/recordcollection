@@ -623,7 +623,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.GetMetadata().Dirty = true
 	}
 
-	if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_VALIDATE {
+	if request.GetUpdate().GetMetadata().GetCategory() == pb.ReleaseMetadata_VALIDATE {
 		rec.GetMetadata().LastValidate = time.Now().Unix()
 		rec.GetMetadata().Dirty = true
 	}
