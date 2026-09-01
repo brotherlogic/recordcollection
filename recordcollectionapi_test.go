@@ -889,3 +889,22 @@ func TestUpdateRecordValidateCategory(t *testing.T) {
 	}
 }
 
+func TestUpdateRecord_NoUpdatesTracked(t *testing.T) {
+	s := InitTestServer(".testUpdateRecord_NoUpdatesTracked")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{ToAdd: &pb.Record{Release: &pbd.Release{Id: 123, Title: "madeup1", InstanceId: 1}, Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100, LastCache: time.Now().Unix()}}})
+	if err != nil {
+		t.Fatalf("Error adding record: %v", err)
+	}
+
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{Reason: "test", Update: &pb.Record{Metadata: &pb.ReleaseMetadata{}, Release: &pbd.Release{Title: "madeup2", InstanceId: 1}}})
+	if err != nil {
+		t.Fatalf("Error updating record: %v", err)
+	}
+
+	updates, err := s.loadUpdates(context.Background(), 1)
+	if err == nil && updates != nil && len(updates.GetUpdates()) > 0 {
+		t.Errorf("Expected no updates to be saved in keystore, but got %v", updates)
+	}
+}
+
+
