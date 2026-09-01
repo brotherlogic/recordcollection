@@ -486,26 +486,6 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		}
 	}
 
-	// If we've loaded the record correctly we're probably fine
-	updates, err := s.loadUpdates(ctx, int64(request.GetUpdate().GetRelease().InstanceId))
-	code := status.Convert(err).Code()
-	if code != codes.OK && code != codes.InvalidArgument {
-		return nil, err
-	}
-	if code == codes.InvalidArgument {
-		updates = &pb.Updates{Updates: []*pb.RecordUpdate{}}
-	}
-	updates.Updates = append(updates.Updates, &pb.RecordUpdate{Update: request.GetUpdate(), Reason: request.GetReason(), Time: time.Now().Unix()})
-	err = s.saveUpdates(ctx, int64(request.GetUpdate().GetRelease().InstanceId), updates)
-	if err != nil {
-		return nil, err
-	}
-
-	// Should be less than 1k
-	if proto.Size(updates) > 100000 {
-		s.RaiseIssue("Update size", fmt.Sprintf("%v has triggered a big update -> %v: %v", request, proto.Size(updates), updates))
-	}
-
 	hasLabels := len(rec.GetRelease().GetLabels()) > 0
 
 	// If this is being sold - mark it for sale
