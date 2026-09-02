@@ -76,7 +76,7 @@ func (p *prodMoveRecorder) moveRecord(ctx context.Context, record *pb.Record, ol
 
 	rmclient := pbrm.NewMoveServiceClient(conn)
 	_, err = rmclient.RecordMove(ctx, &pbrm.MoveRequest{Move: &pbrm.RecordMove{
-		InstanceId: int32(record.GetRelease().InstanceId),
+		InstanceId: record.GetRelease().InstanceId,
 		FromFolder: oldFolder,
 		ToFolder:   newFolder,
 		Record:     record,

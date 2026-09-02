@@ -14,8 +14,13 @@ import (
 	keystoreclient "github.com/brotherlogic/keystore/client"
 	qpb "github.com/brotherlogic/queue/queue_client"
 	pb "github.com/brotherlogic/recordcollection/proto"
+	pbrm "github.com/brotherlogic/recordmover/proto"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/test/bufconn"
+	"net"
 )
 
 func InitTestServer(folder string) *Server {
@@ -904,6 +909,58 @@ func TestUpdateRecord_NoUpdatesTracked(t *testing.T) {
 	updates, err := s.loadUpdates(context.Background(), 1)
 	if err == nil && updates != nil && len(updates.GetUpdates()) > 0 {
 		t.Errorf("Expected no updates to be saved in keystore, but got %v", updates)
+	}
+}
+
+type testMoveServer struct {
+	pbrm.UnimplementedMoveServiceServer
+	lastMove *pbrm.RecordMove
+}
+
+func (s *testMoveServer) RecordMove(ctx context.Context, req *pbrm.MoveRequest) (*pbrm.MoveResponse, error) {
+	s.lastMove = req.GetMove()
+	return &pbrm.MoveResponse{}, nil
+}
+
+func TestProdMoveRecorder_LargeInstanceId(t *testing.T) {
+	lis := bufconn.Listen(1024 * 1024)
+	s := grpc.NewServer()
+	mockServer := &testMoveServer{}
+	pbrm.RegisterMoveServiceServer(s, mockServer)
+
+	go func() {
+		if err := s.Serve(lis); err != nil && err != grpc.ErrServerStopped {
+			log.Printf("Server exited with error: %v", err)
+		}
+	}()
+	defer s.Stop()
+
+	dial := func(ctx context.Context, server string) (*grpc.ClientConn, error) {
+		return grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
+	mover := &prodMoveRecorder{dial: dial}
+
+	var largeId int64 = 2147923344
+	rec := &pb.Record{
+		Release: &pbd.Release{
+			InstanceId: largeId,
+		},
+	}
+
+	err := mover.moveRecord(context.Background(), rec, 1, 2)
+	if err != nil {
+		t.Fatalf("moveRecord failed: %v", err)
+	}
+
+	if mockServer.lastMove == nil {
+		t.Fatalf("mockServer did not receive RecordMove")
+	}
+
+	if mockServer.lastMove.GetInstanceId() != largeId {
+		t.Errorf("Expected InstanceId %v, got %v", largeId, mockServer.lastMove.GetInstanceId())
 	}
 }
 

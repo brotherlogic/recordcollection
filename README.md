@@ -20,7 +20,7 @@
     - **Blocked Records**: Automatically removes records from sale and updates their properties if they are marked as blocked from sale on Discogs.
     - **Inventory Control**: View and manage current Discogs inventory directly through the service.
 - **Microservice Orchestration**: Coordinates with other services in the ecosystem:
-    - `recordmover`: Physical relocation of records between folders.
+    - `recordmover`: Physical relocation of records between folders (supports full 64-bit instance IDs).
     - `recordscores`: Advanced scoring and rating logic.
     - `recordsorganiser`: Folder quota and organization management.
     - `recordfanout`: Broadcasts updates to dependent services.
