@@ -15,7 +15,7 @@
     - **Validation Dirty Flag Logic**: Corrected the validation dirty flag behavior. Now, `VALIDATE` category records are only marked as dirty and their `LastValidate` timestamp set when explicitly transitioning into the `VALIDATE` category. This prevents subsequent updates (like background syncs) from re-marking them as dirty and resetting `LastValidate`.
 
 - **Automated Sale Management**:
-    - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes.
+    - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes, utilizing the local Ollama model setting for description generation.
     - **Dynamic Pricing**: Tracks and updates sale prices based on market data.
     - **Blocked Records**: Automatically removes records from sale and updates their properties if they are marked as blocked from sale on Discogs.
     - **Inventory Control**: View and manage current Discogs inventory directly through the service.

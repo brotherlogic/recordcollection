@@ -194,6 +194,7 @@ func (p *prodGenerator) generate(ctx context.Context, address string, rec *pb.Re
 		MediaCondition:  getGrading(rec.GetRelease().GetRecordCondition()),
 		SleeveCondition: getGrading(rec.GetRelease().GetSleeveCondition()),
 		UserNotes:       rec.GetMetadata().GetNotes(),
+		UseLocalModel:   true,
 	})
 
 	if err != nil {
