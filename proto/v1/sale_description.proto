@@ -26,6 +26,7 @@ message GenerateDescriptionRequest {
   Grading media_condition = 3;
   Grading sleeve_condition = 4;
   string user_notes = 5;
+  bool use_local_model = 6;
 }
 
 message GenerateDescriptionResponse {
