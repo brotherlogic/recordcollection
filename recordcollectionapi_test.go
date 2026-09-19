@@ -12,7 +12,7 @@ import (
 
 	pbd "github.com/brotherlogic/godiscogs/proto"
 	keystoreclient "github.com/brotherlogic/keystore/client"
-	qpb "github.com/brotherlogic/queue/queue_client"
+	qproto "github.com/brotherlogic/queue/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	"google.golang.org/grpc"
@@ -22,6 +22,15 @@ import (
 	"google.golang.org/grpc/test/bufconn"
 	"net"
 )
+
+type testQueueClient struct {
+	items []*qproto.AddQueueItemRequest
+}
+
+func (t *testQueueClient) AddQueueItem(ctx context.Context, req *qproto.AddQueueItemRequest) (*qproto.AddQueueItemResponse, error) {
+	t.items = append(t.items, req)
+	return &qproto.AddQueueItemResponse{}, nil
+}
 
 func InitTestServer(folder string) *Server {
 	s := Init()
@@ -36,7 +45,7 @@ func InitTestServer(folder string) *Server {
 	s.SkipLog = true
 	s.SkipIssue = true
 	s.SkipElect = true
-	s.queueClient = &qpb.QueueClient{Test: true}
+	s.queueClient = &testQueueClient{}
 	s.generator = &testGenerator{}
 
 	return s
@@ -963,5 +972,92 @@ func TestProdMoveRecorder_LargeInstanceId(t *testing.T) {
 		t.Errorf("Expected InstanceId %v, got %v", largeId, mockServer.lastMove.GetInstanceId())
 	}
 }
+
+func TestUpdateRecord_NeedsGramUpdate_EnqueuesFanout(t *testing.T) {
+	s := InitTestServer(".testupdategram")
+	tqc := s.queueClient.(*testQueueClient)
+
+	// Add record
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release:  &pbd.Release{Id: 1234, InstanceId: 5678},
+			Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Failed to add record: %v", err)
+	}
+
+	// Clear queue items from AddRecord
+	tqc.items = nil
+
+	// Update record with reason "Tripping gram update" and NeedsGramUpdate = true
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "Tripping gram update",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 5678},
+			Metadata: &pb.ReleaseMetadata{
+				NeedsGramUpdate: true,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+
+	found := false
+	for _, item := range tqc.items {
+		if item.GetQueueName() == "record_fanout" && item.GetKey() == "5678" {
+			found = true
+			expectedRunTime := time.Now().Add(time.Minute).Unix()
+			if item.GetRunTime() < expectedRunTime-10 || item.GetRunTime() > expectedRunTime+10 {
+				t.Errorf("Unexpected RunTime: got %v, expected around %v", item.GetRunTime(), expectedRunTime)
+			}
+		}
+	}
+	if !found {
+		t.Errorf("Expected record_fanout queue item to be enqueued for record with NeedsGramUpdate, got: %v", tqc.items)
+	}
+}
+
+func TestUpdateRecord_GrambridgeNoNeedsGramUpdate_DoesNotEnqueueFanout(t *testing.T) {
+	s := InitTestServer(".testupdategrambridge")
+	tqc := s.queueClient.(*testQueueClient)
+
+	// Add record
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release:  &pbd.Release{Id: 1234, InstanceId: 9999},
+			Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Failed to add record: %v", err)
+	}
+
+	// Clear queue items from AddRecord
+	tqc.items = nil
+
+	// Update record with reason "updating from grambridge" and NeedsGramUpdate = false
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "updating from grambridge",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 9999},
+			Metadata: &pb.ReleaseMetadata{
+				Cost: 150,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+
+	for _, item := range tqc.items {
+		if item.GetQueueName() == "record_fanout" && item.GetKey() == "9999" {
+			t.Errorf("Expected record_fanout not to be enqueued for grambridge update without NeedsGramUpdate, got item: %v", item)
+		}
+	}
+}
+
 
 
