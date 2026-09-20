@@ -23,6 +23,7 @@ import (
 	pbg "github.com/brotherlogic/goserver/proto"
 	pbks "github.com/brotherlogic/keystore/proto"
 	qpb "github.com/brotherlogic/queue/queue_client"
+	qpbproto "github.com/brotherlogic/queue/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	pbrs "github.com/brotherlogic/recordscores/proto"
@@ -31,6 +32,10 @@ import (
 
 	_ "net/http/pprof"
 )
+
+type queueClient interface {
+	AddQueueItem(ctx context.Context, req *qpbproto.AddQueueItemRequest) (*qpbproto.AddQueueItemResponse, error)
+}
 
 var (
 	stateCount = promauto.NewGaugeVec(prometheus.GaugeOpts{
@@ -222,7 +227,7 @@ type Server struct {
 	fanoutServers []string
 	repeatCount   map[int64]int
 	repeatError   map[int64]error
-	queueClient      *qpb.QueueClient
+	queueClient      queueClient
 	generatorAddress string
 	generator        descriptionGenerator
 }
