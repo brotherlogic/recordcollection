@@ -29,6 +29,7 @@ import (
 	pbrs "github.com/brotherlogic/recordscores/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
 	v1 "github.com/brotherlogic/recordcollection/proto/v1"
+	rpb "github.com/brotherlogic/recorder/proto"
 
 	_ "net/http/pprof"
 )
@@ -209,6 +210,30 @@ func (p *prodGenerator) generate(ctx context.Context, address string, rec *pb.Re
 	return resp.GetDescription(), nil
 }
 
+type qualityClient interface {
+	getQuality(ctx context.Context, address string, releaseID int64) (int32, error)
+}
+
+type prodQualityClient struct{}
+
+func (p *prodQualityClient) getQuality(ctx context.Context, address string, releaseID int64) (int32, error) {
+	callCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	conn, err := grpc.DialContext(callCtx, address, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return 0, status.Errorf(codes.Unavailable, "failed to connect to recorder service at %s: %v", address, err)
+	}
+	defer conn.Close()
+
+	client := rpb.NewQualityServiceClient(conn)
+	resp, err := client.GetQuality(callCtx, &rpb.GetQualityRequest{ReleaseId: releaseID})
+	if err != nil {
+		return 0, status.Errorf(codes.Unavailable, "recorder GetQuality RPC failed: %v", err)
+	}
+	return resp.GetScore(), nil
+}
+
 type fo struct {
 	iid    int64
 	origin string
@@ -217,19 +242,21 @@ type fo struct {
 // Server main server type
 type Server struct {
 	*goserver.GoServer
-	retr          saver
-	scorer        scorer
-	quota         quotaChecker
-	mover         moveRecorder
-	TimeoutLoad   bool
-	disableSales  bool
-	updateFanout  chan *fo
-	fanoutServers []string
-	repeatCount   map[int64]int
-	repeatError   map[int64]error
+	retr             saver
+	scorer           scorer
+	quota            quotaChecker
+	mover            moveRecorder
+	TimeoutLoad      bool
+	disableSales     bool
+	updateFanout     chan *fo
+	fanoutServers    []string
+	repeatCount      map[int64]int
+	repeatError      map[int64]error
 	queueClient      queueClient
 	generatorAddress string
 	generator        descriptionGenerator
+	recorderAddress  string
+	recorderClient   qualityClient
 }
 
 const (
@@ -696,6 +723,7 @@ func Init() *Server {
 	s.mover = &prodMoveRecorder{s.FDialServer}
 	s.queueClient = &qpb.QueueClient{Gs: s.GoServer}
 	s.generator = &prodGenerator{}
+	s.recorderClient = &prodQualityClient{}
 	return s
 }
 
@@ -751,6 +779,7 @@ func main() {
 	var quiet = flag.Bool("quiet", false, "Show all output")
 	var token = flag.String("token", "", "Discogs token")
 	var generator = flag.String("generator_address", "192.168.68.88:30050", "The address of the sale description generator")
+	var recorder = flag.String("recorder_address", "192.168.68.88:8087", "Address of the recorder quality service")
 	flag.Parse()
 
 	//Turn off logging
@@ -768,6 +797,7 @@ func main() {
 	}
 
 	server.generatorAddress = *generator
+	server.recorderAddress = *recorder
 
 	server.Register = server
 
