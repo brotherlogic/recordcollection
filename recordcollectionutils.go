@@ -637,6 +637,12 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			r.GetMetadata().DateArrived = mp[int64(r.GetRelease().GetInstanceId())].Arrived
 		}
 
+		r.GetMetadata().PackageScore = s.parsePackageScore(
+			mp[int64(r.GetRelease().GetInstanceId())].PackageScore,
+			r.GetMetadata().GetPackageScore(),
+			r.GetRelease().GetInstanceId(),
+		)
+
 	} else {
 		return err
 	}
