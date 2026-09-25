@@ -375,6 +375,9 @@ message ReleaseMetadata {
 
   // Package score in the range [0, 5]; -1 indicates unset/unrated
   int32 package_score = 78;
+
+  // Rip quality score in the range [0, 100]; 0 indicates unripped/unset or cleared
+  int32 ripped_quality = 79;
 }
 
 // A request to get some records

@@ -1376,7 +1376,9 @@ type ReleaseMetadata struct {
 	Notes               string                              `protobuf:"bytes,76,opt,name=notes,proto3" json:"notes,omitempty"`
 	SaleDescription     string                              `protobuf:"bytes,77,opt,name=sale_description,json=saleDescription,proto3" json:"sale_description,omitempty"`
 	// Package score in the range [0, 5]; -1 indicates unset/unrated
-	PackageScore  int32 `protobuf:"varint,78,opt,name=package_score,json=packageScore,proto3" json:"package_score,omitempty"`
+	PackageScore int32 `protobuf:"varint,78,opt,name=package_score,json=packageScore,proto3" json:"package_score,omitempty"`
+	// Rip quality score in the range [0, 100]; 0 indicates unripped/unset or cleared
+	RippedQuality int32 `protobuf:"varint,79,opt,name=ripped_quality,json=rippedQuality,proto3" json:"ripped_quality,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1953,6 +1955,13 @@ func (x *ReleaseMetadata) GetSaleDescription() string {
 func (x *ReleaseMetadata) GetPackageScore() int32 {
 	if x != nil {
 		return x.PackageScore
+	}
+	return 0
+}
+
+func (x *ReleaseMetadata) GetRippedQuality() int32 {
+	if x != nil {
+		return x.RippedQuality
 	}
 	return 0
 }
@@ -3793,7 +3802,7 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\n" +
 	"clear_want\x18\x02 \x01(\bR\tclearWant\"\x1d\n" +
 	"\x05Token\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"\xee$\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\x95%\n" +
 	"\x0fReleaseMetadata\x12\x1d\n" +
 	"\n" +
 	"date_added\x18\x01 \x01(\x03R\tdateAdded\x12!\n" +
@@ -3890,7 +3899,8 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\rlast_rip_date\x18K \x01(\x03R\vlastRipDate\x12\x14\n" +
 	"\x05notes\x18L \x01(\tR\x05notes\x12)\n" +
 	"\x10sale_description\x18M \x01(\tR\x0fsaleDescription\x12#\n" +
-	"\rpackage_score\x18N \x01(\x05R\fpackageScore\"\xbb\x05\n" +
+	"\rpackage_score\x18N \x01(\x05R\fpackageScore\x12%\n" +
+	"\x0eripped_quality\x18O \x01(\x05R\rrippedQuality\"\xbb\x05\n" +
 	"\bCategory\x12\v\n" +
 	"\aUNKNOWN\x10\x00\x12\r\n" +
 	"\tPURCHASED\x10\x01\x12\x0e\n" +
