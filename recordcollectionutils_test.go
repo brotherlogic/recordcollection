@@ -613,6 +613,15 @@ func TestValidateSalesBadLoad(t *testing.T) {
 	}
 }
 
+func TestGodiscogsPackageScoreSupported(t *testing.T) {
+	info := &godiscogs.InstanceInfo{
+		PackageScore: "5",
+	}
+	if info.PackageScore != "5" {
+		t.Errorf("PackageScore mismatch: got %v, want 5", info.PackageScore)
+	}
+}
+
 func TestParsePackageScore(t *testing.T) {
 	s := InitTestServer(".testParsePackageScore")
 
