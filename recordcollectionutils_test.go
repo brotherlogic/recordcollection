@@ -612,3 +612,154 @@ func TestValidateSalesBadLoad(t *testing.T) {
 		t.Errorf("Validation did not fail")
 	}
 }
+
+func TestParsePackageScore(t *testing.T) {
+	s := InitTestServer(".testParsePackageScore")
+
+	tests := []struct {
+		name         string
+		raw          string
+		currentScore int32
+		instanceID   int64
+		expected     int32
+	}{
+		{
+			name:         "Discogs input 0 sets PackageScore = 0",
+			raw:          "0",
+			currentScore: -1,
+			instanceID:   123,
+			expected:     0,
+		},
+		{
+			name:         "Discogs input 1 sets PackageScore = 1",
+			raw:          "1",
+			currentScore: -1,
+			instanceID:   123,
+			expected:     1,
+		},
+		{
+			name:         "Discogs input 2 sets PackageScore = 2",
+			raw:          "2",
+			currentScore: -1,
+			instanceID:   123,
+			expected:     2,
+		},
+		{
+			name:         "Discogs input 3 sets PackageScore = 3",
+			raw:          "3",
+			currentScore: -1,
+			instanceID:   123,
+			expected:     3,
+		},
+		{
+			name:         "Discogs input 4 sets PackageScore = 4",
+			raw:          "4",
+			currentScore: -1,
+			instanceID:   123,
+			expected:     4,
+		},
+		{
+			name:         "Discogs input 5 sets PackageScore = 5",
+			raw:          "5",
+			currentScore: -1,
+			instanceID:   123,
+			expected:     5,
+		},
+		{
+			name:         "Discogs input empty sets PackageScore = -1",
+			raw:          "",
+			currentScore: 3,
+			instanceID:   123,
+			expected:     -1,
+		},
+		{
+			name:         "Out-of-bounds low -2 calls s.RaiseIssue and retains previous score",
+			raw:          "-2",
+			currentScore: 3,
+			instanceID:   123,
+			expected:     3,
+		},
+		{
+			name:         "Out-of-bounds low -2 with 0/unset returns -1",
+			raw:          "-2",
+			currentScore: 0,
+			instanceID:   123,
+			expected:     -1,
+		},
+		{
+			name:         "Out-of-bounds high 6 calls s.RaiseIssue and retains previous score",
+			raw:          "6",
+			currentScore: 4,
+			instanceID:   123,
+			expected:     4,
+		},
+		{
+			name:         "Out-of-bounds high 10 calls s.RaiseIssue and retains previous score",
+			raw:          "10",
+			currentScore: 2,
+			instanceID:   123,
+			expected:     2,
+		},
+		{
+			name:         "Out-of-bounds high with 0/unset returns -1",
+			raw:          "6",
+			currentScore: 0,
+			instanceID:   123,
+			expected:     -1,
+		},
+		{
+			name:         "Non-integer string poor calls s.RaiseIssue and retains previous score",
+			raw:          "poor",
+			currentScore: 5,
+			instanceID:   123,
+			expected:     5,
+		},
+		{
+			name:         "Non-integer string N/A calls s.RaiseIssue and retains previous score",
+			raw:          "N/A",
+			currentScore: 1,
+			instanceID:   123,
+			expected:     1,
+		},
+		{
+			name:         "Non-integer string with 0/unset returns -1",
+			raw:          "N/A",
+			currentScore: 0,
+			instanceID:   123,
+			expected:     -1,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := s.parsePackageScore(tc.raw, tc.currentScore, tc.instanceID)
+			if got != tc.expected {
+				t.Errorf("s.parsePackageScore(%q, %v, %v) = %v; want %v", tc.raw, tc.currentScore, tc.instanceID, got, tc.expected)
+			}
+			gotFn := parsePackageScore(tc.raw, tc.currentScore, tc.instanceID, s)
+			if gotFn != tc.expected {
+				t.Errorf("parsePackageScore(%q, %v, %v, s) = %v; want %v", tc.raw, tc.currentScore, tc.instanceID, gotFn, tc.expected)
+			}
+		})
+	}
+}
+
+func TestNewRecordInitializationDefaultsPackageScore(t *testing.T) {
+	s := InitTestServer(".testNewRecordInit")
+	resp, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbgd.Release{Id: 12345, Title: "Test Album"},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:       10,
+				GoalFolder: 12,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+	if resp.GetAdded().GetMetadata().GetPackageScore() != -1 {
+		t.Errorf("Expected PackageScore to default to -1, got %v", resp.GetAdded().GetMetadata().GetPackageScore())
+	}
+}
+

@@ -77,7 +77,7 @@ func (s *Server) runUpdateFanout(ctx context.Context) {
 
 			//We get an Invalid argument when we've failed to save out an added record
 			if status.Convert(err).Code() == codes.InvalidArgument {
-				record = &pb.Record{Release: &pbgd.Release{InstanceId: id}}
+				record = &pb.Record{Release: &pbgd.Release{InstanceId: id}, Metadata: &pb.ReleaseMetadata{PackageScore: -1}}
 			} else {
 				cancel()
 				time.Sleep(time.Minute)
@@ -705,7 +705,7 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 		}
 
 		if !foundInList {
-			nrec := &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix(), GoalFolder: record.FolderId}}
+			nrec := &pb.Record{Release: record, Metadata: &pb.ReleaseMetadata{DateAdded: time.Now().Unix(), GoalFolder: record.FolderId, PackageScore: -1}}
 			s.saveRecord(ctx, nrec)
 		}
 
@@ -835,4 +835,28 @@ func (s *Server) recache(ctx context.Context, r *pb.Record) error {
 	}
 
 	return nil
+}
+
+func (s *Server) parsePackageScore(raw string, currentScore int32, instanceID int64) int32 {
+	return parsePackageScore(raw, currentScore, instanceID, s)
+}
+
+func parsePackageScore(raw string, currentScore int32, instanceID int64, s *Server) int32 {
+	if raw == "" {
+		return -1
+	}
+
+	val, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err == nil && val >= 0 && val <= 5 {
+		return int32(val)
+	}
+
+	if s != nil {
+		s.RaiseIssue("Invalid Package Score", fmt.Sprintf("Instance %v has invalid package score %q: must be integer between 0 and 5", instanceID, raw))
+	}
+
+	if currentScore <= 0 {
+		return -1
+	}
+	return currentScore
 }

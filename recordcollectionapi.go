@@ -467,6 +467,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 					InstanceId: request.GetUpdate().GetRelease().GetInstanceId()},
 				Metadata: &pb.ReleaseMetadata{
 					NeedsGramUpdate: true,
+					PackageScore:    -1,
 				}}
 
 		} else {
@@ -476,7 +477,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 
 	// Set the metadata if it's not
 	if rec.GetMetadata() == nil {
-		rec.Metadata = &pb.ReleaseMetadata{}
+		rec.Metadata = &pb.ReleaseMetadata{
+			PackageScore: -1,
+		}
 	}
 
 	// Adjust keeper if we keeping a record that's staged to sell that we've marked as not a keeper
@@ -674,6 +677,14 @@ func (s *Server) transfer(ctx context.Context, rec *pb.Record) (*pb.Record, erro
 
 // AddRecord adds a record directly to the listening pile
 func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*pb.AddRecordResponse, error) {
+	if request.GetToAdd().GetMetadata() == nil {
+		request.GetToAdd().Metadata = &pb.ReleaseMetadata{
+			PackageScore: -1,
+		}
+	} else if request.GetToAdd().GetMetadata().GetPackageScore() == 0 {
+		request.GetToAdd().GetMetadata().PackageScore = -1
+	}
+
 	if request.GetToAdd().GetMetadata().GetLastUpdateIn() == 0 {
 		request.GetToAdd().GetMetadata().LastUpdateIn = 1
 	}
@@ -812,7 +823,7 @@ func (s *Server) GetRecord(ctx context.Context, req *pb.GetRecordRequest) (*pb.G
 	if err != nil {
 
 		if req.GetForce() > 0 {
-			rec := &pb.Record{Release: &pbgd.Release{Id: req.GetForce(), InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{GoalFolder: 242017, Cost: 1}}
+			rec := &pb.Record{Release: &pbgd.Release{Id: req.GetForce(), InstanceId: req.InstanceId}, Metadata: &pb.ReleaseMetadata{GoalFolder: 242017, Cost: 1, PackageScore: -1}}
 			return &pb.GetRecordResponse{Record: rec}, s.cacheRecord(ctx, rec, true)
 		}
 
