@@ -372,6 +372,9 @@ message ReleaseMetadata {
 
   string notes = 76;
   string sale_description = 77;
+
+  // Package score in the range [0, 5]; -1 indicates unset/unrated
+  int32 package_score = 78;
 }
 
 // A request to get some records
