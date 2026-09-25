@@ -29,6 +29,10 @@ var (
 		Name: "recordcollection_sale_descriptor_result",
 		Help: "Outbound calls to the sale description generator service",
 	}, []string{"status_code"})
+	qualityFetchResults = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "recordcollection_quality_fetch_result",
+		Help: "Results of rip quality fetch from recorder",
+	}, []string{"status"})
 )
 
 func (s *Server) DeleteSale(ctx context.Context, req *pb.DeleteSaleRequest) (*pb.DeleteSaleResponse, error) {
@@ -585,6 +589,35 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 	}
 	if len(request.GetUpdate().GetRelease().GetTracklist()) > 0 {
 		rec.GetRelease().Tracklist = []*pbgd.Track{}
+	}
+
+	if request.GetUpdate().GetMetadata() != nil {
+		if request.GetUpdate().GetMetadata().GetLastRipDate() == -1 {
+			rec.GetMetadata().LastRipDate = 0
+			rec.GetMetadata().RippedQuality = 0
+			request.GetUpdate().GetMetadata().LastRipDate = 0
+			request.GetUpdate().GetMetadata().RippedQuality = 0
+		} else {
+			incomingRipDate := request.GetUpdate().GetMetadata().GetLastRipDate()
+			existingRipDate := rec.GetMetadata().GetLastRipDate()
+			if incomingRipDate > 0 && incomingRipDate != existingRipDate {
+				score, err := s.recorderClient.getQuality(ctx, s.recorderAddress, int64(rec.GetRelease().GetId()))
+				if err != nil {
+					qualityFetchResults.With(prometheus.Labels{"status": "unavailable"}).Inc()
+					s.CtxLog(ctx, fmt.Sprintf("failed to obtain rip quality from recorder: %v", err))
+					return nil, status.Errorf(codes.Unavailable, "failed to obtain rip quality from recorder: %v", err)
+				}
+				if score < 0 || score > 100 {
+					qualityFetchResults.With(prometheus.Labels{"status": "invalid_score"}).Inc()
+					return nil, status.Errorf(codes.InvalidArgument, "invalid rip quality score %d from recorder (must be in [0, 100])", score)
+				}
+				qualityFetchResults.With(prometheus.Labels{"status": "success"}).Inc()
+				rec.GetMetadata().RippedQuality = score
+				request.GetUpdate().GetMetadata().RippedQuality = score
+			} else {
+				request.GetUpdate().GetMetadata().RippedQuality = rec.GetMetadata().GetRippedQuality()
+			}
+		}
 	}
 
 	// Merge in the update
