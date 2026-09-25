@@ -36,6 +36,8 @@ require (
 	github.com/brotherlogic/lock v0.0.0-20260725021330-63010f67dabc // indirect
 	github.com/brotherlogic/logging v0.0.0-20260725012347-7aa22ad1df65 // indirect
 	github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6 // indirect
+	github.com/brotherlogic/recorder v0.0.0-20260925211214-0c726e4b2e4a // indirect
+	github.com/brotherlogic/recordgetter v0.0.0-20260125052128-c2f9222375f7 // indirect
 	github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
