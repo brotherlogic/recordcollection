@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -1116,6 +1117,62 @@ func TestUpdateRecord_RippedQuality_NewRipDate_Success(t *testing.T) {
 	}
 }
 
+func TestUpdateRecord_RippedQuality_ReRipDate_UpdatesScore(t *testing.T) {
+	s := InitTestServer(".testupdate_ripquality_rerip")
+	tqc := &testQualityClient{score: 75}
+	s.recorderClient = tqc
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 1234, InstanceId: 1006},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    20,
+				LastRipDate:   1700000000,
+				RippedQuality: 50,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "re-ripped album",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 1006},
+			Metadata: &pb.ReleaseMetadata{
+				LastRipDate: 1700050000,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+
+	if tqc.calls != 1 {
+		t.Errorf("Expected 1 call to recorder on re-rip, got %d", tqc.calls)
+	}
+	if resp.GetUpdated().GetMetadata().GetLastRipDate() != 1700050000 {
+		t.Errorf("Expected LastRipDate 1700050000, got %d", resp.GetUpdated().GetMetadata().GetLastRipDate())
+	}
+	if resp.GetUpdated().GetMetadata().GetRippedQuality() != 75 {
+		t.Errorf("Expected RippedQuality 75, got %d", resp.GetUpdated().GetMetadata().GetRippedQuality())
+	}
+
+	// Verify loaded record reflects updated values
+	rec, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1006})
+	if err != nil {
+		t.Fatalf("GetRecord failed: %v", err)
+	}
+	if rec.GetRecord().GetMetadata().GetLastRipDate() != 1700050000 {
+		t.Errorf("Expected stored LastRipDate 1700050000, got %d", rec.GetRecord().GetMetadata().GetLastRipDate())
+	}
+	if rec.GetRecord().GetMetadata().GetRippedQuality() != 75 {
+		t.Errorf("Expected stored RippedQuality 75, got %d", rec.GetRecord().GetMetadata().GetRippedQuality())
+	}
+}
+
 func TestUpdateRecord_RippedQuality_ClearRipDate(t *testing.T) {
 	s := InitTestServer(".testupdate_ripquality_clear")
 	tqc := &testQualityClient{score: 88}
@@ -1181,11 +1238,12 @@ func TestUpdateRecord_RippedQuality_RipDateUnchanged_PreservesScore(t *testing.T
 	}
 
 	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
-		Reason: "update notes only",
+		Reason: "update notes and rating only",
 		Update: &pb.Record{
 			Release: &pbd.Release{InstanceId: 1003},
 			Metadata: &pb.ReleaseMetadata{
-				Notes: "great vinyl",
+				Notes:     "great vinyl",
+				SetRating: 4,
 			},
 		},
 	})
@@ -1236,44 +1294,80 @@ func TestUpdateRecord_RippedQuality_RecorderDown_RejectsUpdate(t *testing.T) {
 	if after-before != 1 {
 		t.Errorf("Expected unavailable metric incremented by 1, got before=%v after=%v", before, after)
 	}
+
+	// Verify update is aborted and record remains un-mutated
+	rec, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 1004})
+	if err != nil {
+		t.Fatalf("GetRecord failed: %v", err)
+	}
+	if rec.GetRecord().GetMetadata().GetLastRipDate() != 0 {
+		t.Errorf("Expected LastRipDate to remain 0, got %d", rec.GetRecord().GetMetadata().GetLastRipDate())
+	}
+	if rec.GetRecord().GetMetadata().GetRippedQuality() != 0 {
+		t.Errorf("Expected RippedQuality to remain 0, got %d", rec.GetRecord().GetMetadata().GetRippedQuality())
+	}
 }
 
 func TestUpdateRecord_RippedQuality_InvalidScore_RejectsUpdate(t *testing.T) {
-	s := InitTestServer(".testupdate_ripquality_invalid_score")
-	s.recorderClient = &testQualityClient{score: 150}
+	for _, tc := range []struct {
+		name         string
+		invalidScore int32
+		instanceID   int64
+	}{
+		{name: "above_100", invalidScore: 150, instanceID: 1005},
+		{name: "below_0", invalidScore: -5, instanceID: 1007},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testupdate_ripquality_invalid_%s", tc.name))
+			s.recorderClient = &testQualityClient{score: tc.invalidScore}
 
-	before := testutil.ToFloat64(qualityFetchResults.With(prometheus.Labels{"status": "invalid_score"}))
+			before := testutil.ToFloat64(qualityFetchResults.With(prometheus.Labels{"status": "invalid_score"}))
 
-	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
-		ToAdd: &pb.Record{
-			Release:  &pbd.Release{Id: 1234, InstanceId: 1005},
-			Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
-		},
-	})
-	if err != nil {
-		t.Fatalf("AddRecord failed: %v", err)
-	}
+			_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+				ToAdd: &pb.Record{
+					Release:  &pbd.Release{Id: 1234, InstanceId: tc.instanceID},
+					Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+				},
+			})
+			if err != nil {
+				t.Fatalf("AddRecord failed: %v", err)
+			}
 
-	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
-		Reason: "ripped album",
-		Update: &pb.Record{
-			Release: &pbd.Release{InstanceId: 1005},
-			Metadata: &pb.ReleaseMetadata{
-				LastRipDate: 1700000000,
-			},
-		},
-	})
-	if err == nil {
-		t.Fatalf("Expected error for invalid score, got nil")
-	}
-	if status.Code(err) != codes.InvalidArgument {
-		t.Errorf("Expected InvalidArgument error code, got %v", status.Code(err))
-	}
-	after := testutil.ToFloat64(qualityFetchResults.With(prometheus.Labels{"status": "invalid_score"}))
-	if after-before != 1 {
-		t.Errorf("Expected invalid_score metric incremented by 1, got before=%v after=%v", before, after)
+			_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+				Reason: "ripped album",
+				Update: &pb.Record{
+					Release: &pbd.Release{InstanceId: tc.instanceID},
+					Metadata: &pb.ReleaseMetadata{
+						LastRipDate: 1700000000,
+					},
+				},
+			})
+			if err == nil {
+				t.Fatalf("Expected error for invalid score %d, got nil", tc.invalidScore)
+			}
+			if status.Code(err) != codes.InvalidArgument {
+				t.Errorf("Expected InvalidArgument error code, got %v", status.Code(err))
+			}
+			after := testutil.ToFloat64(qualityFetchResults.With(prometheus.Labels{"status": "invalid_score"}))
+			if after-before != 1 {
+				t.Errorf("Expected invalid_score metric incremented by 1, got before=%v after=%v", before, after)
+			}
+
+			// Verify update is aborted and record remains un-mutated
+			rec, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: tc.instanceID})
+			if err != nil {
+				t.Fatalf("GetRecord failed: %v", err)
+			}
+			if rec.GetRecord().GetMetadata().GetLastRipDate() != 0 {
+				t.Errorf("Expected LastRipDate to remain 0, got %d", rec.GetRecord().GetMetadata().GetLastRipDate())
+			}
+			if rec.GetRecord().GetMetadata().GetRippedQuality() != 0 {
+				t.Errorf("Expected RippedQuality to remain 0, got %d", rec.GetRecord().GetMetadata().GetRippedQuality())
+			}
+		})
 	}
 }
+
 
 
 
