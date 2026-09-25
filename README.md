@@ -27,6 +27,7 @@
     - `recordscores`: Advanced scoring and rating logic.
     - `recordsorganiser`: Folder quota and organization management.
     - `recordfanout`: Broadcasts updates to dependent services.
+    - `recorder`: Rip quality score retrieval via gRPC (`QualityService.GetQuality`) configured via `--recorder_address`.
 - **Audit & History**: Tracks listen times, auditions, and historical updates for every record in the collection.
 - **Monitoring**: Built-in Prometheus metrics for tracking collection status, service health, and loop latencies.
 
