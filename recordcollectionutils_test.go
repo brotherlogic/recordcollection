@@ -612,3 +612,12 @@ func TestValidateSalesBadLoad(t *testing.T) {
 		t.Errorf("Validation did not fail")
 	}
 }
+
+func TestGodiscogsPackageScoreSupported(t *testing.T) {
+	info := &godiscogs.InstanceInfo{
+		PackageScore: "5",
+	}
+	if info.PackageScore != "5" {
+		t.Errorf("PackageScore mismatch: got %v, want 5", info.PackageScore)
+	}
+}
