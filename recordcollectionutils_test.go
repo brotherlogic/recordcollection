@@ -81,10 +81,18 @@ type testSyncer struct {
 	count           int
 	lastSaleNotes   string
 	removedSaleID   int
+	instanceInfo    map[int64]*godiscogs.InstanceInfo
 }
 
 func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int64]*godiscogs.InstanceInfo, error) {
-	return make(map[int64]*godiscogs.InstanceInfo), nil
+	if t.instanceInfo != nil {
+		return t.instanceInfo, nil
+	}
+	return map[int64]*godiscogs.InstanceInfo{
+		123: {
+			PackageScore: "4",
+		},
+	}, nil
 }
 
 func (t *testSyncer) GetInventory(ctx context.Context) ([]*pbgd.ForSale, error) {
@@ -771,4 +779,124 @@ func TestNewRecordInitializationDefaultsPackageScore(t *testing.T) {
 		t.Errorf("Expected PackageScore to default to -1, got %v", resp.GetAdded().GetMetadata().GetPackageScore())
 	}
 }
+
+func TestCacheRecordExtractsPackageScore(t *testing.T) {
+	s := InitTestServer(".testCacheRecordExtractsPackageScore")
+	tRetr := &testSyncer{
+		instanceInfo: map[int64]*godiscogs.InstanceInfo{
+			9876: {
+				PackageScore: "4",
+			},
+		},
+	}
+	s.retr = tRetr
+
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         100,
+			InstanceId: 9876,
+			Title:      "Test Release",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			PackageScore: -1,
+		},
+	}
+
+	err := s.cacheRecord(context.Background(), r, true)
+	if err != nil {
+		t.Fatalf("cacheRecord failed: %v", err)
+	}
+
+	if r.GetMetadata().GetPackageScore() != 4 {
+		t.Errorf("PackageScore not extracted: got %v, want 4", r.GetMetadata().GetPackageScore())
+	}
+}
+
+func TestCacheRecordPackageScoreEmpty(t *testing.T) {
+	s := InitTestServer(".testCacheRecordPackageScoreEmpty")
+	tRetr := &testSyncer{
+		instanceInfo: map[int64]*godiscogs.InstanceInfo{
+			9876: {
+				PackageScore: "",
+			},
+		},
+	}
+	s.retr = tRetr
+
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         100,
+			InstanceId: 9876,
+			Title:      "Test Release",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			PackageScore: 3,
+		},
+	}
+
+	err := s.cacheRecord(context.Background(), r, true)
+	if err != nil {
+		t.Fatalf("cacheRecord failed: %v", err)
+	}
+
+	if r.GetMetadata().GetPackageScore() != -1 {
+		t.Errorf("PackageScore not reset to -1: got %v, want -1", r.GetMetadata().GetPackageScore())
+	}
+}
+
+func TestCacheRecordPackageScoreInvalidRetainsScore(t *testing.T) {
+	s := InitTestServer(".testCacheRecordPackageScoreInvalidRetainsScore")
+	tRetr := &testSyncer{
+		instanceInfo: map[int64]*godiscogs.InstanceInfo{
+			9876: {
+				PackageScore: "invalid",
+			},
+		},
+	}
+	s.retr = tRetr
+
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         100,
+			InstanceId: 9876,
+			Title:      "Test Release",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			PackageScore: 3,
+		},
+	}
+
+	err := s.cacheRecord(context.Background(), r, true)
+	if err != nil {
+		t.Fatalf("cacheRecord failed: %v", err)
+	}
+
+	if r.GetMetadata().GetPackageScore() != 3 {
+		t.Errorf("PackageScore should be retained on invalid: got %v, want 3", r.GetMetadata().GetPackageScore())
+	}
+}
+
+func TestCacheRecordPackageScoreDefaultMockData(t *testing.T) {
+	s := InitTestServer(".testCacheRecordPackageScoreDefaultMockData")
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         100,
+			InstanceId: 123,
+			Title:      "Test Release",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			PackageScore: -1,
+		},
+	}
+
+	err := s.cacheRecord(context.Background(), r, true)
+	if err != nil {
+		t.Fatalf("cacheRecord failed: %v", err)
+	}
+
+	if r.GetMetadata().GetPackageScore() != 4 {
+		t.Errorf("PackageScore default mock data not extracted: got %v, want 4", r.GetMetadata().GetPackageScore())
+	}
+}
+
 
