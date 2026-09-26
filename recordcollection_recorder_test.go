@@ -90,3 +90,11 @@ func TestServer_Init_RecorderClientWired(t *testing.T) {
 		t.Errorf("expected recorderClient to be *prodQualityClient, got %T", s.recorderClient)
 	}
 }
+
+func TestServer_Init_RecorderAddressDefault(t *testing.T) {
+	s := Init()
+	expected := "recorder:8087"
+	if s.recorderAddress != expected {
+		t.Errorf("expected recorderAddress to be %q, got %q", expected, s.recorderAddress)
+	}
+}
