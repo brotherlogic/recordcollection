@@ -82,6 +82,7 @@ type testSyncer struct {
 	lastSaleNotes   string
 	removedSaleID   int
 	instanceInfo    map[int64]*godiscogs.InstanceInfo
+	saleID          int64
 }
 
 func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int64]*godiscogs.InstanceInfo, error) {
@@ -165,7 +166,10 @@ func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID, in
 
 func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int, notes string) (int64, error) {
 	t.lastSaleNotes = notes
-	return 0, nil
+	if t.saleID != 0 {
+		return t.saleID, nil
+	}
+	return 1001, nil
 }
 func (t *testSyncer) GetSalePrice(ctx context.Context, releaseID int) (float32, error) {
 	return 15.5, nil
