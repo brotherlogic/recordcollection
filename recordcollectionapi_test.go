@@ -1601,6 +1601,373 @@ func TestUpdateRecord_StagedToSell_QualityGating(t *testing.T) {
 	}
 }
 
+func TestUpdateRecord_StagedToSell_LowQualityRip_DivertsToRipThenSell(t *testing.T) {
+	s := InitTestServer(".test_staged_to_sell_low_quality")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 201, Title: "Low Quality", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 201},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				RippedQuality: 50,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 201},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_RIP_THEN_SELL {
+		t.Errorf("Expected category RIP_THEN_SELL, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if resp.GetUpdated().GetMetadata().GetSetRating() != -1 {
+		t.Errorf("Expected SetRating -1, got %v", resp.GetUpdated().GetMetadata().GetSetRating())
+	}
+	if resp.GetUpdated().GetMetadata().GetSaleId() != 0 {
+		t.Errorf("Expected SaleId == 0, got %v", resp.GetUpdated().GetMetadata().GetSaleId())
+	}
+	if ts.lastSaleNotes != "" {
+		t.Errorf("Expected no sale created, but lastSaleNotes was %v", ts.lastSaleNotes)
+	}
+}
+
+func TestUpdateRecord_StagedToSell_MissingRipQuality_DivertsToRipThenSell(t *testing.T) {
+	s := InitTestServer(".test_staged_to_sell_missing_quality")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 202, Title: "Missing Quality", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 202},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				RippedQuality: 0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 202},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_RIP_THEN_SELL {
+		t.Errorf("Expected category RIP_THEN_SELL, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if resp.GetUpdated().GetMetadata().GetSetRating() != -1 {
+		t.Errorf("Expected SetRating -1, got %v", resp.GetUpdated().GetMetadata().GetSetRating())
+	}
+	if resp.GetUpdated().GetMetadata().GetSaleId() != 0 {
+		t.Errorf("Expected SaleId == 0, got %v", resp.GetUpdated().GetMetadata().GetSaleId())
+	}
+	if ts.lastSaleNotes != "" {
+		t.Errorf("Expected no sale created, but lastSaleNotes was %v", ts.lastSaleNotes)
+	}
+}
+
+func TestUpdateRecord_StagedToSell_Quality80_ListsForSale(t *testing.T) {
+	s := InitTestServer(".test_staged_to_sell_quality_80")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 203, Title: "Quality 80", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 203},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				RippedQuality: 80,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 203},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_SOLD {
+		t.Errorf("Expected category SOLD, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if ts.lastSaleNotes != "Generated Desc" {
+		t.Errorf("Expected sale creation executed with 'Generated Desc', got %v", ts.lastSaleNotes)
+	}
+	if resp.GetUpdated().GetMetadata().GetSaleId() <= 0 {
+		t.Errorf("Expected SaleId > 0, got %v", resp.GetUpdated().GetMetadata().GetSaleId())
+	}
+}
+
+func TestUpdateRecord_StagedToSell_Quality95_ListsForSale(t *testing.T) {
+	s := InitTestServer(".test_staged_to_sell_quality_95")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 204, Title: "Quality 95", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 204},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				RippedQuality: 95,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 204},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_SOLD {
+		t.Errorf("Expected category SOLD, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if ts.lastSaleNotes != "Generated Desc" {
+		t.Errorf("Expected sale creation executed with 'Generated Desc', got %v", ts.lastSaleNotes)
+	}
+	if resp.GetUpdated().GetMetadata().GetSaleId() <= 0 {
+		t.Errorf("Expected SaleId > 0, got %v", resp.GetUpdated().GetMetadata().GetSaleId())
+	}
+}
+
+func TestUpdateRecord_StagedToSell_KeeperScore_PreservesKeeperFlow(t *testing.T) {
+	s := InitTestServer(".test_staged_to_sell_keeper")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 205, Title: "Keeper", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 205},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				Keep:          pb.ReleaseMetadata_NOT_KEEPER,
+				RippedQuality: 0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score keeper",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 205},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 5,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_STAGED_TO_SELL {
+		t.Errorf("Expected category STAGED_TO_SELL, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if resp.GetUpdated().GetMetadata().GetKeep() != pb.ReleaseMetadata_KEEP_UNKNOWN {
+		t.Errorf("Expected Keep KEEP_UNKNOWN, got %v", resp.GetUpdated().GetMetadata().GetKeep())
+	}
+	if ts.lastSaleNotes != "" {
+		t.Errorf("Expected no sale created for keeper, but lastSaleNotes was %v", ts.lastSaleNotes)
+	}
+}
+
+func TestUpdateRecord_RipThenSell_ScoreRating_ListsForSaleUnconditionally(t *testing.T) {
+	s := InitTestServer(".test_rip_then_sell_score_rating")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 206, Title: "Rip Then Sell Rating", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 206},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_RIP_THEN_SELL,
+				RippedQuality: 0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 206},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_SOLD {
+		t.Errorf("Expected category SOLD, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if ts.lastSaleNotes != "Generated Desc" {
+		t.Errorf("Expected sale creation executed with 'Generated Desc', got %v", ts.lastSaleNotes)
+	}
+	if resp.GetUpdated().GetMetadata().GetSaleId() <= 0 {
+		t.Errorf("Expected SaleId > 0, got %v", resp.GetUpdated().GetMetadata().GetSaleId())
+	}
+}
+
+func TestUpdateRecord_RipThenSell_ScoreKeeper_ListsForSaleUnconditionally(t *testing.T) {
+	s := InitTestServer(".test_rip_then_sell_score_keeper")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 207, Title: "Rip Then Sell Keeper", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 207},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_RIP_THEN_SELL,
+				Keep:          pb.ReleaseMetadata_NOT_KEEPER,
+				RippedQuality: 0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score keeper",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 207},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 5,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_SOLD {
+		t.Errorf("Expected category SOLD, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if ts.lastSaleNotes != "Generated Desc" {
+		t.Errorf("Expected sale creation executed with 'Generated Desc', got %v", ts.lastSaleNotes)
+	}
+	if resp.GetUpdated().GetMetadata().GetSaleId() <= 0 {
+		t.Errorf("Expected SaleId > 0, got %v", resp.GetUpdated().GetMetadata().GetSaleId())
+	}
+}
+
+func TestUpdateRecord_RipThenSell_MissingPrerequisites_FailsPrecondition(t *testing.T) {
+	s := InitTestServer(".test_rip_then_sell_missing_prereqs")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	// Record lacking sleeve condition and notes
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 208, Title: "Missing Prerequisites", InstanceId: 208},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Category:      pb.ReleaseMetadata_RIP_THEN_SELL,
+				RippedQuality: 0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 208},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if status.Code(err) != codes.FailedPrecondition {
+		t.Errorf("Expected codes.FailedPrecondition, got error %v (code %v)", err, status.Code(err))
+	}
+}
+
+
 
 
 
