@@ -18,6 +18,7 @@
     - **Gramophile Updates**: When a record has `NeedsGramUpdate` set, a fanout task is enqueued for one minute in the future in `record_fanout` to pull updated details from Discogs, including updates initiated by Grambridge.
 
 - **Automated Sale Management**:
+    - **Quality Gating & Rip-First Routing**: In `UpdateRecord`, scoring a record in `STAGED_TO_SELL` with sell rating (3) evaluates `ripped_quality`. Records with `ripped_quality < 80` (or unset/0) are diverted to `RIP_THEN_SELL` with score reset (`-1`) to block sale until verified. Records with quality >= 80 escalate to `SOLD` to enter the sale pipeline. Scoring records in `RIP_THEN_SELL` unconditionally escalates them to `SOLD`.
     - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes, utilizing the local Ollama model setting for description generation.
     - **Dynamic Pricing**: Tracks and updates sale prices based on market data.
     - **Blocked Records**: Automatically removes records from sale and updates their properties if they are marked as blocked from sale on Discogs.

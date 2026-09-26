@@ -486,10 +486,40 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		}
 	}
 
-	// Adjust keeper if we keeping a record that's staged to sell that we've marked as not a keeper
-	if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_STAGED_TO_SELL && request.GetUpdate().GetMetadata().GetSetRating() == 5 {
-		if rec.GetMetadata().GetKeep() == pb.ReleaseMetadata_NOT_KEEPER {
-			rec.GetMetadata().Keep = pb.ReleaseMetadata_KEEP_UNKNOWN
+	incomingRating := request.GetUpdate().GetMetadata().GetSetRating()
+	if incomingRating == 0 {
+		incomingRating = request.GetUpdate().GetRelease().GetRating()
+	}
+
+	if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_STAGED_TO_SELL {
+		if incomingRating == 5 {
+			if rec.GetMetadata().GetKeep() == pb.ReleaseMetadata_NOT_KEEPER {
+				rec.GetMetadata().Keep = pb.ReleaseMetadata_KEEP_UNKNOWN
+			}
+		} else if incomingRating == 3 {
+			if rec.GetMetadata().GetRippedQuality() < 80 {
+				rec.GetMetadata().Category = pb.ReleaseMetadata_RIP_THEN_SELL
+				rec.GetMetadata().SetRating = -1
+				if request.GetUpdate().GetMetadata() != nil {
+					request.GetUpdate().GetMetadata().Category = pb.ReleaseMetadata_RIP_THEN_SELL
+					request.GetUpdate().GetMetadata().SetRating = -1
+				}
+				if request.GetUpdate().GetRelease() != nil {
+					request.GetUpdate().GetRelease().Rating = 0
+				}
+			} else {
+				if request.GetUpdate().GetMetadata() == nil {
+					request.GetUpdate().Metadata = &pb.ReleaseMetadata{}
+				}
+				request.GetUpdate().GetMetadata().Category = pb.ReleaseMetadata_SOLD
+			}
+		}
+	} else if rec.GetMetadata().GetCategory() == pb.ReleaseMetadata_RIP_THEN_SELL {
+		if incomingRating > 0 {
+			if request.GetUpdate().GetMetadata() == nil {
+				request.GetUpdate().Metadata = &pb.ReleaseMetadata{}
+			}
+			request.GetUpdate().GetMetadata().Category = pb.ReleaseMetadata_SOLD
 		}
 	}
 
