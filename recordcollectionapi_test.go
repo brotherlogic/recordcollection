@@ -1368,6 +1368,240 @@ func TestUpdateRecord_RippedQuality_InvalidScore_RejectsUpdate(t *testing.T) {
 	}
 }
 
+func TestUpdateRecord_StagedToSell_QualityGating(t *testing.T) {
+	s := InitTestServer(".testupdate_staged_to_sell_gating")
+	ts := &testSyncer{}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "Generated Desc"}
+
+	// 1. STAGED_TO_SELL with RippedQuality = 50, rated 3 -> Divert to RIP_THEN_SELL, SetRating = -1, no sale
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 101, Title: "Low Quality", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 101},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				RippedQuality: 50,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 101},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_RIP_THEN_SELL {
+		t.Errorf("Expected category RIP_THEN_SELL, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if resp.GetUpdated().GetMetadata().GetSetRating() != -1 {
+		t.Errorf("Expected SetRating -1, got %v", resp.GetUpdated().GetMetadata().GetSetRating())
+	}
+	if ts.lastSaleNotes != "" {
+		t.Errorf("Expected no sale triggered, but lastSaleNotes was %v", ts.lastSaleNotes)
+	}
+
+	// 2. STAGED_TO_SELL with RippedQuality = 80, rated 3 -> Escalate to SOLD, sale triggered
+	_, err = s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 102, Title: "Good Quality", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 102},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				RippedQuality: 80,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 102},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_SOLD {
+		t.Errorf("Expected category SOLD, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if ts.lastSaleNotes != "Generated Desc" {
+		t.Errorf("Expected sale triggered with 'Generated Desc', got %v", ts.lastSaleNotes)
+	}
+
+	// 3. RIP_THEN_SELL with RippedQuality = 0, rated 3 -> Escalate to SOLD, sale triggered
+	ts.lastSaleNotes = ""
+	_, err = s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 103, Title: "Rip Then Sell", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 103},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_RIP_THEN_SELL,
+				RippedQuality: 0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 103},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 3,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_SOLD {
+		t.Errorf("Expected category SOLD, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if ts.lastSaleNotes != "Generated Desc" {
+		t.Errorf("Expected sale triggered with 'Generated Desc', got %v", ts.lastSaleNotes)
+	}
+
+	// 4. STAGED_TO_SELL with Keeper rating (5) -> Keeper flow preserved, category remains STAGED_TO_SELL
+	_, err = s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 104, Title: "Keeper", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 104},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				Keep:          pb.ReleaseMetadata_NOT_KEEPER,
+				RippedQuality: 0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "keeper rating",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 104},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 5,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_STAGED_TO_SELL {
+		t.Errorf("Expected category STAGED_TO_SELL, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if resp.GetUpdated().GetMetadata().GetKeep() != pb.ReleaseMetadata_KEEP_UNKNOWN {
+		t.Errorf("Expected Keep KEEP_UNKNOWN, got %v", resp.GetUpdated().GetMetadata().GetKeep())
+	}
+
+	// 5. STAGED_TO_SELL with rating via Release.Rating = 3 and RippedQuality < 80 -> Diverts to RIP_THEN_SELL
+	_, err = s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 105, Title: "Fallback Rating", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 105},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_STAGED_TO_SELL,
+				RippedQuality: 40,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "score sell via release rating",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 105, Rating: 3},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_RIP_THEN_SELL {
+		t.Errorf("Expected category RIP_THEN_SELL, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if resp.GetUpdated().GetMetadata().GetSetRating() != -1 {
+		t.Errorf("Expected SetRating -1, got %v", resp.GetUpdated().GetMetadata().GetSetRating())
+	}
+
+	// 6. RIP_THEN_SELL with Keeper rating (5) -> Unconditionally escalate to SOLD
+	ts.lastSaleNotes = ""
+	_, err = s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 106, Title: "Rip Keeper Escalate", SleeveCondition: "VG+", RecordCondition: "VG+", InstanceId: 106},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:          100,
+				GoalFolder:    100,
+				Notes:         "Notes",
+				HighPrice:     100,
+				Category:      pb.ReleaseMetadata_RIP_THEN_SELL,
+				Keep:          pb.ReleaseMetadata_NOT_KEEPER,
+				RippedQuality: 0,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "keeper rating on rip then sell",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 106},
+			Metadata: &pb.ReleaseMetadata{
+				SetRating: 5,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetCategory() != pb.ReleaseMetadata_SOLD {
+		t.Errorf("Expected category SOLD, got %v", resp.GetUpdated().GetMetadata().GetCategory())
+	}
+	if ts.lastSaleNotes != "Generated Desc" {
+		t.Errorf("Expected sale triggered with 'Generated Desc', got %v", ts.lastSaleNotes)
+	}
+}
+
+
 
 
 
