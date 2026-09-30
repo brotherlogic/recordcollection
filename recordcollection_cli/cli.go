@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -2277,7 +2278,56 @@ func main() {
 			log.Fatalf("Error: %v", err)
 		}
 		fmt.Printf("Updated: %v", rec)
+	case "out_of_play":
+		if err := runOutOfPlay(ctx, registry, os.Args); err != nil {
+			log.Fatalf("%v", err)
+		}
 	default:
 		fmt.Printf("Unknown comand: %v\n", os.Args[1])
 	}
 }
+
+func parseOutOfPlayArgs(args []string) (int64, bool, error) {
+	if len(args) < 4 {
+		return 0, false, fmt.Errorf("Usage: %v out_of_play <instance_id> <true|false>", args[0])
+	}
+	iid, err := strconv.ParseInt(args[2], 10, 64)
+	if err != nil {
+		return 0, false, fmt.Errorf("invalid instance ID %v: %v", args[2], err)
+	}
+	val, err := strconv.ParseBool(args[3])
+	if err != nil {
+		return 0, false, fmt.Errorf("invalid boolean value %v (true or false expected): %v", args[3], err)
+	}
+	return iid, val, nil
+}
+
+func buildOutOfPlayRequest(iid int64, val bool) *pbrc.UpdateRecordRequest {
+	return &pbrc.UpdateRecordRequest{
+		Reason: "CLI-out-of-play",
+		Update: &pbrc.Record{
+			Release: &pbgd.Release{
+				InstanceId: iid,
+			},
+			Metadata: &pbrc.ReleaseMetadata{
+				OutOfPlay: proto.Bool(val),
+			},
+		},
+	}
+}
+
+func runOutOfPlay(ctx context.Context, client pbrc.RecordCollectionServiceClient, args []string) error {
+	iid, val, err := parseOutOfPlayArgs(args)
+	if err != nil {
+		return err
+	}
+	up := buildOutOfPlayRequest(iid, val)
+	rec, err := client.UpdateRecord(ctx, up)
+	if err != nil {
+		return fmt.Errorf("Failed to update record %d: %v", iid, err)
+	}
+	fmt.Printf("Record %d out_of_play set to %v\n", iid, val)
+	fmt.Printf("Updated: %v\n", rec)
+	return nil
+}
+
