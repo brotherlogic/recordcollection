@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"math"
@@ -2282,6 +2283,10 @@ func main() {
 		if err := runOutOfPlay(ctx, registry, os.Args); err != nil {
 			log.Fatalf("%v", err)
 		}
+	case "sleeve_boxsets", "sleeve_boxset", "boxsets", "print_sleeve_boxsets":
+		if err := runPrintSleeveBoxsets(ctx, registry); err != nil {
+			log.Fatalf("%v", err)
+		}
 	default:
 		fmt.Printf("Unknown comand: %v\n", os.Args[1])
 	}
@@ -2328,6 +2333,30 @@ func runOutOfPlay(ctx context.Context, client pbrc.RecordCollectionServiceClient
 	}
 	fmt.Printf("Record %d out_of_play set to %v\n", iid, val)
 	fmt.Printf("Updated: %v\n", rec)
+	return nil
+}
+
+func runPrintSleeveBoxsets(ctx context.Context, client pbrc.RecordCollectionServiceClient) error {
+	return printSleeveBoxsets(ctx, client, os.Stdout)
+}
+
+func printSleeveBoxsets(ctx context.Context, client pbrc.RecordCollectionServiceClient, out io.Writer) error {
+	ids, err := client.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{UpdateTime: 0}})
+	if err != nil {
+		return fmt.Errorf("unable to query records: %w", err)
+	}
+
+	for _, id := range ids.GetInstanceIds() {
+		rec, err := client.GetRecord(ctx, &pbrc.GetRecordRequest{InstanceId: id})
+		if err != nil {
+			return fmt.Errorf("unable to get record %v: %w", id, err)
+		}
+
+		if rec.GetRecord().GetMetadata().GetSleeve() == pbrc.ReleaseMetadata_BOX_SET {
+			fmt.Fprintf(out, "%v %v\n", rec.GetRecord().GetMetadata().GetCategory(), id)
+		}
+	}
+
 	return nil
 }
 

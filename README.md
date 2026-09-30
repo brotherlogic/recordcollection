@@ -85,6 +85,7 @@ Key commands:
 - `pull_blocked`: Lists sold 12-inch records that were physically removed from active sale due to being blocked.
 - `adjust`: Enqueues records for fanout if they are not already in the queue and not marked as SOLD_ARCHIVE.
 - `out_of_play <instance_id> <true|false>`: Sets or clears the `out_of_play` status of a record in collection metadata.
+- `sleeve_boxsets`: Prints all sleeve boxsets (`ReleaseMetadata_BOX_SET`), outputting the category and instance ID for each record.
 
 ## Development
 

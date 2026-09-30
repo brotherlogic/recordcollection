@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"strings"
@@ -15,6 +16,8 @@ import (
 type mockRecordCollectionClient struct {
 	pbrc.RecordCollectionServiceClient
 	updateRecordFn func(ctx context.Context, req *pbrc.UpdateRecordRequest, opts ...grpc.CallOption) (*pbrc.UpdateRecordsResponse, error)
+	queryRecordsFn func(ctx context.Context, req *pbrc.QueryRecordsRequest, opts ...grpc.CallOption) (*pbrc.QueryRecordsResponse, error)
+	getRecordFn    func(ctx context.Context, req *pbrc.GetRecordRequest, opts ...grpc.CallOption) (*pbrc.GetRecordResponse, error)
 }
 
 func (m *mockRecordCollectionClient) UpdateRecord(ctx context.Context, req *pbrc.UpdateRecordRequest, opts ...grpc.CallOption) (*pbrc.UpdateRecordsResponse, error) {
@@ -22,6 +25,20 @@ func (m *mockRecordCollectionClient) UpdateRecord(ctx context.Context, req *pbrc
 		return m.updateRecordFn(ctx, req, opts...)
 	}
 	return nil, errors.New("updateRecordFn not implemented")
+}
+
+func (m *mockRecordCollectionClient) QueryRecords(ctx context.Context, req *pbrc.QueryRecordsRequest, opts ...grpc.CallOption) (*pbrc.QueryRecordsResponse, error) {
+	if m.queryRecordsFn != nil {
+		return m.queryRecordsFn(ctx, req, opts...)
+	}
+	return nil, errors.New("queryRecordsFn not implemented")
+}
+
+func (m *mockRecordCollectionClient) GetRecord(ctx context.Context, req *pbrc.GetRecordRequest, opts ...grpc.CallOption) (*pbrc.GetRecordResponse, error) {
+	if m.getRecordFn != nil {
+		return m.getRecordFn(ctx, req, opts...)
+	}
+	return nil, errors.New("getRecordFn not implemented")
 }
 
 func TestParseOutOfPlayArgs_MissingArgs(t *testing.T) {
@@ -161,5 +178,99 @@ func TestRunOutOfPlay_UpdateError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "Failed to update record 123") {
 		t.Errorf("unexpected error message: %v", err)
+	}
+}
+
+func TestPrintSleeveBoxsets_FiltersCorrectly(t *testing.T) {
+	records := map[int64]*pbrc.Record{
+		101: {
+			Release:  &pbgd.Release{InstanceId: 101, Title: "Box Set 1"},
+			Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_IN_COLLECTION, Sleeve: pbrc.ReleaseMetadata_BOX_SET},
+		},
+		102: {
+			Release:  &pbgd.Release{InstanceId: 102, Title: "Regular 1"},
+			Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_LISTED_TO_SELL, Sleeve: pbrc.ReleaseMetadata_VINYL_STORAGE_DOUBLE_FLAP},
+		},
+		103: {
+			Release:  &pbgd.Release{InstanceId: 103, Title: "Box Set 2"},
+			Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_STAGED, Sleeve: pbrc.ReleaseMetadata_BOX_SET},
+		},
+		104: {
+			Release:  &pbgd.Release{InstanceId: 104, Title: "Regular 2"},
+			Metadata: &pbrc.ReleaseMetadata{Category: pbrc.ReleaseMetadata_UNLISTENED, Sleeve: pbrc.ReleaseMetadata_SLEEVE_UNKNOWN},
+		},
+	}
+
+	mock := &mockRecordCollectionClient{
+		queryRecordsFn: func(ctx context.Context, req *pbrc.QueryRecordsRequest, opts ...grpc.CallOption) (*pbrc.QueryRecordsResponse, error) {
+			return &pbrc.QueryRecordsResponse{
+				InstanceIds: []int64{101, 102, 103, 104},
+			}, nil
+		},
+		getRecordFn: func(ctx context.Context, req *pbrc.GetRecordRequest, opts ...grpc.CallOption) (*pbrc.GetRecordResponse, error) {
+			rec, ok := records[req.GetInstanceId()]
+			if !ok {
+				return nil, errors.New("record not found")
+			}
+			return &pbrc.GetRecordResponse{Record: rec}, nil
+		},
+	}
+
+	buf := &bytes.Buffer{}
+	err := printSleeveBoxsets(context.Background(), mock, buf)
+	if err != nil {
+		t.Fatalf("printSleeveBoxsets unexpected error: %v", err)
+	}
+
+	output := buf.String()
+	expectedLines := []string{
+		"IN_COLLECTION 101",
+		"STAGED 103",
+	}
+
+	for _, expected := range expectedLines {
+		if !strings.Contains(output, expected) {
+			t.Errorf("expected output to contain %q, but got: %q", expected, output)
+		}
+	}
+
+	if strings.Contains(output, "102") {
+		t.Errorf("output should not contain instance 102 (not a box set): %q", output)
+	}
+	if strings.Contains(output, "104") {
+		t.Errorf("output should not contain instance 104 (not a box set): %q", output)
+	}
+}
+
+func TestPrintSleeveBoxsets_QueryError(t *testing.T) {
+	mock := &mockRecordCollectionClient{
+		queryRecordsFn: func(ctx context.Context, req *pbrc.QueryRecordsRequest, opts ...grpc.CallOption) (*pbrc.QueryRecordsResponse, error) {
+			return nil, errors.New("query failed")
+		},
+	}
+
+	buf := &bytes.Buffer{}
+	err := printSleeveBoxsets(context.Background(), mock, buf)
+	if err == nil {
+		t.Fatalf("printSleeveBoxsets expected error on QueryRecords failure, got nil")
+	}
+}
+
+func TestPrintSleeveBoxsets_GetRecordError(t *testing.T) {
+	mock := &mockRecordCollectionClient{
+		queryRecordsFn: func(ctx context.Context, req *pbrc.QueryRecordsRequest, opts ...grpc.CallOption) (*pbrc.QueryRecordsResponse, error) {
+			return &pbrc.QueryRecordsResponse{
+				InstanceIds: []int64{101},
+			}, nil
+		},
+		getRecordFn: func(ctx context.Context, req *pbrc.GetRecordRequest, opts ...grpc.CallOption) (*pbrc.GetRecordResponse, error) {
+			return nil, errors.New("get record failed")
+		},
+	}
+
+	buf := &bytes.Buffer{}
+	err := printSleeveBoxsets(context.Background(), mock, buf)
+	if err == nil {
+		t.Fatalf("printSleeveBoxsets expected error on GetRecord failure, got nil")
 	}
 }
