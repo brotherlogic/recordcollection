@@ -21,6 +21,7 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/test/bufconn"
+	"google.golang.org/protobuf/proto"
 	"net"
 )
 
@@ -1964,6 +1965,230 @@ func TestUpdateRecord_RipThenSell_MissingPrerequisites_FailsPrecondition(t *test
 	})
 	if status.Code(err) != codes.FailedPrecondition {
 		t.Errorf("Expected codes.FailedPrecondition, got error %v (code %v)", err, status.Code(err))
+	}
+}
+
+func TestUpdateRecord_OutOfPlay_ToggleTrue(t *testing.T) {
+	s := InitTestServer(".test_out_of_play_toggle_true")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 301, InstanceId: 301},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:       100,
+				GoalFolder: 100,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "toggle out of play true",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 301},
+			Metadata: &pb.ReleaseMetadata{
+				OutOfPlay: proto.Bool(true),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if !resp.GetUpdated().GetMetadata().GetOutOfPlay() {
+		t.Errorf("Expected updated record OutOfPlay to be true, got false")
+	}
+
+	loaded, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 301})
+	if err != nil {
+		t.Fatalf("GetRecord failed: %v", err)
+	}
+	if !loaded.GetRecord().GetMetadata().GetOutOfPlay() {
+		t.Errorf("Expected loaded record OutOfPlay to be true, got false")
+	}
+}
+
+func TestUpdateRecord_OutOfPlay_ResetFalse(t *testing.T) {
+	s := InitTestServer(".test_out_of_play_reset_false")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 302, InstanceId: 302},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:       100,
+				GoalFolder: 100,
+				OutOfPlay:  proto.Bool(true),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "reset out of play false",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 302},
+			Metadata: &pb.ReleaseMetadata{
+				OutOfPlay: proto.Bool(false),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetOutOfPlay() {
+		t.Errorf("Expected updated record OutOfPlay to be false, got true")
+	}
+
+	loaded, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 302})
+	if err != nil {
+		t.Fatalf("GetRecord failed: %v", err)
+	}
+	if loaded.GetRecord().GetMetadata().GetOutOfPlay() {
+		t.Errorf("Expected loaded record OutOfPlay to be false, got true")
+	}
+}
+
+func TestUpdateRecord_OutOfPlay_PreservesDirtyUnchanged(t *testing.T) {
+	s := InitTestServer(".test_out_of_play_preserves_dirty")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 303, InstanceId: 303},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:       100,
+				GoalFolder: 100,
+				Dirty:      false,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "toggle out of play true",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 303},
+			Metadata: &pb.ReleaseMetadata{
+				OutOfPlay: proto.Bool(true),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if resp.GetUpdated().GetMetadata().GetDirty() {
+		t.Errorf("Expected updated record Dirty to remain false, got true")
+	}
+
+	loaded, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 303})
+	if err != nil {
+		t.Fatalf("GetRecord failed: %v", err)
+	}
+	if loaded.GetRecord().GetMetadata().GetDirty() {
+		t.Errorf("Expected loaded record Dirty to remain false, got true")
+	}
+}
+
+func TestUpdateRecord_OutOfPlay_OmittedPreservesState(t *testing.T) {
+	s := InitTestServer(".test_out_of_play_omitted_preserves")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 304, InstanceId: 304},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:       100,
+				GoalFolder: 100,
+				OutOfPlay:  proto.Bool(true),
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	resp, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "unrelated update",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 304},
+			Metadata: &pb.ReleaseMetadata{
+				Cost: 150,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+	if !resp.GetUpdated().GetMetadata().GetOutOfPlay() {
+		t.Errorf("Expected updated record OutOfPlay to remain true, got false")
+	}
+
+	loaded, err := s.GetRecord(context.Background(), &pb.GetRecordRequest{InstanceId: 304})
+	if err != nil {
+		t.Fatalf("GetRecord failed: %v", err)
+	}
+	if !loaded.GetRecord().GetMetadata().GetOutOfPlay() {
+		t.Errorf("Expected loaded record OutOfPlay to remain true, got false")
+	}
+}
+
+func TestUpdateRecord_OutOfPlay_Idempotent(t *testing.T) {
+	s := InitTestServer(".test_out_of_play_idempotent")
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release: &pbd.Release{Id: 305, InstanceId: 305},
+			Metadata: &pb.ReleaseMetadata{
+				Cost:       100,
+				GoalFolder: 100,
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	req := &pb.UpdateRecordRequest{
+		Reason: "set out of play true",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 305},
+			Metadata: &pb.ReleaseMetadata{
+				OutOfPlay: proto.Bool(true),
+			},
+		},
+	}
+
+	resp1, err := s.UpdateRecord(context.Background(), req)
+	if err != nil {
+		t.Fatalf("First UpdateRecord failed: %v", err)
+	}
+	if !resp1.GetUpdated().GetMetadata().GetOutOfPlay() {
+		t.Errorf("Expected OutOfPlay to be true after first update, got false")
+	}
+
+	resp2, err := s.UpdateRecord(context.Background(), req)
+	if err != nil {
+		t.Fatalf("Second UpdateRecord failed: %v", err)
+	}
+	if !resp2.GetUpdated().GetMetadata().GetOutOfPlay() {
+		t.Errorf("Expected OutOfPlay to be true after second update, got false")
+	}
+}
+
+func TestUpdateRecord_OutOfPlay_NotFound(t *testing.T) {
+	s := InitTestServer(".test_out_of_play_not_found")
+	_, err := s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "update non-existent record",
+		Update: &pb.Record{
+			Release: &pbd.Release{InstanceId: 999999},
+			Metadata: &pb.ReleaseMetadata{
+				OutOfPlay: proto.Bool(true),
+			},
+		},
+	})
+	if err == nil {
+		t.Fatalf("Expected error for non-existent record, got nil")
+	}
+	if status.Code(err) != codes.NotFound {
+		t.Errorf("Expected codes.NotFound, got %v (code %v)", err, status.Code(err))
 	}
 }
 
