@@ -378,7 +378,11 @@ message ReleaseMetadata {
 
   // Rip quality score in the range [0, 100]; 0 indicates unripped/unset or cleared
   int32 ripped_quality = 79;
+
+  // Indicates whether the record is temporarily or permanently out of active rotation/play
+  optional bool out_of_play = 80;
 }
+
 
 // A request to get some records
 message GetRecordsRequest {
