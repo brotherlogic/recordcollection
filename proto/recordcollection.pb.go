@@ -1379,6 +1379,8 @@ type ReleaseMetadata struct {
 	PackageScore int32 `protobuf:"varint,78,opt,name=package_score,json=packageScore,proto3" json:"package_score,omitempty"`
 	// Rip quality score in the range [0, 100]; 0 indicates unripped/unset or cleared
 	RippedQuality int32 `protobuf:"varint,79,opt,name=ripped_quality,json=rippedQuality,proto3" json:"ripped_quality,omitempty"`
+	// Indicates whether the record is temporarily or permanently out of active rotation/play
+	OutOfPlay     *bool `protobuf:"varint,80,opt,name=out_of_play,json=outOfPlay,proto3,oneof" json:"out_of_play,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1964,6 +1966,13 @@ func (x *ReleaseMetadata) GetRippedQuality() int32 {
 		return x.RippedQuality
 	}
 	return 0
+}
+
+func (x *ReleaseMetadata) GetOutOfPlay() bool {
+	if x != nil && x.OutOfPlay != nil {
+		return *x.OutOfPlay
+	}
+	return false
 }
 
 // A request to get some records
@@ -3802,7 +3811,7 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\n" +
 	"clear_want\x18\x02 \x01(\bR\tclearWant\"\x1d\n" +
 	"\x05Token\x12\x14\n" +
-	"\x05token\x18\x01 \x01(\tR\x05token\"\x95%\n" +
+	"\x05token\x18\x01 \x01(\tR\x05token\"\xca%\n" +
 	"\x0fReleaseMetadata\x12\x1d\n" +
 	"\n" +
 	"date_added\x18\x01 \x01(\x03R\tdateAdded\x12!\n" +
@@ -3900,7 +3909,8 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\x05notes\x18L \x01(\tR\x05notes\x12)\n" +
 	"\x10sale_description\x18M \x01(\tR\x0fsaleDescription\x12#\n" +
 	"\rpackage_score\x18N \x01(\x05R\fpackageScore\x12%\n" +
-	"\x0eripped_quality\x18O \x01(\x05R\rrippedQuality\"\xbb\x05\n" +
+	"\x0eripped_quality\x18O \x01(\x05R\rrippedQuality\x12#\n" +
+	"\vout_of_play\x18P \x01(\bH\x00R\toutOfPlay\x88\x01\x01\"\xbb\x05\n" +
 	"\bCategory\x12\v\n" +
 	"\aUNKNOWN\x10\x00\x12\r\n" +
 	"\tPURCHASED\x10\x01\x12\x0e\n" +
@@ -4004,7 +4014,8 @@ const file_recordcollection_proto_rawDesc = "" +
 	"\tNO_DELETE\x10\x00\x12\n" +
 	"\n" +
 	"\x06DELETE\x10\x01\x12\x10\n" +
-	"\fCLEAR_DELETE\x10\x02\"\xa8\x01\n" +
+	"\fCLEAR_DELETE\x10\x02B\x0e\n" +
+	"\f_out_of_play\"\xa8\x01\n" +
 	"\x11GetRecordsRequest\x120\n" +
 	"\x06filter\x18\x01 \x01(\v2\x18.recordcollection.RecordR\x06filter\x12\x14\n" +
 	"\x05force\x18\x02 \x01(\bR\x05force\x12\x14\n" +
@@ -4326,6 +4337,7 @@ func file_recordcollection_proto_init() {
 	if File_recordcollection_proto != nil {
 		return
 	}
+	file_recordcollection_proto_msgTypes[8].OneofWrappers = []any{}
 	file_recordcollection_proto_msgTypes[23].OneofWrappers = []any{
 		(*QueryRecordsRequest_FolderId)(nil),
 		(*QueryRecordsRequest_UpdateTime)(nil),
