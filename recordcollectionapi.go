@@ -475,6 +475,9 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				}}
 
 		} else {
+			if status.Code(err) == codes.InvalidArgument {
+				return nil, status.Errorf(codes.NotFound, "record %v not found: %v", request.GetUpdate().GetRelease().GetInstanceId(), err)
+			}
 			return nil, err
 		}
 	}
