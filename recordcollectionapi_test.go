@@ -2192,6 +2192,81 @@ func TestUpdateRecord_OutOfPlay_NotFound(t *testing.T) {
 	}
 }
 
+func TestCommitRecord_DeletedSale_Reconciles(t *testing.T) {
+	s := InitTestServer(".testCommitRecord_DeletedSale_Reconciles")
+	ctx := context.Background()
+	ts := &testSyncer{
+		currentSaleStateErr: status.Errorf(codes.NotFound, "Sale not found"),
+	}
+	s.retr = ts
+
+	instanceID := int64(10050)
+	r := &pb.Record{
+		Release: &pbd.Release{
+			Id:         10050,
+			InstanceId: instanceID,
+			Title:      "Deleted Sale Record",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			Category:         pb.ReleaseMetadata_LISTED_TO_SELL,
+			SaleId:           8888,
+			SalePrice:        2000,
+			CurrentSalePrice: 2000,
+			SalePriceUpdate:  time.Now().Unix(),
+			SaleState:        pbd.SaleState_FOR_SALE,
+			SaleDirty:        true,
+		},
+	}
+	err := s.saveRecord(ctx, r)
+	if err != nil {
+		t.Fatalf("Failed to save initial record: %v", err)
+	}
+
+	_, err = s.CommitRecord(ctx, &pb.CommitRecordRequest{InstanceId: instanceID})
+	if err != nil {
+		t.Fatalf("CommitRecord failed: %v", err)
+	}
+
+	saved, err := s.loadRecord(ctx, instanceID, false)
+	if err != nil {
+		t.Fatalf("Failed to reload record: %v", err)
+	}
+
+	if saved.GetMetadata().GetCategory() != pb.ReleaseMetadata_PREPARE_TO_SELL {
+		t.Errorf("Category: got %v, want %v", saved.GetMetadata().GetCategory(), pb.ReleaseMetadata_PREPARE_TO_SELL)
+	}
+	if saved.GetMetadata().GetSaleState() != pbd.SaleState_NOT_FOR_SALE {
+		t.Errorf("SaleState: got %v, want %v", saved.GetMetadata().GetSaleState(), pbd.SaleState_NOT_FOR_SALE)
+	}
+	if saved.GetMetadata().GetSalePrice() != -1 {
+		t.Errorf("SalePrice: got %v, want -1", saved.GetMetadata().GetSalePrice())
+	}
+	if saved.GetMetadata().GetCurrentSalePrice() != -1 {
+		t.Errorf("CurrentSalePrice: got %v, want -1", saved.GetMetadata().GetCurrentSalePrice())
+	}
+	if saved.GetMetadata().GetSaleDirty() != false {
+		t.Errorf("SaleDirty: got %v, want false", saved.GetMetadata().GetSaleDirty())
+	}
+	if saved.GetMetadata().GetSaleId() != -1 {
+		t.Errorf("SaleId after reconcile: got %v, want -1", saved.GetMetadata().GetSaleId())
+	}
+
+	// Normalization: subsequent CommitRecord should normalize SaleId == -1 to 0
+	_, err = s.CommitRecord(ctx, &pb.CommitRecordRequest{InstanceId: instanceID})
+	if err != nil {
+		t.Fatalf("Second CommitRecord failed: %v", err)
+	}
+
+	normalized, err := s.loadRecord(ctx, instanceID, false)
+	if err != nil {
+		t.Fatalf("Failed to reload record after normalization: %v", err)
+	}
+	if normalized.GetMetadata().GetSaleId() != 0 {
+		t.Errorf("Normalized SaleId: got %v, want 0", normalized.GetMetadata().GetSaleId())
+	}
+}
+
+
 
 
 
