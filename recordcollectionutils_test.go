@@ -14,6 +14,7 @@ import (
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 type testScorer struct {
@@ -900,6 +901,147 @@ func TestCacheRecordPackageScoreDefaultMockData(t *testing.T) {
 
 	if r.GetMetadata().GetPackageScore() != 4 {
 		t.Errorf("PackageScore default mock data not extracted: got %v, want 4", r.GetMetadata().GetPackageScore())
+	}
+}
+
+func TestReconcileDeletedSale(t *testing.T) {
+	tests := []struct {
+		name             string
+		initialCategory  pb.ReleaseMetadata_Category
+		initialSaleId    int64
+		initialSalePrice int32
+		initialCurrPrice int32
+		initialSaleState pbgd.SaleState
+		initialSaleDirty bool
+		expectedCategory pb.ReleaseMetadata_Category
+	}{
+		{
+			name:             "ListedToSell transitions to PrepareToSell and resets fields",
+			initialCategory:  pb.ReleaseMetadata_LISTED_TO_SELL,
+			initialSaleId:    12345,
+			initialSalePrice: 2000,
+			initialCurrPrice: 1900,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			expectedCategory: pb.ReleaseMetadata_PREPARE_TO_SELL,
+		},
+		{
+			name:             "StaleSale transitions to PrepareToSell and resets fields",
+			initialCategory:  pb.ReleaseMetadata_STALE_SALE,
+			initialSaleId:    54321,
+			initialSalePrice: 1500,
+			initialCurrPrice: 1500,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			expectedCategory: pb.ReleaseMetadata_PREPARE_TO_SELL,
+		},
+		{
+			name:             "Non-sale category IN_COLLECTION is preserved and resets fields",
+			initialCategory:  pb.ReleaseMetadata_IN_COLLECTION,
+			initialSaleId:    999,
+			initialSalePrice: 1000,
+			initialCurrPrice: 1000,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			expectedCategory: pb.ReleaseMetadata_IN_COLLECTION,
+		},
+		{
+			name:             "Non-sale category SOLD is preserved and resets fields",
+			initialCategory:  pb.ReleaseMetadata_SOLD,
+			initialSaleId:    888,
+			initialSalePrice: 1200,
+			initialCurrPrice: 1200,
+			initialSaleState: pbgd.SaleState_SOLD,
+			initialSaleDirty: true,
+			expectedCategory: pb.ReleaseMetadata_SOLD,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testReconcileDeletedSale_%d", i))
+			ctx := context.Background()
+			instanceID := int64(1000 + i)
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:         int32(2000 + i),
+					InstanceId: instanceID,
+					Title:      "Reconciliation Test",
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:         tc.initialCategory,
+					SaleId:           tc.initialSaleId,
+					SalePrice:        tc.initialSalePrice,
+					CurrentSalePrice: tc.initialCurrPrice,
+					SaleState:        tc.initialSaleState,
+					SaleDirty:        tc.initialSaleDirty,
+				},
+			}
+
+			// Pre-save record in server storage
+			err := s.saveRecord(ctx, r)
+			if err != nil {
+				t.Fatalf("Failed to pre-save record: %v", err)
+			}
+
+			metricBefore := testutil.ToFloat64(deletedSaleReconciled)
+
+			// Call reconcileDeletedSale
+			err = s.reconcileDeletedSale(ctx, r)
+			if err != nil {
+				t.Fatalf("reconcileDeletedSale failed: %v", err)
+			}
+
+			metricAfter := testutil.ToFloat64(deletedSaleReconciled)
+			if metricAfter-metricBefore != 1 {
+				t.Errorf("deletedSaleReconciled metric increment: got diff %v, want 1", metricAfter-metricBefore)
+			}
+
+			// Assert in-memory record modifications
+			if r.GetMetadata().GetSaleId() != -1 {
+				t.Errorf("SaleId: got %v, want -1", r.GetMetadata().GetSaleId())
+			}
+			if r.GetMetadata().GetSalePrice() != -1 {
+				t.Errorf("SalePrice: got %v, want -1", r.GetMetadata().GetSalePrice())
+			}
+			if r.GetMetadata().GetCurrentSalePrice() != -1 {
+				t.Errorf("CurrentSalePrice: got %v, want -1", r.GetMetadata().GetCurrentSalePrice())
+			}
+			if r.GetMetadata().GetSaleState() != pbgd.SaleState_NOT_FOR_SALE {
+				t.Errorf("SaleState: got %v, want %v", r.GetMetadata().GetSaleState(), pbgd.SaleState_NOT_FOR_SALE)
+			}
+			if r.GetMetadata().GetSaleDirty() != false {
+				t.Errorf("SaleDirty: got %v, want false", r.GetMetadata().GetSaleDirty())
+			}
+			if r.GetMetadata().GetCategory() != tc.expectedCategory {
+				t.Errorf("Category: got %v, want %v", r.GetMetadata().GetCategory(), tc.expectedCategory)
+			}
+
+			// Assert record updates are saved to storage
+			savedRecord, err := s.loadRecord(ctx, instanceID, false)
+			if err != nil {
+				t.Fatalf("Failed to load saved record: %v", err)
+			}
+			if savedRecord.GetMetadata().GetSaleId() != -1 {
+				t.Errorf("Persisted SaleId: got %v, want -1", savedRecord.GetMetadata().GetSaleId())
+			}
+			if savedRecord.GetMetadata().GetSalePrice() != -1 {
+				t.Errorf("Persisted SalePrice: got %v, want -1", savedRecord.GetMetadata().GetSalePrice())
+			}
+			if savedRecord.GetMetadata().GetCurrentSalePrice() != -1 {
+				t.Errorf("Persisted CurrentSalePrice: got %v, want -1", savedRecord.GetMetadata().GetCurrentSalePrice())
+			}
+			if savedRecord.GetMetadata().GetSaleState() != pbgd.SaleState_NOT_FOR_SALE {
+				t.Errorf("Persisted SaleState: got %v, want %v", savedRecord.GetMetadata().GetSaleState(), pbgd.SaleState_NOT_FOR_SALE)
+			}
+			if savedRecord.GetMetadata().GetSaleDirty() != false {
+				t.Errorf("Persisted SaleDirty: got %v, want false", savedRecord.GetMetadata().GetSaleDirty())
+			}
+			if savedRecord.GetMetadata().GetCategory() != tc.expectedCategory {
+				t.Errorf("Persisted Category: got %v, want %v", savedRecord.GetMetadata().GetCategory(), tc.expectedCategory)
+			}
+		})
 	}
 }
 

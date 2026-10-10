@@ -59,6 +59,12 @@ var (
 		Name: "recordcollection_size",
 		Help: "Last update time",
 	})
+	deletedSaleReconciled = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "recordcollection_deleted_sale_reconciled_total",
+			Help: "The total number of deleted marketplace sales reconciled to PREPARE_TO_SELL",
+		},
+	)
 )
 
 type quotaChecker interface {
@@ -774,6 +780,27 @@ func (s *Server) updateRecordSalePrice(ctx context.Context, r *pb.Record) error 
 	r.GetMetadata().CurrentSalePrice = int32(price * 100)
 	r.GetMetadata().SalePriceUpdate = time.Now().Unix()
 	return s.saveRecord(ctx, r)
+}
+
+func (s *Server) reconcileDeletedSale(ctx context.Context, record *pb.Record) error {
+	if record.GetMetadata() == nil {
+		record.Metadata = &pb.ReleaseMetadata{}
+	}
+
+	record.GetMetadata().SaleId = -1
+	record.GetMetadata().SalePrice = -1
+	record.GetMetadata().CurrentSalePrice = -1
+	record.GetMetadata().SaleState = pbgd.SaleState_NOT_FOR_SALE
+	record.GetMetadata().SaleDirty = false
+
+	if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
+		record.GetMetadata().Category = pb.ReleaseMetadata_PREPARE_TO_SELL
+	}
+
+	deletedSaleReconciled.Inc()
+	s.CtxLog(ctx, fmt.Sprintf("Reconciled deleted sale for instance %v: reset sale_id=-1 and category to %v", record.GetRelease().GetInstanceId(), record.GetMetadata().GetCategory()))
+
+	return s.saveRecord(ctx, record)
 }
 
 func main() {

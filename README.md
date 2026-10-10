@@ -22,6 +22,7 @@
     - **Quality Gating & Rip-First Routing**: In `UpdateRecord`, scoring a record in `STAGED_TO_SELL` with sell rating (3) evaluates `ripped_quality`. Records with `ripped_quality < 80` (or unset/0) are diverted to `RIP_THEN_SELL` with score reset (`-1`) to block sale until verified. Records with quality >= 80 escalate to `SOLD` to enter the sale pipeline. Scoring records in `RIP_THEN_SELL` unconditionally escalates them to `SOLD`. Unit tests verify low quality rip diversion, missing quality diversion, quality 80 and 95 sale escalation, keeper rating preservation, unconditional RIP_THEN_SELL sale escalation for score and keeper ratings, and precondition failure on missing notes or sleeve condition.
     - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes, utilizing the local Ollama model setting for description generation.
     - **Dynamic Pricing**: Tracks and updates sale prices based on market data.
+    - **Deleted Sale Reconciliation**: Reconciles missing or deleted marketplace listings by resetting sale metadata (`sale_id = -1`, `sale_price = -1`, `current_sale_price = -1`, `sale_state = NOT_FOR_SALE`, `sale_dirty = false`), transitioning active selling categories (`LISTED_TO_SELL`, `STALE_SALE`) back to `PREPARE_TO_SELL` while preserving non-sale categories, and tracking reconciliations via Prometheus counter `recordcollection_deleted_sale_reconciled_total`.
     - **Blocked Records**: Automatically removes records from sale and updates their properties if they are marked as blocked from sale on Discogs.
     - **Inventory Control**: View and manage current Discogs inventory directly through the service.
 - **Microservice Orchestration**: Coordinates with other services in the ecosystem:
@@ -112,3 +113,4 @@ Metrics are available via Prometheus. Key metrics include:
 - `recordcollection_recordfolder`: Size of each physical folder.
 - `recordcollection_loop_latency`: Performance tracking for internal processing loops.
 - `recordcollection_sale_descriptor_result`: Counter tracking the gRPC response status codes for calls made to the outbound sale descriptor service.
+- `recordcollection_deleted_sale_reconciled_total`: Total number of deleted marketplace sales reconciled to PREPARE_TO_SELL.
