@@ -179,6 +179,10 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			updated = (cp != record.GetMetadata().GetCurrentSalePrice() || nss != record.GetMetadata().GetSaleState())
 			record.GetMetadata().SaleState = nss
 			s.CtxLog(ctx, fmt.Sprintf("UPDATEDSALESTATE: [%v] => %v", cp, record.GetMetadata()))
+		} else if status.Code(err) == codes.NotFound {
+			_ = s.reconcileDeletedSale(ctx, record)
+			updated = true
+			updateReason += " RECONCILE_DELETED_SALE"
 		}
 	}
 
