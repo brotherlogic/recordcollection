@@ -923,6 +923,7 @@ func TestReconcileDeletedSale(t *testing.T) {
 		initialCurrPrice int32
 		initialSaleState pbgd.SaleState
 		initialSaleDirty bool
+		takenToStore     bool
 		expectedCategory pb.ReleaseMetadata_Category
 	}{
 		{
@@ -944,6 +945,28 @@ func TestReconcileDeletedSale(t *testing.T) {
 			initialSaleState: pbgd.SaleState_FOR_SALE,
 			initialSaleDirty: true,
 			expectedCategory: pb.ReleaseMetadata_PREPARE_TO_SELL,
+		},
+		{
+			name:             "ListedToSell with TakenToStore preserves category and resets fields",
+			initialCategory:  pb.ReleaseMetadata_LISTED_TO_SELL,
+			initialSaleId:    12346,
+			initialSalePrice: 2000,
+			initialCurrPrice: 1900,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			takenToStore:     true,
+			expectedCategory: pb.ReleaseMetadata_LISTED_TO_SELL,
+		},
+		{
+			name:             "StaleSale with TakenToStore preserves category and resets fields",
+			initialCategory:  pb.ReleaseMetadata_STALE_SALE,
+			initialSaleId:    54322,
+			initialSalePrice: 1500,
+			initialCurrPrice: 1500,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			takenToStore:     true,
+			expectedCategory: pb.ReleaseMetadata_STALE_SALE,
 		},
 		{
 			name:             "Non-sale category IN_COLLECTION is preserved and resets fields",
@@ -986,6 +1009,7 @@ func TestReconcileDeletedSale(t *testing.T) {
 					CurrentSalePrice: tc.initialCurrPrice,
 					SaleState:        tc.initialSaleState,
 					SaleDirty:        tc.initialSaleDirty,
+					TakenToStore:     tc.takenToStore,
 				},
 			}
 
