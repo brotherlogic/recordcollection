@@ -793,7 +793,7 @@ func (s *Server) reconcileDeletedSale(ctx context.Context, record *pb.Record) er
 	record.GetMetadata().SaleState = pbgd.SaleState_NOT_FOR_SALE
 	record.GetMetadata().SaleDirty = false
 
-	if record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
+	if !record.GetMetadata().GetTakenToStore() && (record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE) {
 		record.GetMetadata().Category = pb.ReleaseMetadata_PREPARE_TO_SELL
 	}
 
