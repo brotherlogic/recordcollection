@@ -2266,6 +2266,193 @@ func TestCommitRecord_DeletedSale_Reconciles(t *testing.T) {
 	}
 }
 
+func TestUpdateRecord_RefreshSaleDescription_Eligible(t *testing.T) {
+	tests := []struct {
+		name      string
+		category  pb.ReleaseMetadata_Category
+		saleID    int64
+		saleState pbd.SaleState
+	}{
+		{
+			name:      "LISTED_TO_SELL_FOR_SALE",
+			category:  pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:    500,
+			saleState: pbd.SaleState_FOR_SALE,
+		},
+		{
+			name:      "STALE_SALE_EXPIRED",
+			category:  pb.ReleaseMetadata_STALE_SALE,
+			saleID:    501,
+			saleState: pbd.SaleState_EXPIRED,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".test_refresh_sale_desc_eligible_%d", i))
+			ctx := context.Background()
+			tqc := s.queueClient.(*testQueueClient)
+
+			instanceID := int64(2000 + i)
+			_, err := s.AddRecord(ctx, &pb.AddRecordRequest{
+				ToAdd: &pb.Record{
+					Release: &pbd.Release{
+						Id:              int32(2000 + i),
+						InstanceId:      instanceID,
+						Title:           "Active Sale Album",
+						RecordCondition: "Near Mint (NM or M-)",
+						SleeveCondition: "Very Good Plus (VG+)",
+					},
+					Metadata: &pb.ReleaseMetadata{
+						Cost:       1000,
+						GoalFolder: 242017,
+						Category:   tc.category,
+						SaleId:     tc.saleID,
+						SaleState:  tc.saleState,
+						Notes:      "Clean copy",
+					},
+				},
+			})
+			if err != nil {
+				t.Fatalf("AddRecord failed: %v", err)
+			}
+
+			tqc.items = nil
+
+			resp, err := s.UpdateRecord(ctx, &pb.UpdateRecordRequest{
+				Reason: "CLI-refresh-sale-description",
+				Update: &pb.Record{
+					Release: &pbd.Release{InstanceId: instanceID},
+					Metadata: &pb.ReleaseMetadata{
+						RefreshSaleDescription: true,
+					},
+				},
+			})
+			if err != nil {
+				t.Fatalf("UpdateRecord failed for eligible record: %v", err)
+			}
+
+			if !resp.GetUpdated().GetMetadata().GetRefreshSaleDescription() {
+				t.Errorf("Expected RefreshSaleDescription = true on response, got false")
+			}
+			if !resp.GetUpdated().GetMetadata().GetSaleDirty() {
+				t.Errorf("Expected SaleDirty = true on response, got false")
+			}
+
+			saved, err := s.loadRecord(ctx, instanceID, false)
+			if err != nil {
+				t.Fatalf("loadRecord failed: %v", err)
+			}
+			if !saved.GetMetadata().GetRefreshSaleDescription() {
+				t.Errorf("Expected persisted RefreshSaleDescription = true, got false")
+			}
+			if !saved.GetMetadata().GetSaleDirty() {
+				t.Errorf("Expected persisted SaleDirty = true, got false")
+			}
+
+			enqueued := false
+			for _, item := range tqc.items {
+				if item.GetQueueName() == "record_fanout" && item.GetKey() == fmt.Sprintf("%d", instanceID) {
+					enqueued = true
+				}
+			}
+			if !enqueued {
+				t.Errorf("Expected record_fanout queue item for instance %d", instanceID)
+			}
+		})
+	}
+}
+
+func TestUpdateRecord_RefreshSaleDescription_UnlistedOrSold(t *testing.T) {
+	tests := []struct {
+		name      string
+		category  pb.ReleaseMetadata_Category
+		saleID    int64
+		saleState pbd.SaleState
+	}{
+		{
+			name:      "Unlisted_IN_COLLECTION",
+			category:  pb.ReleaseMetadata_IN_COLLECTION,
+			saleID:    500,
+			saleState: pbd.SaleState_FOR_SALE,
+		},
+		{
+			name:      "SaleId_Zero",
+			category:  pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:    0,
+			saleState: pbd.SaleState_FOR_SALE,
+		},
+		{
+			name:      "SaleId_One",
+			category:  pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:    1,
+			saleState: pbd.SaleState_FOR_SALE,
+		},
+		{
+			name:      "Already_Sold",
+			category:  pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:    500,
+			saleState: pbd.SaleState_SOLD,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".test_refresh_sale_desc_ineligible_%d", i))
+			ctx := context.Background()
+
+			instanceID := int64(3000 + i)
+			_, err := s.AddRecord(ctx, &pb.AddRecordRequest{
+				ToAdd: &pb.Record{
+					Release: &pbd.Release{
+						Id:         int32(3000 + i),
+						InstanceId: instanceID,
+						Title:      "Ineligible Album",
+					},
+					Metadata: &pb.ReleaseMetadata{
+						Cost:       1000,
+						GoalFolder: 242017,
+						Category:   tc.category,
+						SaleId:     tc.saleID,
+						SaleState:  tc.saleState,
+					},
+				},
+			})
+			if err != nil {
+				t.Fatalf("AddRecord failed: %v", err)
+			}
+
+			_, err = s.UpdateRecord(ctx, &pb.UpdateRecordRequest{
+				Reason: "CLI-refresh-sale-description",
+				Update: &pb.Record{
+					Release: &pbd.Release{InstanceId: instanceID},
+					Metadata: &pb.ReleaseMetadata{
+						RefreshSaleDescription: true,
+					},
+				},
+			})
+			if err == nil {
+				t.Fatalf("Expected FailedPrecondition error for %s, got nil", tc.name)
+			}
+			if status.Code(err) != codes.FailedPrecondition {
+				t.Errorf("Expected codes.FailedPrecondition, got %v (%v)", status.Code(err), err)
+			}
+
+			saved, err := s.loadRecord(ctx, instanceID, false)
+			if err != nil {
+				t.Fatalf("loadRecord failed: %v", err)
+			}
+			if saved.GetMetadata().GetRefreshSaleDescription() {
+				t.Errorf("Expected RefreshSaleDescription to remain false, got true")
+			}
+			if saved.GetMetadata().GetSaleDirty() {
+				t.Errorf("Expected SaleDirty to remain false, got true")
+			}
+		})
+	}
+}
+
+
 
 
 

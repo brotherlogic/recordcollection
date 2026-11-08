@@ -542,6 +542,10 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		}
 
 		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", int64(r.GetRelease().GetInstanceId()), mp[int64(r.GetRelease().GetInstanceId())]))
+		prevRecordCond := r.GetRelease().GetRecordCondition()
+		prevSleeveCond := r.GetRelease().GetSleeveCondition()
+		prevNotes := r.GetMetadata().GetNotes()
+
 		r.GetMetadata().DateAdded = mp[int64(r.GetRelease().GetInstanceId())].DateAdded
 		r.GetRelease().RecordCondition = mp[int64(r.GetRelease().GetInstanceId())].RecordCondition
 		r.GetRelease().SleeveCondition = mp[int64(r.GetRelease().GetInstanceId())].SleeveCondition
@@ -549,6 +553,14 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		r.GetRelease().FolderId = mp[int64(r.GetRelease().GetInstanceId())].FolderId
 		r.GetRelease().Rating = mp[int64(r.GetRelease().GetInstanceId())].Rating
 		r.GetMetadata().Notes = mp[int64(r.GetRelease().GetInstanceId())].Notes
+
+		if isEligibleForSaleDescriptionRefresh(r) &&
+			(r.GetRelease().GetRecordCondition() != prevRecordCond ||
+				r.GetRelease().GetSleeveCondition() != prevSleeveCond ||
+				r.GetMetadata().GetNotes() != prevNotes) {
+			r.GetMetadata().RefreshSaleDescription = true
+			r.GetMetadata().SaleDirty = true
+		}
 
 		if mp[int64(r.GetRelease().GetInstanceId())].LastListenTime > r.GetMetadata().LastListenTime {
 			r.GetMetadata().LastListenTime = mp[int64(r.GetRelease().GetInstanceId())].LastListenTime
@@ -653,6 +665,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbgd.Release, num int64) {
 	//Update record if releases don't match
 	hasCondition := len(r.GetRelease().RecordCondition) > 0
+	prevRecordCond := r.GetRelease().GetRecordCondition()
+	prevSleeveCond := r.GetRelease().GetSleeveCondition()
 
 	//Clear repeated fields first to prevent growth, but images come from
 	//a hard sync so ignore that
@@ -670,6 +684,13 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbgd.Rel
 	}
 
 	proto.Merge(r.Release, record)
+
+	if isEligibleForSaleDescriptionRefresh(r) &&
+		(r.GetRelease().GetRecordCondition() != prevRecordCond ||
+			r.GetRelease().GetSleeveCondition() != prevSleeveCond) {
+		r.GetMetadata().RefreshSaleDescription = true
+		r.GetMetadata().SaleDirty = true
+	}
 
 	// Set sale dirty if the condition is new
 	if !hasCondition && len(r.Release.RecordCondition) > 0 {
