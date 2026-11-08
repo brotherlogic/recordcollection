@@ -381,6 +381,9 @@ message ReleaseMetadata {
 
   // Indicates whether the record is temporarily or permanently out of active rotation/play
   optional bool out_of_play = 80;
+
+  // Indicates that the record's sale_description should be regenerated and pushed to Discogs
+  bool refresh_sale_description = 81;
 }
 
 
