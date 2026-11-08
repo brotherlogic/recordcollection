@@ -185,6 +185,58 @@ func getGrading(cond string) v1.Grading {
 	return v1.Grading_GRADING_UNSPECIFIED
 }
 
+func getMediaFormat(rec *pb.Record) v1.MediaFormat {
+	hasVinyl := false
+	hasCD := false
+	hasMixed := false
+
+	for _, f := range rec.GetRelease().GetFormats() {
+		switch strings.ToLower(strings.TrimSpace(f.GetName())) {
+		case "vinyl", "lp", "12\"", "10\"", "7\"":
+			hasVinyl = true
+		case "cd", "cdr":
+			hasCD = true
+		case "box set", "boxset":
+			hasMixed = true
+		}
+		for _, desc := range f.GetDescriptions() {
+			switch strings.ToLower(strings.TrimSpace(desc)) {
+			case "vinyl", "lp", "12\"", "10\"", "7\"":
+				hasVinyl = true
+			case "cd", "cdr":
+				hasCD = true
+			case "box set", "boxset":
+				hasMixed = true
+			}
+		}
+	}
+
+	switch rec.GetMetadata().GetFiledUnder() {
+	case pb.ReleaseMetadata_FILE_BOXSET:
+		hasMixed = true
+	case pb.ReleaseMetadata_FILE_12_INCH, pb.ReleaseMetadata_FILE_7_INCH:
+		if !hasVinyl && !hasCD {
+			hasVinyl = true
+		}
+	case pb.ReleaseMetadata_FILE_CD:
+		if !hasVinyl && !hasCD {
+			hasCD = true
+		}
+	}
+
+	if hasMixed || (hasVinyl && hasCD) {
+		return v1.MediaFormat_MEDIA_FORMAT_MIXED
+	}
+	if hasVinyl {
+		return v1.MediaFormat_MEDIA_FORMAT_VINYL
+	}
+	if hasCD {
+		return v1.MediaFormat_MEDIA_FORMAT_CD
+	}
+
+	return v1.MediaFormat_MEDIA_FORMAT_UNSPECIFIED
+}
+
 func (p *prodGenerator) generate(ctx context.Context, address string, rec *pb.Record) (string, error) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
@@ -207,6 +259,7 @@ func (p *prodGenerator) generate(ctx context.Context, address string, rec *pb.Re
 		SleeveCondition: getGrading(rec.GetRelease().GetSleeveCondition()),
 		UserNotes:       rec.GetMetadata().GetNotes(),
 		UseLocalModel:   true,
+		MediaFormat:     getMediaFormat(rec),
 	})
 
 	if err != nil {
