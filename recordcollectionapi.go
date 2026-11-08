@@ -398,6 +398,23 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	return &pb.UpdateWantResponse{}, err
 }
 
+func isEligibleForSaleDescriptionRefresh(rec *pb.Record) bool {
+	if rec == nil || rec.GetMetadata() == nil {
+		return false
+	}
+	cat := rec.GetMetadata().GetCategory()
+	if cat != pb.ReleaseMetadata_LISTED_TO_SELL && cat != pb.ReleaseMetadata_STALE_SALE {
+		return false
+	}
+	if rec.GetMetadata().GetSaleId() <= 1 {
+		return false
+	}
+	if rec.GetMetadata().GetSaleState() == pbgd.SaleState_SOLD {
+		return false
+	}
+	return true
+}
+
 // UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	if request.GetReason() == "" {
@@ -491,6 +508,14 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		rec.Metadata = &pb.ReleaseMetadata{
 			PackageScore: -1,
 		}
+	}
+
+	if request.GetUpdate().GetMetadata().GetRefreshSaleDescription() {
+		if !isEligibleForSaleDescriptionRefresh(rec) {
+			return nil, status.Errorf(codes.FailedPrecondition, "record %v does not have an active sale listing eligible for sale description refresh", rec.GetRelease().GetInstanceId())
+		}
+		rec.GetMetadata().RefreshSaleDescription = true
+		rec.GetMetadata().SaleDirty = true
 	}
 
 	incomingRating := request.GetUpdate().GetMetadata().GetSetRating()

@@ -1354,5 +1354,251 @@ func TestUpdateSale_IdempotentOnResetRecord(t *testing.T) {
 	}
 }
 
+func TestCacheRecord_AutoFlagsRefreshOnInputChange(t *testing.T) {
+	tests := []struct {
+		name           string
+		category       pb.ReleaseMetadata_Category
+		saleID         int64
+		saleState      pbgd.SaleState
+		initialRecCond string
+		initialSlvCond string
+		initialNotes   string
+		newRecCond     string
+		newSlvCond     string
+		newNotes       string
+		wantFlagged    bool
+	}{
+		{
+			name:           "ActiveListing_NotesChanged",
+			category:       pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:         500,
+			saleState:      pbgd.SaleState_FOR_SALE,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "VG+",
+			newSlvCond:     "VG+",
+			newNotes:       "Updated notes",
+			wantFlagged:    true,
+		},
+		{
+			name:           "ActiveListing_RecordConditionChanged",
+			category:       pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:         500,
+			saleState:      pbgd.SaleState_FOR_SALE,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "NM",
+			newSlvCond:     "VG+",
+			newNotes:       "Original notes",
+			wantFlagged:    true,
+		},
+		{
+			name:           "StaleSale_SleeveConditionChanged",
+			category:       pb.ReleaseMetadata_STALE_SALE,
+			saleID:         500,
+			saleState:      pbgd.SaleState_EXPIRED,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "VG+",
+			newSlvCond:     "VG",
+			newNotes:       "Original notes",
+			wantFlagged:    true,
+		},
+		{
+			name:           "ActiveListing_UnchangedInputs",
+			category:       pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:         500,
+			saleState:      pbgd.SaleState_FOR_SALE,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "VG+",
+			newSlvCond:     "VG+",
+			newNotes:       "Original notes",
+			wantFlagged:    false,
+		},
+		{
+			name:           "UnlistedRecord_NotesChanged",
+			category:       pb.ReleaseMetadata_IN_COLLECTION,
+			saleID:         0,
+			saleState:      pbgd.SaleState_NOT_FOR_SALE,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "NM",
+			newSlvCond:     "NM",
+			newNotes:       "Updated notes",
+			wantFlagged:    false,
+		},
+		{
+			name:           "SoldRecord_NotesChanged",
+			category:       pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:         500,
+			saleState:      pbgd.SaleState_SOLD,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "NM",
+			newSlvCond:     "NM",
+			newNotes:       "Updated notes",
+			wantFlagged:    false,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testCacheRecord_AutoFlagsRefresh_%d", i))
+			ctx := context.Background()
+			instanceID := int64(4000 + i)
+
+			s.retr = &testSyncer{
+				instanceInfo: map[int64]*godiscogs.InstanceInfo{
+					instanceID: {
+						RecordCondition: tc.newRecCond,
+						SleeveCondition: tc.newSlvCond,
+						Notes:           tc.newNotes,
+					},
+				},
+			}
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:              int32(4000 + i),
+					InstanceId:      instanceID,
+					Title:           "Cache Refresh Test",
+					RecordCondition: tc.initialRecCond,
+					SleeveCondition: tc.initialSlvCond,
+					Tracklist:       []*pbgd.Track{{Title: "Track 1"}},
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:  tc.category,
+					SaleId:    tc.saleID,
+					SaleState: tc.saleState,
+					Notes:     tc.initialNotes,
+					LastCache: time.Now().Unix(),
+				},
+			}
+
+			if err := s.cacheRecord(ctx, r, true); err != nil {
+				t.Fatalf("cacheRecord failed: %v", err)
+			}
+
+			if r.GetMetadata().GetRefreshSaleDescription() != tc.wantFlagged {
+				t.Errorf("RefreshSaleDescription: got %v, want %v", r.GetMetadata().GetRefreshSaleDescription(), tc.wantFlagged)
+			}
+			if r.GetMetadata().GetSaleDirty() != tc.wantFlagged {
+				t.Errorf("SaleDirty: got %v, want %v", r.GetMetadata().GetSaleDirty(), tc.wantFlagged)
+			}
+		})
+	}
+}
+
+func TestSyncRecords_AutoFlagsRefreshOnConditionChange(t *testing.T) {
+	tests := []struct {
+		name               string
+		category           pb.ReleaseMetadata_Category
+		saleID             int64
+		saleState          pbgd.SaleState
+		initialRecCond     string
+		initialSlvCond     string
+		incomingRecCond    string
+		incomingSlvCond    string
+		wantRefreshFlagged bool
+		wantSaleDirty      bool
+	}{
+		{
+			name:               "ActiveListing_RecordConditionChanged",
+			category:           pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:             500,
+			saleState:          pbgd.SaleState_FOR_SALE,
+			initialRecCond:     "VG+",
+			initialSlvCond:     "VG+",
+			incomingRecCond:    "NM",
+			incomingSlvCond:    "VG+",
+			wantRefreshFlagged: true,
+			wantSaleDirty:      true,
+		},
+		{
+			name:               "StaleSale_SleeveConditionChanged",
+			category:           pb.ReleaseMetadata_STALE_SALE,
+			saleID:             500,
+			saleState:          pbgd.SaleState_EXPIRED,
+			initialRecCond:     "VG+",
+			initialSlvCond:     "VG+",
+			incomingRecCond:    "VG+",
+			incomingSlvCond:    "VG",
+			wantRefreshFlagged: true,
+			wantSaleDirty:      true,
+		},
+		{
+			name:               "ActiveListing_ConditionsUnchanged",
+			category:           pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:             500,
+			saleState:          pbgd.SaleState_FOR_SALE,
+			initialRecCond:     "VG+",
+			initialSlvCond:     "VG+",
+			incomingRecCond:    "VG+",
+			incomingSlvCond:    "VG+",
+			wantRefreshFlagged: false,
+			wantSaleDirty:      false,
+		},
+		{
+			name:               "UnlistedRecord_RecordConditionChanged",
+			category:           pb.ReleaseMetadata_IN_COLLECTION,
+			saleID:             0,
+			saleState:          pbgd.SaleState_NOT_FOR_SALE,
+			initialRecCond:     "VG",
+			initialSlvCond:     "VG",
+			incomingRecCond:    "VG+",
+			incomingSlvCond:    "VG+",
+			wantRefreshFlagged: false,
+			wantSaleDirty:      false,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testSyncRecords_AutoFlagsRefresh_%d", i))
+			ctx := context.Background()
+			instanceID := int64(5000 + i)
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:              int32(5000 + i),
+					InstanceId:      instanceID,
+					Title:           "Sync Refresh Test",
+					RecordCondition: tc.initialRecCond,
+					SleeveCondition: tc.initialSlvCond,
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:  tc.category,
+					SaleId:    tc.saleID,
+					SaleState: tc.saleState,
+				},
+			}
+
+			incoming := &pbgd.Release{
+				Id:              int32(5000 + i),
+				InstanceId:      instanceID,
+				RecordCondition: tc.incomingRecCond,
+				SleeveCondition: tc.incomingSlvCond,
+			}
+
+			s.syncRecords(ctx, r, incoming, 1)
+
+			if r.GetMetadata().GetRefreshSaleDescription() != tc.wantRefreshFlagged {
+				t.Errorf("RefreshSaleDescription: got %v, want %v", r.GetMetadata().GetRefreshSaleDescription(), tc.wantRefreshFlagged)
+			}
+			if r.GetMetadata().GetSaleDirty() != tc.wantSaleDirty {
+				t.Errorf("SaleDirty: got %v, want %v", r.GetMetadata().GetSaleDirty(), tc.wantSaleDirty)
+			}
+		})
+	}
+}
+
+
 
 
