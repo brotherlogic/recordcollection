@@ -304,6 +304,46 @@ func (s *Server) validateSales(ctx context.Context) error {
 }
 
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
+	if val.GetMetadata().GetSaleDirty() && val.GetMetadata().GetRefreshSaleDescription() && !val.GetMetadata().GetExpireSale() && isEligibleForSaleDescriptionRefresh(val) {
+		if len(val.GetRelease().GetRecordCondition()) == 0 || len(val.GetRelease().GetSleeveCondition()) == 0 || len(val.GetMetadata().GetNotes()) == 0 {
+			s.RaiseIssue(fmt.Sprintf("%v needs condition and notes", val.GetRelease().GetInstanceId()), "Yes")
+			return false, status.Errorf(codes.FailedPrecondition, "Sleeve condition, record condition, and notes must not be empty for sale description refresh")
+		}
+
+		desc, err := s.generator.generate(ctx, s.generatorAddress, val)
+		saleDescriptorResults.With(prometheus.Labels{"status_code": status.Code(err).String()}).Inc()
+		if err != nil {
+			return false, err
+		}
+
+		targetPriceCents := val.GetMetadata().GetSalePrice()
+		if val.GetMetadata().GetNewSalePrice() > 0 {
+			targetPriceCents = val.GetMetadata().GetNewSalePrice()
+		}
+
+		stateStr := "For Sale"
+		if val.GetMetadata().GetSaleState() == pbgd.SaleState_EXPIRED {
+			stateStr = "Expired"
+		}
+
+		err = s.retr.UpdateSaleListing(ctx, val.GetMetadata().GetSaleId(), int(val.GetRelease().GetId()), val.GetRelease().GetRecordCondition(), val.GetRelease().GetSleeveCondition(), stateStr, desc, float32(targetPriceCents)/100)
+		if err != nil {
+			return false, err
+		}
+
+		val.GetMetadata().SaleDescription = desc
+		val.GetMetadata().RefreshSaleDescription = false
+		val.GetMetadata().SaleDirty = false
+		if val.GetMetadata().GetNewSalePrice() > 0 {
+			if val.GetMetadata().GetSalePrice() != val.GetMetadata().GetNewSalePrice() {
+				val.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
+			}
+			val.GetMetadata().SalePrice = val.GetMetadata().GetNewSalePrice()
+			val.GetMetadata().NewSalePrice = 0
+		}
+		err = s.saveRecord(ctx, val)
+		return true, err
+	}
 
 	if val.GetMetadata().SaleDirty && !val.GetMetadata().GetExpireSale() && val.GetMetadata().NewSalePrice > 0 &&
 		(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||

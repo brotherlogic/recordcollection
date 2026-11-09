@@ -1653,6 +1653,328 @@ func TestTestSyncer_UpdateSaleListing(t *testing.T) {
 	}
 }
 
+func TestPushSale_RefreshSaleDescription_Success(t *testing.T) {
+	t.Run("ForSale_ExistingSalePrice", func(t *testing.T) {
+		s := InitTestServer(".testPushSale_RefreshSaleDescription_ForSale")
+		ctx := context.Background()
+		ts := &testSyncer{}
+		s.retr = ts
+		s.generator = &testGenerator{desc: "Refreshed Description"}
+
+		instanceID := int64(6001)
+		r := &pb.Record{
+			Release: &pbgd.Release{
+				Id:              6001,
+				InstanceId:      instanceID,
+				Title:           "Refresh For Sale Album",
+				RecordCondition: "Near Mint (NM or M-)",
+				SleeveCondition: "Very Good Plus (VG+)",
+			},
+			Metadata: &pb.ReleaseMetadata{
+				Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+				SaleId:                 500,
+				SalePrice:              2500,
+				SaleState:              pbgd.SaleState_FOR_SALE,
+				SaleDirty:              true,
+				RefreshSaleDescription: true,
+				SaleDescription:        "Old description",
+				Notes:                  "Clean copy",
+			},
+		}
+		if err := s.saveRecord(ctx, r); err != nil {
+			t.Fatalf("saveRecord failed: %v", err)
+		}
+
+		pushed, err := s.pushSale(ctx, r)
+		if err != nil {
+			t.Fatalf("pushSale failed: %v", err)
+		}
+		if !pushed {
+			t.Errorf("Expected pushed = true, got false")
+		}
+		if ts.updateSaleListingCalls != 1 {
+			t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+		}
+		if ts.lastUpdatedSaleNotes != "Refreshed Description" {
+			t.Errorf("lastUpdatedSaleNotes: got %q, want %q", ts.lastUpdatedSaleNotes, "Refreshed Description")
+		}
+		if ts.lastUpdatedSaleStatus != "For Sale" {
+			t.Errorf("lastUpdatedSaleStatus: got %q, want %q", ts.lastUpdatedSaleStatus, "For Sale")
+		}
+		if ts.lastUpdatedSalePrice != 25.0 {
+			t.Errorf("lastUpdatedSalePrice: got %v, want 25.0", ts.lastUpdatedSalePrice)
+		}
+		if r.GetMetadata().GetSaleDescription() != "Refreshed Description" {
+			t.Errorf("SaleDescription: got %q, want %q", r.GetMetadata().GetSaleDescription(), "Refreshed Description")
+		}
+		if r.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected RefreshSaleDescription = false, got true")
+		}
+		if r.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected SaleDirty = false, got true")
+		}
+
+		saved, err := s.loadRecord(ctx, instanceID, false)
+		if err != nil {
+			t.Fatalf("loadRecord failed: %v", err)
+		}
+		if saved.GetMetadata().GetSaleDescription() != "Refreshed Description" {
+			t.Errorf("Persisted SaleDescription: got %q, want %q", saved.GetMetadata().GetSaleDescription(), "Refreshed Description")
+		}
+		if saved.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected persisted RefreshSaleDescription = false, got true")
+		}
+		if saved.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected persisted SaleDirty = false, got true")
+		}
+	})
+
+	t.Run("Expired_WithNewSalePrice", func(t *testing.T) {
+		s := InitTestServer(".testPushSale_RefreshSaleDescription_Expired")
+		ctx := context.Background()
+		ts := &testSyncer{}
+		s.retr = ts
+		s.generator = &testGenerator{desc: "Refreshed Expired Description"}
+
+		instanceID := int64(6002)
+		r := &pb.Record{
+			Release: &pbgd.Release{
+				Id:              6002,
+				InstanceId:      instanceID,
+				Title:           "Refresh Expired Album",
+				RecordCondition: "Very Good Plus (VG+)",
+				SleeveCondition: "Very Good (VG)",
+			},
+			Metadata: &pb.ReleaseMetadata{
+				Category:               pb.ReleaseMetadata_STALE_SALE,
+				SaleId:                 501,
+				SalePrice:              2500,
+				NewSalePrice:           2200,
+				SaleState:              pbgd.SaleState_EXPIRED,
+				SaleDirty:              true,
+				RefreshSaleDescription: true,
+				SaleDescription:        "Old description",
+				Notes:                  "Slight shelf wear",
+			},
+		}
+		if err := s.saveRecord(ctx, r); err != nil {
+			t.Fatalf("saveRecord failed: %v", err)
+		}
+
+		pushed, err := s.pushSale(ctx, r)
+		if err != nil {
+			t.Fatalf("pushSale failed: %v", err)
+		}
+		if !pushed {
+			t.Errorf("Expected pushed = true, got false")
+		}
+		if ts.updateSaleListingCalls != 1 {
+			t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+		}
+		if ts.lastUpdatedSaleNotes != "Refreshed Expired Description" {
+			t.Errorf("lastUpdatedSaleNotes: got %q, want %q", ts.lastUpdatedSaleNotes, "Refreshed Expired Description")
+		}
+		if ts.lastUpdatedSaleStatus != "Expired" {
+			t.Errorf("lastUpdatedSaleStatus: got %q, want %q", ts.lastUpdatedSaleStatus, "Expired")
+		}
+		if ts.lastUpdatedSalePrice != 22.0 {
+			t.Errorf("lastUpdatedSalePrice: got %v, want 22.0", ts.lastUpdatedSalePrice)
+		}
+		if r.GetMetadata().GetSalePrice() != 2200 {
+			t.Errorf("SalePrice: got %d, want 2200", r.GetMetadata().GetSalePrice())
+		}
+		if r.GetMetadata().GetNewSalePrice() != 0 {
+			t.Errorf("NewSalePrice: got %d, want 0", r.GetMetadata().GetNewSalePrice())
+		}
+		if r.GetMetadata().GetLastSalePriceUpdate() == 0 {
+			t.Errorf("Expected LastSalePriceUpdate to be set, got 0")
+		}
+		if r.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected RefreshSaleDescription = false, got true")
+		}
+		if r.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected SaleDirty = false, got true")
+		}
+	})
+}
+
+func TestPushSale_RefreshSaleDescription_MissingInputs(t *testing.T) {
+	tests := []struct {
+		name            string
+		recordCondition string
+		sleeveCondition string
+		notes           string
+	}{
+		{
+			name:            "MissingNotes",
+			recordCondition: "VG+",
+			sleeveCondition: "VG+",
+			notes:           "",
+		},
+		{
+			name:            "MissingRecordCondition",
+			recordCondition: "",
+			sleeveCondition: "VG+",
+			notes:           "Clean copy",
+		},
+		{
+			name:            "MissingSleeveCondition",
+			recordCondition: "VG+",
+			sleeveCondition: "",
+			notes:           "Clean copy",
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testPushSale_RefreshMissingInputs_%d", i))
+			ctx := context.Background()
+			ts := &testSyncer{}
+			s.retr = ts
+			s.generator = &testGenerator{desc: "Should Not Be Used"}
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:              int32(6100 + i),
+					InstanceId:      int64(6100 + i),
+					Title:           "Missing Inputs Album",
+					RecordCondition: tc.recordCondition,
+					SleeveCondition: tc.sleeveCondition,
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+					SaleId:                 500,
+					SalePrice:              2000,
+					SaleState:              pbgd.SaleState_FOR_SALE,
+					SaleDirty:              true,
+					RefreshSaleDescription: true,
+					SaleDescription:        "Existing Description",
+					Notes:                  tc.notes,
+				},
+			}
+
+			pushed, err := s.pushSale(ctx, r)
+			if status.Code(err) != codes.FailedPrecondition {
+				t.Errorf("Expected codes.FailedPrecondition, got %v (%v)", status.Code(err), err)
+			}
+			if pushed {
+				t.Errorf("Expected pushed = false, got true")
+			}
+			if ts.updateSaleListingCalls != 0 {
+				t.Errorf("updateSaleListingCalls: got %d, want 0", ts.updateSaleListingCalls)
+			}
+			if r.GetMetadata().GetSaleDescription() != "Existing Description" {
+				t.Errorf("SaleDescription: got %q, want %q", r.GetMetadata().GetSaleDescription(), "Existing Description")
+			}
+			if !r.GetMetadata().GetRefreshSaleDescription() {
+				t.Errorf("Expected RefreshSaleDescription to remain true, got false")
+			}
+			if !r.GetMetadata().GetSaleDirty() {
+				t.Errorf("Expected SaleDirty to remain true, got false")
+			}
+		})
+	}
+}
+
+func TestPushSale_RefreshSaleDescription_GeneratorOrDiscogsFailure(t *testing.T) {
+	t.Run("GeneratorFailure", func(t *testing.T) {
+		s := InitTestServer(".testPushSale_RefreshGenFail")
+		ctx := context.Background()
+		ts := &testSyncer{}
+		s.retr = ts
+		s.generator = &testGenerator{fail: true}
+
+		r := &pb.Record{
+			Release: &pbgd.Release{
+				Id:              6201,
+				InstanceId:      6201,
+				Title:           "Gen Failure Album",
+				RecordCondition: "VG+",
+				SleeveCondition: "VG+",
+			},
+			Metadata: &pb.ReleaseMetadata{
+				Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+				SaleId:                 500,
+				SalePrice:              2000,
+				SaleState:              pbgd.SaleState_FOR_SALE,
+				SaleDirty:              true,
+				RefreshSaleDescription: true,
+				SaleDescription:        "Existing Description",
+				Notes:                  "Clean copy",
+			},
+		}
+
+		pushed, err := s.pushSale(ctx, r)
+		if err == nil {
+			t.Fatalf("Expected generator error, got nil")
+		}
+		if pushed {
+			t.Errorf("Expected pushed = false, got true")
+		}
+		if ts.updateSaleListingCalls != 0 {
+			t.Errorf("updateSaleListingCalls: got %d, want 0", ts.updateSaleListingCalls)
+		}
+		if r.GetMetadata().GetSaleDescription() != "Existing Description" {
+			t.Errorf("SaleDescription: got %q, want %q", r.GetMetadata().GetSaleDescription(), "Existing Description")
+		}
+		if !r.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected RefreshSaleDescription to remain true, got false")
+		}
+		if !r.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected SaleDirty to remain true, got false")
+		}
+	})
+
+	t.Run("DiscogsUpdateFailure", func(t *testing.T) {
+		s := InitTestServer(".testPushSale_RefreshDiscogsFail")
+		ctx := context.Background()
+		ts := &testSyncer{failUpdateSaleListing: true}
+		s.retr = ts
+		s.generator = &testGenerator{desc: "New Description"}
+
+		r := &pb.Record{
+			Release: &pbgd.Release{
+				Id:              6202,
+				InstanceId:      6202,
+				Title:           "Discogs Failure Album",
+				RecordCondition: "VG+",
+				SleeveCondition: "VG+",
+			},
+			Metadata: &pb.ReleaseMetadata{
+				Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+				SaleId:                 500,
+				SalePrice:              2000,
+				SaleState:              pbgd.SaleState_FOR_SALE,
+				SaleDirty:              true,
+				RefreshSaleDescription: true,
+				SaleDescription:        "Existing Description",
+				Notes:                  "Clean copy",
+			},
+		}
+
+		pushed, err := s.pushSale(ctx, r)
+		if err == nil {
+			t.Fatalf("Expected UpdateSaleListing error, got nil")
+		}
+		if pushed {
+			t.Errorf("Expected pushed = false, got true")
+		}
+		if ts.updateSaleListingCalls != 1 {
+			t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+		}
+		if r.GetMetadata().GetSaleDescription() != "Existing Description" {
+			t.Errorf("SaleDescription: got %q, want %q", r.GetMetadata().GetSaleDescription(), "Existing Description")
+		}
+		if !r.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected RefreshSaleDescription to remain true, got false")
+		}
+		if !r.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected SaleDirty to remain true, got false")
+		}
+	})
+}
+
+
 
 
 
