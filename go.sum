@@ -18,8 +18,8 @@ github.com/brotherlogic/githubridge v0.2875.0 h1:biNFCo/tFgOiyW7+jJfqd8STt2/lVBx
 github.com/brotherlogic/githubridge v0.2875.0/go.mod h1:vLArYFdKXKrP6iDFRlFRsi5j5Pe+yGtrfjZOZKYKzsQ=
 github.com/brotherlogic/gobuildslave v0.0.0-20260725033542-aed659f45e67 h1:nnIIOsNEpAO+c9abep8QPPdMb1ehSMjE/G03S4KBurk=
 github.com/brotherlogic/gobuildslave v0.0.0-20260725033542-aed659f45e67/go.mod h1:2wDAOZwif7aLcYiZbBNDnqBYga27bKTY02RPqehmcLc=
-github.com/brotherlogic/godiscogs v0.0.0-20260925182606-cd03da0a05ae h1:FGo3otm3kQJmJvuG+7Qe7chmJFWuEsHtf22Gcie3uWE=
-github.com/brotherlogic/godiscogs v0.0.0-20260925182606-cd03da0a05ae/go.mod h1:YLlmKCU+X2bq6sdg2raAw5IFujInBy81UcUQmmVx4yo=
+github.com/brotherlogic/godiscogs v0.0.0-20261109051238-8730562ae9a4 h1:4Vw7ZBYolD+Lksd83ASY+Nt5bkCba248fD6rpwxNID4=
+github.com/brotherlogic/godiscogs v0.0.0-20261109051238-8730562ae9a4/go.mod h1:YLlmKCU+X2bq6sdg2raAw5IFujInBy81UcUQmmVx4yo=
 github.com/brotherlogic/goserver v0.0.0-20260125051706-82df7bec125f h1:9so1Hpzgq5lTDLT1y+d3ioNcslgUip8aPWys9nYobTA=
 github.com/brotherlogic/goserver v0.0.0-20260125051706-82df7bec125f/go.mod h1:QbrdZ+d2/FKUG5c9BmQS3yXssOTMOb0nlZyZNcS0UMM=
 github.com/brotherlogic/gramophile v0.1545.0 h1:HSYwe3hsyM3ijPSbIKO0p3vovJQNRSFJ0DR7Nl7BqIc=
@@ -42,8 +42,6 @@ github.com/brotherlogic/recorder v0.0.0-20260925211214-0c726e4b2e4a h1:fqDWRZ/+t
 github.com/brotherlogic/recorder v0.0.0-20260925211214-0c726e4b2e4a/go.mod h1:vf6pBJpHwyL9eRCGZjcEo+aivhHU5XPF+zZo+Tr3NtM=
 github.com/brotherlogic/recordfanout v0.0.0-20260523164131-03652db164be h1:TBHECsGoKqzdWtG/0h1P6fMJ5Bj47Br0ifT8zRMXqNA=
 github.com/brotherlogic/recordfanout v0.0.0-20260523164131-03652db164be/go.mod h1:HpPnmASktBkZ8ytU68eIBX/LaMeFk1nxwtbplUHmhF0=
-github.com/brotherlogic/recordgetter v0.0.0-20260125052128-c2f9222375f7 h1:o8/oCC5j96HhGGvRE8jk99fvW8ABHKtLTRE+2BybEqo=
-github.com/brotherlogic/recordgetter v0.0.0-20260125052128-c2f9222375f7/go.mod h1:hGNjPjU8IRjR7sHwyJvgU3MpLl7kgQdZDjkcphnfXzo=
 github.com/brotherlogic/recordmover v0.0.0-20260902042638-4fec1202e829 h1:LF3ssrLi1MQymWyHdj5ySSVUN3bmuG3+BoIR3LwD1Hw=
 github.com/brotherlogic/recordmover v0.0.0-20260902042638-4fec1202e829/go.mod h1:9ZjHLDKNlKqDUmqJZDxBFvwq4waDDslRLeH97uO11WU=
 github.com/brotherlogic/recordscores v0.0.0-20260319022058-b93047abc253 h1:Udud7AotlCS0WkatyH8iYPT0QMdHT/Ooy0CWvUl/XF4=

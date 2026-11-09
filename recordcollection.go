@@ -125,6 +125,7 @@ type saver interface {
 	RemoveFromWantlist(ctx context.Context, releaseID int) error
 	AddToWantlist(ctx context.Context, releaseID int) error
 	UpdateSalePrice(ctx context.Context, saleID int, releaseID int, condition, sleeve string, price float32) error
+	UpdateSaleListing(ctx context.Context, saleID int64, releaseID int, condition, sleeve, state, notes string, price float32) error
 	GetCurrentSalePrice(ctx context.Context, saleID int64) float32
 	GetCurrentSaleState(ctx context.Context, saleID int64) (pbgd.SaleState, error)
 	RemoveFromSale(ctx context.Context, saleID int, releaseID int) error
@@ -845,6 +846,7 @@ func (s *Server) reconcileDeletedSale(ctx context.Context, record *pb.Record) er
 	record.GetMetadata().CurrentSalePrice = -1
 	record.GetMetadata().SaleState = pbgd.SaleState_NOT_FOR_SALE
 	record.GetMetadata().SaleDirty = false
+	record.GetMetadata().RefreshSaleDescription = false
 
 	if !record.GetMetadata().GetTakenToStore() && (record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE) {
 		record.GetMetadata().Category = pb.ReleaseMetadata_PREPARE_TO_SELL
