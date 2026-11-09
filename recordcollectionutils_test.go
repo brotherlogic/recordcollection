@@ -84,9 +84,14 @@ type testSyncer struct {
 	removedSaleID   int
 	instanceInfo        map[int64]*godiscogs.InstanceInfo
 	saleID              int64
-	currentSaleStateErr error
-	currentSaleState    pbgd.SaleState
-	getCurrentSaleCalls int
+	currentSaleStateErr    error
+	currentSaleState       pbgd.SaleState
+	getCurrentSaleCalls    int
+	lastUpdatedSaleNotes   string
+	lastUpdatedSaleStatus  string
+	lastUpdatedSalePrice   float32
+	updateSaleListingCalls int
+	failUpdateSaleListing  bool
 }
 
 func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int64]*godiscogs.InstanceInfo, error) {
@@ -115,6 +120,17 @@ func (t *testSyncer) UpdateSalePrice(ctx context.Context, saleID int, releaseID 
 	if t.failSalePrice {
 		return fmt.Errorf("built to fail")
 	}
+	return nil
+}
+
+func (t *testSyncer) UpdateSaleListing(ctx context.Context, saleID int64, releaseID int, condition, sleeve, state, notes string, price float32) error {
+	t.updateSaleListingCalls++
+	if t.failUpdateSaleListing {
+		return fmt.Errorf("built to fail")
+	}
+	t.lastUpdatedSaleNotes = notes
+	t.lastUpdatedSaleStatus = state
+	t.lastUpdatedSalePrice = price
 	return nil
 }
 
@@ -1003,13 +1019,14 @@ func TestReconcileDeletedSale(t *testing.T) {
 					Title:      "Reconciliation Test",
 				},
 				Metadata: &pb.ReleaseMetadata{
-					Category:         tc.initialCategory,
-					SaleId:           tc.initialSaleId,
-					SalePrice:        tc.initialSalePrice,
-					CurrentSalePrice: tc.initialCurrPrice,
-					SaleState:        tc.initialSaleState,
-					SaleDirty:        tc.initialSaleDirty,
-					TakenToStore:     tc.takenToStore,
+					Category:               tc.initialCategory,
+					SaleId:                 tc.initialSaleId,
+					SalePrice:              tc.initialSalePrice,
+					CurrentSalePrice:       tc.initialCurrPrice,
+					SaleState:              tc.initialSaleState,
+					SaleDirty:              tc.initialSaleDirty,
+					RefreshSaleDescription: true,
+					TakenToStore:           tc.takenToStore,
 				},
 			}
 
@@ -1048,6 +1065,9 @@ func TestReconcileDeletedSale(t *testing.T) {
 			if r.GetMetadata().GetSaleDirty() != false {
 				t.Errorf("SaleDirty: got %v, want false", r.GetMetadata().GetSaleDirty())
 			}
+			if r.GetMetadata().GetRefreshSaleDescription() != false {
+				t.Errorf("RefreshSaleDescription: got %v, want false", r.GetMetadata().GetRefreshSaleDescription())
+			}
 			if r.GetMetadata().GetCategory() != tc.expectedCategory {
 				t.Errorf("Category: got %v, want %v", r.GetMetadata().GetCategory(), tc.expectedCategory)
 			}
@@ -1071,6 +1091,9 @@ func TestReconcileDeletedSale(t *testing.T) {
 			}
 			if savedRecord.GetMetadata().GetSaleDirty() != false {
 				t.Errorf("Persisted SaleDirty: got %v, want false", savedRecord.GetMetadata().GetSaleDirty())
+			}
+			if savedRecord.GetMetadata().GetRefreshSaleDescription() != false {
+				t.Errorf("Persisted RefreshSaleDescription: got %v, want false", savedRecord.GetMetadata().GetRefreshSaleDescription())
 			}
 			if savedRecord.GetMetadata().GetCategory() != tc.expectedCategory {
 				t.Errorf("Persisted Category: got %v, want %v", savedRecord.GetMetadata().GetCategory(), tc.expectedCategory)
@@ -1598,6 +1621,38 @@ func TestSyncRecords_AutoFlagsRefreshOnConditionChange(t *testing.T) {
 		})
 	}
 }
+
+func TestTestSyncer_UpdateSaleListing(t *testing.T) {
+	ts := &testSyncer{}
+	var s saver = ts
+
+	err := s.UpdateSaleListing(context.Background(), 1001, 2002, "VG+", "VG", "For Sale", "Updated description", 25.50)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if ts.updateSaleListingCalls != 1 {
+		t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+	}
+	if ts.lastUpdatedSaleNotes != "Updated description" {
+		t.Errorf("lastUpdatedSaleNotes: got %q, want %q", ts.lastUpdatedSaleNotes, "Updated description")
+	}
+	if ts.lastUpdatedSaleStatus != "For Sale" {
+		t.Errorf("lastUpdatedSaleStatus: got %q, want %q", ts.lastUpdatedSaleStatus, "For Sale")
+	}
+	if ts.lastUpdatedSalePrice != 25.50 {
+		t.Errorf("lastUpdatedSalePrice: got %v, want 25.50", ts.lastUpdatedSalePrice)
+	}
+
+	ts.failUpdateSaleListing = true
+	err = s.UpdateSaleListing(context.Background(), 1001, 2002, "VG+", "VG", "Expired", "Another description", 19.99)
+	if err == nil {
+		t.Fatalf("Expected error when failUpdateSaleListing is true, got nil")
+	}
+	if ts.updateSaleListingCalls != 2 {
+		t.Errorf("updateSaleListingCalls: got %d, want 2", ts.updateSaleListingCalls)
+	}
+}
+
 
 
 

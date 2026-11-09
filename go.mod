@@ -5,7 +5,7 @@ go 1.26.2
 require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/brotherlogic/dstore v0.0.0-20260203215131-c1953f4290fb
-	github.com/brotherlogic/godiscogs v0.0.0-20260925182606-cd03da0a05ae
+	github.com/brotherlogic/godiscogs v0.0.0-20261109051238-8730562ae9a4
 	github.com/brotherlogic/goserver v0.0.0-20260125051706-82df7bec125f
 	github.com/brotherlogic/gramophile v0.1545.0
 	github.com/brotherlogic/keystore v0.0.0-20260725015259-879577c52b4d
@@ -23,7 +23,10 @@ require (
 	google.golang.org/protobuf v1.36.12
 )
 
-require github.com/brotherlogic/discogs v0.0.0-20260826004029-0e739cb6f1b5
+require (
+	github.com/brotherlogic/discogs v0.0.0-20260826004029-0e739cb6f1b5
+	github.com/brotherlogic/recorder v0.0.0-20260925211214-0c726e4b2e4a
+)
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
@@ -36,8 +39,6 @@ require (
 	github.com/brotherlogic/lock v0.0.0-20260725021330-63010f67dabc // indirect
 	github.com/brotherlogic/logging v0.0.0-20260725012347-7aa22ad1df65 // indirect
 	github.com/brotherlogic/monitor v0.0.0-20221025152653-c10877c5f9e6 // indirect
-	github.com/brotherlogic/recorder v0.0.0-20260925211214-0c726e4b2e4a // indirect
-	github.com/brotherlogic/recordgetter v0.0.0-20260125052128-c2f9222375f7 // indirect
 	github.com/brotherlogic/versionserver v0.0.0-20221025154054-c9bcd41be2f2 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
