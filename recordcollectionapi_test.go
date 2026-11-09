@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 
+	godiscogs "github.com/brotherlogic/godiscogs"
 	pbd "github.com/brotherlogic/godiscogs/proto"
 	keystoreclient "github.com/brotherlogic/keystore/client"
 	qproto "github.com/brotherlogic/queue/proto"
@@ -2451,6 +2452,98 @@ func TestUpdateRecord_RefreshSaleDescription_UnlistedOrSold(t *testing.T) {
 		})
 	}
 }
+
+func TestCommitRecord_RefreshSaleDescription_EndToEnd(t *testing.T) {
+	s := InitTestServer(".test_commit_record_refresh_sale_desc_e2e")
+	ctx := context.Background()
+
+	instanceID := int64(3500)
+	ts := &testSyncer{
+		instanceInfo: map[int64]*godiscogs.InstanceInfo{
+			instanceID: {
+				RecordCondition: "Near Mint (NM or M-)",
+				SleeveCondition: "Very Good Plus (VG+)",
+				Notes:           "Updated notes from Discogs",
+				FolderId:        242017,
+			},
+		},
+	}
+	s.retr = ts
+	s.generator = &testGenerator{desc: "EndToEnd Refreshed Description"}
+
+	r := &pb.Record{
+		Release: &pbd.Release{
+			Id:              3500,
+			InstanceId:      instanceID,
+			FolderId:        242017,
+			Title:           "EndToEnd Refresh Album",
+			RecordCondition: "Very Good (VG)",
+			SleeveCondition: "Very Good (VG)",
+			Tracklist:       []*pbd.Track{{Title: "Track 1"}},
+			Images:          []*pbd.Image{{Uri: "https://example.com/image.jpg"}},
+		},
+		Metadata: &pb.ReleaseMetadata{
+			Cost:                   1000,
+			GoalFolder:             242017,
+			Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+			SaleId:                 550,
+			SalePrice:              2500,
+			CurrentSalePrice:       1234,
+			SalePriceUpdate:        time.Now().Unix(),
+			LastCache:              time.Now().Unix(),
+			SaleState:              pbd.SaleState_FOR_SALE,
+			SaleDirty:              true,
+			RefreshSaleDescription: true,
+			SaleDescription:        "Old Description",
+			Notes:                  "",
+		},
+	}
+	if err := s.saveRecord(ctx, r); err != nil {
+		t.Fatalf("saveRecord failed: %v", err)
+	}
+
+	_, err := s.CommitRecord(ctx, &pb.CommitRecordRequest{InstanceId: instanceID})
+	if err != nil {
+		t.Fatalf("CommitRecord failed: %v", err)
+	}
+
+	if ts.updateSaleListingCalls != 1 {
+		t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+	}
+	if ts.lastUpdatedSaleNotes != "EndToEnd Refreshed Description" {
+		t.Errorf("lastUpdatedSaleNotes: got %q, want %q", ts.lastUpdatedSaleNotes, "EndToEnd Refreshed Description")
+	}
+	if ts.lastUpdatedSaleStatus != "For Sale" {
+		t.Errorf("lastUpdatedSaleStatus: got %q, want %q", ts.lastUpdatedSaleStatus, "For Sale")
+	}
+	if ts.lastUpdatedSalePrice != 25.0 {
+		t.Errorf("lastUpdatedSalePrice: got %v, want 25.0", ts.lastUpdatedSalePrice)
+	}
+
+	saved, err := s.loadRecord(ctx, instanceID, false)
+	if err != nil {
+		t.Fatalf("loadRecord failed: %v", err)
+	}
+	if saved.GetMetadata().GetNotes() != "Updated notes from Discogs" {
+		t.Errorf("Persisted Notes: got %q, want %q", saved.GetMetadata().GetNotes(), "Updated notes from Discogs")
+	}
+	if saved.GetRelease().GetRecordCondition() != "Near Mint (NM or M-)" {
+		t.Errorf("Persisted RecordCondition: got %q, want %q", saved.GetRelease().GetRecordCondition(), "Near Mint (NM or M-)")
+	}
+	if saved.GetRelease().GetSleeveCondition() != "Very Good Plus (VG+)" {
+		t.Errorf("Persisted SleeveCondition: got %q, want %q", saved.GetRelease().GetSleeveCondition(), "Very Good Plus (VG+)")
+	}
+	if saved.GetMetadata().GetSaleDescription() != "EndToEnd Refreshed Description" {
+		t.Errorf("Persisted SaleDescription: got %q, want %q", saved.GetMetadata().GetSaleDescription(), "EndToEnd Refreshed Description")
+	}
+	if saved.GetMetadata().GetRefreshSaleDescription() {
+		t.Errorf("Expected persisted RefreshSaleDescription = false, got true")
+	}
+	if saved.GetMetadata().GetSaleDirty() {
+		t.Errorf("Expected persisted SaleDirty = false, got true")
+	}
+}
+
 
 
 
