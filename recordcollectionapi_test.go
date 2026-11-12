@@ -2544,6 +2544,89 @@ func TestCommitRecord_RefreshSaleDescription_EndToEnd(t *testing.T) {
 	}
 }
 
+func TestUpdateRecordSold_MinimumPriceFloors(t *testing.T) {
+	tests := []struct {
+		name              string
+		cost              int32
+		highPrice         int32
+		wantSellCallPrice float32
+		wantSalePrice     int32
+	}{
+		{
+			name:              "CostFloorConvertsCentsToDollars",
+			cost:              2150,
+			highPrice:         1800,
+			wantSellCallPrice: 21.5,
+			wantSalePrice:     2150,
+		},
+		{
+			name:              "HighPriceFloorPreservesFractionalCents",
+			cost:              1000,
+			highPrice:         1599,
+			wantSellCallPrice: 15.99,
+			wantSalePrice:     1599,
+		},
+		{
+			name:              "SuggestedSalePriceAboveBothFloors",
+			cost:              1000,
+			highPrice:         1200,
+			wantSellCallPrice: 15.5,
+			wantSalePrice:     1550,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".test_sold_min_price_floors_%d", i))
+			ctx := context.Background()
+			ts := &testSyncer{}
+			s.retr = ts
+			s.generator = &testGenerator{desc: "Generated Sale Description"}
+
+			instanceID := int64(8000 + i)
+			_, err := s.AddRecord(ctx, &pb.AddRecordRequest{
+				ToAdd: &pb.Record{
+					Release: &pbd.Release{
+						Id:              int32(8000 + i),
+						InstanceId:      instanceID,
+						Title:           "Marjassa",
+						RecordCondition: "Near Mint (NM or M-)",
+						SleeveCondition: "Near Mint (NM or M-)",
+					},
+					Metadata: &pb.ReleaseMetadata{
+						Cost:       tc.cost,
+						GoalFolder: 242017,
+						HighPrice:  tc.highPrice,
+						Notes:      "Like new",
+					},
+				},
+			})
+			if err != nil {
+				t.Fatalf("AddRecord failed: %v", err)
+			}
+
+			resp, err := s.UpdateRecord(ctx, &pb.UpdateRecordRequest{
+				Reason: "List for sale",
+				Update: &pb.Record{
+					Release:  &pbd.Release{InstanceId: instanceID},
+					Metadata: &pb.ReleaseMetadata{Category: pb.ReleaseMetadata_SOLD},
+				},
+			})
+			if err != nil {
+				t.Fatalf("UpdateRecord failed: %v", err)
+			}
+
+			if ts.lastSalePrice != tc.wantSellCallPrice {
+				t.Errorf("SellRecord price (dollars): got %v, want %v", ts.lastSalePrice, tc.wantSellCallPrice)
+			}
+			if resp.GetUpdated().GetMetadata().GetSalePrice() != tc.wantSalePrice {
+				t.Errorf("Metadata.SalePrice (cents): got %d, want %d", resp.GetUpdated().GetMetadata().GetSalePrice(), tc.wantSalePrice)
+			}
+		})
+	}
+}
+
+
 
 
 

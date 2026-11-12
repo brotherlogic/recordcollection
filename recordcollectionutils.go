@@ -656,7 +656,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			}
 		}
 
-		if r.GetMetadata().GetCost() == 0 {
+		if mp[int64(r.GetRelease().GetInstanceId())].PurchasePrice > 0 {
 			r.GetMetadata().Cost = mp[int64(r.GetRelease().GetInstanceId())].PurchasePrice
 		}
 
