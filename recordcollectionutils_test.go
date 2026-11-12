@@ -81,6 +81,7 @@ type testSyncer struct {
 	badInventory    bool
 	count           int
 	lastSaleNotes   string
+	lastSalePrice   float32
 	removedSaleID   int
 	instanceInfo        map[int64]*godiscogs.InstanceInfo
 	saleID              int64
@@ -186,6 +187,7 @@ func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID, in
 
 func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int, notes string) (int64, error) {
 	t.lastSaleNotes = notes
+	t.lastSalePrice = price
 	if t.saleID != 0 {
 		return t.saleID, nil
 	}
@@ -1973,6 +1975,86 @@ func TestPushSale_RefreshSaleDescription_GeneratorOrDiscogsFailure(t *testing.T)
 		}
 	})
 }
+
+func TestCacheRecord_UpdatesCostFromDiscogsPurchasePrice(t *testing.T) {
+	tests := []struct {
+		name          string
+		initialCost   int32
+		purchasePrice int32
+		wantCost      int32
+	}{
+		{
+			name:          "InitialZeroCost_UpdatesFromPositivePurchasePrice",
+			initialCost:   0,
+			purchasePrice: 2150,
+			wantCost:      2150,
+		},
+		{
+			name:          "ExistingNonZeroCost_OverwrittenByPositivePurchasePrice",
+			initialCost:   21500,
+			purchasePrice: 2150,
+			wantCost:      2150,
+		},
+		{
+			name:          "ExistingNonZeroCost_PreservedWhenPurchasePriceZero",
+			initialCost:   21500,
+			purchasePrice: 0,
+			wantCost:      21500,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testCacheRecord_PurchasePrice_%d", i))
+			ctx := context.Background()
+			instanceID := int64(7000 + i)
+
+			s.retr = &testSyncer{
+				instanceInfo: map[int64]*godiscogs.InstanceInfo{
+					instanceID: {
+						PurchasePrice:   tc.purchasePrice,
+						RecordCondition: "Near Mint (NM or M-)",
+						SleeveCondition: "Near Mint (NM or M-)",
+						Notes:           "Like new",
+						FolderId:        242017,
+					},
+				},
+			}
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:              int32(7000 + i),
+					InstanceId:      instanceID,
+					Title:           "Marjassa",
+					RecordCondition: "Near Mint (NM or M-)",
+					SleeveCondition: "Near Mint (NM or M-)",
+					Tracklist:       []*pbgd.Track{{Title: "Marjassa Pt1."}},
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Cost:      tc.initialCost,
+					LastCache: time.Now().Unix(),
+				},
+			}
+
+			if err := s.cacheRecord(ctx, r, true); err != nil {
+				t.Fatalf("cacheRecord failed: %v", err)
+			}
+
+			if r.GetMetadata().GetCost() != tc.wantCost {
+				t.Errorf("in-memory Cost: got %d, want %d", r.GetMetadata().GetCost(), tc.wantCost)
+			}
+
+			saved, err := s.loadRecord(ctx, instanceID, false)
+			if err != nil {
+				t.Fatalf("loadRecord failed: %v", err)
+			}
+			if saved.GetMetadata().GetCost() != tc.wantCost {
+				t.Errorf("persisted Cost: got %d, want %d", saved.GetMetadata().GetCost(), tc.wantCost)
+			}
+		})
+	}
+}
+
 
 
 

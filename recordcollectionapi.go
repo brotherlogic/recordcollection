@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"strings"
 	"time"
 
@@ -590,12 +591,12 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				return nil, status.Errorf(codes.Internal, "High price is not set")
 			}
 
-			if float32(rec.GetMetadata().GetHighPrice()/100.0) > price {
-				price = float32(rec.GetMetadata().GetHighPrice()) / 100
+			if float32(rec.GetMetadata().GetHighPrice())/100.0 > price {
+				price = float32(rec.GetMetadata().GetHighPrice()) / 100.0
 			}
 
 			if float32(rec.GetMetadata().GetCost())/100.0 > price {
-				price = float32(rec.GetMetadata().GetCost())
+				price = float32(rec.GetMetadata().GetCost()) / 100.0
 			}
 
 			//230 is approx weight of packaging
@@ -616,7 +617,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			request.GetUpdate().GetMetadata().SaleState = 0
 			rec.GetMetadata().SaleId = saleid
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
-			rec.GetMetadata().SalePrice = int32(price * 100)
+			rec.GetMetadata().SalePrice = int32(math.Round(float64(price) * 100))
 			if saleid > 100 {
 				rec.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
 			}
