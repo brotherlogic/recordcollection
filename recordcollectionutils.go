@@ -306,7 +306,7 @@ func (s *Server) validateSales(ctx context.Context) error {
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	if val.GetMetadata().GetSaleDirty() && val.GetMetadata().GetRefreshSaleDescription() && !val.GetMetadata().GetExpireSale() && isEligibleForSaleDescriptionRefresh(val) {
 		if len(val.GetRelease().GetRecordCondition()) == 0 || len(val.GetRelease().GetSleeveCondition()) == 0 || len(val.GetMetadata().GetNotes()) == 0 {
-			s.RaiseIssue(fmt.Sprintf("%v needs condition and notes", val.GetRelease().GetInstanceId()), "Yes")
+			s.RaiseIssue(fmt.Sprintf("%v needs condition and notes", val.GetRelease().GetInstanceId()), fmt.Sprintf("This one [%v]: https://www.discogs.com/madeup/release/%v", val.GetRelease().GetInstanceId(), val.GetRelease().GetId()))
 			return false, status.Errorf(codes.FailedPrecondition, "Sleeve condition, record condition, and notes must not be empty for sale description refresh")
 		}
 

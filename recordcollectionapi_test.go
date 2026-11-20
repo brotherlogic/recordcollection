@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -1955,6 +1957,12 @@ func TestUpdateRecord_RipThenSell_MissingPrerequisites_FailsPrecondition(t *test
 		t.Fatalf("AddRecord failed: %v", err)
 	}
 
+	beforeIssues := s.IssueCount
+	var logBuf bytes.Buffer
+	origOut := log.Writer()
+	log.SetOutput(&logBuf)
+	defer log.SetOutput(origOut)
+
 	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
 		Reason: "score sell",
 		Update: &pb.Record{
@@ -1966,6 +1974,13 @@ func TestUpdateRecord_RipThenSell_MissingPrerequisites_FailsPrecondition(t *test
 	})
 	if status.Code(err) != codes.FailedPrecondition {
 		t.Errorf("Expected codes.FailedPrecondition, got error %v (code %v)", err, status.Code(err))
+	}
+	if s.IssueCount != beforeIssues+1 {
+		t.Errorf("Expected IssueCount = %d, got %d", beforeIssues+1, s.IssueCount)
+	}
+	wantIssueLog := "Raising Issue 208 needs condition and notes -> This one [208]: https://www.discogs.com/madeup/release/208"
+	if !strings.Contains(logBuf.String(), wantIssueLog) {
+		t.Errorf("Expected log %q to contain %q", logBuf.String(), wantIssueLog)
 	}
 }
 
