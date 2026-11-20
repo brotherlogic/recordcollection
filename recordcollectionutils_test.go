@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"log"
+	"strings"
 	"testing"
 	"time"
 
@@ -1855,12 +1858,24 @@ func TestPushSale_RefreshSaleDescription_MissingInputs(t *testing.T) {
 				},
 			}
 
+			var logBuf bytes.Buffer
+			origOut := log.Writer()
+			log.SetOutput(&logBuf)
+			defer log.SetOutput(origOut)
+
 			pushed, err := s.pushSale(ctx, r)
 			if status.Code(err) != codes.FailedPrecondition {
 				t.Errorf("Expected codes.FailedPrecondition, got %v (%v)", status.Code(err), err)
 			}
 			if pushed {
 				t.Errorf("Expected pushed = false, got true")
+			}
+			if s.IssueCount != 1 {
+				t.Errorf("Expected IssueCount = 1, got %d", s.IssueCount)
+			}
+			wantIssueLog := fmt.Sprintf("Raising Issue %v needs condition and notes -> This one [%v]: https://www.discogs.com/madeup/release/%v", r.GetRelease().GetInstanceId(), r.GetRelease().GetInstanceId(), r.GetRelease().GetId())
+			if !strings.Contains(logBuf.String(), wantIssueLog) {
+				t.Errorf("Expected log %q to contain %q", logBuf.String(), wantIssueLog)
 			}
 			if ts.updateSaleListingCalls != 0 {
 				t.Errorf("updateSaleListingCalls: got %d, want 0", ts.updateSaleListingCalls)
