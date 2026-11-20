@@ -303,10 +303,17 @@ func (s *Server) validateSales(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) BounceIssue(ctx context.Context, title, body string, job string, labels ...string) {
+	if s.SkipIssue {
+		s.CtxLog(ctx, fmt.Sprintf("Bouncing Issue (%v) %v -> %v", job, title, body))
+	}
+	s.GoServer.BounceIssue(ctx, title, body, job, labels...)
+}
+
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
 	if val.GetMetadata().GetSaleDirty() && val.GetMetadata().GetRefreshSaleDescription() && !val.GetMetadata().GetExpireSale() && isEligibleForSaleDescriptionRefresh(val) {
 		if len(val.GetRelease().GetRecordCondition()) == 0 || len(val.GetRelease().GetSleeveCondition()) == 0 || len(val.GetMetadata().GetNotes()) == 0 {
-			s.RaiseIssue(fmt.Sprintf("%v needs condition and notes", val.GetRelease().GetInstanceId()), fmt.Sprintf("This one [%v]: https://www.discogs.com/madeup/release/%v", val.GetRelease().GetInstanceId(), val.GetRelease().GetId()))
+			s.BounceIssue(ctx, fmt.Sprintf("%v needs condition and notes", val.GetRelease().GetInstanceId()), fmt.Sprintf("This one [%v]: https://www.discogs.com/madeup/release/%v", val.GetRelease().GetInstanceId(), val.GetRelease().GetId()), "recordalerting")
 			return false, status.Errorf(codes.FailedPrecondition, "Sleeve condition, record condition, and notes must not be empty for sale description refresh")
 		}
 

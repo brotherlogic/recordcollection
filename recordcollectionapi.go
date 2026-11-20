@@ -567,7 +567,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			// Tighten validation
 			if len(rec.GetRelease().SleeveCondition) == 0 || len(rec.GetRelease().RecordCondition) == 0 || len(rec.GetMetadata().GetNotes()) == 0 {
 				s.CtxLog(ctx, fmt.Sprintf("Validation failed: sleeve=%v, record=%v, notes=%v", len(rec.GetRelease().SleeveCondition), len(rec.GetRelease().RecordCondition), len(rec.GetMetadata().GetNotes())))
-				s.RaiseIssue(fmt.Sprintf("%v needs condition and notes", rec.GetRelease().GetInstanceId()), fmt.Sprintf("This one [%v]: https://www.discogs.com/madeup/release/%v", rec.GetRelease().GetInstanceId(), rec.GetRelease().GetId()))
+				s.BounceIssue(ctx, fmt.Sprintf("%v needs condition and notes", rec.GetRelease().GetInstanceId()), fmt.Sprintf("This one [%v]: https://www.discogs.com/madeup/release/%v", rec.GetRelease().GetInstanceId(), rec.GetRelease().GetId()), "recordalerting")
 				return nil, status.Errorf(codes.FailedPrecondition, "Sleeve condition, record condition, and notes must not be empty for sale")
 			}
 

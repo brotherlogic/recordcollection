@@ -1858,6 +1858,7 @@ func TestPushSale_RefreshSaleDescription_MissingInputs(t *testing.T) {
 				},
 			}
 
+			beforeAlerts := s.AlertsFired
 			var logBuf bytes.Buffer
 			origOut := log.Writer()
 			log.SetOutput(&logBuf)
@@ -1870,10 +1871,10 @@ func TestPushSale_RefreshSaleDescription_MissingInputs(t *testing.T) {
 			if pushed {
 				t.Errorf("Expected pushed = false, got true")
 			}
-			if s.IssueCount != 1 {
-				t.Errorf("Expected IssueCount = 1, got %d", s.IssueCount)
+			if s.AlertsFired != beforeAlerts+1 {
+				t.Errorf("Expected AlertsFired = %d, got %d", beforeAlerts+1, s.AlertsFired)
 			}
-			wantIssueLog := fmt.Sprintf("Raising Issue %v needs condition and notes -> This one [%v]: https://www.discogs.com/madeup/release/%v", r.GetRelease().GetInstanceId(), r.GetRelease().GetInstanceId(), r.GetRelease().GetId())
+			wantIssueLog := fmt.Sprintf("Bouncing Issue (recordalerting) %v needs condition and notes -> This one [%v]: https://www.discogs.com/madeup/release/%v", r.GetRelease().GetInstanceId(), r.GetRelease().GetInstanceId(), r.GetRelease().GetId())
 			if !strings.Contains(logBuf.String(), wantIssueLog) {
 				t.Errorf("Expected log %q to contain %q", logBuf.String(), wantIssueLog)
 			}
