@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
+	"log"
+	"strings"
 	"testing"
 	"time"
 
@@ -14,6 +17,7 @@ import (
 	pbgd "github.com/brotherlogic/godiscogs/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbro "github.com/brotherlogic/recordsorganiser/proto"
+	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 type testScorer struct {
@@ -80,9 +84,18 @@ type testSyncer struct {
 	badInventory    bool
 	count           int
 	lastSaleNotes   string
+	lastSalePrice   float32
 	removedSaleID   int
-	instanceInfo    map[int64]*godiscogs.InstanceInfo
-	saleID          int64
+	instanceInfo        map[int64]*godiscogs.InstanceInfo
+	saleID              int64
+	currentSaleStateErr    error
+	currentSaleState       pbgd.SaleState
+	getCurrentSaleCalls    int
+	lastUpdatedSaleNotes   string
+	lastUpdatedSaleStatus  string
+	lastUpdatedSalePrice   float32
+	updateSaleListingCalls int
+	failUpdateSaleListing  bool
 }
 
 func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int64]*godiscogs.InstanceInfo, error) {
@@ -111,6 +124,17 @@ func (t *testSyncer) UpdateSalePrice(ctx context.Context, saleID int, releaseID 
 	if t.failSalePrice {
 		return fmt.Errorf("built to fail")
 	}
+	return nil
+}
+
+func (t *testSyncer) UpdateSaleListing(ctx context.Context, saleID int64, releaseID int, condition, sleeve, state, notes string, price float32) error {
+	t.updateSaleListingCalls++
+	if t.failUpdateSaleListing {
+		return fmt.Errorf("built to fail")
+	}
+	t.lastUpdatedSaleNotes = notes
+	t.lastUpdatedSaleStatus = state
+	t.lastUpdatedSalePrice = price
 	return nil
 }
 
@@ -166,6 +190,7 @@ func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID, in
 
 func (t *testSyncer) SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int, notes string) (int64, error) {
 	t.lastSaleNotes = notes
+	t.lastSalePrice = price
 	if t.saleID != 0 {
 		return t.saleID, nil
 	}
@@ -193,6 +218,13 @@ func (t *testSyncer) GetCurrentSalePrice(ctx context.Context, saleID int64) floa
 }
 
 func (t *testSyncer) GetCurrentSaleState(ctx context.Context, saleID int64) (pbgd.SaleState, error) {
+	t.getCurrentSaleCalls++
+	if t.currentSaleStateErr != nil {
+		return pbgd.SaleState_NOT_FOR_SALE, t.currentSaleStateErr
+	}
+	if t.currentSaleState != 0 {
+		return t.currentSaleState, nil
+	}
 	return pbgd.SaleState_FOR_SALE, nil
 }
 
@@ -902,5 +934,1146 @@ func TestCacheRecordPackageScoreDefaultMockData(t *testing.T) {
 		t.Errorf("PackageScore default mock data not extracted: got %v, want 4", r.GetMetadata().GetPackageScore())
 	}
 }
+
+func TestReconcileDeletedSale(t *testing.T) {
+	tests := []struct {
+		name             string
+		initialCategory  pb.ReleaseMetadata_Category
+		initialSaleId    int64
+		initialSalePrice int32
+		initialCurrPrice int32
+		initialSaleState pbgd.SaleState
+		initialSaleDirty bool
+		takenToStore     bool
+		expectedCategory pb.ReleaseMetadata_Category
+	}{
+		{
+			name:             "ListedToSell transitions to PrepareToSell and resets fields",
+			initialCategory:  pb.ReleaseMetadata_LISTED_TO_SELL,
+			initialSaleId:    12345,
+			initialSalePrice: 2000,
+			initialCurrPrice: 1900,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			expectedCategory: pb.ReleaseMetadata_PREPARE_TO_SELL,
+		},
+		{
+			name:             "StaleSale transitions to PrepareToSell and resets fields",
+			initialCategory:  pb.ReleaseMetadata_STALE_SALE,
+			initialSaleId:    54321,
+			initialSalePrice: 1500,
+			initialCurrPrice: 1500,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			expectedCategory: pb.ReleaseMetadata_PREPARE_TO_SELL,
+		},
+		{
+			name:             "ListedToSell with TakenToStore preserves category and resets fields",
+			initialCategory:  pb.ReleaseMetadata_LISTED_TO_SELL,
+			initialSaleId:    12346,
+			initialSalePrice: 2000,
+			initialCurrPrice: 1900,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			takenToStore:     true,
+			expectedCategory: pb.ReleaseMetadata_LISTED_TO_SELL,
+		},
+		{
+			name:             "StaleSale with TakenToStore preserves category and resets fields",
+			initialCategory:  pb.ReleaseMetadata_STALE_SALE,
+			initialSaleId:    54322,
+			initialSalePrice: 1500,
+			initialCurrPrice: 1500,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			takenToStore:     true,
+			expectedCategory: pb.ReleaseMetadata_STALE_SALE,
+		},
+		{
+			name:             "Non-sale category IN_COLLECTION is preserved and resets fields",
+			initialCategory:  pb.ReleaseMetadata_IN_COLLECTION,
+			initialSaleId:    999,
+			initialSalePrice: 1000,
+			initialCurrPrice: 1000,
+			initialSaleState: pbgd.SaleState_FOR_SALE,
+			initialSaleDirty: true,
+			expectedCategory: pb.ReleaseMetadata_IN_COLLECTION,
+		},
+		{
+			name:             "Non-sale category SOLD is preserved and resets fields",
+			initialCategory:  pb.ReleaseMetadata_SOLD,
+			initialSaleId:    888,
+			initialSalePrice: 1200,
+			initialCurrPrice: 1200,
+			initialSaleState: pbgd.SaleState_SOLD,
+			initialSaleDirty: true,
+			expectedCategory: pb.ReleaseMetadata_SOLD,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testReconcileDeletedSale_%d", i))
+			ctx := context.Background()
+			instanceID := int64(1000 + i)
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:         int32(2000 + i),
+					InstanceId: instanceID,
+					Title:      "Reconciliation Test",
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:               tc.initialCategory,
+					SaleId:                 tc.initialSaleId,
+					SalePrice:              tc.initialSalePrice,
+					CurrentSalePrice:       tc.initialCurrPrice,
+					SaleState:              tc.initialSaleState,
+					SaleDirty:              tc.initialSaleDirty,
+					RefreshSaleDescription: true,
+					TakenToStore:           tc.takenToStore,
+				},
+			}
+
+			// Pre-save record in server storage
+			err := s.saveRecord(ctx, r)
+			if err != nil {
+				t.Fatalf("Failed to pre-save record: %v", err)
+			}
+
+			metricBefore := testutil.ToFloat64(deletedSaleReconciled)
+
+			// Call reconcileDeletedSale
+			err = s.reconcileDeletedSale(ctx, r)
+			if err != nil {
+				t.Fatalf("reconcileDeletedSale failed: %v", err)
+			}
+
+			metricAfter := testutil.ToFloat64(deletedSaleReconciled)
+			if metricAfter-metricBefore != 1 {
+				t.Errorf("deletedSaleReconciled metric increment: got diff %v, want 1", metricAfter-metricBefore)
+			}
+
+			// Assert in-memory record modifications
+			if r.GetMetadata().GetSaleId() != -1 {
+				t.Errorf("SaleId: got %v, want -1", r.GetMetadata().GetSaleId())
+			}
+			if r.GetMetadata().GetSalePrice() != -1 {
+				t.Errorf("SalePrice: got %v, want -1", r.GetMetadata().GetSalePrice())
+			}
+			if r.GetMetadata().GetCurrentSalePrice() != -1 {
+				t.Errorf("CurrentSalePrice: got %v, want -1", r.GetMetadata().GetCurrentSalePrice())
+			}
+			if r.GetMetadata().GetSaleState() != pbgd.SaleState_NOT_FOR_SALE {
+				t.Errorf("SaleState: got %v, want %v", r.GetMetadata().GetSaleState(), pbgd.SaleState_NOT_FOR_SALE)
+			}
+			if r.GetMetadata().GetSaleDirty() != false {
+				t.Errorf("SaleDirty: got %v, want false", r.GetMetadata().GetSaleDirty())
+			}
+			if r.GetMetadata().GetRefreshSaleDescription() != false {
+				t.Errorf("RefreshSaleDescription: got %v, want false", r.GetMetadata().GetRefreshSaleDescription())
+			}
+			if r.GetMetadata().GetCategory() != tc.expectedCategory {
+				t.Errorf("Category: got %v, want %v", r.GetMetadata().GetCategory(), tc.expectedCategory)
+			}
+
+			// Assert record updates are saved to storage
+			savedRecord, err := s.loadRecord(ctx, instanceID, false)
+			if err != nil {
+				t.Fatalf("Failed to load saved record: %v", err)
+			}
+			if savedRecord.GetMetadata().GetSaleId() != -1 {
+				t.Errorf("Persisted SaleId: got %v, want -1", savedRecord.GetMetadata().GetSaleId())
+			}
+			if savedRecord.GetMetadata().GetSalePrice() != -1 {
+				t.Errorf("Persisted SalePrice: got %v, want -1", savedRecord.GetMetadata().GetSalePrice())
+			}
+			if savedRecord.GetMetadata().GetCurrentSalePrice() != -1 {
+				t.Errorf("Persisted CurrentSalePrice: got %v, want -1", savedRecord.GetMetadata().GetCurrentSalePrice())
+			}
+			if savedRecord.GetMetadata().GetSaleState() != pbgd.SaleState_NOT_FOR_SALE {
+				t.Errorf("Persisted SaleState: got %v, want %v", savedRecord.GetMetadata().GetSaleState(), pbgd.SaleState_NOT_FOR_SALE)
+			}
+			if savedRecord.GetMetadata().GetSaleDirty() != false {
+				t.Errorf("Persisted SaleDirty: got %v, want false", savedRecord.GetMetadata().GetSaleDirty())
+			}
+			if savedRecord.GetMetadata().GetRefreshSaleDescription() != false {
+				t.Errorf("Persisted RefreshSaleDescription: got %v, want false", savedRecord.GetMetadata().GetRefreshSaleDescription())
+			}
+			if savedRecord.GetMetadata().GetCategory() != tc.expectedCategory {
+				t.Errorf("Persisted Category: got %v, want %v", savedRecord.GetMetadata().GetCategory(), tc.expectedCategory)
+			}
+		})
+	}
+}
+
+func TestUpdateSale_DeletedSale_ReconcilesToPrepareToSell(t *testing.T) {
+	s := InitTestServer(".testUpdateSale_DeletedSale_ReconcilesToPrepareToSell")
+	ctx := context.Background()
+	ts := &testSyncer{
+		currentSaleStateErr: status.Errorf(codes.NotFound, "Sale not found"),
+	}
+	s.retr = ts
+
+	instanceID := int64(1001)
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         1001,
+			InstanceId: instanceID,
+			Title:      "Deleted Sale Record",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			Category:         pb.ReleaseMetadata_LISTED_TO_SELL,
+			SaleId:           555,
+			SalePrice:        2000,
+			CurrentSalePrice: 1900,
+			SaleState:        pbgd.SaleState_FOR_SALE,
+			SaleDirty:        true,
+		},
+	}
+	err := s.saveRecord(ctx, r)
+	if err != nil {
+		t.Fatalf("Failed to save initial record: %v", err)
+	}
+
+	err = s.updateSale(ctx, int32(instanceID))
+	if err != nil {
+		t.Fatalf("updateSale failed unexpectedly: %v", err)
+	}
+
+	saved, err := s.loadRecord(ctx, instanceID, false)
+	if err != nil {
+		t.Fatalf("Failed to reload record: %v", err)
+	}
+
+	if saved.GetMetadata().GetSaleId() != -1 {
+		t.Errorf("SaleId: got %v, want -1", saved.GetMetadata().GetSaleId())
+	}
+	if saved.GetMetadata().GetSalePrice() != -1 {
+		t.Errorf("SalePrice: got %v, want -1", saved.GetMetadata().GetSalePrice())
+	}
+	if saved.GetMetadata().GetCurrentSalePrice() != -1 {
+		t.Errorf("CurrentSalePrice: got %v, want -1", saved.GetMetadata().GetCurrentSalePrice())
+	}
+	if saved.GetMetadata().GetSaleState() != pbgd.SaleState_NOT_FOR_SALE {
+		t.Errorf("SaleState: got %v, want %v", saved.GetMetadata().GetSaleState(), pbgd.SaleState_NOT_FOR_SALE)
+	}
+	if saved.GetMetadata().GetSaleDirty() != false {
+		t.Errorf("SaleDirty: got %v, want false", saved.GetMetadata().GetSaleDirty())
+	}
+	if saved.GetMetadata().GetCategory() != pb.ReleaseMetadata_PREPARE_TO_SELL {
+		t.Errorf("Category: got %v, want %v", saved.GetMetadata().GetCategory(), pb.ReleaseMetadata_PREPARE_TO_SELL)
+	}
+}
+
+func TestUpdateSale_DeletedSale_StaleSale_ReconcilesToPrepareToSell(t *testing.T) {
+	s := InitTestServer(".testUpdateSale_DeletedSale_StaleSale_ReconcilesToPrepareToSell")
+	ctx := context.Background()
+	ts := &testSyncer{
+		currentSaleStateErr: status.Errorf(codes.NotFound, "Sale not found"),
+	}
+	s.retr = ts
+
+	instanceID := int64(1002)
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         1002,
+			InstanceId: instanceID,
+			Title:      "Stale Sale Record",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			Category:         pb.ReleaseMetadata_STALE_SALE,
+			SaleId:           666,
+			SalePrice:        1500,
+			CurrentSalePrice: 1500,
+			SaleState:        pbgd.SaleState_FOR_SALE,
+			SaleDirty:        true,
+		},
+	}
+	err := s.saveRecord(ctx, r)
+	if err != nil {
+		t.Fatalf("Failed to save initial record: %v", err)
+	}
+
+	err = s.updateSale(ctx, int32(instanceID))
+	if err != nil {
+		t.Fatalf("updateSale failed unexpectedly: %v", err)
+	}
+
+	saved, err := s.loadRecord(ctx, instanceID, false)
+	if err != nil {
+		t.Fatalf("Failed to reload record: %v", err)
+	}
+
+	if saved.GetMetadata().GetSaleId() != -1 {
+		t.Errorf("SaleId: got %v, want -1", saved.GetMetadata().GetSaleId())
+	}
+	if saved.GetMetadata().GetSalePrice() != -1 {
+		t.Errorf("SalePrice: got %v, want -1", saved.GetMetadata().GetSalePrice())
+	}
+	if saved.GetMetadata().GetCurrentSalePrice() != -1 {
+		t.Errorf("CurrentSalePrice: got %v, want -1", saved.GetMetadata().GetCurrentSalePrice())
+	}
+	if saved.GetMetadata().GetSaleState() != pbgd.SaleState_NOT_FOR_SALE {
+		t.Errorf("SaleState: got %v, want %v", saved.GetMetadata().GetSaleState(), pbgd.SaleState_NOT_FOR_SALE)
+	}
+	if saved.GetMetadata().GetSaleDirty() != false {
+		t.Errorf("SaleDirty: got %v, want false", saved.GetMetadata().GetSaleDirty())
+	}
+	if saved.GetMetadata().GetCategory() != pb.ReleaseMetadata_PREPARE_TO_SELL {
+		t.Errorf("Category: got %v, want %v", saved.GetMetadata().GetCategory(), pb.ReleaseMetadata_PREPARE_TO_SELL)
+	}
+}
+
+func TestUpdateSale_DeletedSale_NonSaleCategoryPreserved(t *testing.T) {
+	categories := []pb.ReleaseMetadata_Category{
+		pb.ReleaseMetadata_IN_COLLECTION,
+		pb.ReleaseMetadata_SOLD,
+	}
+
+	for i, cat := range categories {
+		t.Run(cat.String(), func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testUpdateSale_DeletedSale_NonSale_%d", i))
+			ctx := context.Background()
+			ts := &testSyncer{
+				currentSaleStateErr: status.Errorf(codes.NotFound, "Sale not found"),
+			}
+			s.retr = ts
+
+			instanceID := int64(1003 + i)
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:         int32(1003 + i),
+					InstanceId: instanceID,
+					Title:      "Non Sale Category Record",
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:         cat,
+					SaleId:           777,
+					SalePrice:        1000,
+					CurrentSalePrice: 1000,
+					SaleState:        pbgd.SaleState_FOR_SALE,
+					SaleDirty:        true,
+				},
+			}
+			err := s.saveRecord(ctx, r)
+			if err != nil {
+				t.Fatalf("Failed to save initial record: %v", err)
+			}
+
+			err = s.updateSale(ctx, int32(instanceID))
+			if err != nil {
+				t.Fatalf("updateSale failed unexpectedly: %v", err)
+			}
+
+			saved, err := s.loadRecord(ctx, instanceID, false)
+			if err != nil {
+				t.Fatalf("Failed to reload record: %v", err)
+			}
+
+			if saved.GetMetadata().GetSaleId() != -1 {
+				t.Errorf("SaleId: got %v, want -1", saved.GetMetadata().GetSaleId())
+			}
+			if saved.GetMetadata().GetSalePrice() != -1 {
+				t.Errorf("SalePrice: got %v, want -1", saved.GetMetadata().GetSalePrice())
+			}
+			if saved.GetMetadata().GetCurrentSalePrice() != -1 {
+				t.Errorf("CurrentSalePrice: got %v, want -1", saved.GetMetadata().GetCurrentSalePrice())
+			}
+			if saved.GetMetadata().GetSaleState() != pbgd.SaleState_NOT_FOR_SALE {
+				t.Errorf("SaleState: got %v, want %v", saved.GetMetadata().GetSaleState(), pbgd.SaleState_NOT_FOR_SALE)
+			}
+			if saved.GetMetadata().GetSaleDirty() != false {
+				t.Errorf("SaleDirty: got %v, want false", saved.GetMetadata().GetSaleDirty())
+			}
+			if saved.GetMetadata().GetCategory() != cat {
+				t.Errorf("Category: got %v, want %v", saved.GetMetadata().GetCategory(), cat)
+			}
+		})
+	}
+}
+
+func TestUpdateSale_TransientError_Propagates(t *testing.T) {
+	s := InitTestServer(".testUpdateSale_TransientError_Propagates")
+	ctx := context.Background()
+	ts := &testSyncer{
+		currentSaleStateErr: status.Errorf(codes.ResourceExhausted, "Rate limited"),
+	}
+	s.retr = ts
+
+	instanceID := int64(1010)
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         1010,
+			InstanceId: instanceID,
+			Title:      "Transient Error Record",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			Category:         pb.ReleaseMetadata_LISTED_TO_SELL,
+			SaleId:           999,
+			SalePrice:        2000,
+			CurrentSalePrice: 2000,
+			SaleState:        pbgd.SaleState_FOR_SALE,
+			SaleDirty:        true,
+		},
+	}
+	err := s.saveRecord(ctx, r)
+	if err != nil {
+		t.Fatalf("Failed to save initial record: %v", err)
+	}
+
+	err = s.updateSale(ctx, int32(instanceID))
+	if err == nil {
+		t.Fatalf("Expected error from updateSale, got nil")
+	}
+	if status.Code(err) != codes.ResourceExhausted {
+		t.Errorf("Error code: got %v, want %v", status.Code(err), codes.ResourceExhausted)
+	}
+
+	saved, err := s.loadRecord(ctx, instanceID, false)
+	if err != nil {
+		t.Fatalf("Failed to reload record: %v", err)
+	}
+
+	if saved.GetMetadata().GetSaleId() != 999 {
+		t.Errorf("SaleId: got %v, want 999 (should not be modified on transient error)", saved.GetMetadata().GetSaleId())
+	}
+	if saved.GetMetadata().GetCategory() != pb.ReleaseMetadata_LISTED_TO_SELL {
+		t.Errorf("Category: got %v, want %v", saved.GetMetadata().GetCategory(), pb.ReleaseMetadata_LISTED_TO_SELL)
+	}
+}
+
+func TestUpdateSale_IdempotentOnResetRecord(t *testing.T) {
+	s := InitTestServer(".testUpdateSale_IdempotentOnResetRecord")
+	ctx := context.Background()
+	ts := &testSyncer{
+		currentSaleStateErr: status.Errorf(codes.NotFound, "Sale not found"),
+	}
+	s.retr = ts
+
+	instanceID := int64(1020)
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         1020,
+			InstanceId: instanceID,
+			Title:      "Already Reset Record",
+		},
+		Metadata: &pb.ReleaseMetadata{
+			Category:         pb.ReleaseMetadata_PREPARE_TO_SELL,
+			SaleId:           -1,
+			SalePrice:        -1,
+			CurrentSalePrice: -1,
+			SaleState:        pbgd.SaleState_NOT_FOR_SALE,
+			SaleDirty:        false,
+		},
+	}
+	err := s.saveRecord(ctx, r)
+	if err != nil {
+		t.Fatalf("Failed to save initial record: %v", err)
+	}
+
+	err = s.updateSale(ctx, int32(instanceID))
+	if err != nil {
+		t.Fatalf("updateSale failed unexpectedly: %v", err)
+	}
+
+	if ts.getCurrentSaleCalls != 0 {
+		t.Errorf("getCurrentSaleCalls: got %v, want 0", ts.getCurrentSaleCalls)
+	}
+}
+
+func TestCacheRecord_AutoFlagsRefreshOnInputChange(t *testing.T) {
+	tests := []struct {
+		name           string
+		category       pb.ReleaseMetadata_Category
+		saleID         int64
+		saleState      pbgd.SaleState
+		initialRecCond string
+		initialSlvCond string
+		initialNotes   string
+		newRecCond     string
+		newSlvCond     string
+		newNotes       string
+		wantFlagged    bool
+	}{
+		{
+			name:           "ActiveListing_NotesChanged",
+			category:       pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:         500,
+			saleState:      pbgd.SaleState_FOR_SALE,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "VG+",
+			newSlvCond:     "VG+",
+			newNotes:       "Updated notes",
+			wantFlagged:    true,
+		},
+		{
+			name:           "ActiveListing_RecordConditionChanged",
+			category:       pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:         500,
+			saleState:      pbgd.SaleState_FOR_SALE,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "NM",
+			newSlvCond:     "VG+",
+			newNotes:       "Original notes",
+			wantFlagged:    true,
+		},
+		{
+			name:           "StaleSale_SleeveConditionChanged",
+			category:       pb.ReleaseMetadata_STALE_SALE,
+			saleID:         500,
+			saleState:      pbgd.SaleState_EXPIRED,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "VG+",
+			newSlvCond:     "VG",
+			newNotes:       "Original notes",
+			wantFlagged:    true,
+		},
+		{
+			name:           "ActiveListing_UnchangedInputs",
+			category:       pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:         500,
+			saleState:      pbgd.SaleState_FOR_SALE,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "VG+",
+			newSlvCond:     "VG+",
+			newNotes:       "Original notes",
+			wantFlagged:    false,
+		},
+		{
+			name:           "UnlistedRecord_NotesChanged",
+			category:       pb.ReleaseMetadata_IN_COLLECTION,
+			saleID:         0,
+			saleState:      pbgd.SaleState_NOT_FOR_SALE,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "NM",
+			newSlvCond:     "NM",
+			newNotes:       "Updated notes",
+			wantFlagged:    false,
+		},
+		{
+			name:           "SoldRecord_NotesChanged",
+			category:       pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:         500,
+			saleState:      pbgd.SaleState_SOLD,
+			initialRecCond: "VG+",
+			initialSlvCond: "VG+",
+			initialNotes:   "Original notes",
+			newRecCond:     "NM",
+			newSlvCond:     "NM",
+			newNotes:       "Updated notes",
+			wantFlagged:    false,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testCacheRecord_AutoFlagsRefresh_%d", i))
+			ctx := context.Background()
+			instanceID := int64(4000 + i)
+
+			s.retr = &testSyncer{
+				instanceInfo: map[int64]*godiscogs.InstanceInfo{
+					instanceID: {
+						RecordCondition: tc.newRecCond,
+						SleeveCondition: tc.newSlvCond,
+						Notes:           tc.newNotes,
+					},
+				},
+			}
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:              int32(4000 + i),
+					InstanceId:      instanceID,
+					Title:           "Cache Refresh Test",
+					RecordCondition: tc.initialRecCond,
+					SleeveCondition: tc.initialSlvCond,
+					Tracklist:       []*pbgd.Track{{Title: "Track 1"}},
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:  tc.category,
+					SaleId:    tc.saleID,
+					SaleState: tc.saleState,
+					Notes:     tc.initialNotes,
+					LastCache: time.Now().Unix(),
+				},
+			}
+
+			if err := s.cacheRecord(ctx, r, true); err != nil {
+				t.Fatalf("cacheRecord failed: %v", err)
+			}
+
+			if r.GetMetadata().GetRefreshSaleDescription() != tc.wantFlagged {
+				t.Errorf("RefreshSaleDescription: got %v, want %v", r.GetMetadata().GetRefreshSaleDescription(), tc.wantFlagged)
+			}
+			if r.GetMetadata().GetSaleDirty() != tc.wantFlagged {
+				t.Errorf("SaleDirty: got %v, want %v", r.GetMetadata().GetSaleDirty(), tc.wantFlagged)
+			}
+		})
+	}
+}
+
+func TestSyncRecords_AutoFlagsRefreshOnConditionChange(t *testing.T) {
+	tests := []struct {
+		name               string
+		category           pb.ReleaseMetadata_Category
+		saleID             int64
+		saleState          pbgd.SaleState
+		initialRecCond     string
+		initialSlvCond     string
+		incomingRecCond    string
+		incomingSlvCond    string
+		wantRefreshFlagged bool
+		wantSaleDirty      bool
+	}{
+		{
+			name:               "ActiveListing_RecordConditionChanged",
+			category:           pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:             500,
+			saleState:          pbgd.SaleState_FOR_SALE,
+			initialRecCond:     "VG+",
+			initialSlvCond:     "VG+",
+			incomingRecCond:    "NM",
+			incomingSlvCond:    "VG+",
+			wantRefreshFlagged: true,
+			wantSaleDirty:      true,
+		},
+		{
+			name:               "StaleSale_SleeveConditionChanged",
+			category:           pb.ReleaseMetadata_STALE_SALE,
+			saleID:             500,
+			saleState:          pbgd.SaleState_EXPIRED,
+			initialRecCond:     "VG+",
+			initialSlvCond:     "VG+",
+			incomingRecCond:    "VG+",
+			incomingSlvCond:    "VG",
+			wantRefreshFlagged: true,
+			wantSaleDirty:      true,
+		},
+		{
+			name:               "ActiveListing_ConditionsUnchanged",
+			category:           pb.ReleaseMetadata_LISTED_TO_SELL,
+			saleID:             500,
+			saleState:          pbgd.SaleState_FOR_SALE,
+			initialRecCond:     "VG+",
+			initialSlvCond:     "VG+",
+			incomingRecCond:    "VG+",
+			incomingSlvCond:    "VG+",
+			wantRefreshFlagged: false,
+			wantSaleDirty:      false,
+		},
+		{
+			name:               "UnlistedRecord_RecordConditionChanged",
+			category:           pb.ReleaseMetadata_IN_COLLECTION,
+			saleID:             0,
+			saleState:          pbgd.SaleState_NOT_FOR_SALE,
+			initialRecCond:     "VG",
+			initialSlvCond:     "VG",
+			incomingRecCond:    "VG+",
+			incomingSlvCond:    "VG+",
+			wantRefreshFlagged: false,
+			wantSaleDirty:      false,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testSyncRecords_AutoFlagsRefresh_%d", i))
+			ctx := context.Background()
+			instanceID := int64(5000 + i)
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:              int32(5000 + i),
+					InstanceId:      instanceID,
+					Title:           "Sync Refresh Test",
+					RecordCondition: tc.initialRecCond,
+					SleeveCondition: tc.initialSlvCond,
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:  tc.category,
+					SaleId:    tc.saleID,
+					SaleState: tc.saleState,
+				},
+			}
+
+			incoming := &pbgd.Release{
+				Id:              int32(5000 + i),
+				InstanceId:      instanceID,
+				RecordCondition: tc.incomingRecCond,
+				SleeveCondition: tc.incomingSlvCond,
+			}
+
+			s.syncRecords(ctx, r, incoming, 1)
+
+			if r.GetMetadata().GetRefreshSaleDescription() != tc.wantRefreshFlagged {
+				t.Errorf("RefreshSaleDescription: got %v, want %v", r.GetMetadata().GetRefreshSaleDescription(), tc.wantRefreshFlagged)
+			}
+			if r.GetMetadata().GetSaleDirty() != tc.wantSaleDirty {
+				t.Errorf("SaleDirty: got %v, want %v", r.GetMetadata().GetSaleDirty(), tc.wantSaleDirty)
+			}
+		})
+	}
+}
+
+func TestTestSyncer_UpdateSaleListing(t *testing.T) {
+	ts := &testSyncer{}
+	var s saver = ts
+
+	err := s.UpdateSaleListing(context.Background(), 1001, 2002, "VG+", "VG", "For Sale", "Updated description", 25.50)
+	if err != nil {
+		t.Fatalf("Expected no error, got: %v", err)
+	}
+	if ts.updateSaleListingCalls != 1 {
+		t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+	}
+	if ts.lastUpdatedSaleNotes != "Updated description" {
+		t.Errorf("lastUpdatedSaleNotes: got %q, want %q", ts.lastUpdatedSaleNotes, "Updated description")
+	}
+	if ts.lastUpdatedSaleStatus != "For Sale" {
+		t.Errorf("lastUpdatedSaleStatus: got %q, want %q", ts.lastUpdatedSaleStatus, "For Sale")
+	}
+	if ts.lastUpdatedSalePrice != 25.50 {
+		t.Errorf("lastUpdatedSalePrice: got %v, want 25.50", ts.lastUpdatedSalePrice)
+	}
+
+	ts.failUpdateSaleListing = true
+	err = s.UpdateSaleListing(context.Background(), 1001, 2002, "VG+", "VG", "Expired", "Another description", 19.99)
+	if err == nil {
+		t.Fatalf("Expected error when failUpdateSaleListing is true, got nil")
+	}
+	if ts.updateSaleListingCalls != 2 {
+		t.Errorf("updateSaleListingCalls: got %d, want 2", ts.updateSaleListingCalls)
+	}
+}
+
+func TestPushSale_RefreshSaleDescription_Success(t *testing.T) {
+	t.Run("ForSale_ExistingSalePrice", func(t *testing.T) {
+		s := InitTestServer(".testPushSale_RefreshSaleDescription_ForSale")
+		ctx := context.Background()
+		ts := &testSyncer{}
+		s.retr = ts
+		s.generator = &testGenerator{desc: "Refreshed Description"}
+
+		instanceID := int64(6001)
+		r := &pb.Record{
+			Release: &pbgd.Release{
+				Id:              6001,
+				InstanceId:      instanceID,
+				Title:           "Refresh For Sale Album",
+				RecordCondition: "Near Mint (NM or M-)",
+				SleeveCondition: "Very Good Plus (VG+)",
+			},
+			Metadata: &pb.ReleaseMetadata{
+				Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+				SaleId:                 500,
+				SalePrice:              2500,
+				SaleState:              pbgd.SaleState_FOR_SALE,
+				SaleDirty:              true,
+				RefreshSaleDescription: true,
+				SaleDescription:        "Old description",
+				Notes:                  "Clean copy",
+			},
+		}
+		if err := s.saveRecord(ctx, r); err != nil {
+			t.Fatalf("saveRecord failed: %v", err)
+		}
+
+		pushed, err := s.pushSale(ctx, r)
+		if err != nil {
+			t.Fatalf("pushSale failed: %v", err)
+		}
+		if !pushed {
+			t.Errorf("Expected pushed = true, got false")
+		}
+		if ts.updateSaleListingCalls != 1 {
+			t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+		}
+		if ts.lastUpdatedSaleNotes != "Refreshed Description" {
+			t.Errorf("lastUpdatedSaleNotes: got %q, want %q", ts.lastUpdatedSaleNotes, "Refreshed Description")
+		}
+		if ts.lastUpdatedSaleStatus != "For Sale" {
+			t.Errorf("lastUpdatedSaleStatus: got %q, want %q", ts.lastUpdatedSaleStatus, "For Sale")
+		}
+		if ts.lastUpdatedSalePrice != 25.0 {
+			t.Errorf("lastUpdatedSalePrice: got %v, want 25.0", ts.lastUpdatedSalePrice)
+		}
+		if r.GetMetadata().GetSaleDescription() != "Refreshed Description" {
+			t.Errorf("SaleDescription: got %q, want %q", r.GetMetadata().GetSaleDescription(), "Refreshed Description")
+		}
+		if r.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected RefreshSaleDescription = false, got true")
+		}
+		if r.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected SaleDirty = false, got true")
+		}
+
+		saved, err := s.loadRecord(ctx, instanceID, false)
+		if err != nil {
+			t.Fatalf("loadRecord failed: %v", err)
+		}
+		if saved.GetMetadata().GetSaleDescription() != "Refreshed Description" {
+			t.Errorf("Persisted SaleDescription: got %q, want %q", saved.GetMetadata().GetSaleDescription(), "Refreshed Description")
+		}
+		if saved.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected persisted RefreshSaleDescription = false, got true")
+		}
+		if saved.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected persisted SaleDirty = false, got true")
+		}
+	})
+
+	t.Run("Expired_WithNewSalePrice", func(t *testing.T) {
+		s := InitTestServer(".testPushSale_RefreshSaleDescription_Expired")
+		ctx := context.Background()
+		ts := &testSyncer{}
+		s.retr = ts
+		s.generator = &testGenerator{desc: "Refreshed Expired Description"}
+
+		instanceID := int64(6002)
+		r := &pb.Record{
+			Release: &pbgd.Release{
+				Id:              6002,
+				InstanceId:      instanceID,
+				Title:           "Refresh Expired Album",
+				RecordCondition: "Very Good Plus (VG+)",
+				SleeveCondition: "Very Good (VG)",
+			},
+			Metadata: &pb.ReleaseMetadata{
+				Category:               pb.ReleaseMetadata_STALE_SALE,
+				SaleId:                 501,
+				SalePrice:              2500,
+				NewSalePrice:           2200,
+				SaleState:              pbgd.SaleState_EXPIRED,
+				SaleDirty:              true,
+				RefreshSaleDescription: true,
+				SaleDescription:        "Old description",
+				Notes:                  "Slight shelf wear",
+			},
+		}
+		if err := s.saveRecord(ctx, r); err != nil {
+			t.Fatalf("saveRecord failed: %v", err)
+		}
+
+		pushed, err := s.pushSale(ctx, r)
+		if err != nil {
+			t.Fatalf("pushSale failed: %v", err)
+		}
+		if !pushed {
+			t.Errorf("Expected pushed = true, got false")
+		}
+		if ts.updateSaleListingCalls != 1 {
+			t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+		}
+		if ts.lastUpdatedSaleNotes != "Refreshed Expired Description" {
+			t.Errorf("lastUpdatedSaleNotes: got %q, want %q", ts.lastUpdatedSaleNotes, "Refreshed Expired Description")
+		}
+		if ts.lastUpdatedSaleStatus != "Expired" {
+			t.Errorf("lastUpdatedSaleStatus: got %q, want %q", ts.lastUpdatedSaleStatus, "Expired")
+		}
+		if ts.lastUpdatedSalePrice != 22.0 {
+			t.Errorf("lastUpdatedSalePrice: got %v, want 22.0", ts.lastUpdatedSalePrice)
+		}
+		if r.GetMetadata().GetSalePrice() != 2200 {
+			t.Errorf("SalePrice: got %d, want 2200", r.GetMetadata().GetSalePrice())
+		}
+		if r.GetMetadata().GetNewSalePrice() != 0 {
+			t.Errorf("NewSalePrice: got %d, want 0", r.GetMetadata().GetNewSalePrice())
+		}
+		if r.GetMetadata().GetLastSalePriceUpdate() == 0 {
+			t.Errorf("Expected LastSalePriceUpdate to be set, got 0")
+		}
+		if r.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected RefreshSaleDescription = false, got true")
+		}
+		if r.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected SaleDirty = false, got true")
+		}
+	})
+}
+
+func TestPushSale_RefreshSaleDescription_MissingInputs(t *testing.T) {
+	tests := []struct {
+		name            string
+		recordCondition string
+		sleeveCondition string
+		notes           string
+	}{
+		{
+			name:            "MissingNotes",
+			recordCondition: "VG+",
+			sleeveCondition: "VG+",
+			notes:           "",
+		},
+		{
+			name:            "MissingRecordCondition",
+			recordCondition: "",
+			sleeveCondition: "VG+",
+			notes:           "Clean copy",
+		},
+		{
+			name:            "MissingSleeveCondition",
+			recordCondition: "VG+",
+			sleeveCondition: "",
+			notes:           "Clean copy",
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testPushSale_RefreshMissingInputs_%d", i))
+			ctx := context.Background()
+			ts := &testSyncer{}
+			s.retr = ts
+			s.generator = &testGenerator{desc: "Should Not Be Used"}
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:              int32(6100 + i),
+					InstanceId:      int64(6100 + i),
+					Title:           "Missing Inputs Album",
+					RecordCondition: tc.recordCondition,
+					SleeveCondition: tc.sleeveCondition,
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+					SaleId:                 500,
+					SalePrice:              2000,
+					SaleState:              pbgd.SaleState_FOR_SALE,
+					SaleDirty:              true,
+					RefreshSaleDescription: true,
+					SaleDescription:        "Existing Description",
+					Notes:                  tc.notes,
+				},
+			}
+
+			beforeAlerts := s.AlertsFired
+			var logBuf bytes.Buffer
+			origOut := log.Writer()
+			log.SetOutput(&logBuf)
+			defer log.SetOutput(origOut)
+
+			pushed, err := s.pushSale(ctx, r)
+			if status.Code(err) != codes.FailedPrecondition {
+				t.Errorf("Expected codes.FailedPrecondition, got %v (%v)", status.Code(err), err)
+			}
+			if pushed {
+				t.Errorf("Expected pushed = false, got true")
+			}
+			if s.AlertsFired != beforeAlerts+1 {
+				t.Errorf("Expected AlertsFired = %d, got %d", beforeAlerts+1, s.AlertsFired)
+			}
+			wantIssueLog := fmt.Sprintf("Bouncing Issue (recordalerting) %v needs condition and notes -> This one [%v]: https://www.discogs.com/madeup/release/%v", r.GetRelease().GetInstanceId(), r.GetRelease().GetInstanceId(), r.GetRelease().GetId())
+			if !strings.Contains(logBuf.String(), wantIssueLog) {
+				t.Errorf("Expected log %q to contain %q", logBuf.String(), wantIssueLog)
+			}
+			if ts.updateSaleListingCalls != 0 {
+				t.Errorf("updateSaleListingCalls: got %d, want 0", ts.updateSaleListingCalls)
+			}
+			if r.GetMetadata().GetSaleDescription() != "Existing Description" {
+				t.Errorf("SaleDescription: got %q, want %q", r.GetMetadata().GetSaleDescription(), "Existing Description")
+			}
+			if !r.GetMetadata().GetRefreshSaleDescription() {
+				t.Errorf("Expected RefreshSaleDescription to remain true, got false")
+			}
+			if !r.GetMetadata().GetSaleDirty() {
+				t.Errorf("Expected SaleDirty to remain true, got false")
+			}
+		})
+	}
+}
+
+func TestPushSale_RefreshSaleDescription_GeneratorOrDiscogsFailure(t *testing.T) {
+	t.Run("GeneratorFailure", func(t *testing.T) {
+		s := InitTestServer(".testPushSale_RefreshGenFail")
+		ctx := context.Background()
+		ts := &testSyncer{}
+		s.retr = ts
+		s.generator = &testGenerator{fail: true}
+
+		r := &pb.Record{
+			Release: &pbgd.Release{
+				Id:              6201,
+				InstanceId:      6201,
+				Title:           "Gen Failure Album",
+				RecordCondition: "VG+",
+				SleeveCondition: "VG+",
+			},
+			Metadata: &pb.ReleaseMetadata{
+				Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+				SaleId:                 500,
+				SalePrice:              2000,
+				SaleState:              pbgd.SaleState_FOR_SALE,
+				SaleDirty:              true,
+				RefreshSaleDescription: true,
+				SaleDescription:        "Existing Description",
+				Notes:                  "Clean copy",
+			},
+		}
+
+		pushed, err := s.pushSale(ctx, r)
+		if err == nil {
+			t.Fatalf("Expected generator error, got nil")
+		}
+		if pushed {
+			t.Errorf("Expected pushed = false, got true")
+		}
+		if ts.updateSaleListingCalls != 0 {
+			t.Errorf("updateSaleListingCalls: got %d, want 0", ts.updateSaleListingCalls)
+		}
+		if r.GetMetadata().GetSaleDescription() != "Existing Description" {
+			t.Errorf("SaleDescription: got %q, want %q", r.GetMetadata().GetSaleDescription(), "Existing Description")
+		}
+		if !r.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected RefreshSaleDescription to remain true, got false")
+		}
+		if !r.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected SaleDirty to remain true, got false")
+		}
+	})
+
+	t.Run("DiscogsUpdateFailure", func(t *testing.T) {
+		s := InitTestServer(".testPushSale_RefreshDiscogsFail")
+		ctx := context.Background()
+		ts := &testSyncer{failUpdateSaleListing: true}
+		s.retr = ts
+		s.generator = &testGenerator{desc: "New Description"}
+
+		r := &pb.Record{
+			Release: &pbgd.Release{
+				Id:              6202,
+				InstanceId:      6202,
+				Title:           "Discogs Failure Album",
+				RecordCondition: "VG+",
+				SleeveCondition: "VG+",
+			},
+			Metadata: &pb.ReleaseMetadata{
+				Category:               pb.ReleaseMetadata_LISTED_TO_SELL,
+				SaleId:                 500,
+				SalePrice:              2000,
+				SaleState:              pbgd.SaleState_FOR_SALE,
+				SaleDirty:              true,
+				RefreshSaleDescription: true,
+				SaleDescription:        "Existing Description",
+				Notes:                  "Clean copy",
+			},
+		}
+
+		pushed, err := s.pushSale(ctx, r)
+		if err == nil {
+			t.Fatalf("Expected UpdateSaleListing error, got nil")
+		}
+		if pushed {
+			t.Errorf("Expected pushed = false, got true")
+		}
+		if ts.updateSaleListingCalls != 1 {
+			t.Errorf("updateSaleListingCalls: got %d, want 1", ts.updateSaleListingCalls)
+		}
+		if r.GetMetadata().GetSaleDescription() != "Existing Description" {
+			t.Errorf("SaleDescription: got %q, want %q", r.GetMetadata().GetSaleDescription(), "Existing Description")
+		}
+		if !r.GetMetadata().GetRefreshSaleDescription() {
+			t.Errorf("Expected RefreshSaleDescription to remain true, got false")
+		}
+		if !r.GetMetadata().GetSaleDirty() {
+			t.Errorf("Expected SaleDirty to remain true, got false")
+		}
+	})
+}
+
+func TestCacheRecord_UpdatesCostFromDiscogsPurchasePrice(t *testing.T) {
+	tests := []struct {
+		name          string
+		initialCost   int32
+		purchasePrice int32
+		wantCost      int32
+	}{
+		{
+			name:          "InitialZeroCost_UpdatesFromPositivePurchasePrice",
+			initialCost:   0,
+			purchasePrice: 2150,
+			wantCost:      2150,
+		},
+		{
+			name:          "ExistingNonZeroCost_OverwrittenByPositivePurchasePrice",
+			initialCost:   21500,
+			purchasePrice: 2150,
+			wantCost:      2150,
+		},
+		{
+			name:          "ExistingNonZeroCost_PreservedWhenPurchasePriceZero",
+			initialCost:   21500,
+			purchasePrice: 0,
+			wantCost:      21500,
+		},
+	}
+
+	for i, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(fmt.Sprintf(".testCacheRecord_PurchasePrice_%d", i))
+			ctx := context.Background()
+			instanceID := int64(7000 + i)
+
+			s.retr = &testSyncer{
+				instanceInfo: map[int64]*godiscogs.InstanceInfo{
+					instanceID: {
+						PurchasePrice:   tc.purchasePrice,
+						RecordCondition: "Near Mint (NM or M-)",
+						SleeveCondition: "Near Mint (NM or M-)",
+						Notes:           "Like new",
+						FolderId:        242017,
+					},
+				},
+			}
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:              int32(7000 + i),
+					InstanceId:      instanceID,
+					Title:           "Marjassa",
+					RecordCondition: "Near Mint (NM or M-)",
+					SleeveCondition: "Near Mint (NM or M-)",
+					Tracklist:       []*pbgd.Track{{Title: "Marjassa Pt1."}},
+				},
+				Metadata: &pb.ReleaseMetadata{
+					Cost:      tc.initialCost,
+					LastCache: time.Now().Unix(),
+				},
+			}
+
+			if err := s.cacheRecord(ctx, r, true); err != nil {
+				t.Fatalf("cacheRecord failed: %v", err)
+			}
+
+			if r.GetMetadata().GetCost() != tc.wantCost {
+				t.Errorf("in-memory Cost: got %d, want %d", r.GetMetadata().GetCost(), tc.wantCost)
+			}
+
+			saved, err := s.loadRecord(ctx, instanceID, false)
+			if err != nil {
+				t.Fatalf("loadRecord failed: %v", err)
+			}
+			if saved.GetMetadata().GetCost() != tc.wantCost {
+				t.Errorf("persisted Cost: got %d, want %d", saved.GetMetadata().GetCost(), tc.wantCost)
+			}
+		})
+	}
+}
+
+
+
+
+
 
 

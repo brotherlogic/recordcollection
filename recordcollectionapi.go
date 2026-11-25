@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
 	"strings"
 	"time"
 
@@ -179,11 +180,15 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 			updated = (cp != record.GetMetadata().GetCurrentSalePrice() || nss != record.GetMetadata().GetSaleState())
 			record.GetMetadata().SaleState = nss
 			s.CtxLog(ctx, fmt.Sprintf("UPDATEDSALESTATE: [%v] => %v", cp, record.GetMetadata()))
+		} else if status.Code(err) == codes.NotFound {
+			_ = s.reconcileDeletedSale(ctx, record)
+			updated = true
+			updateReason += " RECONCILE_DELETED_SALE"
 		}
 	}
 
 	// Perform a discogs update if needed
-	if record.GetMetadata().GetNeedsGramUpdate() || time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
+	if record.GetMetadata().GetNeedsGramUpdate() || record.GetMetadata().GetRefreshSaleDescription() || time.Since(time.Unix(record.GetMetadata().GetLastCache(), 0)) > time.Hour*24*30 ||
 		(record.GetMetadata().GetFiledUnder() != pb.ReleaseMetadata_FILE_DIGITAL && (record.GetRelease().GetFolderId() == 812802 || record.GetRelease().GetFolderId() == 3386035) && record.GetRelease().GetRecordCondition() == "") ||
 		(len(record.GetRelease().GetImages()) > 0 && strings.Contains(record.GetRelease().GetImages()[0].GetUri(), "img.discogs")) ||
 		len(record.GetRelease().GetTracklist()) == 0 {
@@ -394,6 +399,23 @@ func (s *Server) UpdateWant(ctx context.Context, request *pb.UpdateWantRequest) 
 	return &pb.UpdateWantResponse{}, err
 }
 
+func isEligibleForSaleDescriptionRefresh(rec *pb.Record) bool {
+	if rec == nil || rec.GetMetadata() == nil {
+		return false
+	}
+	cat := rec.GetMetadata().GetCategory()
+	if cat != pb.ReleaseMetadata_LISTED_TO_SELL && cat != pb.ReleaseMetadata_STALE_SALE {
+		return false
+	}
+	if rec.GetMetadata().GetSaleId() <= 1 {
+		return false
+	}
+	if rec.GetMetadata().GetSaleState() == pbgd.SaleState_SOLD {
+		return false
+	}
+	return true
+}
+
 // UpdateRecord updates the record
 func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordRequest) (*pb.UpdateRecordsResponse, error) {
 	if request.GetReason() == "" {
@@ -489,6 +511,14 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 		}
 	}
 
+	if request.GetUpdate().GetMetadata().GetRefreshSaleDescription() {
+		if !isEligibleForSaleDescriptionRefresh(rec) {
+			return nil, status.Errorf(codes.FailedPrecondition, "record %v does not have an active sale listing eligible for sale description refresh", rec.GetRelease().GetInstanceId())
+		}
+		rec.GetMetadata().RefreshSaleDescription = true
+		rec.GetMetadata().SaleDirty = true
+	}
+
 	incomingRating := request.GetUpdate().GetMetadata().GetSetRating()
 	if incomingRating == 0 {
 		incomingRating = request.GetUpdate().GetRelease().GetRating()
@@ -537,7 +567,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			// Tighten validation
 			if len(rec.GetRelease().SleeveCondition) == 0 || len(rec.GetRelease().RecordCondition) == 0 || len(rec.GetMetadata().GetNotes()) == 0 {
 				s.CtxLog(ctx, fmt.Sprintf("Validation failed: sleeve=%v, record=%v, notes=%v", len(rec.GetRelease().SleeveCondition), len(rec.GetRelease().RecordCondition), len(rec.GetMetadata().GetNotes())))
-				s.RaiseIssue(fmt.Sprintf("%v needs condition and notes", rec.GetRelease().GetInstanceId()), "Yes")
+				s.BounceIssue(ctx, fmt.Sprintf("%v needs condition and notes", rec.GetRelease().GetInstanceId()), fmt.Sprintf("This one [%v]: https://www.discogs.com/madeup/release/%v", rec.GetRelease().GetInstanceId(), rec.GetRelease().GetId()), "recordalerting")
 				return nil, status.Errorf(codes.FailedPrecondition, "Sleeve condition, record condition, and notes must not be empty for sale")
 			}
 
@@ -561,12 +591,12 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 				return nil, status.Errorf(codes.Internal, "High price is not set")
 			}
 
-			if float32(rec.GetMetadata().GetHighPrice()/100.0) > price {
-				price = float32(rec.GetMetadata().GetHighPrice()) / 100
+			if float32(rec.GetMetadata().GetHighPrice())/100.0 > price {
+				price = float32(rec.GetMetadata().GetHighPrice()) / 100.0
 			}
 
 			if float32(rec.GetMetadata().GetCost())/100.0 > price {
-				price = float32(rec.GetMetadata().GetCost())
+				price = float32(rec.GetMetadata().GetCost()) / 100.0
 			}
 
 			//230 is approx weight of packaging
@@ -587,7 +617,7 @@ func (s *Server) UpdateRecord(ctx context.Context, request *pb.UpdateRecordReque
 			request.GetUpdate().GetMetadata().SaleState = 0
 			rec.GetMetadata().SaleId = saleid
 			rec.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
-			rec.GetMetadata().SalePrice = int32(price * 100)
+			rec.GetMetadata().SalePrice = int32(math.Round(float64(price) * 100))
 			if saleid > 100 {
 				rec.GetMetadata().SaleState = pbgd.SaleState_FOR_SALE
 			}

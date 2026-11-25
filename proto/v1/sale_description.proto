@@ -20,6 +20,13 @@ enum Grading {
   GRADING_POOR = 8;
 }
 
+enum MediaFormat {
+  MEDIA_FORMAT_UNSPECIFIED = 0;
+  MEDIA_FORMAT_VINYL = 1;
+  MEDIA_FORMAT_CD = 2;
+  MEDIA_FORMAT_MIXED = 3;
+}
+
 message GenerateDescriptionRequest {
   string record_title = 1;
   string artist = 2;
@@ -27,6 +34,7 @@ message GenerateDescriptionRequest {
   Grading sleeve_condition = 4;
   string user_notes = 5;
   bool use_local_model = 6;
+  MediaFormat media_format = 7;
 }
 
 message GenerateDescriptionResponse {

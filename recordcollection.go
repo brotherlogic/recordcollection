@@ -59,6 +59,12 @@ var (
 		Name: "recordcollection_size",
 		Help: "Last update time",
 	})
+	deletedSaleReconciled = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "recordcollection_deleted_sale_reconciled_total",
+			Help: "The total number of deleted marketplace sales reconciled to PREPARE_TO_SELL",
+		},
+	)
 )
 
 type quotaChecker interface {
@@ -119,6 +125,7 @@ type saver interface {
 	RemoveFromWantlist(ctx context.Context, releaseID int) error
 	AddToWantlist(ctx context.Context, releaseID int) error
 	UpdateSalePrice(ctx context.Context, saleID int, releaseID int, condition, sleeve string, price float32) error
+	UpdateSaleListing(ctx context.Context, saleID int64, releaseID int, condition, sleeve, state, notes string, price float32) error
 	GetCurrentSalePrice(ctx context.Context, saleID int64) float32
 	GetCurrentSaleState(ctx context.Context, saleID int64) (pbgd.SaleState, error)
 	RemoveFromSale(ctx context.Context, saleID int, releaseID int) error
@@ -179,6 +186,58 @@ func getGrading(cond string) v1.Grading {
 	return v1.Grading_GRADING_UNSPECIFIED
 }
 
+func getMediaFormat(rec *pb.Record) v1.MediaFormat {
+	hasVinyl := false
+	hasCD := false
+	hasMixed := false
+
+	for _, f := range rec.GetRelease().GetFormats() {
+		switch strings.ToLower(strings.TrimSpace(f.GetName())) {
+		case "vinyl", "lp", "12\"", "10\"", "7\"":
+			hasVinyl = true
+		case "cd", "cdr":
+			hasCD = true
+		case "box set", "boxset":
+			hasMixed = true
+		}
+		for _, desc := range f.GetDescriptions() {
+			switch strings.ToLower(strings.TrimSpace(desc)) {
+			case "vinyl", "lp", "12\"", "10\"", "7\"":
+				hasVinyl = true
+			case "cd", "cdr":
+				hasCD = true
+			case "box set", "boxset":
+				hasMixed = true
+			}
+		}
+	}
+
+	switch rec.GetMetadata().GetFiledUnder() {
+	case pb.ReleaseMetadata_FILE_BOXSET:
+		hasMixed = true
+	case pb.ReleaseMetadata_FILE_12_INCH, pb.ReleaseMetadata_FILE_7_INCH:
+		if !hasVinyl && !hasCD {
+			hasVinyl = true
+		}
+	case pb.ReleaseMetadata_FILE_CD:
+		if !hasVinyl && !hasCD {
+			hasCD = true
+		}
+	}
+
+	if hasMixed || (hasVinyl && hasCD) {
+		return v1.MediaFormat_MEDIA_FORMAT_MIXED
+	}
+	if hasVinyl {
+		return v1.MediaFormat_MEDIA_FORMAT_VINYL
+	}
+	if hasCD {
+		return v1.MediaFormat_MEDIA_FORMAT_CD
+	}
+
+	return v1.MediaFormat_MEDIA_FORMAT_UNSPECIFIED
+}
+
 func (p *prodGenerator) generate(ctx context.Context, address string, rec *pb.Record) (string, error) {
 	conn, err := grpc.Dial(address, grpc.WithInsecure())
 	if err != nil {
@@ -201,6 +260,7 @@ func (p *prodGenerator) generate(ctx context.Context, address string, rec *pb.Re
 		SleeveCondition: getGrading(rec.GetRelease().GetSleeveCondition()),
 		UserNotes:       rec.GetMetadata().GetNotes(),
 		UseLocalModel:   true,
+		MediaFormat:     getMediaFormat(rec),
 	})
 
 	if err != nil {
@@ -774,6 +834,28 @@ func (s *Server) updateRecordSalePrice(ctx context.Context, r *pb.Record) error 
 	r.GetMetadata().CurrentSalePrice = int32(price * 100)
 	r.GetMetadata().SalePriceUpdate = time.Now().Unix()
 	return s.saveRecord(ctx, r)
+}
+
+func (s *Server) reconcileDeletedSale(ctx context.Context, record *pb.Record) error {
+	if record.GetMetadata() == nil {
+		record.Metadata = &pb.ReleaseMetadata{}
+	}
+
+	record.GetMetadata().SaleId = -1
+	record.GetMetadata().SalePrice = -1
+	record.GetMetadata().CurrentSalePrice = -1
+	record.GetMetadata().SaleState = pbgd.SaleState_NOT_FOR_SALE
+	record.GetMetadata().SaleDirty = false
+	record.GetMetadata().RefreshSaleDescription = false
+
+	if !record.GetMetadata().GetTakenToStore() && (record.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || record.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE) {
+		record.GetMetadata().Category = pb.ReleaseMetadata_PREPARE_TO_SELL
+	}
+
+	deletedSaleReconciled.Inc()
+	s.CtxLog(ctx, fmt.Sprintf("Reconciled deleted sale for instance %v: reset sale_id=-1 and category to %v", record.GetRelease().GetInstanceId(), record.GetMetadata().GetCategory()))
+
+	return s.saveRecord(ctx, record)
 }
 
 func main() {

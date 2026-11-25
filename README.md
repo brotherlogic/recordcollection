@@ -10,6 +10,7 @@
 - **Advanced Metadata Tracking**:
     - Physical dimensions (spine width, weight).
     - Condition tracking (media and sleeve).
+    - Purchase price synchronization: synchronizes non-zero `PurchasePrice` values from Discogs custom fields into `metadata.cost` during `cacheRecord` refreshes while preserving existing costs when no Discogs purchase price is set.
     - Package score tracking: parsing and validation in range [0, 5] with issue raising on invalid inputs, -1 default for unrated record stubs, and automated ingestion from Discogs custom fields during cacheRecord synchronization.
     - Rip quality tracking: support for rip quality scores in range [0, 100] via `ripped_quality` metadata field, automatic quality retrieval from the `recorder` service on `last_rip_date` mutation in `UpdateRecord`, sentinel (`-1`) clearing of rip date and quality, Prometheus metric tracking via `recordcollection_quality_fetch_result`, and comprehensive unit test coverage for rip date setting, re-ripping score updates, field updates preservation, clearing, and error/invalid score handling.
     - Out of play status tracking: support for the `out_of_play` boolean field with proto3 field presence on `ReleaseMetadata` to track whether records are temporarily or permanently removed from active play or rotation, verified through gRPC server `UpdateRecord` unit tests covering true toggling, explicit false reset preservation via `proto.Merge`, dirty status preservation, field omission idempotency, and non-existent record handling.
@@ -20,8 +21,9 @@
 
 - **Automated Sale Management**:
     - **Quality Gating & Rip-First Routing**: In `UpdateRecord`, scoring a record in `STAGED_TO_SELL` with sell rating (3) evaluates `ripped_quality`. Records with `ripped_quality < 80` (or unset/0) are diverted to `RIP_THEN_SELL` with score reset (`-1`) to block sale until verified. Records with quality >= 80 escalate to `SOLD` to enter the sale pipeline. Scoring records in `RIP_THEN_SELL` unconditionally escalates them to `SOLD`. Unit tests verify low quality rip diversion, missing quality diversion, quality 80 and 95 sale escalation, keeper rating preservation, unconditional RIP_THEN_SELL sale escalation for score and keeper ratings, and precondition failure on missing notes or sleeve condition.
-    - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition and user notes, utilizing the local Ollama model setting for description generation.
-    - **Dynamic Pricing**: Tracks and updates sale prices based on market data.
+    - **Listing Generation**: Integrates with an external gRPC service to automatically generate rich, descriptive sale listings based on record condition, media format (`MEDIA_FORMAT_VINYL`, `MEDIA_FORMAT_CD`, `MEDIA_FORMAT_MIXED`, `MEDIA_FORMAT_UNSPECIFIED`), and user notes, utilizing the local Ollama model setting for description generation. Supports flagging records for sale description regeneration and Discogs marketplace push via the `refresh_sale_description` boolean field (`81`) on `ReleaseMetadata`, including active-listing eligibility validation (`isEligibleForSaleDescriptionRefresh`) and manual flagging in `UpdateRecord` as well as automatic change detection when `notes`, `record_condition`, or `sleeve_condition` change during `cacheRecord` or `syncRecords`, pre-generation `cacheRecord` synchronization in `CommitRecord`, and description regeneration with in-place Discogs marketplace listing updates in `pushSale` via `UpdateSaleListing` on the `saver` interface (`godiscogs.DiscogsRetriever` and `testSyncer`). When `record_condition`, `sleeve_condition`, or `notes` are missing during initial sale listing (`UpdateRecord`) or sale description refresh (`pushSale`), bounces an issue to the `recordalerting` repository containing a direct Discogs release link (`This one [<instance_id>]: https://www.discogs.com/madeup/release/<release_id>`).
+    - **Dynamic Pricing**: Tracks and updates sale prices based on market data, enforcing minimum listing price floors from `high_price` and `cost` with proper cents-to-dollars conversion.
+    - **Deleted Sale Reconciliation**: Reconciles missing or deleted marketplace listings in `updateSale` and `CommitRecord` by detecting `codes.NotFound` from `GetCurrentSaleState`, resetting sale metadata (`sale_id = -1`, `sale_price = -1`, `current_sale_price = -1`, `sale_state = NOT_FOR_SALE`, `sale_dirty = false`, `refresh_sale_description = false`), transitioning active selling categories (`LISTED_TO_SELL`, `STALE_SALE`) back to `PREPARE_TO_SELL` unless `taken_to_store` is set while preserving non-sale categories, returning `nil` to avoid fanout thrashing, and tracking reconciliations via Prometheus counter `recordcollection_deleted_sale_reconciled_total`.
     - **Blocked Records**: Automatically removes records from sale and updates their properties if they are marked as blocked from sale on Discogs.
     - **Inventory Control**: View and manage current Discogs inventory directly through the service.
 - **Microservice Orchestration**: Coordinates with other services in the ecosystem:
@@ -86,6 +88,7 @@ Key commands:
 - `adjust`: Enqueues records for fanout if they are not already in the queue and not marked as SOLD_ARCHIVE.
 - `out_of_play <instance_id> <true|false>`: Sets or clears the `out_of_play` status of a record in collection metadata.
 - `sleeve_boxsets`: Prints all sleeve boxsets (`ReleaseMetadata_BOX_SET`), outputting the category and instance ID for each record.
+- `refresh_sale_description <instance_id>`: Flags a record for sale description regeneration and in-place Discogs marketplace listing update.
 
 ## Development
 
@@ -112,3 +115,4 @@ Metrics are available via Prometheus. Key metrics include:
 - `recordcollection_recordfolder`: Size of each physical folder.
 - `recordcollection_loop_latency`: Performance tracking for internal processing loops.
 - `recordcollection_sale_descriptor_result`: Counter tracking the gRPC response status codes for calls made to the outbound sale descriptor service.
+- `recordcollection_deleted_sale_reconciled_total`: Total number of deleted marketplace sales reconciled to PREPARE_TO_SELL.

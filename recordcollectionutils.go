@@ -303,7 +303,54 @@ func (s *Server) validateSales(ctx context.Context) error {
 	return nil
 }
 
+func (s *Server) BounceIssue(ctx context.Context, title, body string, job string, labels ...string) {
+	if s.SkipIssue {
+		s.CtxLog(ctx, fmt.Sprintf("Bouncing Issue (%v) %v -> %v", job, title, body))
+	}
+	s.GoServer.BounceIssue(ctx, title, body, job, labels...)
+}
+
 func (s *Server) pushSale(ctx context.Context, val *pb.Record) (bool, error) {
+	if val.GetMetadata().GetSaleDirty() && val.GetMetadata().GetRefreshSaleDescription() && !val.GetMetadata().GetExpireSale() && isEligibleForSaleDescriptionRefresh(val) {
+		if len(val.GetRelease().GetRecordCondition()) == 0 || len(val.GetRelease().GetSleeveCondition()) == 0 || len(val.GetMetadata().GetNotes()) == 0 {
+			s.BounceIssue(ctx, fmt.Sprintf("%v needs condition and notes", val.GetRelease().GetInstanceId()), fmt.Sprintf("This one [%v]: https://www.discogs.com/madeup/release/%v", val.GetRelease().GetInstanceId(), val.GetRelease().GetId()), "recordalerting")
+			return false, status.Errorf(codes.FailedPrecondition, "Sleeve condition, record condition, and notes must not be empty for sale description refresh")
+		}
+
+		desc, err := s.generator.generate(ctx, s.generatorAddress, val)
+		saleDescriptorResults.With(prometheus.Labels{"status_code": status.Code(err).String()}).Inc()
+		if err != nil {
+			return false, err
+		}
+
+		targetPriceCents := val.GetMetadata().GetSalePrice()
+		if val.GetMetadata().GetNewSalePrice() > 0 {
+			targetPriceCents = val.GetMetadata().GetNewSalePrice()
+		}
+
+		stateStr := "For Sale"
+		if val.GetMetadata().GetSaleState() == pbgd.SaleState_EXPIRED {
+			stateStr = "Expired"
+		}
+
+		err = s.retr.UpdateSaleListing(ctx, val.GetMetadata().GetSaleId(), int(val.GetRelease().GetId()), val.GetRelease().GetRecordCondition(), val.GetRelease().GetSleeveCondition(), stateStr, desc, float32(targetPriceCents)/100)
+		if err != nil {
+			return false, err
+		}
+
+		val.GetMetadata().SaleDescription = desc
+		val.GetMetadata().RefreshSaleDescription = false
+		val.GetMetadata().SaleDirty = false
+		if val.GetMetadata().GetNewSalePrice() > 0 {
+			if val.GetMetadata().GetSalePrice() != val.GetMetadata().GetNewSalePrice() {
+				val.GetMetadata().LastSalePriceUpdate = time.Now().Unix()
+			}
+			val.GetMetadata().SalePrice = val.GetMetadata().GetNewSalePrice()
+			val.GetMetadata().NewSalePrice = 0
+		}
+		err = s.saveRecord(ctx, val)
+		return true, err
+	}
 
 	if val.GetMetadata().SaleDirty && !val.GetMetadata().GetExpireSale() && val.GetMetadata().NewSalePrice > 0 &&
 		(val.GetMetadata().Category == pb.ReleaseMetadata_LISTED_TO_SELL ||
@@ -542,6 +589,10 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		}
 
 		s.CtxLog(ctx, fmt.Sprintf("Updating info (%v): %+v", int64(r.GetRelease().GetInstanceId()), mp[int64(r.GetRelease().GetInstanceId())]))
+		prevRecordCond := r.GetRelease().GetRecordCondition()
+		prevSleeveCond := r.GetRelease().GetSleeveCondition()
+		prevNotes := r.GetMetadata().GetNotes()
+
 		r.GetMetadata().DateAdded = mp[int64(r.GetRelease().GetInstanceId())].DateAdded
 		r.GetRelease().RecordCondition = mp[int64(r.GetRelease().GetInstanceId())].RecordCondition
 		r.GetRelease().SleeveCondition = mp[int64(r.GetRelease().GetInstanceId())].SleeveCondition
@@ -549,6 +600,14 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 		r.GetRelease().FolderId = mp[int64(r.GetRelease().GetInstanceId())].FolderId
 		r.GetRelease().Rating = mp[int64(r.GetRelease().GetInstanceId())].Rating
 		r.GetMetadata().Notes = mp[int64(r.GetRelease().GetInstanceId())].Notes
+
+		if isEligibleForSaleDescriptionRefresh(r) &&
+			(r.GetRelease().GetRecordCondition() != prevRecordCond ||
+				r.GetRelease().GetSleeveCondition() != prevSleeveCond ||
+				r.GetMetadata().GetNotes() != prevNotes) {
+			r.GetMetadata().RefreshSaleDescription = true
+			r.GetMetadata().SaleDirty = true
+		}
 
 		if mp[int64(r.GetRelease().GetInstanceId())].LastListenTime > r.GetMetadata().LastListenTime {
 			r.GetMetadata().LastListenTime = mp[int64(r.GetRelease().GetInstanceId())].LastListenTime
@@ -604,7 +663,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 			}
 		}
 
-		if r.GetMetadata().GetCost() == 0 {
+		if mp[int64(r.GetRelease().GetInstanceId())].PurchasePrice > 0 {
 			r.GetMetadata().Cost = mp[int64(r.GetRelease().GetInstanceId())].PurchasePrice
 		}
 
@@ -653,6 +712,8 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbgd.Release, num int64) {
 	//Update record if releases don't match
 	hasCondition := len(r.GetRelease().RecordCondition) > 0
+	prevRecordCond := r.GetRelease().GetRecordCondition()
+	prevSleeveCond := r.GetRelease().GetSleeveCondition()
 
 	//Clear repeated fields first to prevent growth, but images come from
 	//a hard sync so ignore that
@@ -670,6 +731,13 @@ func (s *Server) syncRecords(ctx context.Context, r *pb.Record, record *pbgd.Rel
 	}
 
 	proto.Merge(r.Release, record)
+
+	if isEligibleForSaleDescriptionRefresh(r) &&
+		(r.GetRelease().GetRecordCondition() != prevRecordCond ||
+			r.GetRelease().GetSleeveCondition() != prevSleeveCond) {
+		r.GetMetadata().RefreshSaleDescription = true
+		r.GetMetadata().SaleDirty = true
+	}
 
 	// Set sale dirty if the condition is new
 	if !hasCondition && len(r.Release.RecordCondition) > 0 {
@@ -723,13 +791,16 @@ func (s *Server) syncCollection(ctx context.Context, colNumber int64) error {
 func (s *Server) updateSale(ctx context.Context, iid int32) error {
 	r, err := s.loadRecord(ctx, int64(iid), false)
 	if err == nil {
-		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE {
+		if r.GetMetadata().GetCategory() == pb.ReleaseMetadata_LISTED_TO_SELL || r.GetMetadata().GetCategory() == pb.ReleaseMetadata_STALE_SALE || r.GetMetadata().GetSaleId() > 1 {
 			if r.GetMetadata().SaleId > 1 && !r.GetMetadata().SaleDirty {
 				r.GetMetadata().SalePrice = int32(s.retr.GetCurrentSalePrice(ctx, (r.GetMetadata().SaleId)) * 100)
 			}
 			if r.GetMetadata().SaleId > 1 && r.GetMetadata().SaleState != pbgd.SaleState_SOLD {
 				v, err := s.retr.GetCurrentSaleState(ctx, (r.GetMetadata().SaleId))
 				if err != nil {
+					if status.Code(err) == codes.NotFound {
+						return s.reconcileDeletedSale(ctx, r)
+					}
 					return err
 				}
 				r.GetMetadata().SaleState = v

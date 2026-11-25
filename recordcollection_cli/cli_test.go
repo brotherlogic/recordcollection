@@ -274,3 +274,110 @@ func TestPrintSleeveBoxsets_GetRecordError(t *testing.T) {
 		t.Fatalf("printSleeveBoxsets expected error on GetRecord failure, got nil")
 	}
 }
+
+func TestParseRefreshSaleDescriptionArgs_MissingArgs(t *testing.T) {
+	testCases := [][]string{
+		{"recordcollection_cli"},
+		{"recordcollection_cli", "refresh_sale_description"},
+	}
+
+	for _, args := range testCases {
+		_, err := parseRefreshSaleDescriptionArgs(args)
+		if err == nil {
+			t.Errorf("parseRefreshSaleDescriptionArgs(%v) expected error for missing args, got nil", args)
+		}
+		if !strings.Contains(err.Error(), "Usage:") {
+			t.Errorf("parseRefreshSaleDescriptionArgs(%v) error %q does not contain usage instructions", args, err.Error())
+		}
+	}
+}
+
+func TestParseRefreshSaleDescriptionArgs_InvalidInstanceID(t *testing.T) {
+	args := []string{"recordcollection_cli", "refresh_sale_description", "not-a-number"}
+	_, err := parseRefreshSaleDescriptionArgs(args)
+	if err == nil {
+		t.Fatalf("parseRefreshSaleDescriptionArgs(%v) expected error for invalid instance ID, got nil", args)
+	}
+	if !strings.Contains(err.Error(), "invalid instance ID") {
+		t.Errorf("parseRefreshSaleDescriptionArgs(%v) error %q expected to mention invalid instance ID", args, err.Error())
+	}
+}
+
+func TestParseRefreshSaleDescriptionArgs_Valid(t *testing.T) {
+	args := []string{"recordcollection_cli", "refresh_sale_description", "12345"}
+	iid, err := parseRefreshSaleDescriptionArgs(args)
+	if err != nil {
+		t.Fatalf("parseRefreshSaleDescriptionArgs(%v) unexpected error: %v", args, err)
+	}
+	if iid != 12345 {
+		t.Errorf("parseRefreshSaleDescriptionArgs(%v) got iid %d, want 12345", args, iid)
+	}
+}
+
+func TestBuildRefreshSaleDescriptionRequest(t *testing.T) {
+	req := buildRefreshSaleDescriptionRequest(54321)
+	if req.GetReason() != "CLI-refresh-sale-description" {
+		t.Errorf("buildRefreshSaleDescriptionRequest Reason = %q, want %q", req.GetReason(), "CLI-refresh-sale-description")
+	}
+	if req.GetUpdate().GetRelease().GetInstanceId() != 54321 {
+		t.Errorf("buildRefreshSaleDescriptionRequest InstanceId = %d, want %d", req.GetUpdate().GetRelease().GetInstanceId(), 54321)
+	}
+	if !req.GetUpdate().GetMetadata().GetRefreshSaleDescription() {
+		t.Errorf("buildRefreshSaleDescriptionRequest RefreshSaleDescription = false, want true")
+	}
+}
+
+func TestRunRefreshSaleDescription_Success(t *testing.T) {
+	called := false
+	mock := &mockRecordCollectionClient{
+		updateRecordFn: func(ctx context.Context, req *pbrc.UpdateRecordRequest, opts ...grpc.CallOption) (*pbrc.UpdateRecordsResponse, error) {
+			called = true
+			if req.GetReason() != "CLI-refresh-sale-description" {
+				t.Errorf("unexpected reason: %v", req.GetReason())
+			}
+			if req.GetUpdate().GetRelease().GetInstanceId() != 123 {
+				t.Errorf("unexpected instance id: %v", req.GetUpdate().GetRelease().GetInstanceId())
+			}
+			if !req.GetUpdate().GetMetadata().GetRefreshSaleDescription() {
+				t.Errorf("unexpected refresh_sale_description: %v", req.GetUpdate().GetMetadata().GetRefreshSaleDescription())
+			}
+			return &pbrc.UpdateRecordsResponse{
+				Updated: &pbrc.Record{
+					Release: &pbgd.Release{
+						InstanceId: 123,
+					},
+					Metadata: &pbrc.ReleaseMetadata{
+						RefreshSaleDescription: true,
+					},
+				},
+			}, nil
+		},
+	}
+
+	args := []string{"recordcollection_cli", "refresh_sale_description", "123"}
+	err := runRefreshSaleDescription(context.Background(), mock, args)
+	if err != nil {
+		t.Fatalf("runRefreshSaleDescription failed: %v", err)
+	}
+	if !called {
+		t.Errorf("UpdateRecord was not called")
+	}
+}
+
+func TestRunRefreshSaleDescription_UpdateError(t *testing.T) {
+	mock := &mockRecordCollectionClient{
+		updateRecordFn: func(ctx context.Context, req *pbrc.UpdateRecordRequest, opts ...grpc.CallOption) (*pbrc.UpdateRecordsResponse, error) {
+			return nil, errors.New("rpc network failure")
+		},
+	}
+
+	args := []string{"recordcollection_cli", "refresh_sale_description", "123"}
+	err := runRefreshSaleDescription(context.Background(), mock, args)
+	if err == nil {
+		t.Fatalf("runRefreshSaleDescription expected error on RPC failure, got nil")
+	}
+	if !strings.Contains(err.Error(), "Failed to update record 123") {
+		t.Errorf("unexpected error message: %v", err)
+	}
+}
+

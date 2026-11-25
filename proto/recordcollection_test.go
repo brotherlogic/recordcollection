@@ -98,3 +98,29 @@ func TestReleaseMetadata_OutOfPlay(t *testing.T) {
 	}
 }
 
+func TestReleaseMetadata_RefreshSaleDescription(t *testing.T) {
+	rec := &Record{
+		Metadata: &ReleaseMetadata{
+			RefreshSaleDescription: true,
+		},
+	}
+	if !rec.GetMetadata().GetRefreshSaleDescription() {
+		t.Fatalf("expected refresh_sale_description true, got %v", rec.GetMetadata().GetRefreshSaleDescription())
+	}
+
+	data, err := proto.Marshal(rec)
+	if err != nil {
+		t.Fatalf("failed to marshal Record with refresh_sale_description: %v", err)
+	}
+
+	recUnmarshaled := &Record{}
+	if err := proto.Unmarshal(data, recUnmarshaled); err != nil {
+		t.Fatalf("failed to unmarshal Record: %v", err)
+	}
+
+	if !recUnmarshaled.GetMetadata().GetRefreshSaleDescription() {
+		t.Fatalf("expected unmarshaled refresh_sale_description true, got %v", recUnmarshaled.GetMetadata().GetRefreshSaleDescription())
+	}
+}
+
+

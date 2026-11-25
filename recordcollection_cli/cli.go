@@ -2283,6 +2283,10 @@ func main() {
 		if err := runOutOfPlay(ctx, registry, os.Args); err != nil {
 			log.Fatalf("%v", err)
 		}
+	case "refresh_sale_description":
+		if err := runRefreshSaleDescription(ctx, registry, os.Args); err != nil {
+			log.Fatalf("%v", err)
+		}
 	case "sleeve_boxsets", "sleeve_boxset", "boxsets", "print_sleeve_boxsets":
 		if err := runPrintSleeveBoxsets(ctx, registry); err != nil {
 			log.Fatalf("%v", err)
@@ -2332,6 +2336,46 @@ func runOutOfPlay(ctx context.Context, client pbrc.RecordCollectionServiceClient
 		return fmt.Errorf("Failed to update record %d: %v", iid, err)
 	}
 	fmt.Printf("Record %d out_of_play set to %v\n", iid, val)
+	fmt.Printf("Updated: %v\n", rec)
+	return nil
+}
+
+func parseRefreshSaleDescriptionArgs(args []string) (int64, error) {
+	if len(args) < 3 {
+		return 0, fmt.Errorf("Usage: %v refresh_sale_description <instance_id>", args[0])
+	}
+	iid, err := strconv.ParseInt(args[2], 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid instance ID %v: %v", args[2], err)
+	}
+	return iid, nil
+}
+
+func buildRefreshSaleDescriptionRequest(iid int64) *pbrc.UpdateRecordRequest {
+	return &pbrc.UpdateRecordRequest{
+		Reason: "CLI-refresh-sale-description",
+		Update: &pbrc.Record{
+			Release: &pbgd.Release{
+				InstanceId: iid,
+			},
+			Metadata: &pbrc.ReleaseMetadata{
+				RefreshSaleDescription: true,
+			},
+		},
+	}
+}
+
+func runRefreshSaleDescription(ctx context.Context, client pbrc.RecordCollectionServiceClient, args []string) error {
+	iid, err := parseRefreshSaleDescriptionArgs(args)
+	if err != nil {
+		return err
+	}
+	up := buildRefreshSaleDescriptionRequest(iid)
+	rec, err := client.UpdateRecord(ctx, up)
+	if err != nil {
+		return fmt.Errorf("Failed to update record %d: %v", iid, err)
+	}
+	fmt.Printf("Record %d flagged for sale description refresh\n", iid)
 	fmt.Printf("Updated: %v\n", rec)
 	return nil
 }
