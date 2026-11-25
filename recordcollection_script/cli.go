@@ -216,6 +216,24 @@ func main() {
 			cWidth += r.GetMetadata().GetRecordWidth()
 		}
 		fmt.Printf("Sold %v / %v mm of records (%v/%v in total)\n", cWidth, totalWidth, count, len(records))
+	case "rrsale":
+	     			
+	iid, err := strconv.ParseInt(os.Args[2], 10, 64)
+	if err != nil {
+	       log.Fatalf("invalid instance ID %v: %v", os.Args[2], err)
+	}
+			up := &pbrc.UpdateRecordRequest{Reason: "CLI-sale_cull", Update: &pbrc.Record{
+					Release: &pbgd.Release{InstanceId: iid},
+					Metadata: &pbrc.ReleaseMetadata{
+						SoldPrice:       int32(1),
+						SoldDate:        time.Now().Unix(),
+						DeleteSaleState: pbrc.ReleaseMetadata_DELETE,
+						TakenToStore:    true}}}
+				_, err = registry.UpdateRecord(ctx, up)
+				if err != nil {
+					log.Fatalf("Error: %v", err)
+				}
+	
 	case "factory_reset":
 		all, err := registry.QueryRecords(ctx, &pbrc.QueryRecordsRequest{Query: &pbrc.QueryRecordsRequest_UpdateTime{0}})
 		if err != nil {
@@ -1175,7 +1193,7 @@ func main() {
 					}
 					defer conn2.Close()
 					client2 := pbrs.NewRecordScoreServiceClient(conn2)
-					scores, err := client2.GetScore(ctx2, &pbrs.GetScoreRequest{InstanceId: int32(id)})
+					scores, err := client2.GetScore(ctx2, &pbrs.GetScoreRequest{InstanceId: id})
 					if err != nil {
 						log.Fatalf("Bad score get: %v", err)
 					}
@@ -1393,7 +1411,7 @@ func main() {
 
 			if rec.GetRecord().GetMetadata().GetCategory() == pbrc.ReleaseMetadata_SOLD_ARCHIVE {
 				valid := false
-				scores, err := registry2.GetScore(ctx, &pbrs.GetScoreRequest{InstanceId: int32(id)})
+				scores, err := registry2.GetScore(ctx, &pbrs.GetScoreRequest{InstanceId: id})
 				if err != nil {
 					log.Fatalf("Err: %v", err)
 				}
