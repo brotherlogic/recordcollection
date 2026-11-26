@@ -3,10 +3,13 @@ package main
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -2649,6 +2652,537 @@ func TestSearchReleases_UnimplementedStub(t *testing.T) {
 	}
 	if status.Code(err) != codes.Unimplemented {
 		t.Fatalf("expected codes.Unimplemented, got %v (%v)", status.Code(err), err)
+	}
+}
+
+type testSearcher struct {
+	mu         sync.Mutex
+	calls      []searchParams
+	results    []*searchResult
+	err        error
+	searchFunc func(ctx context.Context, params searchParams) ([]*searchResult, error)
+}
+
+func (t *testSearcher) Search(ctx context.Context, params searchParams) ([]*searchResult, error) {
+	t.mu.Lock()
+	t.calls = append(t.calls, params)
+	fn := t.searchFunc
+	res := t.results
+	err := t.err
+	t.mu.Unlock()
+	if fn != nil {
+		return fn(ctx, params)
+	}
+	return res, err
+}
+
+func TestSearchReleases_ForwardsAllFiltersAndEnforcesReleaseType(t *testing.T) {
+	ts := &testSearcher{
+		results: []*searchResult{
+			{
+				ID:      42,
+				Title:   "Music Has The Right To Children",
+				Year:    "1998",
+				Formats: []string{"Vinyl", "LP"},
+				Country: "UK",
+				URI:     "/release/42-Boards-Of-Canada",
+			},
+		},
+	}
+	s := &Server{searcher: ts}
+
+	beforeOK := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.OK.String()}))
+	resp, err := s.SearchReleases(context.Background(), &pb.SearchReleasesRequest{
+		Q:            "  boards  ",
+		Title:        "  music  ",
+		ReleaseTitle: "  music has the right  ",
+		Credit:       "  marcus eoin  ",
+		Artist:       "  Boards of Canada  ",
+		Anv:          "  BoC  ",
+		Label:        "  Warp Records  ",
+		Genre:        "  Electronic  ",
+		Style:        "  IDM  ",
+		Country:      "  UK  ",
+		Year:         "  1998  ",
+		Format:       "  Vinyl  ",
+		Catno:        "  WARPLP55  ",
+		Barcode:      "  5021603055124  ",
+		Track:        "  Roygbiv  ",
+		Submitter:    "  sub1  ",
+		Contributor:  "  contrib1  ",
+		PerPage:      50,
+		Sort:         " year ",
+		SortOrder:    " DESC ",
+	})
+	if err != nil {
+		t.Fatalf("SearchReleases failed: %v", err)
+	}
+	if len(resp.GetResults()) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(resp.GetResults()))
+	}
+	if len(ts.calls) != 1 {
+		t.Fatalf("expected 1 search call, got %d", len(ts.calls))
+	}
+	got := ts.calls[0]
+	want := searchParams{
+		Query:        "boards",
+		Type:         "release",
+		Title:        "music",
+		ReleaseTitle: "music has the right",
+		Credit:       "marcus eoin",
+		Artist:       "Boards of Canada",
+		ANV:          "BoC",
+		Label:        "Warp Records",
+		Genre:        "Electronic",
+		Style:        "IDM",
+		Country:      "UK",
+		Year:         "1998",
+		Format:       "Vinyl",
+		Catno:        "WARPLP55",
+		Barcode:      "5021603055124",
+		Track:        "Roygbiv",
+		Submitter:    "sub1",
+		Contributor:  "contrib1",
+		PerPage:      50,
+		Sort:         "year",
+		SortOrder:    "desc",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("searchParams mismatch:\n got: %+v\nwant: %+v", got, want)
+	}
+
+	// Verify minimal request does not inject hidden defaults (like Format) and defaults PerPage to 20.
+	_, err = s.SearchReleases(context.Background(), &pb.SearchReleasesRequest{
+		Artist: "Boards of Canada",
+	})
+	if err != nil {
+		t.Fatalf("minimal SearchReleases failed: %v", err)
+	}
+	if len(ts.calls) != 2 {
+		t.Fatalf("expected 2 search calls, got %d", len(ts.calls))
+	}
+	minGot := ts.calls[1]
+	minWant := searchParams{
+		Type:    "release",
+		Artist:  "Boards of Canada",
+		PerPage: 20,
+	}
+	if !reflect.DeepEqual(minGot, minWant) {
+		t.Fatalf("minimal searchParams mismatch:\n got: %+v\nwant: %+v", minGot, minWant)
+	}
+
+	afterOK := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.OK.String()}))
+	if afterOK-beforeOK != 2 {
+		t.Errorf("expected OK counter increment of 2, got before=%v after=%v", beforeOK, afterOK)
+	}
+}
+
+func TestSearchReleases_InvalidArgument(t *testing.T) {
+	tooLongASCII := strings.Repeat("a", 501)
+	tooLongUnicode := strings.Repeat("日", 501)
+
+	tests := []struct {
+		name string
+		req  *pb.SearchReleasesRequest
+	}{
+		{name: "NilRequest", req: nil},
+		{name: "EmptyRequest", req: &pb.SearchReleasesRequest{}},
+		{name: "WhitespaceOnlyFilters", req: &pb.SearchReleasesRequest{Q: "  \t\n ", Artist: "   "}},
+		{name: "NegativePerPage", req: &pb.SearchReleasesRequest{Artist: "BoC", PerPage: -1}},
+		{name: "PerPageExceeds100", req: &pb.SearchReleasesRequest{Artist: "BoC", PerPage: 101}},
+		{name: "FilterOver500ASCII", req: &pb.SearchReleasesRequest{Title: tooLongASCII}},
+		{name: "FilterOver500UnicodeRunes", req: &pb.SearchReleasesRequest{Artist: tooLongUnicode}},
+		{name: "SortOver500Runes", req: &pb.SearchReleasesRequest{Artist: "BoC", Sort: tooLongASCII}},
+		{name: "SortOrderOver500Runes", req: &pb.SearchReleasesRequest{Artist: "BoC", SortOrder: tooLongUnicode}},
+		{name: "InvalidSortOrderAscending", req: &pb.SearchReleasesRequest{Artist: "BoC", SortOrder: "ascending"}},
+		{name: "InvalidSortOrderUp", req: &pb.SearchReleasesRequest{Artist: "BoC", SortOrder: "up"}},
+		{name: "MalformedYearShort", req: &pb.SearchReleasesRequest{Artist: "BoC", Year: "202"}},
+		{name: "MalformedYearLong", req: &pb.SearchReleasesRequest{Artist: "BoC", Year: "20245"}},
+		{name: "MalformedYearAlpha", req: &pb.SearchReleasesRequest{Artist: "BoC", Year: "abcd"}},
+		{name: "MalformedYearTrailingDash", req: &pb.SearchReleasesRequest{Artist: "BoC", Year: "2020-"}},
+		{name: "MalformedYearLeadingDash", req: &pb.SearchReleasesRequest{Artist: "BoC", Year: "-2024"}},
+		{name: "MalformedYearDoubleRange", req: &pb.SearchReleasesRequest{Artist: "BoC", Year: "2020-2024-2025"}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ts := &testSearcher{}
+			s := &Server{searcher: ts}
+			before := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.InvalidArgument.String()}))
+
+			resp, err := s.SearchReleases(context.Background(), tc.req)
+			if resp != nil {
+				t.Errorf("expected nil response, got %+v", resp)
+			}
+			if status.Code(err) != codes.InvalidArgument {
+				t.Fatalf("expected codes.InvalidArgument, got %v (%v)", status.Code(err), err)
+			}
+			if len(ts.calls) != 0 {
+				t.Errorf("expected searcher not to be called, got %d calls", len(ts.calls))
+			}
+
+			after := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.InvalidArgument.String()}))
+			if after-before != 1 {
+				t.Errorf("expected InvalidArgument metric increment by 1, got before=%v after=%v", before, after)
+			}
+		})
+	}
+}
+
+func TestSearchReleases_ValidEdgeInputs(t *testing.T) {
+	exact500Runes := strings.Repeat("日", 500)
+
+	tests := []struct {
+		name          string
+		req           *pb.SearchReleasesRequest
+		wantArtist    string
+		wantYear      string
+		wantPerPage   int
+		wantSortOrder string
+	}{
+		{
+			name:        "Exact500MultibyteRunes",
+			req:         &pb.SearchReleasesRequest{Artist: exact500Runes},
+			wantArtist:  exact500Runes,
+			wantPerPage: 20,
+		},
+		{
+			name:        "SingleYearAndDefaultPerPage",
+			req:         &pb.SearchReleasesRequest{Artist: "Aphex Twin", Year: "2024", PerPage: 0},
+			wantArtist:  "Aphex Twin",
+			wantYear:    "2024",
+			wantPerPage: 20,
+		},
+		{
+			name:          "YearRangeTrimmedAndPerPage1SortOrderASC",
+			req:           &pb.SearchReleasesRequest{Artist: "Aphex Twin", Year: " 2020-2024 ", PerPage: 1, SortOrder: "ASC"},
+			wantArtist:    "Aphex Twin",
+			wantYear:      "2020-2024",
+			wantPerPage:   1,
+			wantSortOrder: "asc",
+		},
+		{
+			name:          "PerPage100AndSortOrderDesc",
+			req:           &pb.SearchReleasesRequest{Artist: "Aphex Twin", PerPage: 100, SortOrder: "Desc"},
+			wantArtist:    "Aphex Twin",
+			wantPerPage:   100,
+			wantSortOrder: "desc",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ts := &testSearcher{}
+			s := &Server{searcher: ts}
+			_, err := s.SearchReleases(context.Background(), tc.req)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			if len(ts.calls) != 1 {
+				t.Fatalf("expected 1 call, got %d", len(ts.calls))
+			}
+			got := ts.calls[0]
+			if got.Artist != tc.wantArtist || got.Year != tc.wantYear || got.PerPage != tc.wantPerPage || got.SortOrder != tc.wantSortOrder || got.Type != "release" {
+				t.Fatalf("unexpected searchParams: %+v", got)
+			}
+		})
+	}
+}
+
+func TestSearchReleases_ZeroResults(t *testing.T) {
+	tests := []struct {
+		name    string
+		results []*searchResult
+	}{
+		{name: "NilSlice", results: nil},
+		{name: "EmptySlice", results: []*searchResult{}},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ts := &testSearcher{results: tc.results}
+			s := &Server{searcher: ts}
+			before := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.OK.String()}))
+
+			resp, err := s.SearchReleases(context.Background(), &pb.SearchReleasesRequest{Q: "nonexistent"})
+			if err != nil {
+				t.Fatalf("expected nil error on zero results, got %v", err)
+			}
+			if resp == nil || resp.Results == nil || len(resp.Results) != 0 {
+				t.Fatalf("expected non-nil empty Results slice, got %+v", resp)
+			}
+
+			after := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.OK.String()}))
+			if after-before != 1 {
+				t.Errorf("expected OK metric increment by 1, got before=%v after=%v", before, after)
+			}
+		})
+	}
+}
+
+func TestSearchReleases_NilSearcher(t *testing.T) {
+	s := &Server{searcher: nil}
+
+	beforeUnimpl := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.Unimplemented.String()}))
+	resp, err := s.SearchReleases(context.Background(), &pb.SearchReleasesRequest{Q: "boards"})
+	if resp != nil {
+		t.Errorf("expected nil response, got %+v", resp)
+	}
+	if status.Code(err) != codes.Unimplemented {
+		t.Fatalf("expected codes.Unimplemented, got %v (%v)", status.Code(err), err)
+	}
+	afterUnimpl := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.Unimplemented.String()}))
+	if afterUnimpl-beforeUnimpl != 1 {
+		t.Errorf("expected Unimplemented metric increment by 1, got before=%v after=%v", beforeUnimpl, afterUnimpl)
+	}
+
+	// Input validation runs before nil-searcher check.
+	beforeInvalid := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.InvalidArgument.String()}))
+	_, err = s.SearchReleases(context.Background(), &pb.SearchReleasesRequest{})
+	if status.Code(err) != codes.InvalidArgument {
+		t.Fatalf("expected codes.InvalidArgument for empty request even when searcher is nil, got %v (%v)", status.Code(err), err)
+	}
+	afterInvalid := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.InvalidArgument.String()}))
+	if afterInvalid-beforeInvalid != 1 {
+		t.Errorf("expected InvalidArgument metric increment by 1, got before=%v after=%v", beforeInvalid, afterInvalid)
+	}
+}
+
+func TestSearchReleases_ErrorMapping(t *testing.T) {
+	tests := []struct {
+		name     string
+		ctxSetup func() (context.Context, context.CancelFunc)
+		err      error
+		wantCode codes.Code
+	}{
+		{
+			name:     "ResourceExhausted",
+			err:      status.Error(codes.ResourceExhausted, "rate limited"),
+			wantCode: codes.ResourceExhausted,
+		},
+		{
+			name:     "FailedPrecondition",
+			err:      status.Error(codes.FailedPrecondition, "bad credentials"),
+			wantCode: codes.FailedPrecondition,
+		},
+		{
+			name:     "Unavailable",
+			err:      status.Error(codes.Unavailable, "discogs 503"),
+			wantCode: codes.Unavailable,
+		},
+		{
+			name:     "DeadlineExceeded",
+			err:      status.Error(codes.DeadlineExceeded, "timeout"),
+			wantCode: codes.DeadlineExceeded,
+		},
+		{
+			name:     "Canceled",
+			err:      status.Error(codes.Canceled, "canceled"),
+			wantCode: codes.Canceled,
+		},
+		{
+			name:     "NonGRPCErrorMappedToUnavailable",
+			err:      errors.New("connection reset"),
+			wantCode: codes.Unavailable,
+		},
+		{
+			name: "NonGRPCErrorWithCanceledContext",
+			ctxSetup: func() (context.Context, context.CancelFunc) {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				return ctx, func() {}
+			},
+			err:      errors.New("context canceled mid-flight"),
+			wantCode: codes.Canceled,
+		},
+		{
+			name: "NonGRPCErrorWithExpiredDeadline",
+			ctxSetup: func() (context.Context, context.CancelFunc) {
+				return context.WithDeadline(context.Background(), time.Now().Add(-time.Second))
+			},
+			err:      errors.New("deadline passed"),
+			wantCode: codes.DeadlineExceeded,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			if tc.ctxSetup != nil {
+				var cancel context.CancelFunc
+				ctx, cancel = tc.ctxSetup()
+				defer cancel()
+			}
+			ts := &testSearcher{err: tc.err}
+			s := &Server{searcher: ts}
+			before := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": tc.wantCode.String()}))
+
+			resp, err := s.SearchReleases(ctx, &pb.SearchReleasesRequest{Q: "test"})
+			if resp != nil {
+				t.Errorf("expected nil response, got %+v", resp)
+			}
+			if status.Code(err) != tc.wantCode {
+				t.Fatalf("expected code %v, got %v (%v)", tc.wantCode, status.Code(err), err)
+			}
+
+			after := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": tc.wantCode.String()}))
+			if after-before != 1 {
+				t.Errorf("expected %s metric increment by 1, got before=%v after=%v", tc.wantCode.String(), before, after)
+			}
+		})
+	}
+}
+
+func TestSearchReleases_ResponseMappingAndURLNormalization(t *testing.T) {
+	ts := &testSearcher{
+		results: []*searchResult{
+			nil,
+			{
+				ID:      123,
+				Title:   "Full HTTPS",
+				Year:    "2001",
+				Formats: []string{"Vinyl", "12\""},
+				Country: "US",
+				URI:     "https://www.discogs.com/release/123-Test",
+			},
+			{
+				ID:      124,
+				Title:   "Full HTTP",
+				Year:    "2002",
+				Formats: []string{"CD"},
+				Country: "DE",
+				URI:     "http://www.discogs.com/release/124-Test",
+			},
+			{
+				ID:      125,
+				Title:   "Leading Slash URI",
+				URI:     "/release/125-Test",
+			},
+			{
+				ID:      126,
+				Title:   "Relative URI Without Slash",
+				URI:     "release/126-Test",
+			},
+			{
+				ID:      127,
+				Title:   "Empty URI With Positive ID",
+				URI:     "",
+				Formats: nil,
+			},
+			{
+				ID:    0,
+				Title: "Empty URI With Zero ID",
+				URI:   "",
+			},
+		},
+	}
+	s := &Server{searcher: ts}
+	before := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.OK.String()}))
+
+	resp, err := s.SearchReleases(context.Background(), &pb.SearchReleasesRequest{Q: "test"})
+	if err != nil {
+		t.Fatalf("SearchReleases failed: %v", err)
+	}
+
+	want := []*pb.SearchReleaseResult{
+		{
+			ReleaseId: 123,
+			Title:     "Full HTTPS",
+			Year:      "2001",
+			Formats:   []string{"Vinyl", "12\""},
+			Country:   "US",
+			Url:       "https://www.discogs.com/release/123-Test",
+		},
+		{
+			ReleaseId: 124,
+			Title:     "Full HTTP",
+			Year:      "2002",
+			Formats:   []string{"CD"},
+			Country:   "DE",
+			Url:       "http://www.discogs.com/release/124-Test",
+		},
+		{
+			ReleaseId: 125,
+			Title:     "Leading Slash URI",
+			Url:       "https://www.discogs.com/release/125-Test",
+		},
+		{
+			ReleaseId: 126,
+			Title:     "Relative URI Without Slash",
+			Url:       "https://www.discogs.com/release/126-Test",
+		},
+		{
+			ReleaseId: 127,
+			Title:     "Empty URI With Positive ID",
+			Url:       "https://www.discogs.com/release/127",
+		},
+		{
+			ReleaseId: 0,
+			Title:     "Empty URI With Zero ID",
+			Url:       "",
+		},
+	}
+
+	if len(resp.GetResults()) != len(want) {
+		t.Fatalf("expected %d results, got %d", len(want), len(resp.GetResults()))
+	}
+	for i := range want {
+		if !proto.Equal(resp.Results[i], want[i]) {
+			t.Errorf("result[%d] mismatch:\n got: %+v\nwant: %+v", i, resp.Results[i], want[i])
+		}
+	}
+
+	after := testutil.ToFloat64(searchReleasesResults.With(prometheus.Labels{"status_code": codes.OK.String()}))
+	if after-before != 1 {
+		t.Errorf("expected OK metric increment by 1, got before=%v after=%v", before, after)
+	}
+}
+
+func TestSearchReleases_Concurrent(t *testing.T) {
+	ts := &testSearcher{
+		searchFunc: func(ctx context.Context, params searchParams) ([]*searchResult, error) {
+			return []*searchResult{
+				{
+					ID:    999,
+					Title: params.Artist,
+					URI:   "/release/999-Concurrent",
+				},
+			}, nil
+		},
+	}
+	s := &Server{searcher: ts}
+
+	const workers = 20
+	var wg sync.WaitGroup
+	errs := make(chan error, workers)
+
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			artist := fmt.Sprintf("Artist-%d", idx)
+			resp, err := s.SearchReleases(context.Background(), &pb.SearchReleasesRequest{Artist: artist})
+			if err != nil {
+				errs <- fmt.Errorf("worker %d failed: %w", idx, err)
+				return
+			}
+			if len(resp.GetResults()) != 1 || resp.Results[0].GetTitle() != artist || resp.Results[0].GetUrl() != "https://www.discogs.com/release/999-Concurrent" {
+				errs <- fmt.Errorf("worker %d unexpected response: %+v", idx, resp)
+			}
+		}(i)
+	}
+
+	wg.Wait()
+	close(errs)
+	for err := range errs {
+		t.Error(err)
+	}
+
+	ts.mu.Lock()
+	callCount := len(ts.calls)
+	ts.mu.Unlock()
+	if callCount != workers {
+		t.Errorf("expected %d searcher calls, got %d", workers, callCount)
 	}
 }
 

@@ -7,6 +7,7 @@
 ## Features
 
 - **Discogs Synchronization**: Automatically syncs collection and wantlist data with Discogs.
+- **Discogs Release Search (`SearchReleases`)**: Implements the `Server.SearchReleases` gRPC handler backed by a decoupled `discogsSearcher` interface on `Server`, enforcing release-only (`type=release`) searches, strict input validation (trimming, 500-rune limit, `per_page` bounds/defaulting, `sort_order` and `year` validation), Discogs URL normalization, upstream gRPC error mapping, and `codes.Unimplemented` guarding when no backend is wired.
 - **Advanced Metadata Tracking**:
     - Physical dimensions (spine width, weight).
     - Condition tracking (media and sleeve).
@@ -41,7 +42,7 @@
 
 ### Key Components
 
-- **gRPC API**: Defined in `proto/recordcollection.proto`, offering services for record querying, updates, and collection management (including the `SearchReleases` RPC protobuf contract with an `Unimplemented` server stub pending handler implementation).
+- **gRPC API**: Defined in `proto/recordcollection.proto`, offering services for record querying, updates, Discogs release searching (`SearchReleases`), and collection management.
 - **Client Library**: `client/client.go` provides `RecordCollectionClient` for downstream services, including `SearchReleases` with `SearchResults` and `SearchFunc` test-mode helpers.
 - **Discogs Integration**: Uses `godiscogs` for direct communication with the Discogs API.
 - **Storage**: Leverages `keystore` for persistent, versioned storage of record metadata.
@@ -117,3 +118,4 @@ Metrics are available via Prometheus. Key metrics include:
 - `recordcollection_loop_latency`: Performance tracking for internal processing loops.
 - `recordcollection_sale_descriptor_result`: Counter tracking the gRPC response status codes for calls made to the outbound sale descriptor service.
 - `recordcollection_deleted_sale_reconciled_total`: Total number of deleted marketplace sales reconciled to PREPARE_TO_SELL.
+- `recordcollection_search_releases_result`: Counter tracking `SearchReleases` RPC outcomes by `status_code`.

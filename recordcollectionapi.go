@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"log"
 	"math"
+	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -34,6 +36,11 @@ var (
 		Name: "recordcollection_quality_fetch_result",
 		Help: "Results of rip quality fetch from recorder",
 	}, []string{"status"})
+	searchReleasesResults = promauto.NewCounterVec(prometheus.CounterOpts{
+		Name: "recordcollection_search_releases_result",
+		Help: "Results of SearchReleases RPC calls",
+	}, []string{"status_code"})
+	searchYearPattern = regexp.MustCompile(`^\d{4}(-\d{4})?$`)
 )
 
 func (s *Server) DeleteSale(ctx context.Context, req *pb.DeleteSaleRequest) (*pb.DeleteSaleResponse, error) {
@@ -60,8 +67,162 @@ func (s *Server) GetInventory(ctx context.Context, req *pb.GetInventoryRequest) 
 	return &pb.GetInventoryResponse{Items: inventory}, nil
 }
 
+const maxSearchFieldRunes = 500
+
+func recordSearchReleasesError(err error) (*pb.SearchReleasesResponse, error) {
+	searchReleasesResults.With(prometheus.Labels{"status_code": status.Code(err).String()}).Inc()
+	return nil, err
+}
+
+func validateAndBuildSearchParams(req *pb.SearchReleasesRequest) (searchParams, error) {
+	if req == nil {
+		return searchParams{}, status.Error(codes.InvalidArgument, "request must not be nil")
+	}
+
+	rawStrings := []struct {
+		name string
+		val  string
+	}{
+		{"q", req.GetQ()},
+		{"title", req.GetTitle()},
+		{"release_title", req.GetReleaseTitle()},
+		{"credit", req.GetCredit()},
+		{"artist", req.GetArtist()},
+		{"anv", req.GetAnv()},
+		{"label", req.GetLabel()},
+		{"genre", req.GetGenre()},
+		{"style", req.GetStyle()},
+		{"country", req.GetCountry()},
+		{"year", req.GetYear()},
+		{"format", req.GetFormat()},
+		{"catno", req.GetCatno()},
+		{"barcode", req.GetBarcode()},
+		{"track", req.GetTrack()},
+		{"submitter", req.GetSubmitter()},
+		{"contributor", req.GetContributor()},
+		{"sort", req.GetSort()},
+		{"sort_order", req.GetSortOrder()},
+	}
+	for _, field := range rawStrings {
+		if utf8.RuneCountInString(field.val) > maxSearchFieldRunes {
+			return searchParams{}, status.Errorf(codes.InvalidArgument, "field %q exceeds maximum length of %d characters", field.name, maxSearchFieldRunes)
+		}
+	}
+
+	params := searchParams{
+		Query:        strings.TrimSpace(req.GetQ()),
+		Type:         "release",
+		Title:        strings.TrimSpace(req.GetTitle()),
+		ReleaseTitle: strings.TrimSpace(req.GetReleaseTitle()),
+		Credit:       strings.TrimSpace(req.GetCredit()),
+		Artist:       strings.TrimSpace(req.GetArtist()),
+		ANV:          strings.TrimSpace(req.GetAnv()),
+		Label:        strings.TrimSpace(req.GetLabel()),
+		Genre:        strings.TrimSpace(req.GetGenre()),
+		Style:        strings.TrimSpace(req.GetStyle()),
+		Country:      strings.TrimSpace(req.GetCountry()),
+		Year:         strings.TrimSpace(req.GetYear()),
+		Format:       strings.TrimSpace(req.GetFormat()),
+		Catno:        strings.TrimSpace(req.GetCatno()),
+		Barcode:      strings.TrimSpace(req.GetBarcode()),
+		Track:        strings.TrimSpace(req.GetTrack()),
+		Submitter:    strings.TrimSpace(req.GetSubmitter()),
+		Contributor:  strings.TrimSpace(req.GetContributor()),
+		Sort:         strings.TrimSpace(req.GetSort()),
+		SortOrder:    strings.ToLower(strings.TrimSpace(req.GetSortOrder())),
+	}
+
+	if params.Query == "" && params.Title == "" && params.ReleaseTitle == "" &&
+		params.Credit == "" && params.Artist == "" && params.ANV == "" &&
+		params.Label == "" && params.Genre == "" && params.Style == "" &&
+		params.Country == "" && params.Year == "" && params.Format == "" &&
+		params.Catno == "" && params.Barcode == "" && params.Track == "" &&
+		params.Submitter == "" && params.Contributor == "" {
+		return searchParams{}, status.Error(codes.InvalidArgument, "at least one search query or filter field must be provided")
+	}
+
+	perPage := int(req.GetPerPage())
+	if perPage == 0 {
+		perPage = 20
+	} else if perPage < 0 || perPage > 100 {
+		return searchParams{}, status.Errorf(codes.InvalidArgument, "per_page must be between 1 and 100 (or 0 for default), got %d", perPage)
+	}
+	params.PerPage = perPage
+
+	if params.SortOrder != "" && params.SortOrder != "asc" && params.SortOrder != "desc" {
+		return searchParams{}, status.Errorf(codes.InvalidArgument, "sort_order must be 'asc' or 'desc', got %q", req.GetSortOrder())
+	}
+
+	if params.Year != "" && !searchYearPattern.MatchString(params.Year) {
+		return searchParams{}, status.Errorf(codes.InvalidArgument, "year must match YYYY or YYYY-YYYY, got %q", params.Year)
+	}
+
+	return params, nil
+}
+
+func mapSearchError(ctx context.Context, err error) error {
+	if st, ok := status.FromError(err); ok && st.Code() != codes.OK {
+		return err
+	}
+	if ctx.Err() != nil {
+		return status.FromContextError(ctx.Err()).Err()
+	}
+	return status.Errorf(codes.Unavailable, "discogs search failed: %v", err)
+}
+
+func normalizeDiscogsURL(rawURI string, releaseID int32) string {
+	uri := strings.TrimSpace(rawURI)
+	switch {
+	case strings.HasPrefix(uri, "http://"), strings.HasPrefix(uri, "https://"):
+		return uri
+	case strings.HasPrefix(uri, "/"):
+		return "https://www.discogs.com" + uri
+	case uri != "":
+		return "https://www.discogs.com/" + uri
+	case releaseID > 0:
+		return fmt.Sprintf("https://www.discogs.com/release/%d", releaseID)
+	default:
+		return ""
+	}
+}
+
+// SearchReleases searches the Discogs database for releases matching the request filters.
 func (s *Server) SearchReleases(ctx context.Context, req *pb.SearchReleasesRequest) (*pb.SearchReleasesResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method SearchReleases not implemented")
+	params, err := validateAndBuildSearchParams(req)
+	if err != nil {
+		return recordSearchReleasesError(err)
+	}
+
+	if s.searcher == nil {
+		return recordSearchReleasesError(status.Error(codes.Unimplemented, "discogs search backend is not configured"))
+	}
+
+	results, err := s.searcher.Search(ctx, params)
+	if err != nil {
+		return recordSearchReleasesError(mapSearchError(ctx, err))
+	}
+
+	pbResults := make([]*pb.SearchReleaseResult, 0, len(results))
+	for _, r := range results {
+		if r == nil {
+			continue
+		}
+		var formats []string
+		if len(r.Formats) > 0 {
+			formats = append([]string(nil), r.Formats...)
+		}
+		pbResults = append(pbResults, &pb.SearchReleaseResult{
+			ReleaseId: r.ID,
+			Title:     r.Title,
+			Year:      r.Year,
+			Formats:   formats,
+			Country:   r.Country,
+			Url:       normalizeDiscogsURL(r.URI, r.ID),
+		})
+	}
+
+	searchReleasesResults.With(prometheus.Labels{"status_code": codes.OK.String()}).Inc()
+	return &pb.SearchReleasesResponse{Results: pbResults}, nil
 }
 
 // CommitRecord runs through the record process stuff
