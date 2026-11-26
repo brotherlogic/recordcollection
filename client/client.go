@@ -11,10 +11,12 @@ import (
 )
 
 type RecordCollectionClient struct {
-	Gs        *pbgs.GoServer
-	getMap    map[int64]*pb.Record
-	Test      bool
-	ErrorCode codes.Code
+	Gs            *pbgs.GoServer
+	getMap        map[int64]*pb.Record
+	Test          bool
+	ErrorCode     codes.Code
+	SearchResults []*pb.SearchReleaseResult
+	SearchFunc    func(ctx context.Context, req *pb.SearchReleasesRequest) (*pb.SearchReleasesResponse, error)
 }
 
 func (c *RecordCollectionClient) AddRecord(r *pb.Record) {
@@ -92,4 +94,25 @@ func (c *RecordCollectionClient) GetPrice(ctx context.Context, req *pb.GetPriceR
 
 	client := pb.NewRecordCollectionServiceClient(conn)
 	return client.GetPrice(ctx, req)
+}
+
+func (c *RecordCollectionClient) SearchReleases(ctx context.Context, req *pb.SearchReleasesRequest) (*pb.SearchReleasesResponse, error) {
+	if c.Test {
+		if c.ErrorCode != codes.OK {
+			return nil, status.Errorf(c.ErrorCode, "built to fail")
+		}
+		if c.SearchFunc != nil {
+			return c.SearchFunc(ctx, req)
+		}
+		return &pb.SearchReleasesResponse{Results: c.SearchResults}, nil
+	}
+
+	conn, err := c.Gs.FDialServer(ctx, "recordcollection")
+	if err != nil {
+		return nil, err
+	}
+	defer conn.Close()
+
+	client := pb.NewRecordCollectionServiceClient(conn)
+	return client.SearchReleases(ctx, req)
 }
