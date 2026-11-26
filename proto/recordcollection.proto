@@ -532,6 +532,47 @@ message GetPriceResponse {
   float price = 1;
 }
 
+message SearchReleasesRequest {
+  // General search query (Discogs `q` parameter)
+  string q = 1;
+
+  // Structured Discogs database search filters
+  string title = 2;
+  string release_title = 3;
+  string credit = 4;
+  string artist = 5;
+  string anv = 6;
+  string label = 7;
+  string genre = 8;
+  string style = 9;
+  string country = 10;
+  string year = 11;
+  string format = 12;
+  string catno = 13;
+  string barcode = 14;
+  string track = 15;
+  string submitter = 16;
+  string contributor = 17;
+
+  // Single-page result sizing and ordering controls
+  int32 per_page = 18;
+  string sort = 19;
+  string sort_order = 20;
+}
+
+message SearchReleaseResult {
+  int32 release_id = 1;
+  string title = 2;
+  string year = 3;
+  repeated string formats = 4;
+  string country = 5;
+  string url = 6;
+}
+
+message SearchReleasesResponse {
+  repeated SearchReleaseResult results = 1;
+}
+
 service RecordCollectionService {
   rpc GetWants(GetWantsRequest) returns (GetWantsResponse) {};
   rpc UpdateRecord(UpdateRecordRequest) returns (UpdateRecordsResponse) {};
@@ -547,6 +588,7 @@ service RecordCollectionService {
   rpc GetPrice(GetPriceRequest) returns (GetPriceResponse) {};
   rpc GetInventory(GetInventoryRequest) returns (GetInventoryResponse) {};
   rpc DeleteSale(DeleteSaleRequest) returns (DeleteSaleResponse) {};
+  rpc SearchReleases(SearchReleasesRequest) returns (SearchReleasesResponse) {};
 }
 
 message GetSalesRequest {

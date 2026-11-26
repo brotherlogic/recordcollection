@@ -41,7 +41,7 @@
 
 ### Key Components
 
-- **gRPC API**: Defined in `proto/recordcollection.proto`, offering services for record querying, updates, and collection management.
+- **gRPC API**: Defined in `proto/recordcollection.proto`, offering services for record querying, updates, and collection management (including the `SearchReleases` RPC protobuf contract with an `Unimplemented` server stub pending handler implementation).
 - **Discogs Integration**: Uses `godiscogs` for direct communication with the Discogs API.
 - **Storage**: Leverages `keystore` for persistent, versioned storage of record metadata.
 - **Metrics**: Exports detailed Prometheus metrics, including record states, folder sizes, and fanout status.

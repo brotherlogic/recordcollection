@@ -150,7 +150,7 @@ func (p *prodScorer) GetScore(ctx context.Context, instanceID int32) (float32, e
 	defer conn.Close()
 
 	client := pbrs.NewRecordScoreServiceClient(conn)
-	res, err := client.GetScore(ctx, &pbrs.GetScoreRequest{InstanceId: instanceID})
+	res, err := client.GetScore(ctx, &pbrs.GetScoreRequest{InstanceId: int64(instanceID)})
 	if err != nil {
 		return -1, err
 	}

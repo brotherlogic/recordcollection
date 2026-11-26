@@ -60,6 +60,10 @@ func (s *Server) GetInventory(ctx context.Context, req *pb.GetInventoryRequest) 
 	return &pb.GetInventoryResponse{Items: inventory}, nil
 }
 
+func (s *Server) SearchReleases(ctx context.Context, req *pb.SearchReleasesRequest) (*pb.SearchReleasesResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SearchReleases not implemented")
+}
+
 // CommitRecord runs through the record process stuff
 func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordRequest) (*pb.CommitRecordResponse, error) {
 	added := false

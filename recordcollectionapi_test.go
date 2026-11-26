@@ -2641,6 +2641,17 @@ func TestUpdateRecordSold_MinimumPriceFloors(t *testing.T) {
 	}
 }
 
+func TestSearchReleases_UnimplementedStub(t *testing.T) {
+	s := &Server{}
+	resp, err := s.SearchReleases(context.Background(), &pb.SearchReleasesRequest{Q: "test"})
+	if resp != nil {
+		t.Fatalf("expected nil response from unimplemented stub, got %+v", resp)
+	}
+	if status.Code(err) != codes.Unimplemented {
+		t.Fatalf("expected codes.Unimplemented, got %v (%v)", status.Code(err), err)
+	}
+}
+
 
 
 
