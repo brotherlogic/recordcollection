@@ -294,6 +294,44 @@ func (p *prodQualityClient) getQuality(ctx context.Context, address string, rele
 	return resp.GetScore(), nil
 }
 
+type searchParams struct {
+	Query        string
+	Type         string
+	Title        string
+	ReleaseTitle string
+	Credit       string
+	Artist       string
+	ANV          string
+	Label        string
+	Genre        string
+	Style        string
+	Country      string
+	Year         string
+	Format       string
+	Catno        string
+	Barcode      string
+	Track        string
+	Submitter    string
+	Contributor  string
+	PerPage      int
+	Sort         string
+	SortOrder    string
+}
+
+type searchResult struct {
+	ID          int32
+	Title       string
+	Year        string
+	Formats     []string
+	Country     string
+	URI         string
+	ResourceURL string
+}
+
+type discogsSearcher interface {
+	Search(ctx context.Context, params searchParams) ([]*searchResult, error)
+}
+
 type fo struct {
 	iid    int64
 	origin string
@@ -303,6 +341,7 @@ type fo struct {
 type Server struct {
 	*goserver.GoServer
 	retr             saver
+	searcher         discogsSearcher
 	scorer           scorer
 	quota            quotaChecker
 	mover            moveRecorder
