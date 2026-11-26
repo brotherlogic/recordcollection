@@ -332,6 +332,71 @@ type discogsSearcher interface {
 	Search(ctx context.Context, params searchParams) ([]*searchResult, error)
 }
 
+type godiscogsSearcher interface {
+	Search(ctx context.Context, params godiscogs.SearchParams) ([]*godiscogs.SearchResult, error)
+}
+
+var (
+	_ godiscogsSearcher = (*godiscogs.DiscogsRetriever)(nil)
+	_ discogsSearcher   = (*godiscogsSearcherAdapter)(nil)
+)
+
+type godiscogsSearcherAdapter struct {
+	retr godiscogsSearcher
+}
+
+func (a *godiscogsSearcherAdapter) Search(ctx context.Context, params searchParams) ([]*searchResult, error) {
+	if a == nil || a.retr == nil {
+		return nil, status.Error(codes.Unimplemented, "discogs search backend is not configured")
+	}
+
+	gdParams := godiscogs.SearchParams{
+		Query:        params.Query,
+		Type:         "release",
+		Title:        params.Title,
+		ReleaseTitle: params.ReleaseTitle,
+		Credit:       params.Credit,
+		Artist:       params.Artist,
+		ANV:          params.ANV,
+		Label:        params.Label,
+		Genre:        params.Genre,
+		Style:        params.Style,
+		Country:      params.Country,
+		Year:         params.Year,
+		Format:       params.Format,
+		Catno:        params.Catno,
+		Barcode:      params.Barcode,
+		Track:        params.Track,
+		Submitter:    params.Submitter,
+		Contributor:  params.Contributor,
+		PerPage:      params.PerPage,
+		Sort:         params.Sort,
+		SortOrder:    params.SortOrder,
+	}
+
+	gdResults, err := a.retr.Search(ctx, gdParams)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]*searchResult, 0, len(gdResults))
+	for _, r := range gdResults {
+		if r == nil {
+			continue
+		}
+		results = append(results, &searchResult{
+			ID:          r.ID,
+			Title:       r.Title,
+			Year:        r.Year,
+			Formats:     r.Formats,
+			Country:     r.Country,
+			URI:         r.URI,
+			ResourceURL: r.ResourceURL,
+		})
+	}
+	return results, nil
+}
+
 type fo struct {
 	iid    int64
 	origin string
@@ -945,7 +1010,9 @@ func main() {
 		log.Fatalf("Read an empty token: %v", tResp)
 
 	}
-	server.retr = godiscogs.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.CtxLog)
+	retr := godiscogs.NewDiscogsRetriever(tResp.(*pb.Token).Token, server.CtxLog)
+	server.retr = retr
+	server.searcher = &godiscogsSearcherAdapter{retr: retr}
 	cancel()
 	//go server.runUpdateFanout()
 
