@@ -683,7 +683,9 @@ func (s *Server) saveRecord(ctx context.Context, r *pb.Record) error {
 	}
 
 	if save {
-		s.saveRecordCollection(ctx, collection)
+		if err := s.saveRecordCollection(ctx, collection); err != nil {
+			return err
+		}
 	}
 
 	counts := make(map[int64]int)

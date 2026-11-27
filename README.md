@@ -45,7 +45,7 @@
 - **gRPC API**: Defined in `proto/recordcollection.proto`, offering services for record querying, updates, Discogs release searching (`SearchReleases`), and collection management.
 - **Client Library**: `client/client.go` provides `RecordCollectionClient` for downstream services, including `SearchReleases` with `SearchResults` and `SearchFunc` test-mode helpers.
 - **Discogs Integration**: Uses `godiscogs` for direct communication with the Discogs API.
-- **Storage**: Leverages `keystore` for persistent, versioned storage of record metadata.
+- **Storage**: Leverages `keystore` for persistent, versioned storage of record metadata, with `saveRecord` propagating `RecordCollection` index write errors from `saveRecordCollection`.
 - **Metrics**: Exports detailed Prometheus metrics, including record states, folder sizes, and fanout status.
 
 ## Getting Started

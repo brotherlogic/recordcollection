@@ -19,6 +19,7 @@ import (
 	godiscogs "github.com/brotherlogic/godiscogs"
 	pbd "github.com/brotherlogic/godiscogs/proto"
 	keystoreclient "github.com/brotherlogic/keystore/client"
+	pbks "github.com/brotherlogic/keystore/proto"
 	qproto "github.com/brotherlogic/queue/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
@@ -3183,6 +3184,119 @@ func TestSearchReleases_Concurrent(t *testing.T) {
 	ts.mu.Unlock()
 	if callCount != workers {
 		t.Errorf("expected %d searcher calls, got %d", workers, callCount)
+	}
+}
+
+type testKeyStoreServer struct {
+	pbks.UnimplementedKeyStoreServiceServer
+	mu          sync.Mutex
+	store       map[string]*pbks.ReadResponse
+	savedKeys   []string
+	failSaveKey string
+	failSaveErr error
+}
+
+func (s *testKeyStoreServer) Save(ctx context.Context, req *pbks.SaveRequest) (*pbks.Empty, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.savedKeys = append(s.savedKeys, req.GetKey())
+	if s.failSaveKey != "" && req.GetKey() == s.failSaveKey {
+		return nil, s.failSaveErr
+	}
+	if s.store == nil {
+		s.store = make(map[string]*pbks.ReadResponse)
+	}
+	s.store[req.GetKey()] = &pbks.ReadResponse{Payload: req.GetValue()}
+	return &pbks.Empty{}, nil
+}
+
+func (s *testKeyStoreServer) Read(ctx context.Context, req *pbks.ReadRequest) (*pbks.ReadResponse, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if val, ok := s.store[req.GetKey()]; ok {
+		return val, nil
+	}
+	return nil, status.Errorf(codes.InvalidArgument, "Unable to locate %v", req.GetKey())
+}
+
+func TestSaveRecordPropagatesSaveRecordCollectionError(t *testing.T) {
+	lis := bufconn.Listen(1024 * 1024)
+	grpcServer := grpc.NewServer()
+	mockKS := &testKeyStoreServer{
+		store: make(map[string]*pbks.ReadResponse),
+	}
+	pbks.RegisterKeyStoreServiceServer(grpcServer, mockKS)
+
+	go func() {
+		if err := grpcServer.Serve(lis); err != nil && err != grpc.ErrServerStopped {
+			log.Printf("Mock keystore server exited with error: %v", err)
+		}
+	}()
+	t.Cleanup(func() {
+		grpcServer.Stop()
+		lis.Close()
+	})
+
+	dial := func(ctx context.Context, server string) (*grpc.ClientConn, error) {
+		return grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	}
+
+	s := InitTestServer(".testsaverecordcollectionerr")
+	s.GoServer.KSclient = *keystoreclient.GetClient(dial)
+
+	if err := s.GoServer.KSclient.Save(context.Background(), KEY, &pb.RecordCollection{}); err != nil {
+		t.Fatalf("failed to seed RecordCollection: %v", err)
+	}
+
+	mockKS.mu.Lock()
+	mockKS.savedKeys = nil
+	mockKS.failSaveKey = KEY
+	mockKS.failSaveErr = status.Error(codes.Unavailable, "injected collection save failure")
+	mockKS.mu.Unlock()
+
+	err := s.saveRecord(context.Background(), &pb.Record{
+		Release: &pbd.Release{
+			Id:         123,
+			InstanceId: 12345,
+			FolderId:   10,
+		},
+		Metadata: &pb.ReleaseMetadata{
+			Category: pb.ReleaseMetadata_IN_COLLECTION,
+		},
+	})
+
+	mockKS.mu.Lock()
+	savedKeys := append([]string(nil), mockKS.savedKeys...)
+	mockKS.mu.Unlock()
+
+	expectedRecordKey := fmt.Sprintf("%v%v", SAVEKEY, 12345)
+	sawRecordKey := false
+	sawCollectionKey := false
+	for _, k := range savedKeys {
+		if k == expectedRecordKey {
+			sawRecordKey = true
+		}
+		if k == KEY {
+			sawCollectionKey = true
+		}
+	}
+	if !sawRecordKey {
+		t.Fatalf("expected individual record key %q to be saved; savedKeys=%v", expectedRecordKey, savedKeys)
+	}
+	if !sawCollectionKey {
+		t.Fatalf("expected collection key %q save to be attempted; savedKeys=%v", KEY, savedKeys)
+	}
+
+	if err == nil {
+		t.Fatalf("expected saveRecord to return error when saveRecordCollection fails, got nil")
+	}
+	if status.Code(err) != codes.Unavailable {
+		t.Errorf("expected status code %v, got %v (err=%v)", codes.Unavailable, status.Code(err), err)
+	}
+	if !strings.Contains(err.Error(), "injected collection save failure") {
+		t.Errorf("expected error to contain %q, got %v", "injected collection save failure", err)
 	}
 }
 
