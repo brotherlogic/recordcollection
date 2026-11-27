@@ -509,13 +509,15 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 	s.CtxLog(ctx, fmt.Sprintf("Updating cache for : %v (%v): %v", r.GetRelease().GetTitle(), r.GetRelease().GetRecordCondition(), force))
 
 	//Add the record if it has not instance ID
-	if r.GetRelease().InstanceId == 0 {
-		inst, err := s.retr.AddToFolder(ctx, r.GetRelease().FolderId, r.GetRelease().Id)
-		if err == nil {
-			r.GetRelease().InstanceId = inst
-		} else {
+	if r.GetRelease().GetInstanceId() == 0 {
+		inst, err := s.retr.AddToFolder(ctx, r.GetRelease().GetFolderId(), r.GetRelease().GetId())
+		if err != nil {
 			return err
 		}
+		if inst <= 0 {
+			return status.Errorf(codes.Internal, "discogs AddToFolder returned invalid instance_id: %d", inst)
+		}
+		r.GetRelease().InstanceId = inst
 	}
 
 	//Force a recache if the record has no title or condition; or if it has the old image format

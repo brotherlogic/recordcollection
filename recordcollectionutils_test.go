@@ -2122,6 +2122,134 @@ func TestPushRecord_LargeInstanceID(t *testing.T) {
 	}
 }
 
+func TestCacheRecord_AddToFolderValidation(t *testing.T) {
+	wantErr := errors.New("discogs add failed")
+
+	tests := []struct {
+		name             string
+		addToFolderID    int64
+		addToFolderIDSet bool
+		addToFolderErr   error
+		instanceInfo     map[int64]*godiscogs.InstanceInfo
+		wantCode         codes.Code
+		wantErr          error
+		wantInstanceID   int64
+		wantPersisted    bool
+	}{
+		{
+			name:             "Preserves64BitInstanceID",
+			addToFolderID:    largeInstanceID,
+			addToFolderIDSet: true,
+			instanceInfo: map[int64]*godiscogs.InstanceInfo{
+				largeInstanceID: {
+					FolderId:        12345,
+					RecordCondition: "Near Mint (NM or M-)",
+					SleeveCondition: "Near Mint (NM or M-)",
+				},
+			},
+			wantInstanceID: largeInstanceID,
+			wantPersisted:  true,
+		},
+		{
+			name:             "RejectsZeroInstanceID",
+			addToFolderID:    0,
+			addToFolderIDSet: true,
+			instanceInfo: map[int64]*godiscogs.InstanceInfo{
+				0: {FolderId: 12345},
+			},
+			wantCode:       codes.Internal,
+			wantInstanceID: 0,
+			wantPersisted:  false,
+		},
+		{
+			name:             "RejectsNegativeInstanceID",
+			addToFolderID:    -1,
+			addToFolderIDSet: true,
+			instanceInfo: map[int64]*godiscogs.InstanceInfo{
+				-1: {FolderId: 12345},
+			},
+			wantCode:       codes.Internal,
+			wantInstanceID: 0,
+			wantPersisted:  false,
+		},
+		{
+			name:           "PropagatesAddToFolderError",
+			addToFolderErr: wantErr,
+			wantErr:        wantErr,
+			wantInstanceID: 0,
+			wantPersisted:  false,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(".testCacheRecordAddToFolder_" + tc.name)
+			ctx := context.Background()
+			ts := &testSyncer{
+				addToFolderID:    tc.addToFolderID,
+				addToFolderIDSet: tc.addToFolderIDSet,
+				addToFolderErr:   tc.addToFolderErr,
+				instanceInfo:     tc.instanceInfo,
+			}
+			s.retr = ts
+
+			r := &pb.Record{
+				Release: &pbgd.Release{
+					Id:         12345,
+					FolderId:   12345,
+					InstanceId: 0,
+					Title:      "Test Release",
+					Tracklist:  []*pbgd.Track{{Title: "Track 1"}},
+				},
+				Metadata: &pb.ReleaseMetadata{
+					LastCache: time.Now().Unix(),
+				},
+			}
+
+			err := s.cacheRecord(ctx, r, true)
+
+			if ts.addToFolderCalls != 1 {
+				t.Errorf("AddToFolder calls: got %d, want 1", ts.addToFolderCalls)
+			}
+
+			if tc.wantErr != nil {
+				if !errors.Is(err, tc.wantErr) {
+					t.Fatalf("cacheRecord error: got %v, want %v", err, tc.wantErr)
+				}
+			} else if tc.wantCode != codes.OK {
+				if err == nil {
+					t.Fatalf("cacheRecord error: got nil, want code %v", tc.wantCode)
+				}
+				if status.Code(err) != tc.wantCode {
+					t.Fatalf("cacheRecord status code: got %v (%v), want %v", status.Code(err), err, tc.wantCode)
+				}
+			} else if err != nil {
+				t.Fatalf("cacheRecord unexpected error: %v", err)
+			}
+
+			if r.GetRelease().GetInstanceId() != tc.wantInstanceID {
+				t.Errorf("in-memory InstanceId: got %d, want %d", r.GetRelease().GetInstanceId(), tc.wantInstanceID)
+			}
+
+			if tc.wantPersisted {
+				saved, loadErr := s.loadRecord(ctx, tc.wantInstanceID, false)
+				if loadErr != nil {
+					t.Fatalf("loadRecord(%d) failed: %v", tc.wantInstanceID, loadErr)
+				}
+				if saved.GetRelease().GetInstanceId() != tc.wantInstanceID {
+					t.Errorf("persisted InstanceId: got %d, want %d", saved.GetRelease().GetInstanceId(), tc.wantInstanceID)
+				}
+			} else {
+				for _, checkID := range []int64{0, tc.addToFolderID} {
+					if _, loadErr := s.loadRecord(ctx, checkID, false); loadErr == nil {
+						t.Errorf("expected record %d not to be persisted in keystore, but loadRecord succeeded", checkID)
+					}
+				}
+			}
+		})
+	}
+}
+
 
 
 
