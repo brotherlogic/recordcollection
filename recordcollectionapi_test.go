@@ -22,6 +22,7 @@ import (
 	pbks "github.com/brotherlogic/keystore/proto"
 	qproto "github.com/brotherlogic/queue/proto"
 	pb "github.com/brotherlogic/recordcollection/proto"
+	rfpb "github.com/brotherlogic/recordfanout/proto"
 	pbrm "github.com/brotherlogic/recordmover/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -34,10 +35,14 @@ import (
 
 type testQueueClient struct {
 	items []*qproto.AddQueueItemRequest
+	err   error
 }
 
 func (t *testQueueClient) AddQueueItem(ctx context.Context, req *qproto.AddQueueItemRequest) (*qproto.AddQueueItemResponse, error) {
 	t.items = append(t.items, req)
+	if t.err != nil {
+		return &qproto.AddQueueItemResponse{}, t.err
+	}
 	return &qproto.AddQueueItemResponse{}, nil
 }
 
@@ -3358,6 +3363,382 @@ func TestSaveRecordPropagatesSaveRecordCollectionError(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "injected collection save failure") {
 		t.Errorf("expected error to contain %q, got %v", "injected collection save failure", err)
+	}
+}
+
+func TestAddRecord_ValidationErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		req  *pb.AddRecordRequest
+	}{
+		{
+			name: "NilRequest",
+			req:  nil,
+		},
+		{
+			name: "NilToAdd",
+			req:  &pb.AddRecordRequest{},
+		},
+		{
+			name: "NilRelease",
+			req: &pb.AddRecordRequest{
+				ToAdd: &pb.Record{
+					Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+				},
+			},
+		},
+		{
+			name: "NegativeInstanceID",
+			req: &pb.AddRecordRequest{
+				ToAdd: &pb.Record{
+					Release:  &pbd.Release{Id: 1234, InstanceId: -42},
+					Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+				},
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(t.TempDir())
+			ts := &testSyncer{}
+			q := &testQueueClient{}
+			s.retr = ts
+			s.queueClient = q
+
+			_, err := s.AddRecord(context.Background(), tc.req)
+			if status.Code(err) != codes.InvalidArgument {
+				t.Fatalf("expected codes.InvalidArgument, got %v (err=%v)", status.Code(err), err)
+			}
+			if ts.addToFolderCalls != 0 {
+				t.Errorf("expected addToFolderCalls == 0, got %d", ts.addToFolderCalls)
+			}
+			if len(q.items) != 0 {
+				t.Errorf("expected no queued items, got %d", len(q.items))
+			}
+
+			col, colErr := s.readRecordCollection(context.Background())
+			if colErr != nil {
+				t.Fatalf("readRecordCollection failed: %v", colErr)
+			}
+			if len(col.GetInstanceToFolder()) != 0 {
+				t.Errorf("expected empty collection, got %v", col.GetInstanceToFolder())
+			}
+			if _, _, readErr := s.KSclient.Read(context.Background(), fmt.Sprintf("%v%v", SAVEKEY, -42), &pb.Record{}); readErr == nil {
+				t.Errorf("expected negative instance_id record not to be saved")
+			}
+		})
+	}
+}
+
+func TestAddRecord_AddToFolderErrorsAndInvalidIDs(t *testing.T) {
+	wantErr := errors.New("discogs add failed")
+	tests := []struct {
+		name             string
+		addToFolderID    int64
+		addToFolderIDSet bool
+		addToFolderErr   error
+		wantCode         codes.Code
+	}{
+		{
+			name:           "AddToFolderError",
+			addToFolderErr: wantErr,
+		},
+		{
+			name:             "AddToFolderZero",
+			addToFolderID:    0,
+			addToFolderIDSet: true,
+			wantCode:         codes.Internal,
+		},
+		{
+			name:             "AddToFolderNegative",
+			addToFolderID:    -1,
+			addToFolderIDSet: true,
+			wantCode:         codes.Internal,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			s := InitTestServer(t.TempDir())
+			ts := &testSyncer{
+				addToFolderID:    tc.addToFolderID,
+				addToFolderIDSet: tc.addToFolderIDSet,
+				addToFolderErr:   tc.addToFolderErr,
+			}
+			q := &testQueueClient{}
+			s.retr = ts
+			s.queueClient = q
+
+			_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+				ToAdd: &pb.Record{
+					Release:  &pbd.Release{Id: 1234},
+					Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+				},
+			})
+			if err == nil {
+				t.Fatalf("expected error, got nil")
+			}
+			if tc.addToFolderErr != nil && !errors.Is(err, tc.addToFolderErr) {
+				t.Errorf("expected error %v, got %v", tc.addToFolderErr, err)
+			}
+			if tc.wantCode != codes.OK && status.Code(err) != tc.wantCode {
+				t.Errorf("expected status code %v, got %v (err=%v)", tc.wantCode, status.Code(err), err)
+			}
+			if len(q.items) != 0 {
+				t.Errorf("expected no queued items, got %d", len(q.items))
+			}
+
+			col, colErr := s.readRecordCollection(context.Background())
+			if colErr != nil {
+				t.Fatalf("readRecordCollection failed: %v", colErr)
+			}
+			if len(col.GetInstanceToFolder()) != 0 {
+				t.Errorf("expected empty collection, got %v", col.GetInstanceToFolder())
+			}
+			for _, id := range []int64{0, -1} {
+				if _, _, readErr := s.KSclient.Read(context.Background(), fmt.Sprintf("%v%v", SAVEKEY, id), &pb.Record{}); readErr == nil {
+					t.Errorf("expected record %d not to be saved in keystore", id)
+				}
+			}
+		})
+	}
+}
+
+func TestAddRecord_LargeInstanceIDAndRetry(t *testing.T) {
+	t.Run("AddToFolderLargeInstanceID", func(t *testing.T) {
+		s := InitTestServer(t.TempDir())
+		ts := &testSyncer{
+			addToFolderID:    largeInstanceID,
+			addToFolderIDSet: true,
+		}
+		q := &testQueueClient{}
+		s.retr = ts
+		s.queueClient = q
+
+		resp, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+			ToAdd: &pb.Record{
+				Release:  &pbd.Release{Id: 1234},
+				Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+			},
+		})
+		if err != nil {
+			t.Fatalf("AddRecord failed: %v", err)
+		}
+		if resp.GetAdded().GetRelease().GetInstanceId() != largeInstanceID {
+			t.Fatalf("got instance_id %d, want %d", resp.GetAdded().GetRelease().GetInstanceId(), largeInstanceID)
+		}
+
+		saved, _, err := s.KSclient.Read(context.Background(), fmt.Sprintf("%v%v", SAVEKEY, largeInstanceID), &pb.Record{})
+		if err != nil {
+			t.Fatalf("failed reading saved record from keystore: %v", err)
+		}
+		savedRec := saved.(*pb.Record)
+		if savedRec.GetRelease().GetInstanceId() != largeInstanceID {
+			t.Errorf("saved keystore record instance_id = %d, want %d", savedRec.GetRelease().GetInstanceId(), largeInstanceID)
+		}
+
+		col, err := s.readRecordCollection(context.Background())
+		if err != nil {
+			t.Fatalf("readRecordCollection failed: %v", err)
+		}
+		if col.GetInstanceToId()[largeInstanceID] != 1234 {
+			t.Errorf("collection InstanceToId[%d] = %d, want 1234", largeInstanceID, col.GetInstanceToId()[largeInstanceID])
+		}
+		if col.GetInstanceToFolder()[largeInstanceID] != 3380098 {
+			t.Errorf("collection InstanceToFolder[%d] = %d, want 3380098", largeInstanceID, col.GetInstanceToFolder()[largeInstanceID])
+		}
+
+		if len(q.items) != 1 {
+			t.Fatalf("expected 1 queued item, got %d", len(q.items))
+		}
+		if q.items[0].GetQueueName() != "record_fanout" {
+			t.Errorf("queue name = %q, want %q", q.items[0].GetQueueName(), "record_fanout")
+		}
+		if q.items[0].GetKey() != fmt.Sprintf("%d", largeInstanceID) {
+			t.Errorf("queue key = %q, want %q", q.items[0].GetKey(), fmt.Sprintf("%d", largeInstanceID))
+		}
+		var fanout rfpb.FanoutRequest
+		if err := proto.Unmarshal(q.items[0].GetPayload().GetValue(), &fanout); err != nil {
+			t.Fatalf("failed unmarshaling FanoutRequest: %v", err)
+		}
+		if fanout.GetInstanceId() != largeInstanceID {
+			t.Errorf("fanout InstanceId = %d, want %d", fanout.GetInstanceId(), largeInstanceID)
+		}
+	})
+
+	t.Run("RetryWithCallerSuppliedLargeInstanceID", func(t *testing.T) {
+		s := InitTestServer(t.TempDir())
+		ts := &testSyncer{}
+		q := &testQueueClient{}
+		s.retr = ts
+		s.queueClient = q
+
+		resp, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+			ToAdd: &pb.Record{
+				Release:  &pbd.Release{Id: 1234, InstanceId: largeInstanceID},
+				Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+			},
+		})
+		if err != nil {
+			t.Fatalf("AddRecord retry failed: %v", err)
+		}
+		if ts.addToFolderCalls != 0 {
+			t.Errorf("expected addToFolderCalls == 0 on retry, got %d", ts.addToFolderCalls)
+		}
+		if resp.GetAdded().GetRelease().GetInstanceId() != largeInstanceID {
+			t.Errorf("got instance_id %d, want %d", resp.GetAdded().GetRelease().GetInstanceId(), largeInstanceID)
+		}
+		if _, _, err := s.KSclient.Read(context.Background(), fmt.Sprintf("%v%v", SAVEKEY, largeInstanceID), &pb.Record{}); err != nil {
+			t.Fatalf("expected record to be saved under %v%v: %v", SAVEKEY, largeInstanceID, err)
+		}
+		if len(q.items) != 1 || q.items[0].GetKey() != fmt.Sprintf("%d", largeInstanceID) {
+			t.Fatalf("expected 1 record_fanout item for %d, got %v", largeInstanceID, q.items)
+		}
+		var fanout rfpb.FanoutRequest
+		if err := proto.Unmarshal(q.items[0].GetPayload().GetValue(), &fanout); err != nil {
+			t.Fatalf("failed unmarshaling FanoutRequest: %v", err)
+		}
+		if fanout.GetInstanceId() != largeInstanceID {
+			t.Errorf("fanout InstanceId = %d, want %d", fanout.GetInstanceId(), largeInstanceID)
+		}
+	})
+}
+
+func TestAddRecord_SaveFailureWireContract(t *testing.T) {
+	assertSaveErrDetails := func(t *testing.T, err error) {
+		t.Helper()
+		if err == nil {
+			t.Fatalf("expected non-nil error on saveRecord failure")
+		}
+		if !strings.Contains(err.Error(), fmt.Sprintf("%d", largeInstanceID)) {
+			t.Errorf("expected error message to include %d, got %v", largeInstanceID, err)
+		}
+		st, ok := status.FromError(err)
+		if !ok {
+			t.Fatalf("expected gRPC status error, got %T: %v", err, err)
+		}
+		if st.Code() == codes.OK {
+			t.Errorf("expected non-OK status code, got %v", st.Code())
+		}
+		var foundID int64
+		for _, d := range st.Details() {
+			if addResp, ok := d.(*pb.AddRecordResponse); ok {
+				foundID = addResp.GetAdded().GetRelease().GetInstanceId()
+			}
+		}
+		if foundID != largeInstanceID {
+			t.Errorf("expected *pb.AddRecordResponse detail with instance_id %d, got %d (details=%v)", largeInstanceID, foundID, st.Details())
+		}
+	}
+
+	t.Run("InProcess", func(t *testing.T) {
+		s := InitTestServer(t.TempDir())
+		ts := &testSyncer{
+			addToFolderID:    largeInstanceID,
+			addToFolderIDSet: true,
+		}
+		q := &testQueueClient{}
+		s.retr = ts
+		s.queueClient = q
+		s.KSclient.Fail = true
+
+		resp, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+			ToAdd: &pb.Record{
+				Release:  &pbd.Release{Id: 1234},
+				Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+			},
+		})
+		assertSaveErrDetails(t, err)
+		if resp.GetAdded().GetRelease().GetInstanceId() != largeInstanceID {
+			t.Errorf("in-process resp instance_id = %d, want %d", resp.GetAdded().GetRelease().GetInstanceId(), largeInstanceID)
+		}
+		if len(q.items) != 0 {
+			t.Errorf("expected no queued items on save failure, got %d", len(q.items))
+		}
+	})
+
+	t.Run("BufconnGRPC", func(t *testing.T) {
+		s := InitTestServer(t.TempDir())
+		ts := &testSyncer{
+			addToFolderID:    largeInstanceID,
+			addToFolderIDSet: true,
+		}
+		q := &testQueueClient{}
+		s.retr = ts
+		s.queueClient = q
+		s.KSclient.Fail = true
+
+		lis := bufconn.Listen(1024 * 1024)
+		grpcSrv := grpc.NewServer()
+		pb.RegisterRecordCollectionServiceServer(grpcSrv, s)
+		go func() {
+			if serveErr := grpcSrv.Serve(lis); serveErr != nil && serveErr != grpc.ErrServerStopped {
+				log.Printf("bufconn server exited: %v", serveErr)
+			}
+		}()
+		t.Cleanup(func() {
+			grpcSrv.Stop()
+			lis.Close()
+		})
+
+		conn, err := grpc.DialContext(context.Background(), "bufnet",
+			grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+				return lis.Dial()
+			}),
+			grpc.WithTransportCredentials(insecure.NewCredentials()),
+		)
+		if err != nil {
+			t.Fatalf("grpc.DialContext failed: %v", err)
+		}
+		t.Cleanup(func() { conn.Close() })
+
+		client := pb.NewRecordCollectionServiceClient(conn)
+		_, err = client.AddRecord(context.Background(), &pb.AddRecordRequest{
+			ToAdd: &pb.Record{
+				Release:  &pbd.Release{Id: 1234},
+				Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+			},
+		})
+		assertSaveErrDetails(t, err)
+		if len(q.items) != 0 {
+			t.Errorf("expected no queued items on save failure, got %d", len(q.items))
+		}
+	})
+}
+
+func TestAddRecord_FanoutQueueFailureAfterSave(t *testing.T) {
+	s := InitTestServer(t.TempDir())
+	ts := &testSyncer{
+		addToFolderID:    largeInstanceID,
+		addToFolderIDSet: true,
+	}
+	queueErr := status.Error(codes.Unavailable, "queue unavailable")
+	q := &testQueueClient{err: queueErr}
+	s.retr = ts
+	s.queueClient = q
+
+	before := testutil.ToFloat64(queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", queueErr)}))
+
+	resp, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release:  &pbd.Release{Id: 1234},
+			Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+		},
+	})
+	if err != nil {
+		t.Fatalf("expected AddRecord to succeed when only fanout enqueue fails, got %v", err)
+	}
+	if resp.GetAdded().GetRelease().GetInstanceId() != largeInstanceID {
+		t.Errorf("resp instance_id = %d, want %d", resp.GetAdded().GetRelease().GetInstanceId(), largeInstanceID)
+	}
+	if _, _, readErr := s.KSclient.Read(context.Background(), fmt.Sprintf("%v%v", SAVEKEY, largeInstanceID), &pb.Record{}); readErr != nil {
+		t.Fatalf("expected record to remain persisted in keystore: %v", readErr)
+	}
+
+	after := testutil.ToFloat64(queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", queueErr)}))
+	if after != before+1 {
+		t.Errorf("queueResults counter for error %q = %v, want %v", queueErr, after, before+1)
 	}
 }
 
