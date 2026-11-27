@@ -936,8 +936,24 @@ func (s *Server) transfer(ctx context.Context, rec *pb.Record) (*pb.Record, erro
 	return trecord.GetAdded(), nil
 }
 
+func addRecordSaveError(instanceID int64, resp *pb.AddRecordResponse, saveErr error) error {
+	code := codes.Internal
+	if st, ok := status.FromError(saveErr); ok && st.Code() != codes.OK {
+		code = st.Code()
+	}
+	st := status.Newf(code, "failed to save record (assigned instance_id=%d): %v", instanceID, saveErr)
+	if detailed, err := st.WithDetails(resp); err == nil {
+		return detailed.Err()
+	}
+	return st.Err()
+}
+
 // AddRecord adds a record directly to the listening pile
 func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*pb.AddRecordResponse, error) {
+	if request == nil || request.GetToAdd() == nil || request.GetToAdd().GetRelease() == nil {
+		return &pb.AddRecordResponse{}, status.Error(codes.InvalidArgument, "request, record, and release must not be nil")
+	}
+
 	if request.GetToAdd().GetMetadata() == nil {
 		request.GetToAdd().Metadata = &pb.ReleaseMetadata{
 			PackageScore: -1,
@@ -950,6 +966,12 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 		request.GetToAdd().GetMetadata().LastUpdateIn = 1
 	}
 
+	// Reject negative instance_id before any Discogs, storage, or queue calls
+	instanceID := request.GetToAdd().GetRelease().GetInstanceId()
+	if instanceID < 0 {
+		return &pb.AddRecordResponse{}, status.Errorf(codes.InvalidArgument, "invalid negative instance_id: %d", instanceID)
+	}
+
 	//Reject the add if we don't have a cost or goal folder
 	if request.GetToAdd().GetMetadata().GetCost() == 0 || request.GetToAdd().GetMetadata().GetGoalFolder() == 0 {
 		return &pb.AddRecordResponse{}, fmt.Errorf("Unable to add - no cost or goal folder (%v)", request)
@@ -957,39 +979,50 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 
 	s.CtxLog(ctx, fmt.Sprintf("AddRecord %v", request))
 
-	var err error
-	instanceID := request.GetToAdd().GetRelease().GetInstanceId()
 	if instanceID == 0 {
-		instanceID, err = s.retr.AddToFolder(ctx, 3380098, request.GetToAdd().GetRelease().Id)
+		var err error
+		instanceID, err = s.retr.AddToFolder(ctx, 3380098, request.GetToAdd().GetRelease().GetId())
+		if err != nil {
+			return &pb.AddRecordResponse{}, err
+		}
+		if instanceID <= 0 {
+			return &pb.AddRecordResponse{}, status.Errorf(codes.Internal, "discogs AddToFolder returned invalid instance_id: %d", instanceID)
+		}
 	}
-	if err == nil {
-		request.GetToAdd().Release.InstanceId = instanceID
-		if request.GetToAdd().GetRelease().GetFolderId() == 0 {
-			request.GetToAdd().GetRelease().FolderId = int32(3380098)
-		}
-		if request.GetToAdd().GetMetadata().GetDateAdded() == 0 {
-			request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
-		}
 
-		err := s.saveRecord(ctx, request.GetToAdd())
-		s.CtxLog(ctx, fmt.Sprintf("Saved record: %v", err))
+	request.GetToAdd().Release.InstanceId = instanceID
+	if request.GetToAdd().GetRelease().GetFolderId() == 0 {
+		request.GetToAdd().GetRelease().FolderId = int32(3380098)
+	}
+	if request.GetToAdd().GetMetadata().GetDateAdded() == 0 {
+		request.GetToAdd().GetMetadata().DateAdded = time.Now().Unix()
+	}
+
+	resp := &pb.AddRecordResponse{Added: request.GetToAdd()}
+	if err := s.saveRecord(ctx, request.GetToAdd()); err != nil {
+		s.CtxLog(ctx, fmt.Sprintf("Failed to save record %d: %v", instanceID, err))
+		return resp, addRecordSaveError(instanceID, resp, err)
 	}
 
 	upup := &rfpb.FanoutRequest{
 		InstanceId: instanceID,
 	}
 	data, _ := proto.Marshal(upup)
-	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
+	_, queueErr := s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{
 		QueueName:     "record_fanout",
 		RunTime:       time.Now().Unix(),
 		Payload:       &google_protobuf.Any{Value: data},
-		Key:           fmt.Sprintf("%v", instanceID),
+		Key:           fmt.Sprintf("%d", instanceID),
 		RequireUnique: true,
 	})
-	s.CtxLog(ctx, fmt.Sprintf("Updating because we just added %v", instanceID))
-	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", err)}).Inc()
+	if queueErr != nil {
+		s.CtxLog(ctx, fmt.Sprintf("Failed to enqueue record_fanout for %d: %v", instanceID, queueErr))
+	} else {
+		s.CtxLog(ctx, fmt.Sprintf("Updating because we just added %d", instanceID))
+	}
+	queueResults.With(prometheus.Labels{"error": fmt.Sprintf("%v", queueErr)}).Inc()
 
-	return &pb.AddRecordResponse{Added: request.GetToAdd()}, err
+	return resp, nil
 }
 
 // QueryRecords gets a record using the new schema
