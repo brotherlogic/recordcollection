@@ -74,6 +74,8 @@ func (t *testGenerator) generate(ctx context.Context, address string, rec *pb.Re
 	return "Generated Description", nil
 }
 
+const largeInstanceID int64 = 2182621358
+
 type testSyncer struct {
 	setRatingCount  int
 	moveRecordCount int
@@ -96,6 +98,12 @@ type testSyncer struct {
 	lastUpdatedSalePrice   float32
 	updateSaleListingCalls int
 	failUpdateSaleListing  bool
+	addToFolderID          int64
+	addToFolderIDSet       bool
+	addToFolderErr         error
+	addToFolderCalls       int
+	lastMoveInstanceID     int64
+	lastDeleteInstanceID   int64
 }
 
 func (t *testSyncer) GetInstanceInfo(ctx context.Context, ID int32) (map[int64]*godiscogs.InstanceInfo, error) {
@@ -166,9 +174,19 @@ func (t *testSyncer) GetRelease(ctx context.Context, id int32) (*pbgd.Release, e
 	return &pbgd.Release{Id: id, Title: "On The Wall", Labels: []*pbgd.Label{&pbgd.Label{Name: "madeup", Id: 123}}}, nil
 }
 
-func (t *testSyncer) AddToFolder(ctx context.Context, id int32, folderID int32) (int, error) {
+func (t *testSyncer) AddToFolder(ctx context.Context, folderID int32, releaseID int32) (int64, error) {
+	t.addToFolderCalls++
+	if t.addToFolderErr != nil {
+		return 0, t.addToFolderErr
+	}
+	if t.addToFolderIDSet {
+		return t.addToFolderID, nil
+	}
+	if t.addToFolderID != 0 {
+		return t.addToFolderID, nil
+	}
 	t.count++
-	return 200 + t.count, nil
+	return int64(200 + t.count), nil
 }
 
 func (t *testSyncer) SetRating(ctx context.Context, id int, rating int) error {
@@ -179,12 +197,14 @@ func (t *testSyncer) SetRating(ctx context.Context, id int, rating int) error {
 	return nil
 }
 
-func (t *testSyncer) MoveToFolder(ctx context.Context, a, b, c, d int) (string, error) {
+func (t *testSyncer) MoveToFolder(ctx context.Context, folderID, releaseID int, instanceID int64, newFolderID int) (string, error) {
 	t.moveRecordCount = 1
+	t.lastMoveInstanceID = instanceID
 	return "ALL GOOD!", nil
 }
 
-func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID, instanceID int) error {
+func (t *testSyncer) DeleteInstance(ctx context.Context, folderID, releaseID int, instanceID int64) error {
+	t.lastDeleteInstanceID = instanceID
 	return fmt.Errorf("ALL GOOD!")
 }
 
@@ -2068,6 +2088,37 @@ func TestCacheRecord_UpdatesCostFromDiscogsPurchasePrice(t *testing.T) {
 				t.Errorf("persisted Cost: got %d, want %d", saved.GetMetadata().GetCost(), tc.wantCost)
 			}
 		})
+	}
+}
+
+func TestPushRecord_LargeInstanceID(t *testing.T) {
+	s := InitTestServer(".testpushrecord_large_iid")
+	ts := &testSyncer{}
+	s.retr = ts
+
+	r := &pb.Record{
+		Release: &pbgd.Release{
+			Id:         12345,
+			FolderId:   12,
+			InstanceId: largeInstanceID,
+		},
+		Metadata: &pb.ReleaseMetadata{
+			Cost:       100,
+			GoalFolder: 100,
+			MoveFolder: 26,
+			Dirty:      true,
+		},
+	}
+
+	pushed, err := s.pushRecord(context.Background(), r)
+	if err != nil {
+		t.Fatalf("pushRecord failed: %v", err)
+	}
+	if !pushed {
+		t.Fatalf("expected pushed == true, got false")
+	}
+	if ts.lastMoveInstanceID != largeInstanceID {
+		t.Errorf("MoveToFolder instanceID: got %d, want %d", ts.lastMoveInstanceID, largeInstanceID)
 	}
 }
 

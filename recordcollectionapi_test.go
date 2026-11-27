@@ -3187,6 +3187,67 @@ func TestSearchReleases_Concurrent(t *testing.T) {
 	}
 }
 
+func TestDeleteRecord_LargeInstanceID(t *testing.T) {
+	s := InitTestServer(".testdeleterecord_large_iid")
+	ts := &testSyncer{}
+	s.retr = ts
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release:  &pbd.Release{Id: 12345, FolderId: 12, InstanceId: largeInstanceID},
+			Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 20},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	_, err = s.DeleteRecord(context.Background(), &pb.DeleteRecordRequest{InstanceId: largeInstanceID})
+	if err != nil {
+		t.Fatalf("DeleteRecord failed: %v", err)
+	}
+
+	if ts.lastDeleteInstanceID != largeInstanceID {
+		t.Errorf("DeleteInstance instanceID: got %d, want %d", ts.lastDeleteInstanceID, largeInstanceID)
+	}
+}
+
+func TestCommitRecordTransfer_LargeInstanceID(t *testing.T) {
+	s := InitTestServer(".testcommittransfer_large_iid")
+	ts := &testSyncer{}
+	s.retr = ts
+
+	_, err := s.AddRecord(context.Background(), &pb.AddRecordRequest{
+		ToAdd: &pb.Record{
+			Release:  &pbd.Release{Id: 100, FolderId: 12, InstanceId: largeInstanceID},
+			Metadata: &pb.ReleaseMetadata{Cost: 100, GoalFolder: 100},
+		},
+	})
+	if err != nil {
+		t.Fatalf("AddRecord failed: %v", err)
+	}
+
+	_, err = s.UpdateRecord(context.Background(), &pb.UpdateRecordRequest{
+		Reason: "testing",
+		Update: &pb.Record{
+			Release:  &pbd.Release{InstanceId: largeInstanceID},
+			Metadata: &pb.ReleaseMetadata{TransferTo: 52},
+		},
+	})
+	if err != nil {
+		t.Fatalf("UpdateRecord failed: %v", err)
+	}
+
+	_, err = s.CommitRecord(context.Background(), &pb.CommitRecordRequest{InstanceId: largeInstanceID})
+	if err != nil {
+		t.Fatalf("CommitRecord failed: %v", err)
+	}
+
+	if ts.lastDeleteInstanceID != largeInstanceID {
+		t.Errorf("DeleteInstance instanceID: got %d, want %d", ts.lastDeleteInstanceID, largeInstanceID)
+	}
+}
+
 type testKeyStoreServer struct {
 	pbks.UnimplementedKeyStoreServiceServer
 	mu          sync.Mutex

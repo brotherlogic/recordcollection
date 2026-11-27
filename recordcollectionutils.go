@@ -447,7 +447,7 @@ func (s *Server) pushRecord(ctx context.Context, r *pb.Record) (bool, error) {
 				return false, fmt.Errorf("Move fail %v -> %v: %v (%v)", r.GetRelease().FolderId, r.GetMetadata().GetMoveFolder(), err, ctx)
 			}
 
-			_, err = s.retr.MoveToFolder(ctx, int(r.GetRelease().FolderId), int(r.GetRelease().Id), int(r.GetRelease().InstanceId), int(r.GetMetadata().GetMoveFolder()))
+			_, err = s.retr.MoveToFolder(ctx, int(r.GetRelease().FolderId), int(r.GetRelease().Id), r.GetRelease().GetInstanceId(), int(r.GetMetadata().GetMoveFolder()))
 			if err != nil && status.Code(err) != codes.ResourceExhausted {
 				s.RaiseIssue("Move Failure", fmt.Sprintf("%v -> %v", r.GetRelease().GetInstanceId(), err))
 
@@ -512,7 +512,7 @@ func (s *Server) cacheRecord(ctx context.Context, r *pb.Record, force bool) erro
 	if r.GetRelease().InstanceId == 0 {
 		inst, err := s.retr.AddToFolder(ctx, r.GetRelease().FolderId, r.GetRelease().Id)
 		if err == nil {
-			r.GetRelease().InstanceId = int64(int32(inst))
+			r.GetRelease().InstanceId = inst
 		} else {
 			return err
 		}
