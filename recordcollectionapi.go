@@ -416,7 +416,7 @@ func (s *Server) CommitRecord(ctx context.Context, request *pb.CommitRecordReque
 		}
 		added = true
 
-		res := s.retr.DeleteInstance(ctx, int(record.GetRelease().GetFolderId()), int(record.GetRelease().GetId()), int(request.GetInstanceId()))
+		res := s.retr.DeleteInstance(ctx, int(record.GetRelease().GetFolderId()), int(record.GetRelease().GetId()), request.GetInstanceId())
 		s.CtxLog(ctx, fmt.Sprintf("Deleted from collection: %v", res))
 	}
 
@@ -517,8 +517,8 @@ func (s *Server) DeleteRecord(ctx context.Context, request *pb.DeleteRecordReque
 		return nil, err
 	}
 
-	res := s.retr.DeleteInstance(ctx, int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), int(request.GetInstanceId()))
-	s.CtxLog(ctx, fmt.Sprintf("Deleted from collection: %v -> %v and %v and %v", res, int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), int(request.GetInstanceId())))
+	res := s.retr.DeleteInstance(ctx, int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), request.GetInstanceId())
+	s.CtxLog(ctx, fmt.Sprintf("Deleted from collection: %v -> %v and %v and %v", res, int(rec.GetRelease().GetFolderId()), int(rec.GetRelease().GetId()), request.GetInstanceId()))
 
 	err = s.saveRecordCollection(ctx, collection)
 	if err != nil {
@@ -958,12 +958,12 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	s.CtxLog(ctx, fmt.Sprintf("AddRecord %v", request))
 
 	var err error
-	instanceID := int(request.GetToAdd().GetRelease().InstanceId)
+	instanceID := request.GetToAdd().GetRelease().GetInstanceId()
 	if instanceID == 0 {
 		instanceID, err = s.retr.AddToFolder(ctx, 3380098, request.GetToAdd().GetRelease().Id)
 	}
 	if err == nil {
-		request.GetToAdd().Release.InstanceId = int64(int64(instanceID))
+		request.GetToAdd().Release.InstanceId = instanceID
 		if request.GetToAdd().GetRelease().GetFolderId() == 0 {
 			request.GetToAdd().GetRelease().FolderId = int32(3380098)
 		}
@@ -976,7 +976,7 @@ func (s *Server) AddRecord(ctx context.Context, request *pb.AddRecordRequest) (*
 	}
 
 	upup := &rfpb.FanoutRequest{
-		InstanceId: int64(instanceID),
+		InstanceId: instanceID,
 	}
 	data, _ := proto.Marshal(upup)
 	_, err = s.queueClient.AddQueueItem(ctx, &qpb.AddQueueItemRequest{

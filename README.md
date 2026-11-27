@@ -6,7 +6,7 @@
 
 ## Features
 
-- **Discogs Synchronization**: Automatically syncs collection and wantlist data with Discogs.
+- **Discogs Synchronization**: Automatically syncs collection and wantlist data with Discogs, propagating full 64-bit (`int64`) `instance_id` values across `saver` Discogs calls (`AddToFolder`, `MoveToFolder`, `DeleteInstance`) for 32-bit host compatibility.
 - **Discogs Release Search (`SearchReleases`)**: Implements the `Server.SearchReleases` gRPC handler backed by `discogsSearcher` on `Server` (wired in `main()` to `godiscogs.DiscogsRetriever.Search` via `godiscogsSearcherAdapter`), enforcing release-only (`type=release`) searches, strict input validation (trimming, 500-rune limit, `per_page` bounds/defaulting, `sort_order` and `year` validation), Discogs URL normalization, upstream gRPC error mapping, and `codes.Unimplemented` guarding when no backend is wired.
 - **Advanced Metadata Tracking**:
     - Physical dimensions (spine width, weight).

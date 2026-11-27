@@ -116,10 +116,10 @@ type saver interface {
 	GetCollection(ctx context.Context) []*pbgd.Release
 	GetWantlist(ctx context.Context) ([]*pbgd.Release, error)
 	GetRelease(ctx context.Context, id int32) (*pbgd.Release, error)
-	AddToFolder(ctx context.Context, folderID int32, releaseID int32) (int, error)
+	AddToFolder(ctx context.Context, folderID int32, releaseID int32) (int64, error)
 	SetRating(ctx context.Context, releaseID int, rating int) error
-	MoveToFolder(ctx context.Context, folderID, releaseID, instanceID, newFolderID int) (string, error)
-	DeleteInstance(ctx context.Context, folderID, releaseID, instanceID int) error
+	MoveToFolder(ctx context.Context, folderID, releaseID int, instanceID int64, newFolderID int) (string, error)
+	DeleteInstance(ctx context.Context, folderID, releaseID int, instanceID int64) error
 	SellRecord(ctx context.Context, releaseID int, price float32, state string, condition, sleeve string, weight int, notes string) (int64, error)
 	GetSalePrice(ctx context.Context, releaseID int) (float32, error)
 	RemoveFromWantlist(ctx context.Context, releaseID int) error
@@ -134,6 +134,8 @@ type saver interface {
 	GetInstanceInfo(ctx context.Context, ID int32) (map[int64]*godiscogs.InstanceInfo, error)
 	GetOrder(ctx context.Context, ID string) (map[int64]int32, time.Time, error)
 }
+
+var _ saver = (*godiscogs.DiscogsRetriever)(nil)
 
 type scorer interface {
 	GetScore(ctx context.Context, instanceID int32) (float32, error)
